@@ -1,0 +1,23 @@
+[project]
+name = "ipb-smart-reserve-hub"
+version = "0.1.0"
+description = "IPB Smart Reserve Hub backend foundation"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "httpx>=0.28.0",
+    "pydantic-settings>=2.6.0",
+    "python-jose[cryptography]>=3.3.0",
+    "starlette>=0.46.0,<1.0.0",
+    "sqlalchemy>=2.0.0",
+    "uvicorn[standard]>=0.32.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

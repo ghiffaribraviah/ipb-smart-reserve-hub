@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+ipb_smart_reserve_hub.db
+.pytest_cache/

@@ -24,6 +24,36 @@ A User Repository is the persistence Seam for User account records.
 
 It lets account workflows store a User account and look one up by email address or ID without knowing the database Adapter or query Implementation.
 
+## Facility
+
+A Facility is a reservable campus place that students can discover and later reserve.
+
+Active Facilities are visible to students in the Facility Catalog. Inactive Facilities keep their history but are hidden from student browsing and should not accept new reservations.
+
+## Facility Category
+
+A Facility Category is a managed label used to group Facilities for browsing and administration.
+
+In the MVP, each Facility belongs to one Facility Category.
+
+## Facility Image
+
+A Facility Image is a public image for a Facility.
+
+Facility Images are shown in student browsing. Exactly one active Facility Image should be treated as the cover image for catalog cards, while Facility detail may show multiple active Facility Images.
+
+## Facility Catalog
+
+The Facility Catalog is the student browsing Module for public Facility information.
+
+It lists active Facilities for comparison and exposes Facility detail with public information: images, contact details, price or free status, open-hours summary, and review summary placeholders. The Facility Catalog should not expose private staff, reservation, payment, or student data.
+
+## Facility Repository
+
+A Facility Repository is the persistence Seam for Facility records.
+
+It lets Facility browsing and future reservation workflows look up active Facilities without knowing the database Adapter or query Implementation.
+
 ## HTTP Application
 
 The HTTP Application is the runtime shell that adapts HTTP requests to User account workflows and Access Policy checks.

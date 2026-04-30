@@ -2,30 +2,9 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.main import create_app
-from app.models import User, UserRole
-from app.security import create_access_token, hash_password
-
-
-def seed_user(
-    app,
-    *,
-    email: str,
-    role: UserRole,
-    password: str = "secret123",
-    is_active: bool = True,
-) -> str:
-    session_factory = app.state.session_factory
-    with session_factory() as session:
-        user = User(
-            email=email,
-            password_hash=hash_password(password),
-            full_name="Seed User",
-            role=role,
-            is_active=is_active,
-        )
-        session.add(user)
-        session.commit()
-        return user.id
+from app.models import UserRole
+from app.security import create_access_token
+from tests.data_builder import DataBuilder
 
 
 @pytest.mark.anyio
@@ -78,7 +57,7 @@ async def test_student_registers_with_allowed_email_and_reaches_student_shell():
 @pytest.mark.anyio
 async def test_super_admin_creates_staff_and_role_shells_are_guarded():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
-    seed_user(app, email="admin@ipb.ac.id", role=UserRole.super_admin)
+    DataBuilder(app).create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -125,11 +104,8 @@ async def test_super_admin_creates_staff_and_role_shells_are_guarded():
 @pytest.mark.anyio
 async def test_inactive_users_cannot_login_or_refresh_sessions():
     app = create_app(database_url="sqlite+pysqlite:///:memory:", secret_key="test-secret")
-    inactive_user_id = seed_user(
-        app,
-        email="inactive@apps.ipb.ac.id",
-        role=UserRole.student,
-        is_active=False,
+    inactive_user_id = DataBuilder(app).create_user(
+        email="inactive@apps.ipb.ac.id", role=UserRole.student, is_active=False
     )
     inactive_token = create_access_token(inactive_user_id, "test-secret")
     transport = ASGITransport(app=app)

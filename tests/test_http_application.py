@@ -12,6 +12,8 @@ def test_http_application_module_builds_app_with_foundation_routes():
     assert "/auth/register" in route_paths
     assert "/auth/login" in route_paths
     assert "/auth/refresh" in route_paths
+    assert "/facilities" in route_paths
+    assert "/facilities/{facility_id}" in route_paths
     assert "/admin/users" in route_paths
     assert "/student/shell" in route_paths
     assert "/staff/shell" in route_paths

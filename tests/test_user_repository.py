@@ -1,8 +1,8 @@
 import pytest
 
-from app.database import Base, build_session_factory
+from app.core.database import Base, build_session_factory
 from app.models import User, UserRole
-from app.user_repository import DuplicateUserEmail, SqlAlchemyUserRepository
+from app.repositories.user_repository import DuplicateUserEmail, SqlAlchemyUserRepository
 
 
 def test_sqlalchemy_user_repository_stores_and_finds_user_accounts():

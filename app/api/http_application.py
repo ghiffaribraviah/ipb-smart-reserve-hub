@@ -5,26 +5,26 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from app.access_policy import AccessDenied, AccessPolicyAction, AccessPolicyModule
-from app.accounts import (
+from app.core.access_policy import AccessDenied, AccessPolicyAction, AccessPolicyModule
+from app.services.accounts import (
     AccountInactive,
     AccountTokenInvalid,
     UserAccount,
     UserAccountModule,
 )
-from app.account_routes import register_account_routes
-from app.booking_setting_routes import register_booking_setting_routes
-from app.booking_settings import BookingSettings
-from app.database import Base, build_session_factory
-from app.facility_routes import register_facility_routes
-from app.organization_unit_routes import register_organization_unit_routes
-from app.module_factories import (
+from app.api.routes.account_routes import register_account_routes
+from app.api.routes.booking_setting_routes import register_booking_setting_routes
+from app.services.booking_settings import BookingSettings
+from app.core.database import Base, build_session_factory
+from app.api.routes.facility_routes import register_facility_routes
+from app.api.routes.organization_unit_routes import register_organization_unit_routes
+from app.core.module_factories import (
     BookingSettingsModuleFactory,
     FacilityModuleFactory,
     OrganizationUnitModuleFactory,
     UserAccountModuleFactory,
 )
-from app.settings import SettingsModule
+from app.core.settings import SettingsModule
 
 
 class HttpRuntimeModule:

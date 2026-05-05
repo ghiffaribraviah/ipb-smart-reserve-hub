@@ -1,8 +1,8 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.booking_setting_schemas import BookingSettingsResponse, BookingSettingsUpdateRequest
-from app.booking_settings import BookingSettings
+from app.schemas.booking_setting_schemas import BookingSettingsResponse, BookingSettingsUpdateRequest
+from app.services.booking_settings import BookingSettings
 from app.main import create_app
 from app.models import SystemSetting, UserRole
 from tests.data_builder import DataBuilder

@@ -3,9 +3,9 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi.security import HTTPBearer
 
-from app.http_application import HttpApplicationModule
-from app.http_application import HttpRuntimeModule
-from app.settings import SettingsModule
+from app.api.http_application import HttpApplicationModule
+from app.api.http_application import HttpRuntimeModule
+from app.core.settings import SettingsModule
 
 
 @pytest.mark.anyio

@@ -3,9 +3,9 @@ from httpx import ASGITransport, AsyncClient
 
 from app.main import create_app
 from app.models import OrganizationUnit, UserRole
-from app.organization_unit_repository import DuplicateOrganizationUnitName
-from app.organization_units import OrganizationUnitCreation, OrganizationUnitManagementModule
-from app.organization_units import OrganizationUnitNameAlreadyExists
+from app.repositories.organization_unit_repository import DuplicateOrganizationUnitName
+from app.services.organization_units import OrganizationUnitCreation, OrganizationUnitManagementModule
+from app.services.organization_units import OrganizationUnitNameAlreadyExists
 from tests.data_builder import DataBuilder
 
 

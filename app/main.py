@@ -3,8 +3,8 @@ from datetime import datetime
 
 from fastapi import FastAPI
 
-from app.http_application import HttpApplicationModule
-from app.settings import SettingsModule
+from app.api.http_application import HttpApplicationModule
+from app.core.settings import SettingsModule
 
 
 def create_app(

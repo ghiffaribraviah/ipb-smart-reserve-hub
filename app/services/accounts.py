@@ -2,15 +2,15 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from app.models import User, UserRole
-from app.security import (
+from app.core.security import (
     InvalidTokenError,
     create_access_token,
     decode_access_token,
     hash_password,
     verify_password,
 )
-from app.student_email_policy import AllowedStudentEmailDomains
-from app.user_repository import DuplicateUserEmail, UserRepository
+from app.core.student_email_policy import AllowedStudentEmailDomains
+from app.repositories.user_repository import DuplicateUserEmail, UserRepository
 
 
 @dataclass(frozen=True)

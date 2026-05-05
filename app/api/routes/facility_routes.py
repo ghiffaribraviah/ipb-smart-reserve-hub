@@ -3,18 +3,18 @@ from datetime import datetime
 
 from fastapi import Depends, FastAPI, HTTPException, status
 
-from app.facility_availability import FacilityAvailabilityModule
-from app.facility_availability import FacilityNotFound as FacilityAvailabilityNotFound
-from app.facilities import FacilityCatalogModule, FacilityNotFound
-from app.facility_schemas import (
+from app.services.facility_availability import FacilityAvailabilityModule
+from app.services.facility_availability import FacilityNotFound as FacilityAvailabilityNotFound
+from app.services.facilities import FacilityCatalogModule, FacilityNotFound
+from app.schemas.facility_schemas import (
     FacilityAvailabilityResponse,
     FacilityCalendarEntryResponse,
     FacilityCatalogItemResponse,
     FacilityDetailResponse,
 )
-from app.reservation_time_selection import FacilityNotFound as ReservationTimeSelectionFacilityNotFound
-from app.reservation_time_selection import ReservationTimeSelectionModule
-from app.reservation_time_selection_schemas import (
+from app.services.reservation_time_selection import FacilityNotFound as ReservationTimeSelectionFacilityNotFound
+from app.services.reservation_time_selection import ReservationTimeSelectionModule
+from app.schemas.reservation_time_selection_schemas import (
     ReservationTimeSelectionRequest,
     ReservationTimeSelectionResponse,
 )

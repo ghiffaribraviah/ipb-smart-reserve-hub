@@ -4,9 +4,9 @@ from datetime import datetime, time
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.facility_availability import FacilityAvailabilityModule
-from app.facility_catalog_reader import FacilityCatalogImageRecord, FacilityCatalogRecord
-from app.facilities import FacilityCatalogModule
+from app.services.facility_availability import FacilityAvailabilityModule
+from app.repositories.facility_catalog_reader import FacilityCatalogImageRecord, FacilityCatalogRecord
+from app.services.facilities import FacilityCatalogModule
 from app.main import create_app
 from app.models import Facility, FacilityCategory, FacilityImage, ReservationStatus, UserRole
 from tests.data_builder import DataBuilder

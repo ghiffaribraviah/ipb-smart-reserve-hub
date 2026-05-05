@@ -1,5 +1,5 @@
-from app.booking_settings import BookingSettings
-from app.settings import SettingsModule
+from app.services.booking_settings import BookingSettings
+from app.core.settings import SettingsModule
 
 
 def test_settings_module_loads_environment_and_normalizes_allowed_domains(monkeypatch):

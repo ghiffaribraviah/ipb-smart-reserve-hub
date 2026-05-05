@@ -1,7 +1,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.accounts import (
+from app.services.accounts import (
     AccountSession,
     AccountSessionCodec,
     AllowedStudentEmailDomains,
@@ -12,7 +12,7 @@ from app.accounts import (
 )
 from app.main import create_app
 from app.models import User, UserRole
-from app.security import create_access_token
+from app.core.security import create_access_token
 from tests.data_builder import DataBuilder
 
 

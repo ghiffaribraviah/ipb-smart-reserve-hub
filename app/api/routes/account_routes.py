@@ -3,8 +3,8 @@ from collections.abc import Callable
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 
-from app.access_policy import AccessPolicyAction
-from app.accounts import (
+from app.core.access_policy import AccessPolicyAction
+from app.services.accounts import (
     AccountInactive,
     AccountTokenInvalid,
     AdminManagedUserCreation,
@@ -17,7 +17,7 @@ from app.accounts import (
     UserAccount,
     UserAccountModule,
 )
-from app.account_schemas import (
+from app.schemas.account_schemas import (
     AdminCreateUserRequest,
     LoginRequest,
     StudentRegistrationRequest,

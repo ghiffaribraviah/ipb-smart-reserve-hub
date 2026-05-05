@@ -1,11 +1,11 @@
-from app.account_schemas import (
+from app.schemas.account_schemas import (
     AdminCreateUserRequest,
     LoginRequest,
     StudentRegistrationRequest,
     TokenResponse,
     UserResponse,
 )
-from app.facility_schemas import (
+from app.schemas.facility_schemas import (
     FacilityCatalogItemResponse,
     FacilityContactResponse,
     FacilityDetailResponse,

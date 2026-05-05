@@ -3,18 +3,18 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.accounts import UserAccountModule
-from app.booking_settings import BookingSettings, BookingSettingsModule
-from app.facility_availability import FacilityAvailabilityModule
-from app.facility_availability_reader import SqlAlchemyFacilityAvailabilityReader
-from app.facility_catalog_reader import SqlAlchemyFacilityCatalogReader
-from app.facilities import FacilityCatalogModule
-from app.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
-from app.organization_units import OrganizationUnitManagementModule
-from app.reservation_time_selection import ReservationTimeSelectionModule
-from app.settings import SettingsModule
-from app.student_email_policy import AllowedStudentEmailDomains
-from app.user_repository import SqlAlchemyUserRepository
+from app.services.accounts import UserAccountModule
+from app.services.booking_settings import BookingSettings, BookingSettingsModule
+from app.services.facility_availability import FacilityAvailabilityModule
+from app.repositories.facility_availability_reader import SqlAlchemyFacilityAvailabilityReader
+from app.repositories.facility_catalog_reader import SqlAlchemyFacilityCatalogReader
+from app.services.facilities import FacilityCatalogModule
+from app.repositories.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
+from app.services.organization_units import OrganizationUnitManagementModule
+from app.services.reservation_time_selection import ReservationTimeSelectionModule
+from app.core.settings import SettingsModule
+from app.core.student_email_policy import AllowedStudentEmailDomains
+from app.repositories.user_repository import SqlAlchemyUserRepository
 
 
 class UserAccountModuleFactory:

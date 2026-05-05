@@ -3,8 +3,8 @@ from datetime import UTC, datetime, timedelta
 import enum
 from typing import Callable
 
-from app.booking_settings import BookingSettings
-from app.facility_availability import BUSINESS_TIMEZONE, FacilityAvailabilityModule, FacilityNotFound
+from app.services.booking_settings import BookingSettings
+from app.services.facility_availability import BUSINESS_TIMEZONE, FacilityAvailabilityModule, FacilityNotFound
 
 
 @dataclass(frozen=True)

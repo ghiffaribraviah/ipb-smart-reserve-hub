@@ -2,10 +2,10 @@ from collections.abc import Callable
 
 from fastapi import Depends, FastAPI, HTTPException, status
 
-from app.access_policy import AccessPolicyAction
-from app.accounts import UserAccount
-from app.booking_setting_schemas import BookingSettingsResponse, BookingSettingsUpdateRequest
-from app.booking_settings import BookingSettingsModule, InvalidBookingSettings
+from app.core.access_policy import AccessPolicyAction
+from app.services.accounts import UserAccount
+from app.schemas.booking_setting_schemas import BookingSettingsResponse, BookingSettingsUpdateRequest
+from app.services.booking_settings import BookingSettingsModule, InvalidBookingSettings
 
 
 def register_booking_setting_routes(

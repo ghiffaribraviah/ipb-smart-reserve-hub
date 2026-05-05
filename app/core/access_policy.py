@@ -1,6 +1,6 @@
 import enum
 
-from app.accounts import UserAccount
+from app.services.accounts import UserAccount
 from app.models import UserRole
 
 

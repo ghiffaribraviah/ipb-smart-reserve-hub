@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.reservation_time_selection import ReservationTimeSelection, ReservationTimeSelectionError
+from app.services.reservation_time_selection import ReservationTimeSelection, ReservationTimeSelectionError
 
 
 class ReservationTimeSelectionRequest(BaseModel):

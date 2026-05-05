@@ -2,7 +2,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from app.student_email_policy import DEFAULT_ALLOWED_STUDENT_EMAIL_DOMAINS, normalize_allowed_student_email_domains
+from app.core.student_email_policy import DEFAULT_ALLOWED_STUDENT_EMAIL_DOMAINS, normalize_allowed_student_email_domains
 
 DEFAULT_DATABASE_URL = "sqlite+pysqlite:///./ipb_smart_reserve_hub.db"
 DEFAULT_SECRET_KEY = "dev-secret-change-me"

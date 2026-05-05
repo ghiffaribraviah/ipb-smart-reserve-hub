@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models import SystemSetting
-from app.student_email_policy import (
+from app.core.student_email_policy import (
     DEFAULT_ALLOWED_STUDENT_EMAIL_DOMAINS,
     normalize_allowed_student_email_domains,
 )

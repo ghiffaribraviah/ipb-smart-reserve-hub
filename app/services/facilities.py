@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from app.facility_catalog_reader import FacilityCatalogReader, FacilityCatalogRecord
+from app.repositories.facility_catalog_reader import FacilityCatalogReader, FacilityCatalogRecord
 
 
 class FacilityNotFound(Exception):

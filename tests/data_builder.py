@@ -14,7 +14,7 @@ from app.models import (
     User,
     UserRole,
 )
-from app.security import hash_password
+from app.core.security import hash_password
 
 
 class DataBuilder:

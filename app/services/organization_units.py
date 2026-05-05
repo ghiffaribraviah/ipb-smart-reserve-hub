@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from app.models import OrganizationUnit
-from app.organization_unit_repository import DuplicateOrganizationUnitName, OrganizationUnitRepository
+from app.repositories.organization_unit_repository import DuplicateOrganizationUnitName, OrganizationUnitRepository
 
 
 @dataclass(frozen=True)

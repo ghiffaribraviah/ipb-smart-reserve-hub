@@ -2,7 +2,7 @@ from dataclasses import asdict
 
 from pydantic import BaseModel
 
-from app.booking_settings import BookingSettings
+from app.services.booking_settings import BookingSettings
 
 
 class BookingSettingsSchema(BaseModel):

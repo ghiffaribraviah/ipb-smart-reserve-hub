@@ -1,7 +1,7 @@
 import pytest
 
-from app.access_policy import AccessDenied, AccessPolicyAction, AccessPolicyModule
-from app.accounts import UserAccount
+from app.core.access_policy import AccessDenied, AccessPolicyAction, AccessPolicyModule
+from app.services.accounts import UserAccount
 from app.models import UserRole
 
 

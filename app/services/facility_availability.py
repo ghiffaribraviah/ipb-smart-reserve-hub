@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
-from app.facility_availability_reader import FacilityAvailabilityReader
+from app.repositories.facility_availability_reader import FacilityAvailabilityReader
 from app.models import ReservationStatus
 
 

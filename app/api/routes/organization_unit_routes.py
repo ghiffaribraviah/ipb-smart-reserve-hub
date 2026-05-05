@@ -2,14 +2,14 @@ from collections.abc import Callable
 
 from fastapi import Depends, FastAPI, HTTPException, status
 
-from app.access_policy import AccessPolicyAction
-from app.accounts import UserAccount
-from app.organization_unit_schemas import (
+from app.core.access_policy import AccessPolicyAction
+from app.services.accounts import UserAccount
+from app.schemas.organization_unit_schemas import (
     OrganizationUnitCreateRequest,
     OrganizationUnitResponse,
     OrganizationUnitUpdateRequest,
 )
-from app.organization_units import (
+from app.services.organization_units import (
     OrganizationUnitCreation,
     OrganizationUnitManagementModule,
     OrganizationUnitNameAlreadyExists,

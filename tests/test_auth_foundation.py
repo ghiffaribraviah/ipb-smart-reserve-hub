@@ -1,7 +1,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.accounts import StudentRegistration, UserAccountModule
+from app.accounts import AllowedStudentEmailDomains, StudentRegistration, UserAccountModule
 from app.main import create_app
 from app.models import User, UserRole
 from app.security import create_access_token
@@ -20,11 +20,19 @@ class StubUserRepository:
         return None
 
 
+def test_user_account_module_uses_named_institutional_email_policy():
+    policy = AllowedStudentEmailDomains((" apps.ipb.ac.id ", "IPB.AC.ID"))
+
+    assert policy.allows("budi@apps.ipb.ac.id")
+    assert policy.allows("siti@ipb.ac.id")
+    assert not policy.allows("student@gmail.com")
+
+
 def test_user_account_module_returns_public_user_account_not_persistence_record():
     user_accounts = UserAccountModule(
         user_repository=StubUserRepository(),
         secret_key="test-secret",
-        allowed_student_email_domains=("apps.ipb.ac.id",),
+        student_email_policy=AllowedStudentEmailDomains(("apps.ipb.ac.id",)),
     )
 
     user_account = user_accounts.register_student(

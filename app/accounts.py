@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Protocol
 
 from app.models import User, UserRole
 from app.security import (
@@ -49,6 +50,24 @@ class UserAccount:
     is_active: bool
 
 
+class StudentEmailPolicy(Protocol):
+    def allows(self, email: str) -> bool:
+        raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class AllowedStudentEmailDomains:
+    domains: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "domains", tuple(domain.strip().lower() for domain in self.domains if domain.strip()))
+
+    def allows(self, email: str) -> bool:
+        normalized_email = email.lower().strip()
+        email_domain = normalized_email.rsplit("@", 1)[-1] if "@" in normalized_email else ""
+        return email_domain in self.domains
+
+
 class UserAccountError(Exception):
     pass
 
@@ -83,15 +102,15 @@ class UserAccountModule:
         *,
         user_repository: UserRepository,
         secret_key: str,
-        allowed_student_email_domains: tuple[str, ...],
+        student_email_policy: StudentEmailPolicy,
     ) -> None:
         self._user_repository = user_repository
         self._secret_key = secret_key
-        self._allowed_student_email_domains = allowed_student_email_domains
+        self._student_email_policy = student_email_policy
 
     def register_student(self, registration: StudentRegistration) -> UserAccount:
         email = self._normalize_email(registration.email)
-        if self._email_domain(email) not in self._allowed_student_email_domains:
+        if not self._student_email_policy.allows(email):
             raise EmailDomainNotAllowed
 
         user = User(
@@ -161,6 +180,3 @@ class UserAccountModule:
 
     def _normalize_email(self, email: str) -> str:
         return email.lower().strip()
-
-    def _email_domain(self, email: str) -> str:
-        return email.rsplit("@", 1)[-1] if "@" in email else ""

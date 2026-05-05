@@ -6,12 +6,13 @@ from app.access_policy import AccessDenied, AccessPolicyAction, AccessPolicyModu
 from app.accounts import (
     AccountInactive,
     AccountTokenInvalid,
+    AllowedStudentEmailDomains,
     UserAccount,
     UserAccountModule,
 )
 from app.account_routes import register_account_routes
 from app.booking_setting_routes import register_booking_setting_routes
-from app.booking_settings import BookingSettingsModule
+from app.booking_settings import BookingSettings, BookingSettingsModule
 from app.database import Base, build_session_factory
 from app.facility_availability import FacilityAvailabilityModule
 from app.facilities import FacilityCatalogModule
@@ -32,6 +33,9 @@ class HttpRuntimeModule:
         bearer_scheme: HTTPBearer | None = None,
     ) -> None:
         self._settings = settings
+        self._default_booking_settings = BookingSettings.defaults(
+            allowed_student_email_domains=self._settings.allowed_student_email_domains
+        )
         self._bearer_scheme = bearer_scheme or HTTPBearer(auto_error=False)
         self.session_factory = build_session_factory(self._settings.database_url)
         self.get_user_accounts = self._build_get_user_accounts()
@@ -63,12 +67,12 @@ class HttpRuntimeModule:
         async def dependency(session: Session = Depends(self.get_session)) -> UserAccountModule:
             booking_settings = BookingSettingsModule(
                 session=session,
-                defaults=self._settings.booking_settings,
+                defaults=self._default_booking_settings,
             ).get_booking_settings()
             return UserAccountModule(
                 user_repository=SqlAlchemyUserRepository(session),
                 secret_key=self._settings.secret_key,
-                allowed_student_email_domains=booking_settings.allowed_student_email_domains,
+                student_email_policy=AllowedStudentEmailDomains(booking_settings.allowed_student_email_domains),
             )
 
         return dependency
@@ -95,7 +99,7 @@ class HttpRuntimeModule:
 
     def _build_get_booking_settings(self):
         async def dependency(session: Session = Depends(self.get_session)):
-            return BookingSettingsModule(session=session, defaults=self._settings.booking_settings)
+            return BookingSettingsModule(session=session, defaults=self._default_booking_settings)
 
         return dependency
 

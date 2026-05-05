@@ -5,21 +5,25 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.facility_availability import FacilityAvailabilityModule
+from app.facility_catalog_reader import FacilityCatalogImageRecord, FacilityCatalogRecord
 from app.facilities import FacilityCatalogModule
 from app.main import create_app
 from app.models import Facility, FacilityCategory, FacilityImage, ReservationStatus, UserRole
 from tests.data_builder import DataBuilder
 
 
-class StubFacilityRepository:
-    def __init__(self, facilities: list[Facility]) -> None:
+class StubFacilityCatalogReader:
+    def __init__(self, facilities: list[FacilityCatalogRecord]) -> None:
         self._facilities = facilities
 
-    def list_active_facilities(self) -> list[Facility]:
+    def list_active_facilities(self) -> list[FacilityCatalogRecord]:
         return self._facilities
 
-    def get_active_facility_by_id(self, facility_id: str) -> Facility | None:
+    def get_active_facility_by_id(self, facility_id: str) -> FacilityCatalogRecord | None:
         return next((facility for facility in self._facilities if facility.id == facility_id), None)
+
+    def list_public_calendar_reservations(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> list:
+        return []
 
 
 @dataclass(frozen=True)
@@ -30,17 +34,24 @@ class StubOpenHour:
 
 
 class StubFacilityAvailabilityRepository:
-    def get_active_facility_by_id(self, facility_id: str):
-        return object() if facility_id == "facility-1" else None
+    def active_facility_exists(self, facility_id: str) -> bool:
+        return facility_id == "facility-1"
 
     def list_facility_open_hours(self, facility_id: str) -> list[StubOpenHour]:
         return [StubOpenHour(day_of_week=0, opens_at=time(8, 0), closes_at=time(16, 0))]
 
-    def list_overlapping_blackouts(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> list:
-        return []
+    def has_overlapping_blackout(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> bool:
+        return False
 
-    def list_public_calendar_reservations(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> list:
-        return [object()]
+    def has_overlapping_reservation(
+        self,
+        facility_id: str,
+        *,
+        starts_at: datetime,
+        ends_at: datetime,
+        statuses: tuple,
+    ) -> bool:
+        return True
 
 
 def build_facility_record(*, name: str = "Auditorium Andi Hakim Nasoetion", price_rupiah: int = 0) -> Facility:
@@ -74,7 +85,33 @@ def build_facility_record(*, name: str = "Auditorium Andi Hakim Nasoetion", pric
 
 def test_facility_catalog_module_projects_public_catalog_items_through_repository_seam():
     facility_catalog = FacilityCatalogModule(
-        facility_repository=StubFacilityRepository([build_facility_record()])
+        facility_catalog_reader=StubFacilityCatalogReader(
+            [
+                FacilityCatalogRecord(
+                    id="facility-1",
+                    name="Auditorium Andi Hakim Nasoetion",
+                    location="Kampus IPB Dramaga",
+                    capacity=120,
+                    category="Auditorium",
+                    description="Ruang kegiatan mahasiswa",
+                    contact_name="TU Fasilitas",
+                    contact_phone="0251-8620000",
+                    contact_email=None,
+                    price_rupiah=0,
+                    open_hours_summary="Senin-Jumat 08.00-16.00",
+                    rating_average=None,
+                    review_count=0,
+                    images=[
+                        FacilityCatalogImageRecord(
+                            url="https://cdn.example.test/auditorium-cover.jpg",
+                            alt_text="Auditorium cover",
+                            is_cover=True,
+                            is_active=True,
+                        )
+                    ],
+                )
+            ]
+        )
     )
 
     catalog_items = facility_catalog.list_active_facilities()
@@ -86,7 +123,7 @@ def test_facility_catalog_module_projects_public_catalog_items_through_repositor
 
 def test_facility_availability_module_concentrates_reservation_time_rules():
     facility_availability = FacilityAvailabilityModule(
-        facility_repository=StubFacilityAvailabilityRepository()
+        facility_availability_reader=StubFacilityAvailabilityRepository()
     )
 
     availability = facility_availability.check_availability(

@@ -5,13 +5,11 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models import SystemSetting
+from app.student_email_policy import (
+    DEFAULT_ALLOWED_STUDENT_EMAIL_DOMAINS,
+    normalize_allowed_student_email_domains,
+)
 
-
-DEFAULT_ALLOWED_STUDENT_EMAIL_DOMAINS = ("apps.ipb.ac.id",)
-
-
-def normalize_allowed_student_email_domains(domains: tuple[str, ...]) -> tuple[str, ...]:
-    return tuple(domain.strip().lower() for domain in domains if domain.strip())
 
 
 class BookingSettingsError(Exception):

@@ -1,7 +1,15 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.accounts import AllowedStudentEmailDomains, StudentRegistration, UserAccountModule
+from app.accounts import (
+    AccountSession,
+    AccountSessionCodec,
+    AllowedStudentEmailDomains,
+    LoginCredentials,
+    PasswordHasher,
+    StudentRegistration,
+    UserAccountModule,
+)
 from app.main import create_app
 from app.models import User, UserRole
 from app.security import create_access_token
@@ -9,15 +17,38 @@ from tests.data_builder import DataBuilder
 
 
 class StubUserRepository:
+    def __init__(self) -> None:
+        self.added_user: User | None = None
+
     def add(self, user: User) -> User:
         user.id = "user-1"
+        user.is_active = True
+        self.added_user = user
         return user
 
     def find_by_email(self, email: str) -> User | None:
+        if self.added_user is not None and self.added_user.email == email:
+            return self.added_user
         return None
 
     def get_by_id(self, user_id: str) -> User | None:
         return None
+
+
+class SpyPasswordHasher(PasswordHasher):
+    def hash(self, password: str) -> str:
+        return f"hashed:{password}"
+
+    def verify(self, password: str, password_hash: str) -> bool:
+        return password_hash == f"hashed:{password}"
+
+
+class StubAccountSessionCodec(AccountSessionCodec):
+    def issue(self, user_id: str) -> str:
+        return f"session-for:{user_id}"
+
+    def resolve_user_id(self, access_token: str) -> str:
+        return access_token.removeprefix("session-for:")
 
 
 def test_user_account_module_uses_named_institutional_email_policy():
@@ -29,10 +60,13 @@ def test_user_account_module_uses_named_institutional_email_policy():
 
 
 def test_user_account_module_returns_public_user_account_not_persistence_record():
+    user_repository = StubUserRepository()
     user_accounts = UserAccountModule(
-        user_repository=StubUserRepository(),
+        user_repository=user_repository,
         secret_key="test-secret",
         student_email_policy=AllowedStudentEmailDomains(("apps.ipb.ac.id",)),
+        password_hasher=SpyPasswordHasher(),
+        account_session_codec=StubAccountSessionCodec(),
     )
 
     user_account = user_accounts.register_student(
@@ -47,7 +81,33 @@ def test_user_account_module_returns_public_user_account_not_persistence_record(
 
     assert user_account.id == "user-1"
     assert user_account.email == "budi@apps.ipb.ac.id"
+    assert user_repository.added_user is not None
+    assert user_repository.added_user.password_hash == "hashed:secret123"
     assert not hasattr(user_account, "password_hash")
+
+
+def test_user_account_module_issues_sessions_through_session_codec():
+    user_repository = StubUserRepository()
+    user_accounts = UserAccountModule(
+        user_repository=user_repository,
+        secret_key="test-secret",
+        student_email_policy=AllowedStudentEmailDomains(("apps.ipb.ac.id",)),
+        password_hasher=SpyPasswordHasher(),
+        account_session_codec=StubAccountSessionCodec(),
+    )
+    user_accounts.register_student(
+        StudentRegistration(
+            email="budi@apps.ipb.ac.id",
+            password="secret123",
+            full_name="Budi Santoso",
+            nim="G64190001",
+            phone="08123456789",
+        )
+    )
+
+    account_session = user_accounts.login(LoginCredentials(email="budi@apps.ipb.ac.id", password="secret123"))
+
+    assert account_session == AccountSession(access_token="session-for:user-1")
 
 
 @pytest.mark.anyio

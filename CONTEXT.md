@@ -50,11 +50,29 @@ The Facility Catalog is the student browsing Module for public Facility informat
 
 It lists active Facilities for comparison and exposes Facility detail with public information: images, contact details, price or free status, open-hours summary, and review summary placeholders. The Facility Catalog should not expose private staff, reservation, payment, or student data.
 
-## Facility Repository
+## Facility Catalog Reader
 
-A Facility Repository is the persistence Seam for Facility records.
+A Facility Catalog Reader is the read Seam for public Facility Catalog records.
 
-It lets Facility browsing and future reservation workflows look up active Facilities without knowing the database Adapter or query Implementation.
+It gives the Facility Catalog public Facility records and public calendar reservation records without exposing database records, private reservation data, or ORM relationship loading details.
+
+## Facility Availability Reader
+
+A Facility Availability Reader is the read Seam for Facility availability facts.
+
+It lets availability workflows check active Facility existence, open hours, blackout periods, and overlapping reservation facts without knowing the database Adapter or query Implementation.
+
+## Facility Availability
+
+Facility Availability decides whether a Facility can accept a candidate reservation time.
+
+It owns the rules for open-hours fit, blackout overlap, and blocking reservation overlap. Callers should ask for availability reasons, not inspect Facility, Blackout, or Reservation persistence records directly.
+
+## Reservation Time Selection
+
+Reservation Time Selection is the student-facing validation Module for a candidate reservation start and end time.
+
+It combines local time rules, booking window rules, and Facility Availability into one result so callers do not need to know validation ordering or reason-message mapping.
 
 ## Organization Unit
 

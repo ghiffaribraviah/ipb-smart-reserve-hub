@@ -9,6 +9,7 @@ from app.security import (
     hash_password,
     verify_password,
 )
+from app.student_email_policy import AllowedStudentEmailDomains
 from app.user_repository import DuplicateUserEmail, UserRepository
 
 
@@ -55,17 +56,39 @@ class StudentEmailPolicy(Protocol):
         raise NotImplementedError
 
 
-@dataclass(frozen=True)
-class AllowedStudentEmailDomains:
-    domains: tuple[str, ...]
+class PasswordHasher(Protocol):
+    def hash(self, password: str) -> str:
+        raise NotImplementedError
 
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "domains", tuple(domain.strip().lower() for domain in self.domains if domain.strip()))
+    def verify(self, password: str, password_hash: str) -> bool:
+        raise NotImplementedError
 
-    def allows(self, email: str) -> bool:
-        normalized_email = email.lower().strip()
-        email_domain = normalized_email.rsplit("@", 1)[-1] if "@" in normalized_email else ""
-        return email_domain in self.domains
+
+class AccountSessionCodec(Protocol):
+    def issue(self, user_id: str) -> str:
+        raise NotImplementedError
+
+    def resolve_user_id(self, access_token: str) -> str:
+        raise NotImplementedError
+
+
+class SecurityPasswordHasher:
+    def hash(self, password: str) -> str:
+        return hash_password(password)
+
+    def verify(self, password: str, password_hash: str) -> bool:
+        return verify_password(password, password_hash)
+
+
+class JwtAccountSessionCodec:
+    def __init__(self, *, secret_key: str) -> None:
+        self._secret_key = secret_key
+
+    def issue(self, user_id: str) -> str:
+        return create_access_token(user_id, self._secret_key)
+
+    def resolve_user_id(self, access_token: str) -> str:
+        return decode_access_token(access_token, self._secret_key)
 
 
 class UserAccountError(Exception):
@@ -103,10 +126,13 @@ class UserAccountModule:
         user_repository: UserRepository,
         secret_key: str,
         student_email_policy: StudentEmailPolicy,
+        password_hasher: PasswordHasher | None = None,
+        account_session_codec: AccountSessionCodec | None = None,
     ) -> None:
         self._user_repository = user_repository
-        self._secret_key = secret_key
         self._student_email_policy = student_email_policy
+        self._password_hasher = password_hasher or SecurityPasswordHasher()
+        self._account_session_codec = account_session_codec or JwtAccountSessionCodec(secret_key=secret_key)
 
     def register_student(self, registration: StudentRegistration) -> UserAccount:
         email = self._normalize_email(registration.email)
@@ -115,7 +141,7 @@ class UserAccountModule:
 
         user = User(
             email=email,
-            password_hash=hash_password(registration.password),
+            password_hash=self._password_hasher.hash(registration.password),
             full_name=registration.full_name,
             role=UserRole.student,
             nim=registration.nim,
@@ -129,7 +155,7 @@ class UserAccountModule:
 
         user = User(
             email=self._normalize_email(creation.email),
-            password_hash=hash_password(creation.password),
+            password_hash=self._password_hasher.hash(creation.password),
             full_name=creation.full_name,
             role=creation.role,
             is_active=creation.is_active,
@@ -138,7 +164,7 @@ class UserAccountModule:
 
     def login(self, credentials: LoginCredentials) -> AccountSession:
         user = self._user_repository.find_by_email(self._normalize_email(credentials.email))
-        if user is None or not verify_password(credentials.password, user.password_hash):
+        if user is None or not self._password_hasher.verify(credentials.password, user.password_hash):
             raise InvalidCredentials
         if not user.is_active:
             raise AccountInactive
@@ -151,7 +177,7 @@ class UserAccountModule:
 
     def resolve_active_user(self, access_token: str) -> UserAccount:
         try:
-            user_id = decode_access_token(access_token, self._secret_key)
+            user_id = self._account_session_codec.resolve_user_id(access_token)
         except InvalidTokenError as exc:
             raise AccountTokenInvalid from exc
 
@@ -167,7 +193,7 @@ class UserAccountModule:
             raise EmailAlreadyRegistered from exc
 
     def _issue_session(self, user: User | UserAccount) -> AccountSession:
-        return AccountSession(access_token=create_access_token(user.id, self._secret_key))
+        return AccountSession(access_token=self._account_session_codec.issue(user.id))
 
     def _to_user_account(self, user: User) -> UserAccount:
         return UserAccount(

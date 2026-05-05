@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from app.models import Facility
-from app.facility_repository import FacilityRepository
+from app.facility_catalog_reader import FacilityCatalogReader, FacilityCatalogRecord
 
 
 class FacilityNotFound(Exception):
@@ -81,15 +80,15 @@ def summarize_price(price_rupiah: int) -> str:
 
 
 class FacilityCatalogModule:
-    def __init__(self, *, facility_repository: FacilityRepository) -> None:
-        self._facility_repository = facility_repository
+    def __init__(self, *, facility_catalog_reader: FacilityCatalogReader) -> None:
+        self._facility_catalog_reader = facility_catalog_reader
 
     def list_active_facilities(self) -> list[FacilityCatalogItem]:
-        facilities = self._facility_repository.list_active_facilities()
+        facilities = self._facility_catalog_reader.list_active_facilities()
         return [self._catalog_item(facility) for facility in facilities]
 
     def get_public_detail(self, facility_id: str) -> FacilityPublicDetail:
-        facility = self._facility_repository.get_active_facility_by_id(facility_id)
+        facility = self._facility_catalog_reader.get_active_facility_by_id(facility_id)
         if facility is None:
             raise FacilityNotFound
 
@@ -99,7 +98,7 @@ class FacilityCatalogModule:
             name=facility.name,
             location=facility.location,
             capacity=facility.capacity,
-            category=facility.category.name,
+            category=facility.category,
             description=facility.description,
             contact=FacilityContact(
                 name=facility.contact_name,
@@ -133,33 +132,33 @@ class FacilityCatalogModule:
         starts_at: datetime,
         ends_at: datetime,
     ) -> list[FacilityCalendarEntry]:
-        facility = self._facility_repository.get_active_facility_by_id(facility_id)
+        facility = self._facility_catalog_reader.get_active_facility_by_id(facility_id)
         if facility is None:
             raise FacilityNotFound
 
         return [
             FacilityCalendarEntry(
-                facility_name=reservation.facility.name,
+                facility_name=reservation.facility_name,
                 activity_title=reservation.activity_title,
-                organization_unit=reservation.organization_unit.name,
+                organization_unit=reservation.organization_unit,
                 starts_at=_as_utc(reservation.starts_at),
                 ends_at=_as_utc(reservation.ends_at),
             )
-            for reservation in self._facility_repository.list_public_calendar_reservations(
+            for reservation in self._facility_catalog_reader.list_public_calendar_reservations(
                 facility_id,
                 starts_at=starts_at,
                 ends_at=ends_at,
             )
         ]
 
-    def _catalog_item(self, facility: Facility) -> FacilityCatalogItem:
+    def _catalog_item(self, facility: FacilityCatalogRecord) -> FacilityCatalogItem:
         cover_image = next((image for image in facility.images if image.is_active and image.is_cover), None)
         return FacilityCatalogItem(
             id=facility.id,
             name=facility.name,
             location=facility.location,
             capacity=facility.capacity,
-            category=facility.category.name,
+            category=facility.category,
             cover_image_url=cover_image.url if cover_image else None,
             rating_average=facility.rating_average,
             review_count=facility.review_count,

@@ -9,24 +9,22 @@ from app.access_policy import AccessDenied, AccessPolicyAction, AccessPolicyModu
 from app.accounts import (
     AccountInactive,
     AccountTokenInvalid,
-    AllowedStudentEmailDomains,
     UserAccount,
     UserAccountModule,
 )
 from app.account_routes import register_account_routes
 from app.booking_setting_routes import register_booking_setting_routes
-from app.booking_settings import BookingSettings, BookingSettingsModule
+from app.booking_settings import BookingSettings
 from app.database import Base, build_session_factory
-from app.facility_availability import FacilityAvailabilityModule
-from app.facilities import FacilityCatalogModule
-from app.facility_repository import SqlAlchemyFacilityRepository
 from app.facility_routes import register_facility_routes
-from app.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
 from app.organization_unit_routes import register_organization_unit_routes
-from app.organization_units import OrganizationUnitManagementModule
-from app.reservation_time_selection import ReservationTimeSelectionModule
+from app.module_factories import (
+    BookingSettingsModuleFactory,
+    FacilityModuleFactory,
+    OrganizationUnitModuleFactory,
+    UserAccountModuleFactory,
+)
 from app.settings import SettingsModule
-from app.user_repository import SqlAlchemyUserRepository
 
 
 class HttpRuntimeModule:
@@ -41,6 +39,18 @@ class HttpRuntimeModule:
         self._clock = clock or (lambda: datetime.now(UTC))
         self._default_booking_settings = BookingSettings.defaults(
             allowed_student_email_domains=self._settings.allowed_student_email_domains
+        )
+        self._user_account_factory = UserAccountModuleFactory(
+            settings=self._settings,
+            default_booking_settings=self._default_booking_settings,
+        )
+        self._facility_factory = FacilityModuleFactory(
+            default_booking_settings=self._default_booking_settings,
+            clock=self._clock,
+        )
+        self._organization_unit_factory = OrganizationUnitModuleFactory()
+        self._booking_settings_factory = BookingSettingsModuleFactory(
+            default_booking_settings=self._default_booking_settings
         )
         self._bearer_scheme = bearer_scheme or HTTPBearer(auto_error=False)
         self.session_factory = build_session_factory(self._settings.database_url)
@@ -72,56 +82,37 @@ class HttpRuntimeModule:
 
     def _build_get_user_accounts(self):
         async def dependency(session: Session = Depends(self.get_session)) -> UserAccountModule:
-            booking_settings = BookingSettingsModule(
-                session=session,
-                defaults=self._default_booking_settings,
-            ).get_booking_settings()
-            return UserAccountModule(
-                user_repository=SqlAlchemyUserRepository(session),
-                secret_key=self._settings.secret_key,
-                student_email_policy=AllowedStudentEmailDomains(booking_settings.allowed_student_email_domains),
-            )
+            return self._user_account_factory.build(session)
 
         return dependency
 
     def _build_get_facility_catalog(self):
-        async def dependency(session: Session = Depends(self.get_session)) -> FacilityCatalogModule:
-            return FacilityCatalogModule(facility_repository=SqlAlchemyFacilityRepository(session))
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._facility_factory.build_catalog(session)
 
         return dependency
 
     def _build_get_facility_availability(self):
-        async def dependency(session: Session = Depends(self.get_session)) -> FacilityAvailabilityModule:
-            return FacilityAvailabilityModule(facility_repository=SqlAlchemyFacilityRepository(session))
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._facility_factory.build_availability(session)
 
         return dependency
 
     def _build_get_reservation_time_selection(self):
-        async def dependency(session: Session = Depends(self.get_session)) -> ReservationTimeSelectionModule:
-            return ReservationTimeSelectionModule(
-                facility_availability=FacilityAvailabilityModule(
-                    facility_repository=SqlAlchemyFacilityRepository(session),
-                ),
-                booking_settings=BookingSettingsModule(
-                    session=session,
-                    defaults=self._default_booking_settings,
-                ).get_booking_settings(),
-                clock=self._clock,
-            )
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._facility_factory.build_reservation_time_selection(session)
 
         return dependency
 
     def _build_get_organization_unit_management(self):
-        async def dependency(session: Session = Depends(self.get_session)) -> OrganizationUnitManagementModule:
-            return OrganizationUnitManagementModule(
-                organization_unit_repository=SqlAlchemyOrganizationUnitRepository(session)
-            )
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._organization_unit_factory.build_management(session)
 
         return dependency
 
     def _build_get_booking_settings(self):
         async def dependency(session: Session = Depends(self.get_session)):
-            return BookingSettingsModule(session=session, defaults=self._default_booking_settings)
+            return self._booking_settings_factory.build(session)
 
         return dependency
 

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from app.models import Facility
 from app.facility_repository import FacilityRepository
@@ -64,6 +65,15 @@ class FacilityPublicDetail:
     review_summary: FacilityReviewSummary
 
 
+@dataclass(frozen=True)
+class FacilityCalendarEntry:
+    facility_name: str
+    activity_title: str
+    organization_unit: str
+    starts_at: datetime
+    ends_at: datetime
+
+
 def summarize_price(price_rupiah: int) -> str:
     if price_rupiah == 0:
         return "Gratis"
@@ -116,6 +126,32 @@ class FacilityCatalogModule:
             ),
         )
 
+    def list_public_calendar_entries(
+        self,
+        facility_id: str,
+        *,
+        starts_at: datetime,
+        ends_at: datetime,
+    ) -> list[FacilityCalendarEntry]:
+        facility = self._facility_repository.get_active_facility_by_id(facility_id)
+        if facility is None:
+            raise FacilityNotFound
+
+        return [
+            FacilityCalendarEntry(
+                facility_name=reservation.facility.name,
+                activity_title=reservation.activity_title,
+                organization_unit=reservation.organization_unit.name,
+                starts_at=_as_utc(reservation.starts_at),
+                ends_at=_as_utc(reservation.ends_at),
+            )
+            for reservation in self._facility_repository.list_public_calendar_reservations(
+                facility_id,
+                starts_at=starts_at,
+                ends_at=ends_at,
+            )
+        ]
+
     def _catalog_item(self, facility: Facility) -> FacilityCatalogItem:
         cover_image = next((image for image in facility.images if image.is_active and image.is_cover), None)
         return FacilityCatalogItem(
@@ -130,3 +166,9 @@ class FacilityCatalogModule:
             price_summary=summarize_price(facility.price_rupiah),
             open_hours_summary=facility.open_hours_summary,
         )
+
+
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)

@@ -40,6 +40,15 @@ class AccountSession:
     access_token: str
 
 
+@dataclass(frozen=True)
+class UserAccount:
+    id: str
+    email: str
+    full_name: str
+    role: UserRole
+    is_active: bool
+
+
 class UserAccountError(Exception):
     pass
 
@@ -80,7 +89,7 @@ class UserAccountModule:
         self._secret_key = secret_key
         self._allowed_student_email_domains = allowed_student_email_domains
 
-    def register_student(self, registration: StudentRegistration) -> User:
+    def register_student(self, registration: StudentRegistration) -> UserAccount:
         email = self._normalize_email(registration.email)
         if self._email_domain(email) not in self._allowed_student_email_domains:
             raise EmailDomainNotAllowed
@@ -93,9 +102,9 @@ class UserAccountModule:
             nim=registration.nim,
             phone=registration.phone,
         )
-        return self._add_user(user)
+        return self._to_user_account(self._add_user(user))
 
-    def create_admin_managed_user(self, creation: AdminManagedUserCreation) -> User:
+    def create_admin_managed_user(self, creation: AdminManagedUserCreation) -> UserAccount:
         if creation.role == UserRole.student:
             raise StudentMustSelfRegister
 
@@ -106,7 +115,7 @@ class UserAccountModule:
             role=creation.role,
             is_active=creation.is_active,
         )
-        return self._add_user(user)
+        return self._to_user_account(self._add_user(user))
 
     def login(self, credentials: LoginCredentials) -> AccountSession:
         user = self._user_repository.find_by_email(self._normalize_email(credentials.email))
@@ -121,7 +130,7 @@ class UserAccountModule:
         user = self.resolve_active_user(access_token)
         return self._issue_session(user)
 
-    def resolve_active_user(self, access_token: str) -> User:
+    def resolve_active_user(self, access_token: str) -> UserAccount:
         try:
             user_id = decode_access_token(access_token, self._secret_key)
         except InvalidTokenError as exc:
@@ -130,7 +139,7 @@ class UserAccountModule:
         user = self._user_repository.get_by_id(user_id)
         if user is None or not user.is_active:
             raise AccountInactive
-        return user
+        return self._to_user_account(user)
 
     def _add_user(self, user: User) -> User:
         try:
@@ -138,8 +147,17 @@ class UserAccountModule:
         except DuplicateUserEmail as exc:
             raise EmailAlreadyRegistered from exc
 
-    def _issue_session(self, user: User) -> AccountSession:
+    def _issue_session(self, user: User | UserAccount) -> AccountSession:
         return AccountSession(access_token=create_access_token(user.id, self._secret_key))
+
+    def _to_user_account(self, user: User) -> UserAccount:
+        return UserAccount(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            role=user.role,
+            is_active=user.is_active,
+        )
 
     def _normalize_email(self, email: str) -> str:
         return email.lower().strip()

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -49,3 +51,16 @@ class FacilityDetailResponse(BaseModel):
     price: FacilityPriceResponse
     open_hours_summary: str
     review_summary: FacilityReviewSummaryResponse
+
+
+class FacilityCalendarEntryResponse(BaseModel):
+    facility_name: str
+    activity_title: str
+    organization_unit: str
+    starts_at: datetime
+    ends_at: datetime
+
+
+class FacilityAvailabilityResponse(BaseModel):
+    available: bool
+    reasons: list[str]

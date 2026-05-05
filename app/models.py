@@ -1,8 +1,8 @@
 import enum
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -12,6 +12,17 @@ class UserRole(str, enum.Enum):
     student = "student"
     staff = "staff"
     super_admin = "super_admin"
+
+
+class ReservationStatus(str, enum.Enum):
+    pending_document_upload = "pending_document_upload"
+    pending_document_review = "pending_document_review"
+    pending_payment = "pending_payment"
+    approved = "approved"
+    completed = "completed"
+    cancelled = "cancelled"
+    rejected = "rejected"
+    expired = "expired"
 
 
 class User(Base):
@@ -40,6 +51,18 @@ class FacilityCategory(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     facilities: Mapped[list["Facility"]] = relationship(back_populates="category")
+
+
+class OrganizationUnit(Base):
+    __tablename__ = "organization_units"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    type: Mapped[str] = mapped_column(String(64), default="student_organization", nullable=False)
+    code: Mapped[str | None] = mapped_column(String(64))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    reservations: Mapped[list["Reservation"]] = relationship(back_populates="organization_unit")
 
 
 class Facility(Base):
@@ -71,6 +94,16 @@ class Facility(Base):
         cascade="all, delete-orphan",
         order_by="FacilityImage.display_order",
     )
+    open_hours: Mapped[list["FacilityOpenHour"]] = relationship(
+        back_populates="facility",
+        cascade="all, delete-orphan",
+        order_by="FacilityOpenHour.day_of_week",
+    )
+    blackouts: Mapped[list["FacilityBlackout"]] = relationship(
+        back_populates="facility",
+        cascade="all, delete-orphan",
+    )
+    reservations: Mapped[list["Reservation"]] = relationship(back_populates="facility")
 
 
 class FacilityImage(Base):
@@ -85,3 +118,51 @@ class FacilityImage(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     facility: Mapped[Facility] = relationship(back_populates="images")
+
+
+class FacilityOpenHour(Base):
+    __tablename__ = "facility_open_hours"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    facility_id: Mapped[str] = mapped_column(ForeignKey("facilities.id"), nullable=False)
+    day_of_week: Mapped[int] = mapped_column(Integer, nullable=False)
+    opens_at: Mapped[time] = mapped_column(Time, nullable=False)
+    closes_at: Mapped[time] = mapped_column(Time, nullable=False)
+
+    facility: Mapped[Facility] = relationship(back_populates="open_hours")
+
+
+class FacilityBlackout(Base):
+    __tablename__ = "facility_blackouts"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    facility_id: Mapped[str] = mapped_column(ForeignKey("facilities.id"), nullable=False)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    reason: Mapped[str] = mapped_column(String(255), default="Blackout", nullable=False)
+
+    facility: Mapped[Facility] = relationship(back_populates="blackouts")
+
+
+class Reservation(Base):
+    __tablename__ = "reservations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    facility_id: Mapped[str] = mapped_column(ForeignKey("facilities.id"), nullable=False)
+    student_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+    organization_unit_id: Mapped[str] = mapped_column(ForeignKey("organization_units.id"), nullable=False)
+    reservation_code: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
+    activity_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    event_description: Mapped[str] = mapped_column(Text, nullable=False)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[ReservationStatus] = mapped_column(Enum(ReservationStatus), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    facility: Mapped[Facility] = relationship(back_populates="reservations")
+    organization_unit: Mapped[OrganizationUnit] = relationship(back_populates="reservations")
+    student: Mapped[User] = relationship()

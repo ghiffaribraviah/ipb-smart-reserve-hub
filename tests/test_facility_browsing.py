@@ -1,9 +1,13 @@
+from dataclasses import dataclass
+from datetime import datetime, time
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.facility_availability import FacilityAvailabilityModule
 from app.facilities import FacilityCatalogModule
 from app.main import create_app
-from app.models import Facility, FacilityCategory, FacilityImage
+from app.models import Facility, FacilityCategory, FacilityImage, ReservationStatus
 from tests.data_builder import DataBuilder
 
 
@@ -16,6 +20,27 @@ class StubFacilityRepository:
 
     def get_active_facility_by_id(self, facility_id: str) -> Facility | None:
         return next((facility for facility in self._facilities if facility.id == facility_id), None)
+
+
+@dataclass(frozen=True)
+class StubOpenHour:
+    day_of_week: int
+    opens_at: time
+    closes_at: time
+
+
+class StubFacilityAvailabilityRepository:
+    def get_active_facility_by_id(self, facility_id: str):
+        return object() if facility_id == "facility-1" else None
+
+    def list_facility_open_hours(self, facility_id: str) -> list[StubOpenHour]:
+        return [StubOpenHour(day_of_week=0, opens_at=time(8, 0), closes_at=time(16, 0))]
+
+    def list_overlapping_blackouts(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> list:
+        return []
+
+    def list_public_calendar_reservations(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> list:
+        return [object()]
 
 
 def build_facility_record(*, name: str = "Auditorium Andi Hakim Nasoetion", price_rupiah: int = 0) -> Facility:
@@ -57,6 +82,21 @@ def test_facility_catalog_module_projects_public_catalog_items_through_repositor
     assert catalog_items[0].name == "Auditorium Andi Hakim Nasoetion"
     assert catalog_items[0].cover_image_url == "https://cdn.example.test/auditorium-cover.jpg"
     assert catalog_items[0].price_summary == "Gratis"
+
+
+def test_facility_availability_module_concentrates_reservation_time_rules():
+    facility_availability = FacilityAvailabilityModule(
+        facility_repository=StubFacilityAvailabilityRepository()
+    )
+
+    availability = facility_availability.check_availability(
+        "facility-1",
+        starts_at=datetime.fromisoformat("2026-06-01T02:00:00+00:00"),
+        ends_at=datetime.fromisoformat("2026-06-01T04:00:00+00:00"),
+    )
+
+    assert availability.available is False
+    assert availability.reasons == ["reserved_time"]
 
 
 @pytest.mark.anyio
@@ -155,3 +195,141 @@ async def test_paid_facility_detail_shows_price_status_and_summary():
         "amount_rupiah": 250000,
         "summary": "Rp250.000",
     }
+
+
+@pytest.mark.anyio
+async def test_students_view_public_facility_calendar_without_private_reservation_data():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    organization_unit_id = test_data.create_organization_unit(name="BEM KM IPB")
+    test_data.create_reservation(
+        facility_id=facility_id,
+        organization_unit_id=organization_unit_id,
+        activity_title="Seminar Karier",
+        starts_at="2026-06-01T02:00:00+00:00",
+        ends_at="2026-06-01T04:00:00+00:00",
+        status=ReservationStatus.pending_document_upload,
+    )
+    test_data.create_reservation(
+        facility_id=facility_id,
+        organization_unit_id=organization_unit_id,
+        activity_title="Workshop Kewirausahaan",
+        starts_at="2026-06-02T03:00:00+00:00",
+        ends_at="2026-06-02T05:00:00+00:00",
+        status=ReservationStatus.approved,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(
+            f"/facilities/{facility_id}/calendar",
+            params={
+                "start": "2026-06-01T00:00:00+00:00",
+                "end": "2026-06-03T00:00:00+00:00",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "facility_name": "Auditorium Andi Hakim Nasoetion",
+            "activity_title": "Seminar Karier",
+            "organization_unit": "BEM KM IPB",
+            "starts_at": "2026-06-01T02:00:00Z",
+            "ends_at": "2026-06-01T04:00:00Z",
+        },
+        {
+            "facility_name": "Auditorium Andi Hakim Nasoetion",
+            "activity_title": "Workshop Kewirausahaan",
+            "organization_unit": "BEM KM IPB",
+            "starts_at": "2026-06-02T03:00:00Z",
+            "ends_at": "2026-06-02T05:00:00Z",
+        },
+    ]
+
+
+@pytest.mark.anyio
+async def test_students_check_facility_availability_against_open_hours():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="08:00", closes_at="16:00")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        inside_hours = await client.get(
+            f"/facilities/{facility_id}/availability",
+            params={
+                "start": "2026-06-01T02:00:00+00:00",
+                "end": "2026-06-01T04:00:00+00:00",
+            },
+        )
+        outside_hours = await client.get(
+            f"/facilities/{facility_id}/availability",
+            params={
+                "start": "2026-06-01T11:30:00+00:00",
+                "end": "2026-06-01T12:30:00+00:00",
+            },
+        )
+
+    assert inside_hours.status_code == 200
+    assert inside_hours.json() == {"available": True, "reasons": []}
+    assert outside_hours.status_code == 200
+    assert outside_hours.json() == {"available": False, "reasons": ["outside_open_hours"]}
+
+
+@pytest.mark.anyio
+async def test_students_check_facility_availability_against_blackout_periods():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="08:00", closes_at="16:00")
+    test_data.add_facility_blackout(
+        facility_id,
+        starts_at="2026-06-01T02:30:00+00:00",
+        ends_at="2026-06-01T03:30:00+00:00",
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(
+            f"/facilities/{facility_id}/availability",
+            params={
+                "start": "2026-06-01T02:00:00+00:00",
+                "end": "2026-06-01T04:00:00+00:00",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"available": False, "reasons": ["blackout_period"]}
+
+
+@pytest.mark.anyio
+async def test_students_check_facility_availability_against_blocking_reservations():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    organization_unit_id = test_data.create_organization_unit(name="BEM KM IPB")
+    test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="08:00", closes_at="16:00")
+    test_data.create_reservation(
+        facility_id=facility_id,
+        organization_unit_id=organization_unit_id,
+        activity_title="Seminar Karier",
+        starts_at="2026-06-01T02:30:00+00:00",
+        ends_at="2026-06-01T03:30:00+00:00",
+        status=ReservationStatus.approved,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(
+            f"/facilities/{facility_id}/availability",
+            params={
+                "start": "2026-06-01T02:00:00+00:00",
+                "end": "2026-06-01T04:00:00+00:00",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"available": False, "reasons": ["reserved_time"]}

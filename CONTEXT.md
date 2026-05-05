@@ -12,6 +12,8 @@ An Access Policy decides whether an active User account may perform a role-limit
 
 In the MVP, shell access is exact-role access: Student User accounts enter the student shell, Staff User accounts enter the staff shell, and Super Admin User accounts enter the admin shell.
 
+Access Policy callers should ask about named actions, not raw role comparisons, so role rules stay local to the Access Policy Module.
+
 ## Application Settings
 
 Application Settings are the runtime configuration values needed to assemble the app: database URL, token secret, and allowed student email domains.
@@ -53,6 +55,18 @@ It lists active Facilities for comparison and exposes Facility detail with publi
 A Facility Repository is the persistence Seam for Facility records.
 
 It lets Facility browsing and future reservation workflows look up active Facilities without knowing the database Adapter or query Implementation.
+
+## Organization Unit
+
+An Organization Unit is a student organization or campus unit that can be associated with a Facility Reservation.
+
+Active Organization Units are available for student selection. Inactive Organization Units keep their history but should not be offered for new student-facing reservation choices.
+
+## Organization Unit Management
+
+Organization Unit Management is the admin workflow for creating, updating, activating, and deactivating Organization Units.
+
+It owns Organization Unit profile rules, including duplicate-name handling, so HTTP routes and callers do not need to know database constraint details.
 
 ## HTTP Application
 

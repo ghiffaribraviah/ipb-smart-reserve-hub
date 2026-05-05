@@ -3,6 +3,7 @@ from collections.abc import Callable
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 
+from app.access_policy import AccessPolicyAction
 from app.accounts import (
     AccountInactive,
     AccountTokenInvalid,
@@ -13,6 +14,7 @@ from app.accounts import (
     LoginCredentials,
     StudentMustSelfRegister,
     StudentRegistration,
+    UserAccount,
     UserAccountModule,
 )
 from app.account_schemas import (
@@ -22,7 +24,6 @@ from app.account_schemas import (
     TokenResponse,
     UserResponse,
 )
-from app.models import User, UserRole
 
 
 def register_account_routes(
@@ -30,13 +31,13 @@ def register_account_routes(
     *,
     get_bearer_credentials: Callable,
     get_user_accounts: Callable,
-    require_role: Callable[[UserRole], Callable],
+    require_access: Callable[[AccessPolicyAction], Callable],
 ) -> None:
     @app.post("/auth/register", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
     async def register_student(
         payload: StudentRegistrationRequest,
         user_accounts: UserAccountModule = Depends(get_user_accounts),
-    ) -> User:
+    ) -> UserAccount:
         try:
             return user_accounts.register_student(
                 StudentRegistration(
@@ -87,8 +88,8 @@ def register_account_routes(
     async def create_admin_managed_user(
         payload: AdminCreateUserRequest,
         user_accounts: UserAccountModule = Depends(get_user_accounts),
-        _: User = Depends(require_role(UserRole.super_admin)),
-    ) -> User:
+        _: UserAccount = Depends(require_access(AccessPolicyAction.manage_user_accounts)),
+    ) -> UserAccount:
         try:
             return user_accounts.create_admin_managed_user(
                 AdminManagedUserCreation(
@@ -108,13 +109,15 @@ def register_account_routes(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email sudah terdaftar.")
 
     @app.get("/student/shell")
-    async def student_shell(current_user: User = Depends(require_role(UserRole.student))):
+    async def student_shell(
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.enter_student_shell)),
+    ):
         return {"shell": "student", "email": current_user.email}
 
     @app.get("/staff/shell")
-    async def staff_shell(current_user: User = Depends(require_role(UserRole.staff))):
+    async def staff_shell(current_user: UserAccount = Depends(require_access(AccessPolicyAction.enter_staff_shell))):
         return {"shell": "staff", "email": current_user.email}
 
     @app.get("/admin/shell")
-    async def admin_shell(current_user: User = Depends(require_role(UserRole.super_admin))):
+    async def admin_shell(current_user: UserAccount = Depends(require_access(AccessPolicyAction.enter_admin_shell))):
         return {"shell": "admin", "email": current_user.email}

@@ -1,10 +1,45 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.accounts import StudentRegistration, UserAccountModule
 from app.main import create_app
-from app.models import UserRole
+from app.models import User, UserRole
 from app.security import create_access_token
 from tests.data_builder import DataBuilder
+
+
+class StubUserRepository:
+    def add(self, user: User) -> User:
+        user.id = "user-1"
+        return user
+
+    def find_by_email(self, email: str) -> User | None:
+        return None
+
+    def get_by_id(self, user_id: str) -> User | None:
+        return None
+
+
+def test_user_account_module_returns_public_user_account_not_persistence_record():
+    user_accounts = UserAccountModule(
+        user_repository=StubUserRepository(),
+        secret_key="test-secret",
+        allowed_student_email_domains=("apps.ipb.ac.id",),
+    )
+
+    user_account = user_accounts.register_student(
+        StudentRegistration(
+            email="BUDI@apps.ipb.ac.id",
+            password="secret123",
+            full_name="Budi Santoso",
+            nim="G64190001",
+            phone="08123456789",
+        )
+    )
+
+    assert user_account.id == "user-1"
+    assert user_account.email == "budi@apps.ipb.ac.id"
+    assert not hasattr(user_account, "password_hash")
 
 
 @pytest.mark.anyio

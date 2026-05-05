@@ -10,6 +10,8 @@ from app.accounts import (
     UserAccountModule,
 )
 from app.account_routes import register_account_routes
+from app.booking_setting_routes import register_booking_setting_routes
+from app.booking_settings import BookingSettingsModule
 from app.database import Base, build_session_factory
 from app.facility_availability import FacilityAvailabilityModule
 from app.facilities import FacilityCatalogModule
@@ -36,6 +38,7 @@ class HttpRuntimeModule:
         self.get_facility_catalog = self._build_get_facility_catalog()
         self.get_facility_availability = self._build_get_facility_availability()
         self.get_organization_unit_management = self._build_get_organization_unit_management()
+        self.get_booking_settings = self._build_get_booking_settings()
         self.get_current_user = self._build_get_current_user()
 
     @property
@@ -58,10 +61,14 @@ class HttpRuntimeModule:
 
     def _build_get_user_accounts(self):
         async def dependency(session: Session = Depends(self.get_session)) -> UserAccountModule:
+            booking_settings = BookingSettingsModule(
+                session=session,
+                defaults=self._settings.booking_settings,
+            ).get_booking_settings()
             return UserAccountModule(
                 user_repository=SqlAlchemyUserRepository(session),
                 secret_key=self._settings.secret_key,
-                allowed_student_email_domains=self._settings.allowed_student_email_domains,
+                allowed_student_email_domains=booking_settings.allowed_student_email_domains,
             )
 
         return dependency
@@ -83,6 +90,12 @@ class HttpRuntimeModule:
             return OrganizationUnitManagementModule(
                 organization_unit_repository=SqlAlchemyOrganizationUnitRepository(session)
             )
+
+        return dependency
+
+    def _build_get_booking_settings(self):
+        async def dependency(session: Session = Depends(self.get_session)):
+            return BookingSettingsModule(session=session, defaults=self._settings.booking_settings)
 
         return dependency
 
@@ -139,6 +152,11 @@ class HttpApplicationModule:
         register_organization_unit_routes(
             app,
             get_organization_unit_management=runtime.get_organization_unit_management,
+            require_access=runtime.require_access,
+        )
+        register_booking_setting_routes(
+            app,
+            get_booking_settings=runtime.get_booking_settings,
             require_access=runtime.require_access,
         )
 

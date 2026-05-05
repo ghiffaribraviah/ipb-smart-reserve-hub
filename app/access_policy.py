@@ -10,6 +10,7 @@ class AccessPolicyAction(str, enum.Enum):
     enter_admin_shell = "enter_admin_shell"
     manage_user_accounts = "manage_user_accounts"
     manage_organization_units = "manage_organization_units"
+    manage_booking_settings = "manage_booking_settings"
 
 
 class AccessPolicyError(Exception):
@@ -27,6 +28,7 @@ class AccessPolicyModule:
         AccessPolicyAction.enter_admin_shell: UserRole.super_admin,
         AccessPolicyAction.manage_user_accounts: UserRole.super_admin,
         AccessPolicyAction.manage_organization_units: UserRole.super_admin,
+        AccessPolicyAction.manage_booking_settings: UserRole.super_admin,
     }
 
     def require_action(self, user_account: UserAccount, action: AccessPolicyAction) -> UserAccount:

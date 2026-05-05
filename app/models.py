@@ -25,6 +25,13 @@ class ReservationStatus(str, enum.Enum):
     expired = "expired"
 
 
+class SystemSetting(Base):
+    __tablename__ = "system_settings"
+
+    key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    value: Mapped[str] = mapped_column(Text, nullable=False)
+
+
 class User(Base):
     __tablename__ = "users"
 

@@ -10,7 +10,9 @@ from app.repositories.facility_availability_reader import SqlAlchemyFacilityAvai
 from app.repositories.facility_catalog_reader import SqlAlchemyFacilityCatalogReader
 from app.services.facilities import FacilityCatalogModule
 from app.repositories.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
+from app.repositories.reservation_repository import SqlAlchemyReservationRepository
 from app.services.organization_units import OrganizationUnitManagementModule
+from app.services.reservations import ReservationModule
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
 from app.core.settings import SettingsModule
 from app.core.student_email_policy import AllowedStudentEmailDomains
@@ -53,6 +55,12 @@ class FacilityModuleFactory:
                 defaults=self._default_booking_settings,
             ).get_booking_settings(),
             clock=self._clock,
+        )
+
+    def build_reservations(self, session: Session) -> ReservationModule:
+        return ReservationModule(
+            reservation_repository=SqlAlchemyReservationRepository(session),
+            reservation_time_selection=self.build_reservation_time_selection(session),
         )
 
 

@@ -113,7 +113,7 @@ class SqlAlchemyFacilityCatalogReader:
             FacilityCalendarReservationRecord(
                 facility_name=reservation.facility.name,
                 activity_title=reservation.activity_title,
-                organization_unit=reservation.organization_unit.name,
+                organization_unit=reservation.organization_unit_name or reservation.organization_unit.name,
                 starts_at=reservation.starts_at,
                 ends_at=reservation.ends_at,
             )

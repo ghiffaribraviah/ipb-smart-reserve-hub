@@ -13,6 +13,7 @@ class AccessPolicyAction(str, enum.Enum):
     manage_booking_settings = "manage_booking_settings"
     manage_facility_staff_assignments = "manage_facility_staff_assignments"
     manage_assigned_facilities = "manage_assigned_facilities"
+    view_system_status = "view_system_status"
 
 
 class AccessPolicyError(Exception):
@@ -33,6 +34,7 @@ class AccessPolicyModule:
         AccessPolicyAction.manage_booking_settings: UserRole.super_admin,
         AccessPolicyAction.manage_facility_staff_assignments: UserRole.super_admin,
         AccessPolicyAction.manage_assigned_facilities: UserRole.staff,
+        AccessPolicyAction.view_system_status: UserRole.super_admin,
     }
 
     def require_action(self, user_account: UserAccount, action: AccessPolicyAction) -> UserAccount:

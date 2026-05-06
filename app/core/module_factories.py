@@ -16,6 +16,7 @@ from app.repositories.reservation_repository import SqlAlchemyReservationReposit
 from app.services.organization_units import OrganizationUnitManagementModule
 from app.services.reservations import ReservationModule
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
+from app.services.system_status import SystemStatusModule
 from app.core.settings import SettingsModule
 from app.core.student_email_policy import AllowedStudentEmailDomains
 from app.repositories.user_repository import SqlAlchemyUserRepository
@@ -84,3 +85,8 @@ class BookingSettingsModuleFactory:
 
     def build(self, session: Session) -> BookingSettingsModule:
         return BookingSettingsModule(session=session, defaults=self._default_booking_settings)
+
+
+class SystemStatusModuleFactory:
+    def build(self, session: Session) -> SystemStatusModule:
+        return SystemStatusModule(session=session)

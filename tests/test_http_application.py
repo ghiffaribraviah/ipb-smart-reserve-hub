@@ -47,6 +47,7 @@ def test_http_application_module_builds_app_with_foundation_routes():
     assert "/admin/organization-units/{organization_unit_id}" in route_paths
     assert "/admin/organization-units/{organization_unit_id}/activate" in route_paths
     assert "/admin/organization-units/{organization_unit_id}/deactivate" in route_paths
+    assert "/admin/system-status" in route_paths
     assert "/student/shell" in route_paths
     assert "/staff/shell" in route_paths
     assert "/admin/shell" in route_paths

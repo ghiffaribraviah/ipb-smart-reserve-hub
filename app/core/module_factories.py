@@ -8,10 +8,15 @@ from app.services.booking_settings import BookingSettings, BookingSettingsModule
 from app.services.facility_availability import FacilityAvailabilityModule
 from app.repositories.facility_availability_reader import SqlAlchemyFacilityAvailabilityReader
 from app.repositories.facility_catalog_reader import SqlAlchemyFacilityCatalogReader
+from app.repositories.facility_management_repository import SqlAlchemyFacilityManagementRepository
 from app.services.facilities import FacilityCatalogModule
+from app.services.facility_management import FacilityManagementModule
 from app.repositories.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
+from app.repositories.reservation_repository import SqlAlchemyReservationRepository
 from app.services.organization_units import OrganizationUnitManagementModule
+from app.services.reservations import ReservationModule
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
+from app.services.system_status import SystemStatusModule
 from app.core.settings import SettingsModule
 from app.core.student_email_policy import AllowedStudentEmailDomains
 from app.repositories.user_repository import SqlAlchemyUserRepository
@@ -55,6 +60,17 @@ class FacilityModuleFactory:
             clock=self._clock,
         )
 
+    def build_reservations(self, session: Session) -> ReservationModule:
+        return ReservationModule(
+            reservation_repository=SqlAlchemyReservationRepository(session),
+            reservation_time_selection=self.build_reservation_time_selection(session),
+        )
+
+    def build_management(self, session: Session) -> FacilityManagementModule:
+        return FacilityManagementModule(
+            facility_management_repository=SqlAlchemyFacilityManagementRepository(session)
+        )
+
 
 class OrganizationUnitModuleFactory:
     def build_management(self, session: Session) -> OrganizationUnitManagementModule:
@@ -69,3 +85,8 @@ class BookingSettingsModuleFactory:
 
     def build(self, session: Session) -> BookingSettingsModule:
         return BookingSettingsModule(session=session, defaults=self._default_booking_settings)
+
+
+class SystemStatusModuleFactory:
+    def build(self, session: Session) -> SystemStatusModule:
+        return SystemStatusModule(session=session)

@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import UTC, datetime, time
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text, Time
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text, Time, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -85,6 +85,7 @@ class Facility(Base):
     contact_phone: Mapped[str] = mapped_column(String(32), nullable=False)
     contact_email: Mapped[str | None] = mapped_column(String(255))
     price_rupiah: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    payment_instructions: Mapped[str | None] = mapped_column(Text)
     open_hours_summary: Mapped[str] = mapped_column(String(255), nullable=False)
     rating_average: Mapped[float | None] = mapped_column(Float)
     review_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -111,6 +112,22 @@ class Facility(Base):
         cascade="all, delete-orphan",
     )
     reservations: Mapped[list["Reservation"]] = relationship(back_populates="facility")
+    staff_assignments: Mapped[list["FacilityStaffAssignment"]] = relationship(
+        back_populates="facility",
+        cascade="all, delete-orphan",
+    )
+
+
+class FacilityStaffAssignment(Base):
+    __tablename__ = "facility_staff_assignments"
+    __table_args__ = (UniqueConstraint("facility_id", "staff_id", name="uq_facility_staff_assignment"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    facility_id: Mapped[str] = mapped_column(ForeignKey("facilities.id"), nullable=False)
+    staff_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+
+    facility: Mapped[Facility] = relationship(back_populates="staff_assignments")
+    staff: Mapped[User] = relationship()
 
 
 class FacilityImage(Base):
@@ -161,6 +178,10 @@ class Reservation(Base):
     reservation_code: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
     activity_title: Mapped[str] = mapped_column(String(255), nullable=False)
     event_description: Mapped[str] = mapped_column(Text, nullable=False)
+    participant_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    contact_phone: Mapped[str] = mapped_column(String(32), default="", nullable=False)
+    price_rupiah: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    organization_unit_name: Mapped[str] = mapped_column(String(255), default="", nullable=False)
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[ReservationStatus] = mapped_column(Enum(ReservationStatus), nullable=False)

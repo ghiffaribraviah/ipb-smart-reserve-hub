@@ -16,12 +16,16 @@ from app.api.routes.account_routes import register_account_routes
 from app.api.routes.booking_setting_routes import register_booking_setting_routes
 from app.services.booking_settings import BookingSettings
 from app.core.database import Base, build_session_factory
+from app.api.routes.facility_management_routes import register_facility_management_routes
 from app.api.routes.facility_routes import register_facility_routes
 from app.api.routes.organization_unit_routes import register_organization_unit_routes
+from app.api.routes.reservation_routes import register_reservation_routes
+from app.api.routes.system_status_routes import register_system_status_routes
 from app.core.module_factories import (
     BookingSettingsModuleFactory,
     FacilityModuleFactory,
     OrganizationUnitModuleFactory,
+    SystemStatusModuleFactory,
     UserAccountModuleFactory,
 )
 from app.core.settings import SettingsModule
@@ -52,14 +56,18 @@ class HttpRuntimeModule:
         self._booking_settings_factory = BookingSettingsModuleFactory(
             default_booking_settings=self._default_booking_settings
         )
+        self._system_status_factory = SystemStatusModuleFactory()
         self._bearer_scheme = bearer_scheme or HTTPBearer(auto_error=False)
         self.session_factory = build_session_factory(self._settings.database_url)
         self.get_user_accounts = self._build_get_user_accounts()
         self.get_facility_catalog = self._build_get_facility_catalog()
         self.get_facility_availability = self._build_get_facility_availability()
         self.get_reservation_time_selection = self._build_get_reservation_time_selection()
+        self.get_reservations = self._build_get_reservations()
+        self.get_facility_management = self._build_get_facility_management()
         self.get_organization_unit_management = self._build_get_organization_unit_management()
         self.get_booking_settings = self._build_get_booking_settings()
+        self.get_system_status = self._build_get_system_status()
         self.get_current_user = self._build_get_current_user()
 
     @property
@@ -104,6 +112,18 @@ class HttpRuntimeModule:
 
         return dependency
 
+    def _build_get_reservations(self):
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._facility_factory.build_reservations(session)
+
+        return dependency
+
+    def _build_get_facility_management(self):
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._facility_factory.build_management(session)
+
+        return dependency
+
     def _build_get_organization_unit_management(self):
         async def dependency(session: Session = Depends(self.get_session)):
             return self._organization_unit_factory.build_management(session)
@@ -113,6 +133,12 @@ class HttpRuntimeModule:
     def _build_get_booking_settings(self):
         async def dependency(session: Session = Depends(self.get_session)):
             return self._booking_settings_factory.build(session)
+
+        return dependency
+
+    def _build_get_system_status(self):
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._system_status_factory.build(session)
 
         return dependency
 
@@ -168,6 +194,16 @@ class HttpApplicationModule:
             get_facility_availability=runtime.get_facility_availability,
             get_reservation_time_selection=runtime.get_reservation_time_selection,
         )
+        register_reservation_routes(
+            app,
+            get_reservations=runtime.get_reservations,
+            require_access=runtime.require_access,
+        )
+        register_facility_management_routes(
+            app,
+            get_facility_management=runtime.get_facility_management,
+            require_access=runtime.require_access,
+        )
         register_organization_unit_routes(
             app,
             get_organization_unit_management=runtime.get_organization_unit_management,
@@ -176,6 +212,11 @@ class HttpApplicationModule:
         register_booking_setting_routes(
             app,
             get_booking_settings=runtime.get_booking_settings,
+            require_access=runtime.require_access,
+        )
+        register_system_status_routes(
+            app,
+            get_system_status=runtime.get_system_status,
             require_access=runtime.require_access,
         )
 

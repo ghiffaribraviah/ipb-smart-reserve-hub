@@ -1,7 +1,12 @@
 from dataclasses import dataclass
 
-from app.models import OrganizationUnit
-from app.repositories.organization_unit_repository import DuplicateOrganizationUnitName, OrganizationUnitRepository
+from app.repositories.organization_unit_repository import (
+    DuplicateOrganizationUnitName,
+    NewOrganizationUnitRecord,
+    OrganizationUnitProfileUpdateRecord,
+    OrganizationUnitRecord,
+    OrganizationUnitRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -43,7 +48,7 @@ class OrganizationUnitManagementModule:
         try:
             return self._to_profile(
                 self._organization_unit_repository.add(
-                    OrganizationUnit(
+                    NewOrganizationUnitRecord(
                         name=creation.name,
                         type=creation.type,
                         code=creation.code,
@@ -65,14 +70,17 @@ class OrganizationUnitManagementModule:
         organization_unit_id: str,
         update: OrganizationUnitUpdate,
     ) -> OrganizationUnitProfile:
-        organization_unit = self._organization_unit_repository.get_by_id(organization_unit_id)
-        if organization_unit is None:
+        updated_organization_unit = self._organization_unit_repository.update_profile(
+            organization_unit_id,
+            OrganizationUnitProfileUpdateRecord(
+                name=update.name,
+                type=update.type,
+                code=update.code,
+            ),
+        )
+        if updated_organization_unit is None:
             raise OrganizationUnitNotFound
-
-        organization_unit.name = update.name
-        organization_unit.type = update.type
-        organization_unit.code = update.code
-        return self._to_profile(organization_unit)
+        return self._to_profile(updated_organization_unit)
 
     def set_organization_unit_active_status(
         self,
@@ -80,14 +88,15 @@ class OrganizationUnitManagementModule:
         *,
         is_active: bool,
     ) -> OrganizationUnitProfile:
-        organization_unit = self._organization_unit_repository.get_by_id(organization_unit_id)
-        if organization_unit is None:
+        updated_organization_unit = self._organization_unit_repository.set_active_status(
+            organization_unit_id,
+            is_active=is_active,
+        )
+        if updated_organization_unit is None:
             raise OrganizationUnitNotFound
+        return self._to_profile(updated_organization_unit)
 
-        organization_unit.is_active = is_active
-        return self._to_profile(organization_unit)
-
-    def _to_profile(self, organization_unit: OrganizationUnit) -> OrganizationUnitProfile:
+    def _to_profile(self, organization_unit: OrganizationUnitRecord) -> OrganizationUnitProfile:
         return OrganizationUnitProfile(
             id=organization_unit.id,
             name=organization_unit.name,

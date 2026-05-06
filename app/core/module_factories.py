@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.pdf import ApprovalLetterPdfGenerator
 from app.services.approval_letters import ApprovalLetterModule
 from app.services.accounts import UserAccountModule
+from app.repositories.booking_settings_repository import SqlAlchemyBookingSettingsRepository
 from app.services.booking_settings import BookingSettings, BookingSettingsModule
 from app.services.facility_availability import FacilityAvailabilityModule
 from app.repositories.facility_availability_reader import SqlAlchemyFacilityAvailabilityReader
@@ -16,7 +17,7 @@ from app.services.facility_management import FacilityManagementModule
 from app.repositories.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
 from app.repositories.reservation_repository import SqlAlchemyReservationRepository
 from app.services.organization_units import OrganizationUnitManagementModule
-from app.services.reservations import ReservationModule
+from app.services.reservations import ReservationModule, ReservationSubmissionConflictGuard
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
 from app.services.system_status import SystemStatusModule
 from app.storage import PrivateStorage
@@ -32,7 +33,7 @@ class UserAccountModuleFactory:
 
     def build(self, session: Session) -> UserAccountModule:
         booking_settings = BookingSettingsModule(
-            session=session,
+            booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
             defaults=self._default_booking_settings,
         ).get_booking_settings()
         return UserAccountModule(
@@ -65,16 +66,18 @@ class FacilityModuleFactory:
         return ReservationTimeSelectionModule(
             facility_availability=self.build_availability(session),
             booking_settings=BookingSettingsModule(
-                session=session,
+                booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
                 defaults=self._default_booking_settings,
             ).get_booking_settings(),
             clock=self._clock,
         )
 
     def build_reservations(self, session: Session) -> ReservationModule:
+        reservation_repository = SqlAlchemyReservationRepository(session)
         return ReservationModule(
-            reservation_repository=SqlAlchemyReservationRepository(session),
+            reservation_repository=reservation_repository,
             reservation_time_selection=self.build_reservation_time_selection(session),
+            submission_conflict_guard=ReservationSubmissionConflictGuard(conflict_reader=reservation_repository),
         )
 
     def build_approval_letters(self, session: Session) -> ApprovalLetterModule:
@@ -103,7 +106,10 @@ class BookingSettingsModuleFactory:
         self._default_booking_settings = default_booking_settings
 
     def build(self, session: Session) -> BookingSettingsModule:
-        return BookingSettingsModule(session=session, defaults=self._default_booking_settings)
+        return BookingSettingsModule(
+            booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
+            defaults=self._default_booking_settings,
+        )
 
 
 class SystemStatusModuleFactory:

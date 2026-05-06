@@ -2,10 +2,67 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.schemas.booking_setting_schemas import BookingSettingsResponse, BookingSettingsUpdateRequest
-from app.services.booking_settings import BookingSettings
+from app.services.booking_settings import BookingSettings, BookingSettingsModule
 from app.main import create_app
 from app.models import SystemSetting, UserRole
 from tests.data_builder import DataBuilder
+
+
+class InMemoryBookingSettingsRepository:
+    def __init__(self, stored_values: dict | None = None) -> None:
+        self.stored_values = stored_values or {}
+        self.saved_values: dict | None = None
+
+    def load_booking_setting_values(self, setting_keys: set[str]) -> dict:
+        return {key: value for key, value in self.stored_values.items() if key in setting_keys}
+
+    def save_booking_setting_values(self, values: dict) -> None:
+        self.saved_values = values
+        self.stored_values.update(values)
+
+
+def test_booking_settings_module_uses_repository_seam_for_stored_values():
+    repository = InMemoryBookingSettingsRepository(
+        {
+            "min_booking_lead_hours": 48,
+            "allowed_student_email_domains": ("student.ipb.ac.id",),
+            "maintenance_banner": "Jaringan kampus dalam pemeliharaan",
+        }
+    )
+    booking_settings = BookingSettingsModule(
+        booking_settings_repository=repository,
+        defaults=BookingSettings.defaults(),
+    )
+
+    current_settings = booking_settings.get_booking_settings()
+    updated_settings = booking_settings.update_booking_settings(
+        BookingSettings(
+            min_booking_lead_hours=72,
+            max_booking_advance_hours=720,
+            document_upload_due_hours=24,
+            document_verification_due_hours=12,
+            payment_upload_due_hours=6,
+            payment_verification_due_hours=6,
+            final_approval_cutoff_hours=72,
+            overdue_final_approval_cutoff_hours=48,
+            allowed_student_email_domains=(" STUDENT.IPB.AC.ID ",),
+        )
+    )
+
+    assert current_settings.min_booking_lead_hours == 48
+    assert current_settings.allowed_student_email_domains == ("student.ipb.ac.id",)
+    assert updated_settings.min_booking_lead_hours == 72
+    assert repository.saved_values == {
+        "min_booking_lead_hours": 72,
+        "max_booking_advance_hours": 720,
+        "document_upload_due_hours": 24,
+        "document_verification_due_hours": 12,
+        "payment_upload_due_hours": 6,
+        "payment_verification_due_hours": 6,
+        "final_approval_cutoff_hours": 72,
+        "overdue_final_approval_cutoff_hours": 48,
+        "allowed_student_email_domains": ("student.ipb.ac.id",),
+    }
 
 
 @pytest.mark.anyio

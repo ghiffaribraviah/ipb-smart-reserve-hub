@@ -1,5 +1,7 @@
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Protocol
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -30,6 +32,79 @@ from app.core.module_factories import (
 )
 from app.core.settings import SettingsModule
 from app.storage import InMemoryPrivateStorage
+
+
+@dataclass(frozen=True)
+class AccountRouteDependencies:
+    get_bearer_credentials: Callable
+    get_user_accounts: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class FacilityRouteDependencies:
+    get_facility_catalog: Callable
+    get_facility_availability: Callable
+    get_reservation_time_selection: Callable
+
+
+@dataclass(frozen=True)
+class ReservationRouteDependencies:
+    get_reservations: Callable
+    get_approval_letters: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class FacilityManagementRouteDependencies:
+    get_facility_management: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class OrganizationUnitRouteDependencies:
+    get_organization_unit_management: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class BookingSettingRouteDependencies:
+    get_booking_settings: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class SystemStatusRouteDependencies:
+    get_system_status: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+class HttpRuntimeDependencyRegistry(Protocol):
+    session_factory: Callable
+
+    def create_schema(self) -> None:
+        raise NotImplementedError
+
+    def account_routes(self) -> AccountRouteDependencies:
+        raise NotImplementedError
+
+    def facility_routes(self) -> FacilityRouteDependencies:
+        raise NotImplementedError
+
+    def reservation_routes(self) -> ReservationRouteDependencies:
+        raise NotImplementedError
+
+    def facility_management_routes(self) -> FacilityManagementRouteDependencies:
+        raise NotImplementedError
+
+    def organization_unit_routes(self) -> OrganizationUnitRouteDependencies:
+        raise NotImplementedError
+
+    def booking_setting_routes(self) -> BookingSettingRouteDependencies:
+        raise NotImplementedError
+
+    def system_status_routes(self) -> SystemStatusRouteDependencies:
+        raise NotImplementedError
 
 
 class HttpRuntimeModule:
@@ -77,6 +152,54 @@ class HttpRuntimeModule:
     @property
     def bearer_scheme(self) -> HTTPBearer:
         return self._bearer_scheme
+
+    def create_schema(self) -> None:
+        Base.metadata.create_all(bind=self.session_factory.kw["bind"])
+
+    def account_routes(self) -> AccountRouteDependencies:
+        return AccountRouteDependencies(
+            get_bearer_credentials=self.bearer_scheme,
+            get_user_accounts=self.get_user_accounts,
+            require_access=self.require_access,
+        )
+
+    def facility_routes(self) -> FacilityRouteDependencies:
+        return FacilityRouteDependencies(
+            get_facility_catalog=self.get_facility_catalog,
+            get_facility_availability=self.get_facility_availability,
+            get_reservation_time_selection=self.get_reservation_time_selection,
+        )
+
+    def reservation_routes(self) -> ReservationRouteDependencies:
+        return ReservationRouteDependencies(
+            get_reservations=self.get_reservations,
+            get_approval_letters=self.get_approval_letters,
+            require_access=self.require_access,
+        )
+
+    def facility_management_routes(self) -> FacilityManagementRouteDependencies:
+        return FacilityManagementRouteDependencies(
+            get_facility_management=self.get_facility_management,
+            require_access=self.require_access,
+        )
+
+    def organization_unit_routes(self) -> OrganizationUnitRouteDependencies:
+        return OrganizationUnitRouteDependencies(
+            get_organization_unit_management=self.get_organization_unit_management,
+            require_access=self.require_access,
+        )
+
+    def booking_setting_routes(self) -> BookingSettingRouteDependencies:
+        return BookingSettingRouteDependencies(
+            get_booking_settings=self.get_booking_settings,
+            require_access=self.require_access,
+        )
+
+    def system_status_routes(self) -> SystemStatusRouteDependencies:
+        return SystemStatusRouteDependencies(
+            get_system_status=self.get_system_status,
+            require_access=self.require_access,
+        )
 
     async def get_session(self):
         session = self.session_factory()
@@ -184,51 +307,65 @@ class HttpRuntimeModule:
 
 
 class HttpApplicationModule:
-    def __init__(self, *, settings: SettingsModule, clock: Callable[[], datetime] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        settings: SettingsModule,
+        clock: Callable[[], datetime] | None = None,
+        runtime_dependency_registry: HttpRuntimeDependencyRegistry | None = None,
+    ) -> None:
         self._settings = settings
         self._clock = clock
+        self._runtime_dependency_registry = runtime_dependency_registry
 
     def build(self) -> FastAPI:
         app = FastAPI(title="IPB Smart Reserve Hub")
-        runtime = HttpRuntimeModule(settings=self._settings, clock=self._clock)
-        Base.metadata.create_all(bind=runtime.session_factory.kw["bind"])
+        runtime = self._runtime_dependency_registry or HttpRuntimeModule(settings=self._settings, clock=self._clock)
+        runtime.create_schema()
+        account_dependencies = runtime.account_routes()
         register_account_routes(
             app,
-            get_bearer_credentials=runtime.bearer_scheme,
-            get_user_accounts=runtime.get_user_accounts,
-            require_access=runtime.require_access,
+            get_bearer_credentials=account_dependencies.get_bearer_credentials,
+            get_user_accounts=account_dependencies.get_user_accounts,
+            require_access=account_dependencies.require_access,
         )
+        facility_dependencies = runtime.facility_routes()
         register_facility_routes(
             app,
-            get_facility_catalog=runtime.get_facility_catalog,
-            get_facility_availability=runtime.get_facility_availability,
-            get_reservation_time_selection=runtime.get_reservation_time_selection,
+            get_facility_catalog=facility_dependencies.get_facility_catalog,
+            get_facility_availability=facility_dependencies.get_facility_availability,
+            get_reservation_time_selection=facility_dependencies.get_reservation_time_selection,
         )
+        reservation_dependencies = runtime.reservation_routes()
         register_reservation_routes(
             app,
-            get_reservations=runtime.get_reservations,
-            get_approval_letters=runtime.get_approval_letters,
-            require_access=runtime.require_access,
+            get_reservations=reservation_dependencies.get_reservations,
+            get_approval_letters=reservation_dependencies.get_approval_letters,
+            require_access=reservation_dependencies.require_access,
         )
+        facility_management_dependencies = runtime.facility_management_routes()
         register_facility_management_routes(
             app,
-            get_facility_management=runtime.get_facility_management,
-            require_access=runtime.require_access,
+            get_facility_management=facility_management_dependencies.get_facility_management,
+            require_access=facility_management_dependencies.require_access,
         )
+        organization_unit_dependencies = runtime.organization_unit_routes()
         register_organization_unit_routes(
             app,
-            get_organization_unit_management=runtime.get_organization_unit_management,
-            require_access=runtime.require_access,
+            get_organization_unit_management=organization_unit_dependencies.get_organization_unit_management,
+            require_access=organization_unit_dependencies.require_access,
         )
+        booking_setting_dependencies = runtime.booking_setting_routes()
         register_booking_setting_routes(
             app,
-            get_booking_settings=runtime.get_booking_settings,
-            require_access=runtime.require_access,
+            get_booking_settings=booking_setting_dependencies.get_booking_settings,
+            require_access=booking_setting_dependencies.require_access,
         )
+        system_status_dependencies = runtime.system_status_routes()
         register_system_status_routes(
             app,
-            get_system_status=runtime.get_system_status,
-            require_access=runtime.require_access,
+            get_system_status=system_status_dependencies.get_system_status,
+            require_access=system_status_dependencies.require_access,
         )
 
         app.state.session_factory = runtime.session_factory

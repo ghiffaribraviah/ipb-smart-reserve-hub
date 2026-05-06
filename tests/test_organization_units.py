@@ -3,7 +3,11 @@ from httpx import ASGITransport, AsyncClient
 
 from app.main import create_app
 from app.models import OrganizationUnit, UserRole
-from app.repositories.organization_unit_repository import DuplicateOrganizationUnitName
+from app.repositories.organization_unit_repository import (
+    DuplicateOrganizationUnitName,
+    NewOrganizationUnitRecord,
+    OrganizationUnitRecord,
+)
 from app.services.organization_units import OrganizationUnitCreation, OrganizationUnitManagementModule
 from app.services.organization_units import OrganizationUnitNameAlreadyExists
 from tests.data_builder import DataBuilder
@@ -13,16 +17,21 @@ class StubOrganizationUnitRepository:
     def __init__(self, *, duplicate_name: bool = False) -> None:
         self._duplicate_name = duplicate_name
 
-    def add(self, organization_unit: OrganizationUnit) -> OrganizationUnit:
+    def add(self, organization_unit: NewOrganizationUnitRecord) -> OrganizationUnitRecord:
         if self._duplicate_name:
             raise DuplicateOrganizationUnitName
-        organization_unit.id = "organization-unit-1"
-        return organization_unit
+        return OrganizationUnitRecord(
+            id="organization-unit-1",
+            name=organization_unit.name,
+            type=organization_unit.type,
+            code=organization_unit.code,
+            is_active=organization_unit.is_active,
+        )
 
-    def get_by_id(self, organization_unit_id: str) -> OrganizationUnit | None:
+    def get_by_id(self, organization_unit_id: str) -> OrganizationUnitRecord | None:
         return None
 
-    def list_active(self) -> list[OrganizationUnit]:
+    def list_active(self) -> list[OrganizationUnitRecord]:
         return []
 
 

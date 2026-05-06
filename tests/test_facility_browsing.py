@@ -5,6 +5,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.services.facility_availability import FacilityAvailabilityModule
+from app.repositories.facility_availability_reader import FacilityAvailabilityFacts, FacilityOpenHourRecord
 from app.repositories.facility_catalog_reader import FacilityCatalogImageRecord, FacilityCatalogRecord
 from app.services.facilities import FacilityCatalogModule
 from app.main import create_app
@@ -26,32 +27,21 @@ class StubFacilityCatalogReader:
         return []
 
 
-@dataclass(frozen=True)
-class StubOpenHour:
-    day_of_week: int
-    opens_at: time
-    closes_at: time
-
-
 class StubFacilityAvailabilityRepository:
-    def active_facility_exists(self, facility_id: str) -> bool:
-        return facility_id == "facility-1"
-
-    def list_facility_open_hours(self, facility_id: str) -> list[StubOpenHour]:
-        return [StubOpenHour(day_of_week=0, opens_at=time(8, 0), closes_at=time(16, 0))]
-
-    def has_overlapping_blackout(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> bool:
-        return False
-
-    def has_overlapping_reservation(
+    def load_availability_facts(
         self,
         facility_id: str,
         *,
         starts_at: datetime,
         ends_at: datetime,
-        statuses: tuple,
-    ) -> bool:
-        return True
+        blocking_statuses: tuple,
+    ):
+        return FacilityAvailabilityFacts(
+            active_facility_exists=facility_id == "facility-1",
+            open_hours=[FacilityOpenHourRecord(day_of_week=0, opens_at=time(8, 0), closes_at=time(16, 0))],
+            has_overlapping_blackout=False,
+            has_overlapping_reservation=True,
+        )
 
 
 def build_facility_record(*, name: str = "Auditorium Andi Hakim Nasoetion", price_rupiah: int = 0) -> Facility:

@@ -1,15 +1,10 @@
-import json
 from dataclasses import asdict, dataclass, fields
-from typing import Any
 
-from sqlalchemy.orm import Session
-
-from app.models import SystemSetting
 from app.core.student_email_policy import (
     DEFAULT_ALLOWED_STUDENT_EMAIL_DOMAINS,
     normalize_allowed_student_email_domains,
 )
-
+from app.repositories.booking_settings_repository import BookingSettingsRepository
 
 
 class BookingSettingsError(Exception):
@@ -77,37 +72,14 @@ class BookingSettings:
 
 
 class BookingSettingsModule:
-    def __init__(self, *, session: Session, defaults: BookingSettings) -> None:
-        self._session = session
+    def __init__(self, *, booking_settings_repository: BookingSettingsRepository, defaults: BookingSettings) -> None:
+        self._booking_settings_repository = booking_settings_repository
         self._defaults = defaults
 
     def get_booking_settings(self) -> BookingSettings:
-        setting_keys = BookingSettings.setting_keys()
-        stored_values = {
-            setting.key: self._decode(setting.value)
-            for setting in self._session.query(SystemSetting).all()
-            if setting.key in setting_keys
-        }
+        stored_values = self._booking_settings_repository.load_booking_setting_values(BookingSettings.setting_keys())
         return BookingSettings(**(asdict(self._defaults) | stored_values))
 
     def update_booking_settings(self, booking_settings: BookingSettings) -> BookingSettings:
-        for key, value in asdict(booking_settings).items():
-            setting = self._session.get(SystemSetting, key)
-            if setting is None:
-                setting = SystemSetting(key=key, value=self._encode(value))
-                self._session.add(setting)
-            else:
-                setting.value = self._encode(value)
-        self._session.flush()
+        self._booking_settings_repository.save_booking_setting_values(asdict(booking_settings))
         return self.get_booking_settings()
-
-    @staticmethod
-    def _encode(value: Any) -> str:
-        return json.dumps(value)
-
-    @staticmethod
-    def _decode(value: str) -> Any:
-        decoded = json.loads(value)
-        if isinstance(decoded, list):
-            return tuple(decoded)
-        return decoded

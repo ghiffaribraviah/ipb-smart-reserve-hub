@@ -20,6 +20,18 @@ Application Settings are the runtime configuration values needed to assemble the
 
 Application Settings may come from defaults, tests, or deployment environment variables, but callers should not need to know those environment variable names.
 
+## Booking Settings
+
+Booking Settings are admin-managed reservation policy values, including booking windows, document and payment due hours, final approval cutoffs, and allowed student email domains.
+
+Booking Settings own value validation and normalization so callers can use one settings record without knowing storage encoding or default-merging rules.
+
+## Booking Settings Repository
+
+A Booking Settings Repository is the persistence Seam for stored Booking Settings values.
+
+It lets Booking Settings load and save recognized settings values without knowing the System Setting database Adapter, JSON encoding, or unrelated setting rows.
+
 ## User Repository
 
 A User Repository is the persistence Seam for User account records.
@@ -60,7 +72,7 @@ It gives the Facility Catalog public Facility records and public calendar reserv
 
 A Facility Availability Reader is the read Seam for Facility availability facts.
 
-It lets availability workflows check active Facility existence, open hours, blackout periods, and overlapping reservation facts without knowing the database Adapter or query Implementation.
+It loads the Facility availability facts for a candidate reservation time in one read so availability workflows do not need to choreograph database Adapter queries or know the query Implementation.
 
 ## Facility Availability
 
@@ -74,11 +86,23 @@ Reservation Time Selection is the student-facing validation Module for a candida
 
 It combines local time rules, booking window rules, and Facility Availability into one result so callers do not need to know validation ordering or reason-message mapping.
 
+## Reservation Submission Conflict Guard
+
+A Reservation Submission Conflict Guard is the write-path Module that protects Reservation submission from creating a Facility Reservation that overlaps an existing blocking Reservation.
+
+Reservation Time Selection can tell students whether a candidate time appears acceptable before submission, but Reservation submission must still ask the Reservation Submission Conflict Guard before holding the Facility time.
+
 ## Organization Unit
 
 An Organization Unit is a student organization or campus unit that can be associated with a Facility Reservation.
 
 Active Organization Units are available for student selection. Inactive Organization Units keep their history but should not be offered for new student-facing reservation choices.
+
+## Organization Unit Repository
+
+An Organization Unit Repository is the persistence Seam for Organization Unit records.
+
+It lets Organization Unit Management create, update, activate, deactivate, and list Organization Units without knowing the database Adapter, ORM record shape, or mutation Implementation.
 
 ## Organization Unit Management
 
@@ -91,3 +115,9 @@ It owns Organization Unit profile rules, including duplicate-name handling, so H
 The HTTP Application is the runtime shell that adapts HTTP requests to User account workflows and Access Policy checks.
 
 It owns FastAPI route registration and dependency assembly, but it should not own account, policy, settings, or persistence rules.
+
+## Runtime Dependency Registry
+
+A Runtime Dependency Registry is the HTTP Application assembly Module that provides grouped route dependencies and owns database schema creation.
+
+It lets the HTTP Application register routes without knowing every workflow factory, storage Adapter, session dependency, or authentication dependency Implementation.

@@ -4,8 +4,80 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.main import create_app
-from app.models import ReservationStatus
+from app.models import Reservation, ReservationStatus, UserRole
+from app.repositories.reservation_repository import ReservationFacilityRecord, ReservationOrganizationUnitRecord
+from app.services.accounts import UserAccount
+from app.services.reservation_time_selection import ReservationTimeSelection
+from app.services.reservations import (
+    ReservationModule,
+    ReservationSubmission,
+    ReservationSubmissionConflict,
+    ReservationTimeUnavailable,
+)
 from tests.data_builder import DataBuilder
+
+
+class AvailableTimeSelection:
+    def validate_time_selection(self, facility_id: str, *, starts_at: datetime, ends_at: datetime):
+        return ReservationTimeSelection(available=True, errors=[])
+
+
+class RejectingSubmissionConflictGuard:
+    def ensure_reservation_can_be_held(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> None:
+        raise ReservationSubmissionConflict
+
+
+class StubReservationRepository:
+    def __init__(self) -> None:
+        self.added_reservations: list[Reservation] = []
+
+    def get_active_facility(self, facility_id: str) -> ReservationFacilityRecord | None:
+        return ReservationFacilityRecord(id=facility_id, name="Auditorium Andi Hakim Nasoetion", price_rupiah=0)
+
+    def get_active_organization_unit(self, organization_unit_id: str) -> ReservationOrganizationUnitRecord | None:
+        return ReservationOrganizationUnitRecord(id=organization_unit_id, name="BEM KM IPB")
+
+    def add(self, reservation: Reservation) -> Reservation:
+        self.added_reservations.append(reservation)
+        return reservation
+
+    def list_for_student(self, student_id: str) -> list[Reservation]:
+        return []
+
+    def get_for_student(self, reservation_id: str, student_id: str) -> Reservation | None:
+        return None
+
+
+def test_reservation_submission_rejects_commit_time_conflict_after_available_time_selection():
+    reservation_repository = StubReservationRepository()
+    reservations = ReservationModule(
+        reservation_repository=reservation_repository,
+        reservation_time_selection=AvailableTimeSelection(),
+        submission_conflict_guard=RejectingSubmissionConflictGuard(),
+    )
+
+    with pytest.raises(ReservationTimeUnavailable):
+        reservations.submit_reservation(
+            UserAccount(
+                id="student-1",
+                email="budi@apps.ipb.ac.id",
+                full_name="Budi Santoso",
+                role=UserRole.student,
+                is_active=True,
+            ),
+            ReservationSubmission(
+                facility_id="facility-1",
+                activity_title="Seminar Karier",
+                event_description="Seminar persiapan karier untuk mahasiswa tingkat akhir.",
+                participant_count=80,
+                organization_unit_id="organization-unit-1",
+                contact_phone="08123456789",
+                starts_at=datetime(2026, 6, 1, 2, tzinfo=UTC),
+                ends_at=datetime(2026, 6, 1, 4, tzinfo=UTC),
+            ),
+        )
+
+    assert reservation_repository.added_reservations == []
 
 
 @pytest.mark.anyio

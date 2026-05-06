@@ -36,29 +36,26 @@ class FacilityAvailabilityModule:
         starts_at: datetime,
         ends_at: datetime,
     ) -> FacilityAvailability:
-        if not self._facility_availability_reader.active_facility_exists(facility_id):
+        facts = self._facility_availability_reader.load_availability_facts(
+            facility_id,
+            starts_at=starts_at,
+            ends_at=ends_at,
+            blocking_statuses=BLOCKING_RESERVATION_STATUSES,
+        )
+        if not facts.active_facility_exists:
             raise FacilityNotFound
 
         reasons: list[str] = []
-        if not self._is_within_open_hours(facility_id, starts_at=starts_at, ends_at=ends_at):
+        if not self._is_within_open_hours(facts.open_hours, starts_at=starts_at, ends_at=ends_at):
             reasons.append("outside_open_hours")
-        if self._facility_availability_reader.has_overlapping_blackout(
-            facility_id,
-            starts_at=starts_at,
-            ends_at=ends_at,
-        ):
+        if facts.has_overlapping_blackout:
             reasons.append("blackout_period")
-        if self._facility_availability_reader.has_overlapping_reservation(
-            facility_id,
-            starts_at=starts_at,
-            ends_at=ends_at,
-            statuses=BLOCKING_RESERVATION_STATUSES,
-        ):
+        if facts.has_overlapping_reservation:
             reasons.append("reserved_time")
 
         return FacilityAvailability(available=not reasons, reasons=reasons)
 
-    def _is_within_open_hours(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> bool:
+    def _is_within_open_hours(self, open_hours: list, *, starts_at: datetime, ends_at: datetime) -> bool:
         local_start = _as_utc(starts_at).astimezone(BUSINESS_TIMEZONE)
         local_end = _as_utc(ends_at).astimezone(BUSINESS_TIMEZONE)
         if local_start.date() != local_end.date():
@@ -68,7 +65,7 @@ class FacilityAvailabilityModule:
             open_hour.day_of_week == local_start.weekday()
             and open_hour.opens_at <= local_start.time()
             and local_end.time() <= open_hour.closes_at
-            for open_hour in self._facility_availability_reader.list_facility_open_hours(facility_id)
+            for open_hour in open_hours
         )
 
 

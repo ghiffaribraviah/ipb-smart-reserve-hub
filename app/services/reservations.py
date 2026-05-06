@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Protocol
 import uuid
 
 from app.models import Reservation, ReservationStatus
@@ -24,8 +25,36 @@ class ReservationTimeUnavailable(ReservationError):
     pass
 
 
+class ReservationSubmissionConflict(ReservationError):
+    pass
+
+
 class ReservationNotFound(ReservationError):
     pass
+
+
+class ReservationSubmissionConflictReader(Protocol):
+    def has_overlapping_blocking_reservation(
+        self,
+        facility_id: str,
+        *,
+        starts_at: datetime,
+        ends_at: datetime,
+    ) -> bool:
+        raise NotImplementedError
+
+
+class ReservationSubmissionConflictGuard:
+    def __init__(self, *, conflict_reader: ReservationSubmissionConflictReader) -> None:
+        self._conflict_reader = conflict_reader
+
+    def ensure_reservation_can_be_held(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> None:
+        if self._conflict_reader.has_overlapping_blocking_reservation(
+            facility_id,
+            starts_at=starts_at,
+            ends_at=ends_at,
+        ):
+            raise ReservationSubmissionConflict
 
 
 @dataclass(frozen=True)
@@ -74,9 +103,11 @@ class ReservationModule:
         *,
         reservation_repository: ReservationRepository,
         reservation_time_selection: ReservationTimeSelectionModule,
+        submission_conflict_guard: ReservationSubmissionConflictGuard,
     ) -> None:
         self._reservation_repository = reservation_repository
         self._reservation_time_selection = reservation_time_selection
+        self._submission_conflict_guard = submission_conflict_guard
 
     def submit_reservation(self, student: UserAccount, submission: ReservationSubmission) -> StudentReservation:
         facility = self._reservation_repository.get_active_facility(submission.facility_id)
@@ -99,11 +130,13 @@ class ReservationModule:
 
         starts_at = _as_utc(submission.starts_at)
         ends_at = _as_utc(submission.ends_at)
-        if self._reservation_repository.has_overlapping_blocking_reservation(
-            submission.facility_id,
-            starts_at=starts_at,
-            ends_at=ends_at,
-        ):
+        try:
+            self._submission_conflict_guard.ensure_reservation_can_be_held(
+                submission.facility_id,
+                starts_at=starts_at,
+                ends_at=ends_at,
+            )
+        except ReservationSubmissionConflict:
             raise ReservationTimeUnavailable
 
         reservation = Reservation(

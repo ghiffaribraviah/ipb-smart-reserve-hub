@@ -15,24 +15,23 @@ class FacilityOpenHourRecord:
     closes_at: time
 
 
+@dataclass(frozen=True)
+class FacilityAvailabilityFacts:
+    active_facility_exists: bool
+    open_hours: list[FacilityOpenHourRecord]
+    has_overlapping_blackout: bool
+    has_overlapping_reservation: bool
+
+
 class FacilityAvailabilityReader(Protocol):
-    def active_facility_exists(self, facility_id: str) -> bool:
-        raise NotImplementedError
-
-    def list_facility_open_hours(self, facility_id: str) -> list[FacilityOpenHourRecord]:
-        raise NotImplementedError
-
-    def has_overlapping_blackout(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> bool:
-        raise NotImplementedError
-
-    def has_overlapping_reservation(
+    def load_availability_facts(
         self,
         facility_id: str,
         *,
         starts_at: datetime,
         ends_at: datetime,
-        statuses: tuple[ReservationStatus, ...],
-    ) -> bool:
+        blocking_statuses: tuple[ReservationStatus, ...],
+    ) -> FacilityAvailabilityFacts:
         raise NotImplementedError
 
 
@@ -40,12 +39,36 @@ class SqlAlchemyFacilityAvailabilityReader:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def active_facility_exists(self, facility_id: str) -> bool:
+    def load_availability_facts(
+        self,
+        facility_id: str,
+        *,
+        starts_at: datetime,
+        ends_at: datetime,
+        blocking_statuses: tuple[ReservationStatus, ...],
+    ) -> FacilityAvailabilityFacts:
+        return FacilityAvailabilityFacts(
+            active_facility_exists=self._active_facility_exists(facility_id),
+            open_hours=self._list_facility_open_hours(facility_id),
+            has_overlapping_blackout=self._has_overlapping_blackout(
+                facility_id,
+                starts_at=starts_at,
+                ends_at=ends_at,
+            ),
+            has_overlapping_reservation=self._has_overlapping_reservation(
+                facility_id,
+                starts_at=starts_at,
+                ends_at=ends_at,
+                statuses=blocking_statuses,
+            ),
+        )
+
+    def _active_facility_exists(self, facility_id: str) -> bool:
         return self._session.scalar(
             select(exists().where(Facility.id == facility_id, Facility.is_active.is_(True)))
         )
 
-    def list_facility_open_hours(self, facility_id: str) -> list[FacilityOpenHourRecord]:
+    def _list_facility_open_hours(self, facility_id: str) -> list[FacilityOpenHourRecord]:
         open_hours = self._session.scalars(
             select(FacilityOpenHour)
             .where(FacilityOpenHour.facility_id == facility_id)
@@ -60,7 +83,7 @@ class SqlAlchemyFacilityAvailabilityReader:
             for open_hour in open_hours
         ]
 
-    def has_overlapping_blackout(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> bool:
+    def _has_overlapping_blackout(self, facility_id: str, *, starts_at: datetime, ends_at: datetime) -> bool:
         return self._session.scalar(
             select(
                 exists().where(
@@ -71,7 +94,7 @@ class SqlAlchemyFacilityAvailabilityReader:
             )
         )
 
-    def has_overlapping_reservation(
+    def _has_overlapping_reservation(
         self,
         facility_id: str,
         *,

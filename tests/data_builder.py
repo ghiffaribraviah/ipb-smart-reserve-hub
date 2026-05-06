@@ -134,6 +134,7 @@ class DataBuilder:
         has_payment_receipt: bool = False,
     ) -> str:
         with self._session_factory() as session:
+            facility = session.get(Facility, facility_id)
             student = User(
                 email=f"student-{activity_title.lower().replace(' ', '-')}@apps.ipb.ac.id",
                 password_hash=hash_password("secret123"),
@@ -148,6 +149,7 @@ class DataBuilder:
                 reservation_code=f"RSV-{activity_title.upper().replace(' ', '-')}",
                 activity_title=activity_title,
                 event_description="Private event description",
+                price_rupiah=facility.price_rupiah if facility is not None else 0,
                 starts_at=datetime.fromisoformat(starts_at),
                 ends_at=datetime.fromisoformat(ends_at),
                 document_upload_due_at=_datetime_or_none(document_upload_due_at),

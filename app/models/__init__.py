@@ -20,6 +20,7 @@ class ReservationStatus(str, enum.Enum):
     pending_payment = "pending_payment"
     overdue_verification = "overdue_verification"
     approved = "approved"
+    cancellation_requested = "cancellation_requested"
     completed = "completed"
     cancelled = "cancelled"
     rejected = "rejected"
@@ -206,6 +207,8 @@ class Reservation(Base):
     payment_verification_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[ReservationStatus] = mapped_column(Enum(ReservationStatus), nullable=False)
     rejection_reason: Mapped[str | None] = mapped_column(Text)
+    cancellation_reason: Mapped[str | None] = mapped_column(Text)
+    cancellation_rejection_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

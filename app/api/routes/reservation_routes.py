@@ -1,10 +1,13 @@
 from collections.abc import Callable
+from dataclasses import asdict
 
 from fastapi import Depends, FastAPI, HTTPException, Response, UploadFile, status
 
 from app.core.access_policy import AccessPolicyAction
 from app.schemas.reservation_schemas import (
     ReservationSubmissionRequest,
+    StudentCancellationRequestBody,
+    StudentCancellationRequestResponse,
     StaffDocumentRejectionRequest,
     StaffDocumentReviewResponse,
     StudentApprovalLetterResponse,
@@ -24,12 +27,16 @@ from app.services.approval_letters import (
 )
 from app.services.accounts import UserAccount
 from app.services.reservations import (
+    CancellationRequestNotFound,
     FacilityNotFound,
     OrganizationUnitNotFound,
     ReservationModule,
+    ReservationCancellationUnavailable,
+    ReservationCancellationReasonRequired,
     ReservationNotFound,
     ReservationSubmission,
     ReservationTimeUnavailable,
+    StaffCancellationReviewAccessDenied,
 )
 from app.services.payments import (
     InvalidPaymentReceiptFile,
@@ -100,6 +107,97 @@ def register_reservation_routes(
             return reservations.get_student_reservation(current_user, reservation_id)
         except ReservationNotFound:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+
+    @app.post("/student/reservations/{reservation_id}/cancel", response_model=StudentReservationResponse)
+    async def cancel_student_reservation(
+        reservation_id: str,
+        reservations: ReservationModule = Depends(get_reservations),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.enter_student_shell)),
+    ):
+        try:
+            return reservations.cancel_student_reservation(current_user, reservation_id)
+        except ReservationNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+        except ReservationCancellationUnavailable:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Reservasi yang sudah disetujui harus diajukan pembatalannya.",
+            )
+
+    @app.post(
+        "/student/reservations/{reservation_id}/cancellation-request",
+        response_model=StudentCancellationRequestResponse,
+    )
+    async def request_student_cancellation(
+        reservation_id: str,
+        payload: StudentCancellationRequestBody,
+        reservations: ReservationModule = Depends(get_reservations),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.enter_student_shell)),
+    ):
+        try:
+            cancellation = reservations.request_student_cancellation(
+                current_user,
+                reservation_id,
+                reason=payload.reason,
+            )
+            return {
+                **asdict(cancellation.reservation),
+                "refund_warning": cancellation.refund_warning,
+            }
+        except ReservationCancellationReasonRequired:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Alasan pembatalan wajib diisi.")
+        except ReservationNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+        except ReservationCancellationUnavailable:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Pembatalan hanya dapat diajukan untuk reservasi yang sudah disetujui.",
+            )
+
+    @app.post(
+        "/staff/reservations/{reservation_id}/cancellation-review/approve",
+        response_model=StudentReservationResponse,
+    )
+    async def approve_staff_cancellation_review(
+        reservation_id: str,
+        reservations: ReservationModule = Depends(get_reservations),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.manage_assigned_facilities)),
+    ):
+        try:
+            return reservations.approve_cancellation_request(current_user, reservation_id)
+        except ReservationNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+        except StaffCancellationReviewAccessDenied:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Staff tidak ditugaskan ke fasilitas reservasi ini.",
+            )
+        except CancellationRequestNotFound:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Pengajuan pembatalan tidak ditemukan.")
+
+    @app.post(
+        "/staff/reservations/{reservation_id}/cancellation-review/reject",
+        response_model=StudentReservationResponse,
+    )
+    async def reject_staff_cancellation_review(
+        reservation_id: str,
+        payload: StaffDocumentRejectionRequest,
+        reservations: ReservationModule = Depends(get_reservations),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.manage_assigned_facilities)),
+    ):
+        try:
+            return reservations.reject_cancellation_request(current_user, reservation_id, reason=payload.reason)
+        except ReservationCancellationReasonRequired:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Alasan penolakan wajib diisi.")
+        except ReservationNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+        except StaffCancellationReviewAccessDenied:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Staff tidak ditugaskan ke fasilitas reservasi ini.",
+            )
+        except CancellationRequestNotFound:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Pengajuan pembatalan tidak ditemukan.")
 
     @app.get(
         "/student/reservations/{reservation_id}/payment",

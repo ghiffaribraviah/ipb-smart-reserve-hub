@@ -23,6 +23,7 @@ BLOCKING_RESERVATION_STATUSES = (
     ReservationStatus.pending_payment,
     ReservationStatus.overdue_verification,
     ReservationStatus.approved,
+    ReservationStatus.cancellation_requested,
 )
 
 

@@ -35,6 +35,22 @@ class ReservationNotFound(ReservationError):
     pass
 
 
+class ReservationCancellationUnavailable(ReservationError):
+    pass
+
+
+class ReservationCancellationReasonRequired(ReservationError):
+    pass
+
+
+class StaffCancellationReviewAccessDenied(ReservationError):
+    pass
+
+
+class CancellationRequestNotFound(ReservationError):
+    pass
+
+
 class ReservationSubmissionConflictReader(Protocol):
     def has_overlapping_blocking_reservation(
         self,
@@ -101,6 +117,14 @@ class StudentReservation:
     document_verification_due_at: datetime | None = None
     payment_upload_due_at: datetime | None = None
     payment_verification_due_at: datetime | None = None
+    cancellation_reason: str | None = None
+    cancellation_rejection_reason: str | None = None
+
+
+@dataclass(frozen=True)
+class StudentCancellationRequest:
+    reservation: StudentReservation
+    refund_warning: str | None = None
 
 
 class ReservationModule:
@@ -185,6 +209,79 @@ class ReservationModule:
             raise ReservationNotFound
         return _to_student_reservation(reservation, now=_as_utc(self._clock()))
 
+    def cancel_student_reservation(self, student: UserAccount, reservation_id: str) -> StudentReservation:
+        reservation = self._reservation_repository.get_for_student(reservation_id, student.id)
+        if reservation is None:
+            raise ReservationNotFound
+        if reservation.status not in _PRE_APPROVAL_CANCELLABLE_STATUSES:
+            raise ReservationCancellationUnavailable
+        reservation.status = ReservationStatus.cancelled
+        return _to_student_reservation(reservation, now=_as_utc(self._clock()))
+
+    def request_student_cancellation(
+        self,
+        student: UserAccount,
+        reservation_id: str,
+        *,
+        reason: str,
+    ) -> StudentCancellationRequest:
+        reason = reason.strip()
+        if not reason:
+            raise ReservationCancellationReasonRequired
+        reservation = self._reservation_repository.get_for_student(reservation_id, student.id)
+        if reservation is None:
+            raise ReservationNotFound
+        if _effective_status(reservation, _as_utc(self._clock())) != ReservationStatus.approved:
+            raise ReservationCancellationUnavailable
+        reservation.status = ReservationStatus.cancellation_requested
+        reservation.cancellation_reason = reason
+        reservation.cancellation_rejection_reason = None
+        refund_warning = None
+        if reservation.price_rupiah > 0:
+            refund_warning = "Sistem tidak memproses refund. Silakan hubungi TU fasilitas untuk tindak lanjut refund."
+        return StudentCancellationRequest(
+            reservation=_to_student_reservation(reservation, now=_as_utc(self._clock())),
+            refund_warning=refund_warning,
+        )
+
+    def approve_cancellation_request(self, staff: UserAccount, reservation_id: str) -> StudentReservation:
+        reservation = self._get_staff_cancellation_request(staff, reservation_id)
+        reservation.status = ReservationStatus.cancelled
+        return _to_student_reservation(reservation, now=_as_utc(self._clock()))
+
+    def reject_cancellation_request(
+        self,
+        staff: UserAccount,
+        reservation_id: str,
+        *,
+        reason: str,
+    ) -> StudentReservation:
+        reason = reason.strip()
+        if not reason:
+            raise ReservationCancellationReasonRequired
+        reservation = self._get_staff_cancellation_request(staff, reservation_id)
+        reservation.status = ReservationStatus.approved
+        reservation.cancellation_rejection_reason = reason
+        return _to_student_reservation(reservation, now=_as_utc(self._clock()))
+
+    def _get_staff_cancellation_request(self, staff: UserAccount, reservation_id: str) -> Reservation:
+        reservation = self._reservation_repository.get_for_assigned_staff_review(reservation_id, staff.id)
+        if reservation is not None:
+            if reservation.status != ReservationStatus.cancellation_requested:
+                raise CancellationRequestNotFound
+            return reservation
+        if self._reservation_repository.get_by_id_for_review(reservation_id) is not None:
+            raise StaffCancellationReviewAccessDenied
+        raise ReservationNotFound
+
+
+_PRE_APPROVAL_CANCELLABLE_STATUSES = (
+    ReservationStatus.pending_document_upload,
+    ReservationStatus.pending_document_review,
+    ReservationStatus.pending_payment,
+    ReservationStatus.overdue_verification,
+)
+
 
 def _to_student_reservation(reservation: Reservation, *, now: datetime) -> StudentReservation:
     return StudentReservation(
@@ -210,6 +307,8 @@ def _to_student_reservation(reservation: Reservation, *, now: datetime) -> Stude
         document_verification_due_at=_optional_utc(reservation.document_verification_due_at),
         payment_upload_due_at=_optional_utc(reservation.payment_upload_due_at),
         payment_verification_due_at=_optional_utc(reservation.payment_verification_due_at),
+        cancellation_reason=reservation.cancellation_reason,
+        cancellation_rejection_reason=reservation.cancellation_rejection_reason,
     )
 
 

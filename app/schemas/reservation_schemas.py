@@ -40,6 +40,16 @@ class StudentReservationResponse(BaseModel):
     document_verification_due_at: datetime | None = None
     payment_upload_due_at: datetime | None = None
     payment_verification_due_at: datetime | None = None
+    cancellation_reason: str | None = None
+    cancellation_rejection_reason: str | None = None
+
+
+class StudentCancellationRequestBody(BaseModel):
+    reason: str
+
+
+class StudentCancellationRequestResponse(StudentReservationResponse):
+    refund_warning: str | None = None
 
 
 class StudentApprovalLetterResponse(BaseModel):

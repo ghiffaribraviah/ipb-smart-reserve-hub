@@ -17,6 +17,7 @@ from app.services.facility_management import FacilityManagementModule
 from app.repositories.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
 from app.repositories.reservation_repository import SqlAlchemyReservationRepository
 from app.services.organization_units import OrganizationUnitManagementModule
+from app.services.payments import PaymentModule
 from app.services.reservations import ReservationModule, ReservationSubmissionConflictGuard
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
 from app.services.system_status import SystemStatusModule
@@ -85,6 +86,13 @@ class FacilityModuleFactory:
             reservation_repository=SqlAlchemyReservationRepository(session),
             storage=self._private_storage,
             pdf_generator=self._approval_letter_pdf_generator,
+            clock=self._clock,
+        )
+
+    def build_payments(self, session: Session) -> PaymentModule:
+        return PaymentModule(
+            reservation_repository=SqlAlchemyReservationRepository(session),
+            storage=self._private_storage,
             clock=self._clock,
         )
 

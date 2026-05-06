@@ -48,6 +48,7 @@ class DataBuilder:
         is_active: bool = True,
         category_name: str = "Auditorium",
         price_rupiah: int = 0,
+        payment_instructions: str | None = None,
     ) -> str:
         with self._session_factory() as session:
             category = session.scalar(select(FacilityCategory).where(FacilityCategory.name == category_name))
@@ -62,6 +63,7 @@ class DataBuilder:
                 contact_name="TU Fasilitas",
                 contact_phone="0251-8620000",
                 price_rupiah=price_rupiah,
+                payment_instructions=payment_instructions,
                 open_hours_summary="Senin-Jumat 08.00-16.00",
                 rating_average=None,
                 review_count=0,

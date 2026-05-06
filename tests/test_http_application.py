@@ -53,6 +53,7 @@ class StubHttpRuntimeDependencyRegistry:
         return ReservationRouteDependencies(
             get_reservations=placeholder_dependency,
             get_approval_letters=placeholder_dependency,
+            get_payments=placeholder_dependency,
             require_access=placeholder_require_access,
         )
 

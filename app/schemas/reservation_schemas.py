@@ -47,6 +47,21 @@ class StudentApprovalLetterResponse(BaseModel):
     generated_at: datetime
 
 
+class StudentReservationPaymentResponse(BaseModel):
+    reservation_id: str
+    reservation_code: str
+    amount_rupiah: int
+    payment_instructions: str
+
+
+class StudentPaymentReceiptResponse(BaseModel):
+    reservation_id: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    uploaded_at: datetime
+
+
 class StudentSignedApprovalLetterResponse(BaseModel):
     reservation_id: str
     filename: str

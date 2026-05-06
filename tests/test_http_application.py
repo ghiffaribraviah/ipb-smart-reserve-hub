@@ -35,6 +35,12 @@ def test_http_application_module_builds_app_with_foundation_routes():
     assert "/facilities/{facility_id}/reservations" in route_paths
     assert "/student/reservations" in route_paths
     assert "/student/reservations/{reservation_id}" in route_paths
+    assert "/admin/facilities/{facility_id}/staff-assignments/{staff_id}" in route_paths
+    assert "/staff/facilities" in route_paths
+    assert "/staff/facilities/{facility_id}" in route_paths
+    assert "/staff/facilities/{facility_id}/images" in route_paths
+    assert "/staff/facilities/{facility_id}/open-hours" in route_paths
+    assert "/staff/facilities/{facility_id}/blackouts" in route_paths
     assert "/organization-units" in route_paths
     assert "/admin/users" in route_paths
     assert "/admin/organization-units" in route_paths

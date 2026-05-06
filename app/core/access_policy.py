@@ -11,6 +11,8 @@ class AccessPolicyAction(str, enum.Enum):
     manage_user_accounts = "manage_user_accounts"
     manage_organization_units = "manage_organization_units"
     manage_booking_settings = "manage_booking_settings"
+    manage_facility_staff_assignments = "manage_facility_staff_assignments"
+    manage_assigned_facilities = "manage_assigned_facilities"
 
 
 class AccessPolicyError(Exception):
@@ -29,6 +31,8 @@ class AccessPolicyModule:
         AccessPolicyAction.manage_user_accounts: UserRole.super_admin,
         AccessPolicyAction.manage_organization_units: UserRole.super_admin,
         AccessPolicyAction.manage_booking_settings: UserRole.super_admin,
+        AccessPolicyAction.manage_facility_staff_assignments: UserRole.super_admin,
+        AccessPolicyAction.manage_assigned_facilities: UserRole.staff,
     }
 
     def require_action(self, user_account: UserAccount, action: AccessPolicyAction) -> UserAccount:

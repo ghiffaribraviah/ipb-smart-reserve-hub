@@ -8,7 +8,9 @@ from app.services.booking_settings import BookingSettings, BookingSettingsModule
 from app.services.facility_availability import FacilityAvailabilityModule
 from app.repositories.facility_availability_reader import SqlAlchemyFacilityAvailabilityReader
 from app.repositories.facility_catalog_reader import SqlAlchemyFacilityCatalogReader
+from app.repositories.facility_management_repository import SqlAlchemyFacilityManagementRepository
 from app.services.facilities import FacilityCatalogModule
+from app.services.facility_management import FacilityManagementModule
 from app.repositories.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
 from app.repositories.reservation_repository import SqlAlchemyReservationRepository
 from app.services.organization_units import OrganizationUnitManagementModule
@@ -61,6 +63,11 @@ class FacilityModuleFactory:
         return ReservationModule(
             reservation_repository=SqlAlchemyReservationRepository(session),
             reservation_time_selection=self.build_reservation_time_selection(session),
+        )
+
+    def build_management(self, session: Session) -> FacilityManagementModule:
+        return FacilityManagementModule(
+            facility_management_repository=SqlAlchemyFacilityManagementRepository(session)
         )
 
 

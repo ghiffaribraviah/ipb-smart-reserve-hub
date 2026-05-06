@@ -3,6 +3,8 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
+from app.pdf import ApprovalLetterPdfGenerator
+from app.services.approval_letters import ApprovalLetterModule
 from app.services.accounts import UserAccountModule
 from app.services.booking_settings import BookingSettings, BookingSettingsModule
 from app.services.facility_availability import FacilityAvailabilityModule
@@ -17,6 +19,7 @@ from app.services.organization_units import OrganizationUnitManagementModule
 from app.services.reservations import ReservationModule
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
 from app.services.system_status import SystemStatusModule
+from app.storage import PrivateStorage
 from app.core.settings import SettingsModule
 from app.core.student_email_policy import AllowedStudentEmailDomains
 from app.repositories.user_repository import SqlAlchemyUserRepository
@@ -40,9 +43,17 @@ class UserAccountModuleFactory:
 
 
 class FacilityModuleFactory:
-    def __init__(self, *, default_booking_settings: BookingSettings, clock: Callable[[], datetime]) -> None:
+    def __init__(
+        self,
+        *,
+        default_booking_settings: BookingSettings,
+        clock: Callable[[], datetime],
+        private_storage: PrivateStorage,
+    ) -> None:
         self._default_booking_settings = default_booking_settings
         self._clock = clock
+        self._private_storage = private_storage
+        self._approval_letter_pdf_generator = ApprovalLetterPdfGenerator()
 
     def build_catalog(self, session: Session) -> FacilityCatalogModule:
         return FacilityCatalogModule(facility_catalog_reader=SqlAlchemyFacilityCatalogReader(session))
@@ -64,6 +75,14 @@ class FacilityModuleFactory:
         return ReservationModule(
             reservation_repository=SqlAlchemyReservationRepository(session),
             reservation_time_selection=self.build_reservation_time_selection(session),
+        )
+
+    def build_approval_letters(self, session: Session) -> ApprovalLetterModule:
+        return ApprovalLetterModule(
+            reservation_repository=SqlAlchemyReservationRepository(session),
+            storage=self._private_storage,
+            pdf_generator=self._approval_letter_pdf_generator,
+            clock=self._clock,
         )
 
     def build_management(self, session: Session) -> FacilityManagementModule:

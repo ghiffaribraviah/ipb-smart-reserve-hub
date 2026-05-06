@@ -29,6 +29,7 @@ from app.core.module_factories import (
     UserAccountModuleFactory,
 )
 from app.core.settings import SettingsModule
+from app.storage import InMemoryPrivateStorage
 
 
 class HttpRuntimeModule:
@@ -44,6 +45,7 @@ class HttpRuntimeModule:
         self._default_booking_settings = BookingSettings.defaults(
             allowed_student_email_domains=self._settings.allowed_student_email_domains
         )
+        self._private_storage = InMemoryPrivateStorage()
         self._user_account_factory = UserAccountModuleFactory(
             settings=self._settings,
             default_booking_settings=self._default_booking_settings,
@@ -51,6 +53,7 @@ class HttpRuntimeModule:
         self._facility_factory = FacilityModuleFactory(
             default_booking_settings=self._default_booking_settings,
             clock=self._clock,
+            private_storage=self._private_storage,
         )
         self._organization_unit_factory = OrganizationUnitModuleFactory()
         self._booking_settings_factory = BookingSettingsModuleFactory(
@@ -64,6 +67,7 @@ class HttpRuntimeModule:
         self.get_facility_availability = self._build_get_facility_availability()
         self.get_reservation_time_selection = self._build_get_reservation_time_selection()
         self.get_reservations = self._build_get_reservations()
+        self.get_approval_letters = self._build_get_approval_letters()
         self.get_facility_management = self._build_get_facility_management()
         self.get_organization_unit_management = self._build_get_organization_unit_management()
         self.get_booking_settings = self._build_get_booking_settings()
@@ -115,6 +119,12 @@ class HttpRuntimeModule:
     def _build_get_reservations(self):
         async def dependency(session: Session = Depends(self.get_session)):
             return self._facility_factory.build_reservations(session)
+
+        return dependency
+
+    def _build_get_approval_letters(self):
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._facility_factory.build_approval_letters(session)
 
         return dependency
 
@@ -197,6 +207,7 @@ class HttpApplicationModule:
         register_reservation_routes(
             app,
             get_reservations=runtime.get_reservations,
+            get_approval_letters=runtime.get_approval_letters,
             require_access=runtime.require_access,
         )
         register_facility_management_routes(

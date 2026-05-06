@@ -36,3 +36,12 @@ class StudentReservationResponse(BaseModel):
     starts_at: datetime
     ends_at: datetime
     price_rupiah: int
+
+
+class StudentApprovalLetterResponse(BaseModel):
+    reservation_id: str
+    reservation_code: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    generated_at: datetime

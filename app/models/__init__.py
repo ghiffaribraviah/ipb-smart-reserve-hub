@@ -194,3 +194,25 @@ class Reservation(Base):
     facility: Mapped[Facility] = relationship(back_populates="reservations")
     organization_unit: Mapped[OrganizationUnit] = relationship(back_populates="reservations")
     student: Mapped[User] = relationship()
+    approval_letter: Mapped["ReservationApprovalLetter | None"] = relationship(
+        back_populates="reservation",
+        cascade="all, delete-orphan",
+    )
+
+
+class ReservationApprovalLetter(Base):
+    __tablename__ = "reservation_approval_letters"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    reservation_id: Mapped[str] = mapped_column(
+        ForeignKey("reservations.id"),
+        unique=True,
+        nullable=False,
+    )
+    storage_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    reservation: Mapped[Reservation] = relationship(back_populates="approval_letter")

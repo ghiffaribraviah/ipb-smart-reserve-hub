@@ -1,9 +1,14 @@
 from collections.abc import Callable
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Response, status
 
 from app.core.access_policy import AccessPolicyAction
-from app.schemas.reservation_schemas import ReservationSubmissionRequest, StudentReservationResponse
+from app.schemas.reservation_schemas import (
+    ReservationSubmissionRequest,
+    StudentApprovalLetterResponse,
+    StudentReservationResponse,
+)
+from app.services.approval_letters import ApprovalLetterModule
 from app.services.accounts import UserAccount
 from app.services.reservations import (
     FacilityNotFound,
@@ -19,6 +24,7 @@ def register_reservation_routes(
     app: FastAPI,
     *,
     get_reservations: Callable,
+    get_approval_letters: Callable,
     require_access: Callable[[AccessPolicyAction], Callable],
 ) -> None:
     @app.post(
@@ -70,3 +76,33 @@ def register_reservation_routes(
             return reservations.get_student_reservation(current_user, reservation_id)
         except ReservationNotFound:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+
+    @app.get(
+        "/student/reservations/{reservation_id}/approval-letter",
+        response_model=StudentApprovalLetterResponse,
+    )
+    async def get_student_approval_letter(
+        reservation_id: str,
+        approval_letters: ApprovalLetterModule = Depends(get_approval_letters),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.enter_student_shell)),
+    ):
+        try:
+            return approval_letters.get_student_approval_letter(current_user, reservation_id)
+        except ReservationNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+
+    @app.get("/student/reservations/{reservation_id}/approval-letter/download")
+    async def download_student_approval_letter(
+        reservation_id: str,
+        approval_letters: ApprovalLetterModule = Depends(get_approval_letters),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.enter_student_shell)),
+    ):
+        try:
+            download = approval_letters.download_student_approval_letter(current_user, reservation_id)
+        except ReservationNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+        return Response(
+            content=download.content,
+            media_type=download.content_type,
+            headers={"Content-Disposition": f'attachment; filename="{download.filename}"'},
+        )

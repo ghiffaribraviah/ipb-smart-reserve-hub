@@ -1,7 +1,5 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useState,
   type ReactNode,
@@ -9,20 +7,11 @@ import {
 import { AuthSession } from "./auth-session";
 import { apiGet, apiPost } from "./api-client";
 import type { TokenResponse, User } from "./types";
-
-interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  error: string | null;
-}
-
-const AuthContext = createContext<AuthState | null>(null);
+import { AuthContext } from "./use-auth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => Boolean(AuthSession.getToken()));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,8 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           AuthSession.clear();
         })
         .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
     }
   }, []);
 
@@ -60,10 +47,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
 }

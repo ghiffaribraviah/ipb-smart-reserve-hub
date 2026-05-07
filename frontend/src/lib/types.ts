@@ -71,3 +71,11 @@ export interface FacilityDetail {
   review_summary: FacilityReviewSummary;
   reviews: FacilityPublicReview[];
 }
+
+export interface OrganizationUnit {
+  id: string;
+  name: string;
+  type: string;
+  code: string;
+  is_active: boolean;
+}

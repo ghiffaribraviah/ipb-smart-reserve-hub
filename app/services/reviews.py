@@ -6,6 +6,8 @@ from app.models import FacilityReview, ReservationStatus
 from app.repositories.review_repository import ReviewRepository
 from app.services.accounts import UserAccount
 from app.services.audit_logs import AuditLogModule
+from app.services.booking_settings import BookingSettings
+from app.services.reservation_lifecycle import FacilityReservationLifecycleModule
 
 
 class ReviewError(Exception):
@@ -99,10 +101,15 @@ class ReviewModule:
         *,
         review_repository: ReviewRepository,
         clock: Callable[[], datetime],
+        reservation_lifecycle: FacilityReservationLifecycleModule | None = None,
         audit_logs: AuditLogModule | None = None,
     ) -> None:
         self._review_repository = review_repository
         self._clock = clock
+        self._reservation_lifecycle = reservation_lifecycle or FacilityReservationLifecycleModule(
+            booking_settings=BookingSettings.defaults(),
+            clock=clock,
+        )
         self._audit_logs = audit_logs
 
     def submit_student_review(
@@ -114,7 +121,7 @@ class ReviewModule:
         reservation = self._review_repository.get_student_reservation(reservation_id, student.id)
         if reservation is None:
             raise ReviewReservationNotFound
-        if _effective_status(reservation.status, reservation.ends_at, _as_utc(self._clock())) != ReservationStatus.completed:
+        if self._reservation_lifecycle.effective_status(reservation) != ReservationStatus.completed:
             raise ReviewReservationNotCompleted
         if reservation.review is not None:
             raise ReviewAlreadySubmitted
@@ -237,7 +244,6 @@ class ReviewModule:
         self._require_staff_assignment(staff, facility_id)
         reviews = self._review_repository.list_visible_for_facility(facility_id)
         reservations = self._review_repository.list_reservations_for_facility(facility_id)
-        now = _as_utc(self._clock())
         return StaffFacilityStatistics(
             facility_id=facility_id,
             review_count=len(reviews),
@@ -246,7 +252,7 @@ class ReviewModule:
             completed_reservation_count=sum(
                 1
                 for reservation in reservations
-                if _effective_status(reservation.status, reservation.ends_at, now) == ReservationStatus.completed
+                if self._reservation_lifecycle.effective_status(reservation) == ReservationStatus.completed
             ),
         )
 
@@ -305,12 +311,6 @@ def _to_admin_review(review: FacilityReview) -> AdminReview:
         admin_removal_reason=review.admin_removal_reason,
         created_at=_as_utc(review.created_at),
     )
-
-
-def _effective_status(status: ReservationStatus, ends_at: datetime, now: datetime) -> ReservationStatus:
-    if status == ReservationStatus.approved and _as_utc(ends_at) <= now:
-        return ReservationStatus.completed
-    return status
 
 
 def _as_utc(value: datetime) -> datetime:

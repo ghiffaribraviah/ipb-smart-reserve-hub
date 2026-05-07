@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 import uuid
 
 from app.models import ReservationApprovalLetter, ReservationSignedApprovalLetter, ReservationStatus
@@ -10,7 +10,13 @@ from app.services.accounts import UserAccount
 from app.services.audit_logs import AuditLogModule
 from app.services.booking_settings import BookingSettings
 from app.services.notifications import NotificationModule
+from app.services.reservation_lifecycle import FacilityReservationLifecycleModule
 from app.services.reservations import ReservationNotFound
+from app.services.staff_reservation_review_access import (
+    StaffReservationReviewAccessDenied,
+    StaffReservationReviewAccessModule,
+    StaffReservationReviewReservationNotFound,
+)
 from app.storage import PrivateStorage
 
 
@@ -90,14 +96,22 @@ class ApprovalLetterModule:
         pdf_generator: ApprovalLetterPdfGenerator,
         booking_settings: BookingSettings,
         clock: Callable[[], datetime],
+        reservation_lifecycle: FacilityReservationLifecycleModule | None = None,
+        staff_review_access: StaffReservationReviewAccessModule | None = None,
         notifications: NotificationModule | None = None,
         audit_logs: AuditLogModule | None = None,
     ) -> None:
         self._reservation_repository = reservation_repository
         self._storage = storage
         self._pdf_generator = pdf_generator
-        self._booking_settings = booking_settings
         self._clock = clock
+        self._reservation_lifecycle = reservation_lifecycle or FacilityReservationLifecycleModule(
+            booking_settings=booking_settings,
+            clock=clock,
+        )
+        self._staff_review_access = staff_review_access or StaffReservationReviewAccessModule(
+            reservation_repository=reservation_repository
+        )
         self._notifications = notifications
         self._audit_logs = audit_logs
 
@@ -145,10 +159,7 @@ class ApprovalLetterModule:
             size_bytes=len(upload.content),
             uploaded_at=uploaded_at,
         )
-        reservation.status = ReservationStatus.pending_document_review
-        reservation.document_verification_due_at = uploaded_at + timedelta(
-            hours=self._booking_settings.document_verification_due_hours
-        )
+        self._reservation_lifecycle.record_signed_document_uploaded(reservation)
         if self._notifications is not None:
             self._notifications.student_action_recorded(
                 reservation,
@@ -167,15 +178,11 @@ class ApprovalLetterModule:
         if reservation.signed_approval_letter is None:
             raise ApprovalLetterNotGenerated
 
-        if reservation.price_rupiah == 0:
-            reservation.status = ReservationStatus.approved
+        self._reservation_lifecycle.approve_document(reservation)
+        if reservation.status == ReservationStatus.approved:
             title = "Reservasi disetujui"
             message = f"Reservasi {reservation.activity_title} sudah disetujui."
         else:
-            reservation.status = ReservationStatus.pending_payment
-            reservation.payment_upload_due_at = _as_utc(self._clock()) + timedelta(
-                hours=self._booking_settings.payment_upload_due_hours
-            )
             title = "Pembayaran diperlukan"
             message = f"Reservasi {reservation.activity_title} disetujui dokumennya dan menunggu pembayaran."
         if self._notifications is not None:
@@ -221,8 +228,7 @@ class ApprovalLetterModule:
         if reservation.signed_approval_letter is None:
             raise ApprovalLetterNotGenerated
 
-        reservation.status = ReservationStatus.rejected
-        reservation.rejection_reason = reason
+        self._reservation_lifecycle.reject_document(reservation, reason=reason)
         if self._notifications is not None:
             self._notifications.student_action_recorded(
                 reservation,
@@ -245,12 +251,12 @@ class ApprovalLetterModule:
         )
 
     def _get_staff_review_reservation(self, staff: UserAccount, reservation_id: str):
-        reservation = self._reservation_repository.get_for_assigned_staff_review(reservation_id, staff.id)
-        if reservation is not None:
-            return reservation
-        if self._reservation_repository.get_by_id_for_review(reservation_id) is not None:
+        try:
+            return self._staff_review_access.require_assigned_reservation(reservation_id, staff_id=staff.id)
+        except StaffReservationReviewAccessDenied:
             raise StaffDocumentReviewAccessDenied
-        raise ReservationNotFound
+        except StaffReservationReviewReservationNotFound:
+            raise ReservationNotFound
 
     def _record_audit(
         self,

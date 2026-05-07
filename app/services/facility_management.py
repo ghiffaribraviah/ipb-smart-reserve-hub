@@ -4,6 +4,11 @@ from datetime import UTC, datetime
 from app.models import Facility, FacilityBlackout, FacilityImage, FacilityOpenHour
 from app.repositories.facility_management_repository import FacilityManagementRepository
 from app.services.accounts import UserAccount
+from app.services.assigned_facility_access import (
+    AssignedFacilityAccessDenied,
+    AssignedFacilityAccessModule,
+    AssignedFacilityNotFound,
+)
 from app.services.audit_logs import AuditLogModule
 from app.services.facilities import summarize_price
 
@@ -116,9 +121,13 @@ class FacilityManagementModule:
         self,
         *,
         facility_management_repository: FacilityManagementRepository,
+        assigned_facility_access: AssignedFacilityAccessModule | None = None,
         audit_logs: AuditLogModule | None = None,
     ) -> None:
         self._facility_management_repository = facility_management_repository
+        self._assigned_facility_access = assigned_facility_access or AssignedFacilityAccessModule(
+            facility_repository=facility_management_repository
+        )
         self._audit_logs = audit_logs
 
     def assign_staff(self, facility_id: str, staff_id: str, *, actor: UserAccount | None = None) -> StaffAssignment:
@@ -243,12 +252,12 @@ class FacilityManagementModule:
         return _to_blackout_profile(blackout)
 
     def _require_assigned_facility(self, staff: UserAccount, facility_id: str) -> Facility:
-        facility = self._facility_management_repository.get_facility(facility_id)
-        if facility is None:
+        try:
+            return self._assigned_facility_access.require_assigned_facility(facility_id, staff_id=staff.id)
+        except AssignedFacilityNotFound:
             raise FacilityNotFound
-        if not self._facility_management_repository.staff_is_assigned(facility_id, staff.id):
+        except AssignedFacilityAccessDenied:
             raise StaffFacilityAccessDenied
-        return facility
 
     def _record_audit(
         self,

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app.repositories.facility_catalog_reader import FacilityCatalogReader, FacilityCatalogRecord
+from app.services.public_facility_reviews import PublicFacilityReviewModule
 
 
 class FacilityNotFound(Exception):
@@ -90,8 +91,14 @@ def summarize_price(price_rupiah: int) -> str:
 
 
 class FacilityCatalogModule:
-    def __init__(self, *, facility_catalog_reader: FacilityCatalogReader) -> None:
+    def __init__(
+        self,
+        *,
+        facility_catalog_reader: FacilityCatalogReader,
+        public_facility_reviews: PublicFacilityReviewModule | None = None,
+    ) -> None:
         self._facility_catalog_reader = facility_catalog_reader
+        self._public_facility_reviews = public_facility_reviews or PublicFacilityReviewModule()
 
     def list_active_facilities(self) -> list[FacilityCatalogItem]:
         facilities = self._facility_catalog_reader.list_active_facilities()
@@ -103,6 +110,7 @@ class FacilityCatalogModule:
             raise FacilityNotFound
 
         active_images = [image for image in facility.images if image.is_active]
+        review_projection = self._public_facility_reviews.project(facility.reviews)
         return FacilityPublicDetail(
             id=facility.id,
             name=facility.name,
@@ -130,8 +138,8 @@ class FacilityCatalogModule:
             ),
             open_hours_summary=facility.open_hours_summary,
             review_summary=FacilityReviewSummary(
-                rating_average=facility.rating_average,
-                review_count=facility.review_count,
+                rating_average=review_projection.summary.rating_average,
+                review_count=review_projection.summary.review_count,
             ),
             reviews=[
                 FacilityPublicReview(
@@ -141,7 +149,7 @@ class FacilityCatalogModule:
                     author_name=review.author_name,
                     created_at=_as_utc(review.created_at),
                 )
-                for review in facility.reviews
+                for review in review_projection.reviews
             ],
         )
 
@@ -173,6 +181,7 @@ class FacilityCatalogModule:
 
     def _catalog_item(self, facility: FacilityCatalogRecord) -> FacilityCatalogItem:
         cover_image = next((image for image in facility.images if image.is_active and image.is_cover), None)
+        review_projection = self._public_facility_reviews.project(facility.reviews)
         return FacilityCatalogItem(
             id=facility.id,
             name=facility.name,
@@ -180,8 +189,8 @@ class FacilityCatalogModule:
             capacity=facility.capacity,
             category=facility.category,
             cover_image_url=cover_image.url if cover_image else None,
-            rating_average=facility.rating_average,
-            review_count=facility.review_count,
+            rating_average=review_projection.summary.rating_average,
+            review_count=review_projection.summary.review_count,
             price_summary=summarize_price(facility.price_rupiah),
             open_hours_summary=facility.open_hours_summary,
         )

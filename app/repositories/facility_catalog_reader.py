@@ -5,17 +5,8 @@ from typing import Protocol
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Facility, FacilityReview, Reservation, ReservationStatus
-
-
-PUBLIC_CALENDAR_RESERVATION_STATUSES = (
-    ReservationStatus.pending_document_upload,
-    ReservationStatus.pending_document_review,
-    ReservationStatus.pending_payment,
-    ReservationStatus.overdue_verification,
-    ReservationStatus.approved,
-    ReservationStatus.cancellation_requested,
-)
+from app.models import Facility, FacilityReview, Reservation
+from app.services.public_facility_calendar import PublicFacilityCalendarModule
 
 
 @dataclass(frozen=True)
@@ -52,6 +43,7 @@ class FacilityReviewRecord:
     comment: str | None
     author_name: str
     created_at: datetime
+    is_deleted: bool
 
 
 @dataclass(frozen=True)
@@ -81,8 +73,13 @@ class FacilityCatalogReader(Protocol):
 
 
 class SqlAlchemyFacilityCatalogReader:
-    def __init__(self, session: Session) -> None:
+    def __init__(
+        self,
+        session: Session,
+        public_facility_calendar: PublicFacilityCalendarModule | None = None,
+    ) -> None:
         self._session = session
+        self._public_facility_calendar = public_facility_calendar or PublicFacilityCalendarModule()
 
     def list_active_facilities(self) -> list[FacilityCatalogRecord]:
         facilities = self._session.scalars(
@@ -123,7 +120,7 @@ class SqlAlchemyFacilityCatalogReader:
             .options(joinedload(Reservation.facility), joinedload(Reservation.organization_unit))
             .where(
                 Reservation.facility_id == facility_id,
-                Reservation.status.in_(PUBLIC_CALENDAR_RESERVATION_STATUSES),
+                Reservation.status.in_(self._public_facility_calendar.public_reservation_statuses()),
                 Reservation.starts_at < ends_at,
                 Reservation.ends_at > starts_at,
             )
@@ -153,8 +150,8 @@ class SqlAlchemyFacilityCatalogReader:
             contact_email=facility.contact_email,
             price_rupiah=facility.price_rupiah,
             open_hours_summary=facility.open_hours_summary,
-            rating_average=_review_average(facility),
-            review_count=len(_visible_reviews(facility)),
+            rating_average=None,
+            review_count=0,
             images=[
                 FacilityCatalogImageRecord(
                     url=image.url,
@@ -171,18 +168,8 @@ class SqlAlchemyFacilityCatalogReader:
                     comment=review.comment,
                     author_name=review.student.full_name,
                     created_at=review.created_at,
+                    is_deleted=review.is_deleted,
                 )
-                for review in _visible_reviews(facility)
+                for review in facility.reviews
             ],
         )
-
-
-def _visible_reviews(facility: Facility) -> list:
-    return [review for review in facility.reviews if not review.is_deleted]
-
-
-def _review_average(facility: Facility) -> float | None:
-    reviews = _visible_reviews(facility)
-    if not reviews:
-        return None
-    return round(sum(review.rating for review in reviews) / len(reviews), 1)

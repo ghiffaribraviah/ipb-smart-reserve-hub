@@ -7,6 +7,7 @@ from app.pdf import ApprovalLetterPdfGenerator
 from app.services.approval_letters import ApprovalLetterModule
 from app.services.accounts import UserAccountModule
 from app.repositories.audit_log_repository import SqlAlchemyAuditLogRepository
+from app.services.assigned_facility_access import AssignedFacilityAccessModule
 from app.services.audit_logs import AuditLogModule
 from app.repositories.booking_settings_repository import SqlAlchemyBookingSettingsRepository
 from app.services.booking_settings import BookingSettings, BookingSettingsModule
@@ -23,10 +24,12 @@ from app.repositories.review_repository import SqlAlchemyReviewRepository
 from app.services.organization_units import OrganizationUnitManagementModule
 from app.services.notifications import NotificationModule
 from app.services.payments import PaymentModule
+from app.services.public_facility_calendar import PublicFacilityCalendarModule
 from app.services.reservation_lifecycle import FacilityReservationLifecycleModule
 from app.services.reservations import ReservationModule, ReservationSubmissionConflictGuard
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
 from app.services.reviews import ReviewModule
+from app.services.staff_reservation_review_access import StaffReservationReviewAccessModule
 from app.services.system_status import SystemStatusModule
 from app.storage import PrivateStorage
 from app.core.settings import SettingsModule
@@ -65,7 +68,12 @@ class FacilityModuleFactory:
         self._approval_letter_pdf_generator = ApprovalLetterPdfGenerator()
 
     def build_catalog(self, session: Session) -> FacilityCatalogModule:
-        return FacilityCatalogModule(facility_catalog_reader=SqlAlchemyFacilityCatalogReader(session))
+        return FacilityCatalogModule(
+            facility_catalog_reader=SqlAlchemyFacilityCatalogReader(
+                session,
+                public_facility_calendar=PublicFacilityCalendarModule(),
+            )
+        )
 
     def build_availability(self, session: Session) -> FacilityAvailabilityModule:
         return FacilityAvailabilityModule(facility_availability_reader=SqlAlchemyFacilityAvailabilityReader(session))
@@ -94,14 +102,27 @@ class FacilityModuleFactory:
             submission_conflict_guard=ReservationSubmissionConflictGuard(conflict_reader=reservation_repository),
             booking_settings=booking_settings,
             clock=self._clock,
+            reservation_lifecycle=FacilityReservationLifecycleModule(
+                booking_settings=booking_settings,
+                clock=self._clock,
+            ),
+            staff_review_access=StaffReservationReviewAccessModule(reservation_repository=reservation_repository),
             notifications=notifications,
             audit_logs=audit_logs,
         )
 
     def build_reviews(self, session: Session) -> ReviewModule:
+        booking_settings = BookingSettingsModule(
+            booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
+            defaults=self._default_booking_settings,
+        ).get_booking_settings()
         return ReviewModule(
             review_repository=SqlAlchemyReviewRepository(session),
             clock=self._clock,
+            reservation_lifecycle=FacilityReservationLifecycleModule(
+                booking_settings=booking_settings,
+                clock=self._clock,
+            ),
             audit_logs=self.build_audit_logs(session),
         )
 
@@ -119,8 +140,9 @@ class FacilityModuleFactory:
             booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
             defaults=self._default_booking_settings,
         ).get_booking_settings()
+        reservation_repository = SqlAlchemyReservationRepository(session)
         return ApprovalLetterModule(
-            reservation_repository=SqlAlchemyReservationRepository(session),
+            reservation_repository=reservation_repository,
             storage=self._private_storage,
             pdf_generator=self._approval_letter_pdf_generator,
             booking_settings=booking_settings,
@@ -129,6 +151,7 @@ class FacilityModuleFactory:
                 booking_settings=booking_settings,
                 clock=self._clock,
             ),
+            staff_review_access=StaffReservationReviewAccessModule(reservation_repository=reservation_repository),
             notifications=self.build_notifications(session),
             audit_logs=self.build_audit_logs(session),
         )
@@ -138,18 +161,28 @@ class FacilityModuleFactory:
             booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
             defaults=self._default_booking_settings,
         ).get_booking_settings()
+        reservation_repository = SqlAlchemyReservationRepository(session)
         return PaymentModule(
-            reservation_repository=SqlAlchemyReservationRepository(session),
+            reservation_repository=reservation_repository,
             storage=self._private_storage,
             booking_settings=booking_settings,
             clock=self._clock,
+            reservation_lifecycle=FacilityReservationLifecycleModule(
+                booking_settings=booking_settings,
+                clock=self._clock,
+            ),
+            staff_review_access=StaffReservationReviewAccessModule(reservation_repository=reservation_repository),
             notifications=self.build_notifications(session),
             audit_logs=self.build_audit_logs(session),
         )
 
     def build_management(self, session: Session) -> FacilityManagementModule:
+        facility_management_repository = SqlAlchemyFacilityManagementRepository(session)
         return FacilityManagementModule(
-            facility_management_repository=SqlAlchemyFacilityManagementRepository(session),
+            facility_management_repository=facility_management_repository,
+            assigned_facility_access=AssignedFacilityAccessModule(
+                facility_repository=facility_management_repository
+            ),
             audit_logs=self.build_audit_logs(session),
         )
 

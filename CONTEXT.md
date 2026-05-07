@@ -62,6 +62,18 @@ The Facility Catalog is the student browsing Module for public Facility informat
 
 It lists active Facilities for comparison and exposes Facility detail with public information: images, contact details, price or free status, open-hours summary, and review summary placeholders. The Facility Catalog should not expose private staff, reservation, payment, or student data.
 
+## Public Facility Reviews
+
+Public Facility Reviews are the visible Facility Review facts shown in the Facility Catalog.
+
+Public Facility Reviews own deleted-review filtering and visible rating summaries so the Facility Catalog can expose reviews without knowing Facility Review moderation state rules.
+
+## Public Facility Calendar
+
+Public Facility Calendar is the Facility Catalog view of Reservation time blocks that students may see for a Facility.
+
+Public Facility Calendar owns which Facility Reservation statuses appear as public calendar entries so persistence Adapters do not encode public visibility rules.
+
 ## Facility Catalog Reader
 
 A Facility Catalog Reader is the read Seam for public Facility Catalog records.
@@ -91,6 +103,24 @@ It combines local time rules, booking window rules, and Facility Availability in
 A Reservation Submission Conflict Guard is the write-path Module that protects Reservation submission from creating a Facility Reservation that overlaps an existing blocking Reservation.
 
 Reservation Time Selection can tell students whether a candidate time appears acceptable before submission, but Reservation submission must still ask the Reservation Submission Conflict Guard before holding the Facility time.
+
+## Facility Reservation Lifecycle
+
+Facility Reservation Lifecycle owns the status transitions and effective-status rules for a Facility Reservation.
+
+Reservation, Approval Letter, Payment, Cancellation, Deadline Worker, and Review callers should ask the Facility Reservation Lifecycle to move or interpret a Facility Reservation instead of comparing raw reservation statuses directly.
+
+## Staff Reservation Review Access
+
+Staff Reservation Review Access decides whether a Staff User account may review a Facility Reservation for a Facility they are assigned to.
+
+Approval Letter, Payment, and Cancellation callers should ask Staff Reservation Review Access for an assigned Facility Reservation instead of knowing how staff assignments and Reservation existence checks are queried.
+
+## Assigned Facility Access
+
+Assigned Facility Access decides whether a Staff User account may manage a Facility assigned to them.
+
+Facility Management callers should ask Assigned Facility Access for an assigned Facility instead of knowing how Facility existence and staff assignment checks are queried.
 
 ## Organization Unit
 

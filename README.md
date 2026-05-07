@@ -6,7 +6,7 @@ Status implementasi saat ini:
 
 | Area | Status | Keterangan |
 | --- | --- | --- |
-| Frontend | Pengembangan | Antarmuka website belum tersedia di repository ini. |
+| Frontend | Pengembangan | Aplikasi Vite React TypeScript tersedia di `frontend/`. Login dan student shell sudah terintegrasi. |
 | Backend/API | Selesai | Fondasi API dan business workflow utama sudah tersedia dan tercakup test. |
 
 ## Ringkasan Fitur
@@ -100,9 +100,24 @@ Credential lokal yang dibuat:
 
 Seed juga membuat synthetic Student `demo.blocking@apps.ipb.ac.id` untuk pemilik reservasi blocking kalender publik. Akun demo Student utama sengaja dibiarkan tanpa reservasi awal agar alur frontend baru mudah diverifikasi.
 
+## Frontend
+
+Frontend adalah aplikasi Vite React TypeScript di `frontend/`.
+
+```sh
+cd frontend
+npm install
+npm run dev          # dev server (default port 5173)
+npm run build        # production build
+npm test             # jalankan test
+npm run test:watch   # test dalam watch mode
+```
+
+Backend base URL dikonfigurasi melalui environment variable `VITE_API_BASE_URL` (default: `http://localhost:8000`).
+
 ## Testing
 
-Jalankan semua test:
+Jalankan semua test backend:
 
 ```sh
 uv run --extra dev pytest -q

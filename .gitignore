@@ -5,3 +5,7 @@ __pycache__/
 *.egg-info/
 ipb_smart_reserve_hub.db
 .pytest_cache/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

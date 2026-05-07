@@ -7,6 +7,7 @@
 - Tests should verify observable behavior through public service/API interfaces, not private implementation details.
 - Do not create broad testing plans up front unless explicitly requested; define the next behavior test at the start of each implementation slice.
 - Follow OOP principles.
+- Read /docs for more context if needed (especially in frontend)
 
 ## Agent skills
 

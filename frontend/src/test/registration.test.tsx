@@ -71,6 +71,17 @@ describe("Registration", () => {
     expect(button).toBeDisabled();
   });
 
+  it("provides a link to the login page", async () => {
+    const user = userEvent.setup();
+    renderApp("/register");
+
+    await user.click(screen.getByRole("link", { name: /masuk/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /^masuk$/i }),
+    ).toBeInTheDocument();
+  });
+
   it("does not store a token after successful registration", async () => {
     const user = userEvent.setup();
     renderApp("/register");

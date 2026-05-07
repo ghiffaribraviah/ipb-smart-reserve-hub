@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiPost, type ApiError } from "../lib/api-client";
 
 export function RegisterPage() {
@@ -144,6 +144,13 @@ export function RegisterPage() {
             {isSubmitting ? "Memproses..." : "Daftar"}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-text-secondary">
+          Sudah punya akun?{" "}
+          <Link to="/login" className="font-medium text-accent hover:text-accent-hover">
+            Masuk di sini
+          </Link>
+        </p>
       </div>
     </div>
   );

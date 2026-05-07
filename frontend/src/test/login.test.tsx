@@ -49,6 +49,17 @@ describe("Login", () => {
     ).toBeInTheDocument();
   });
 
+  it("provides a link to the register page", async () => {
+    const user = userEvent.setup();
+    renderApp("/login");
+
+    await user.click(screen.getByRole("link", { name: /daftar/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /daftar akun/i }),
+    ).toBeInTheDocument();
+  });
+
   it("shows a loading state while submitting", async () => {
     server.use(
       http.post("http://localhost:8000/auth/login", async () => {

@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 import type { ApiError } from "../lib/api-client";
 
@@ -91,6 +91,13 @@ export function LoginPage() {
             {isSubmitting ? "Memproses..." : "Masuk"}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-text-secondary">
+          Belum punya akun?{" "}
+          <Link to="/register" className="font-medium text-accent hover:text-accent-hover">
+            Daftar di sini
+          </Link>
+        </p>
       </div>
     </div>
   );

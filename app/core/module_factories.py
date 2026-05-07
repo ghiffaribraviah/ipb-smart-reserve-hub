@@ -23,6 +23,7 @@ from app.repositories.review_repository import SqlAlchemyReviewRepository
 from app.services.organization_units import OrganizationUnitManagementModule
 from app.services.notifications import NotificationModule
 from app.services.payments import PaymentModule
+from app.services.reservation_lifecycle import FacilityReservationLifecycleModule
 from app.services.reservations import ReservationModule, ReservationSubmissionConflictGuard
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
 from app.services.reviews import ReviewModule
@@ -124,6 +125,10 @@ class FacilityModuleFactory:
             pdf_generator=self._approval_letter_pdf_generator,
             booking_settings=booking_settings,
             clock=self._clock,
+            reservation_lifecycle=FacilityReservationLifecycleModule(
+                booking_settings=booking_settings,
+                clock=self._clock,
+            ),
             notifications=self.build_notifications(session),
             audit_logs=self.build_audit_logs(session),
         )

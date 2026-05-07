@@ -30,6 +30,7 @@ def register_account_routes(
     app: FastAPI,
     *,
     get_bearer_credentials: Callable,
+    get_current_user: Callable,
     get_user_accounts: Callable,
     require_access: Callable[[AccessPolicyAction], Callable],
 ) -> None:
@@ -83,6 +84,12 @@ def register_account_routes(
         except AccountInactive:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Akun tidak aktif.")
         return TokenResponse(access_token=account_session.access_token)
+
+    @app.get("/auth/me", response_model=UserResponse)
+    async def get_current_user_identity(
+        current_user: UserAccount = Depends(get_current_user),
+    ) -> UserAccount:
+        return current_user
 
     @app.post("/admin/users", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
     async def create_admin_managed_user(

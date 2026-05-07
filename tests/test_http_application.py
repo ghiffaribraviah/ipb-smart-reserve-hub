@@ -40,6 +40,7 @@ class StubHttpRuntimeDependencyRegistry:
     def account_routes(self):
         return AccountRouteDependencies(
             get_bearer_credentials=self.bearer_scheme,
+            get_current_user=placeholder_dependency,
             get_user_accounts=placeholder_dependency,
             require_access=placeholder_require_access,
         )

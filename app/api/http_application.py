@@ -39,6 +39,7 @@ from app.storage import InMemoryPrivateStorage
 @dataclass(frozen=True)
 class AccountRouteDependencies:
     get_bearer_credentials: Callable
+    get_current_user: Callable
     get_user_accounts: Callable
     require_access: Callable[[AccessPolicyAction], Callable]
 
@@ -185,6 +186,7 @@ class HttpRuntimeModule:
     def account_routes(self) -> AccountRouteDependencies:
         return AccountRouteDependencies(
             get_bearer_credentials=self.bearer_scheme,
+            get_current_user=self.get_current_user,
             get_user_accounts=self.get_user_accounts,
             require_access=self.require_access,
         )
@@ -390,6 +392,7 @@ class HttpApplicationModule:
         register_account_routes(
             app,
             get_bearer_credentials=account_dependencies.get_bearer_credentials,
+            get_current_user=account_dependencies.get_current_user,
             get_user_accounts=account_dependencies.get_user_accounts,
             require_access=account_dependencies.require_access,
         )

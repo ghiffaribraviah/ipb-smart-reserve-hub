@@ -158,6 +158,79 @@ async def test_student_registers_with_allowed_email_and_reaches_student_shell():
 
 
 @pytest.mark.anyio
+async def test_active_authenticated_user_can_get_current_user_identity():
+    transport = ASGITransport(app=create_app(database_url="sqlite+pysqlite:///:memory:"))
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        registered = await client.post(
+            "/auth/register",
+            json={
+                "email": "budi@apps.ipb.ac.id",
+                "password": "secret123",
+                "full_name": "Budi Santoso",
+                "nim": "G64190001",
+                "phone": "08123456789",
+            },
+        )
+        logged_in = await client.post(
+            "/auth/login",
+            json={"email": "budi@apps.ipb.ac.id", "password": "secret123"},
+        )
+
+        response = await client.get(
+            "/auth/me",
+            headers={"Authorization": f"Bearer {logged_in.json()['access_token']}"},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "id": registered.json()["id"],
+            "email": "budi@apps.ipb.ac.id",
+            "full_name": "Budi Santoso",
+            "role": "student",
+            "is_active": True,
+        }
+
+
+@pytest.mark.anyio
+async def test_current_user_identity_requires_bearer_credentials():
+    transport = ASGITransport(app=create_app(database_url="sqlite+pysqlite:///:memory:"))
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/auth/me")
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Autentikasi diperlukan."
+
+
+@pytest.mark.anyio
+async def test_current_user_identity_rejects_invalid_tokens():
+    transport = ASGITransport(app=create_app(database_url="sqlite+pysqlite:///:memory:"))
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/auth/me", headers={"Authorization": "Bearer not-a-valid-token"})
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Token tidak valid."
+
+
+@pytest.mark.anyio
+async def test_current_user_identity_rejects_inactive_user_tokens():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:", secret_key="test-secret")
+    inactive_user_id = DataBuilder(app).create_user(
+        email="inactive@apps.ipb.ac.id", role=UserRole.student, is_active=False
+    )
+    inactive_token = create_access_token(inactive_user_id, "test-secret")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/auth/me", headers={"Authorization": f"Bearer {inactive_token}"})
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Akun tidak aktif."
+
+
+@pytest.mark.anyio
 async def test_super_admin_creates_staff_and_role_shells_are_guarded():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
     DataBuilder(app).create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)

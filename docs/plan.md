@@ -681,6 +681,7 @@ Student/public:
 - `POST /auth/register`
 - `POST /auth/login`
 - `POST /auth/refresh`
+- `GET /auth/me`
 - `GET /facilities`
 - `GET /facilities/{id}`
 - `GET /facilities/{id}/calendar`

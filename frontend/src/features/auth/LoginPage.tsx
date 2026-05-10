@@ -1,10 +1,9 @@
 import { ArrowRight, Lock, Mail } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 
 import { ApiError } from '../../shared/api';
 import { authSession } from '../../shared/auth';
-import { AuthCampusVisual } from './AuthCampusVisual';
 import { getCurrentUser, getRoleLandingPath, login } from './api';
 
 type FormErrors = {
@@ -43,7 +42,6 @@ function validate(email: string, password: string): FormErrors {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
@@ -52,13 +50,6 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isBusy = isCheckingSession || isSubmitting;
-  const registrationSuccess =
-    typeof location.state === 'object' &&
-    location.state !== null &&
-    'registrationSuccess' in location.state &&
-    typeof location.state.registrationSuccess === 'string'
-      ? location.state.registrationSuccess
-      : null;
   const fieldErrorId = useMemo(
     () => ({
       email: errors.email ? 'login-email-error' : undefined,
@@ -226,12 +217,6 @@ export function LoginPage() {
                     </div>
                   ) : null}
 
-                  {registrationSuccess ? (
-                    <div className="rounded-xl border border-secondary/25 bg-secondary-container px-4 py-3 text-sm font-semibold text-on-secondary-container">
-                      {registrationSuccess}
-                    </div>
-                  ) : null}
-
                   <button
                     className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#07996f] px-5 text-base font-bold text-white transition hover:bg-secondary focus:outline-none focus:ring-4 focus:ring-secondary/20 disabled:cursor-not-allowed"
                     type="submit"
@@ -239,13 +224,6 @@ export function LoginPage() {
                     {isSubmitting ? 'Signing in...' : 'Sign In'}
                     {!isSubmitting ? <ArrowRight aria-hidden="true" className="size-5" /> : null}
                   </button>
-
-                  <p className="text-center text-sm font-medium text-on-surface-variant">
-                    Need a student account?{' '}
-                    <Link className="font-bold text-secondary transition hover:text-primary" to="/register">
-                      Register
-                    </Link>
-                  </p>
                 </fieldset>
               </form>
             </div>
@@ -259,7 +237,13 @@ export function LoginPage() {
           </div>
         </section>
 
-        <AuthCampusVisual />
+        <aside
+          aria-label="Campus building image placeholder"
+          className="relative hidden min-h-screen overflow-hidden bg-primary-container lg:block"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(139,245,189,0.24),transparent_34%),linear-gradient(140deg,#c8e9e8_0%,#466463_42%,#0f2e2e_100%)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/25 to-transparent" />
+        </aside>
       </div>
     </main>
   );

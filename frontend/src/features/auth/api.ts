@@ -20,25 +20,10 @@ export type LoginCredentials = {
   password: string;
 };
 
-export type StudentRegistrationPayload = {
-  email: string;
-  password: string;
-  full_name: string;
-  nim: string;
-  phone: string;
-};
-
 export function login(credentials: LoginCredentials): Promise<LoginResponse> {
   return apiRequest<LoginResponse>('/auth/login', {
     method: 'POST',
     body: credentials,
-  });
-}
-
-export function registerStudent(payload: StudentRegistrationPayload): Promise<CurrentUser> {
-  return apiRequest<CurrentUser>('/auth/register', {
-    method: 'POST',
-    body: payload,
   });
 }
 

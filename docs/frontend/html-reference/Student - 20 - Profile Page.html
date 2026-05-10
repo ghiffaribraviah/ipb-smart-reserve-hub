@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Profil Mahasiswa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Variables & Reset */
+        :root {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #0f9d58;
+            --brand-green-light: #e8f5e9;
+            --brand-green-dark: #0b7340;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --logo-serif: 'Playfair Display', serif;
+            --sans-serif: 'Inter', system-ui, sans-serif;
+            --navbar-height: 80px;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: var(--sans-serif); background-color: var(--bg-main); color: var(--primary-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navbar */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .logo-nav { font-family: var(--logo-serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
+        .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; background-color: var(--brand-green); }
+
+        /* Layout */
+        .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 40px) auto 80px; }
+        .page-header { margin-bottom: 32px; }
+        .page-header h1 { font-size: 32px; font-weight: 700; margin: 0 0 8px; color: var(--primary-text); }
+        .page-header p { font-size: 14px; color: var(--secondary-text); margin: 0; }
+
+        /* Profile Layout */
+        .profile-layout { display: flex; gap: 32px; align-items: flex-start; }
+
+        /* Sidebar */
+        .profile-sidebar { width: 320px; display: flex; flex-direction: column; gap: 24px; }
+        .profile-card { background-color: var(--bg-surface); border-radius: 16px; box-shadow: var(--card-shadow); padding: 32px 24px; text-align: center; border: 1px solid var(--border-color); }
+        .avatar-lg { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 16px; background-color: var(--brand-green-light); color: var(--brand-green); display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .profile-name { font-size: 20px; font-weight: 700; margin: 0 0 4px; color: var(--primary-text); }
+        .profile-nim { font-size: 14px; color: var(--secondary-text); margin: 0 0 16px; }
+        .badge-status { display: inline-block; padding: 6px 12px; background-color: #ecfdf5; color: #059669; font-size: 12px; font-weight: 600; border-radius: 20px; letter-spacing: 0.5px; }
+        
+        .btn-logout { margin-top: 24px; width: 100%; background-color: #fee2e2; color: #ef4444; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-logout:hover { background-color: #fecaca; }
+
+        /* Main Content */
+        .profile-main { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+        .info-section { background-color: var(--bg-surface); border-radius: 16px; box-shadow: var(--card-shadow); padding: 32px; border: 1px solid var(--border-color); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
+        .section-title { font-size: 18px; font-weight: 700; margin: 0; color: var(--primary-text); }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .info-item { display: flex; flex-direction: column; gap: 6px; }
+        .info-label { font-size: 11px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-value { font-size: 15px; color: var(--primary-text); font-weight: 500; }
+
+        /* Footer */
+        .footer { background-color: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px; }
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: var(--logo-serif); font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text); margin: 0; margin-top: 12px; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text); }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .profile-layout { flex-direction: column; }
+            .profile-sidebar { width: 100%; }
+        }
+        @media (max-width: 768px) {
+            .info-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-content">
+            <div class="nav-left">
+                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <div class="nav-search">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" placeholder="Search facilities...">
+                </div>
+            </div>
+            <div class="nav-center">
+                <a href="#" class="nav-link">Beranda</a>
+                <a href="#" class="nav-link">Fasilitas</a>
+                <a href="#" class="nav-link">Reservasi</a>
+            </div>
+            <div class="nav-right">
+                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
+                <div class="profile-pic">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        
+        <div class="page-header">
+            <h1>Profil Mahasiswa</h1>
+            <p>Informasi akademik mahasiswa.</p>
+        </div>
+
+        <div class="profile-layout">
+            
+            <aside class="profile-sidebar">
+                <div class="profile-card">
+                    <div class="avatar-lg">JD</div>
+                    <h2 class="profile-name">Johnathan Doe</h2>
+                    <p class="profile-nim">G64190001</p>
+                    <span class="badge-status">Mahasiswa Aktif</span>
+                    
+                    <button class="btn-logout">&#128682; Keluar (Logout)</button>
+                </div>
+            </aside>
+
+            <div class="profile-main">
+                
+                <section class="info-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Informasi Akademik</h3>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Nomor Induk Mahasiswa (NIM)</span>
+                            <span class="info-value">G64190001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Program Studi</span>
+                            <span class="info-value">Ilmu Komputer</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Fakultas</span>
+                            <span class="info-value">Matematika dan Ilmu Pengetahuan Alam (FMIPA)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tahun Masuk</span>
+                            <span class="info-value">2019</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Strata</span>
+                            <span class="info-value">Sarjana (S1)</span>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <h2 class="logo-footer">IPB SRH</h2>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

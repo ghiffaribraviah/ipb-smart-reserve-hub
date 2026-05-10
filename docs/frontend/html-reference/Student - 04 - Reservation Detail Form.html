@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Detail Kegiatan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #0f9d58;
+            --brand-green-light: #e8f5e9;
+            --brand-green-dark: #0b7340;
+            --border-color: #e5e7eb;
+            --stepper-inactive: #d1d5db;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --logo-serif: 'Playfair Display', serif;
+            --sans-serif: 'Inter', system-ui, sans-serif;
+            --navbar-height: 80px;
+        }
+
+        body {
+            margin: 0; font-family: var(--sans-serif); background-color: var(--bg-main); color: var(--primary-text); line-height: 1.5; -webkit-font-smoothing: antialiased;
+        }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navbar & Footer (Shared) */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .logo-nav { font-family: var(--logo-serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
+        .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); }
+
+        /* Layout */
+        .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 32px) auto 80px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--brand-green); font-size: 14px; font-weight: 600; margin-bottom: 32px; }
+
+        /* Stepper */
+        .stepper-wrapper { display: flex; justify-content: center; margin-bottom: 48px; }
+        .stepper { display: flex; align-items: center; width: 600px; max-width: 100%; }
+        .step-item { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 2; }
+        .step-circle { width: 36px; height: 36px; border-radius: 50%; background-color: var(--bg-surface); border: 2px solid var(--stepper-inactive); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: var(--secondary-text); }
+        .step-label { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; position: absolute; top: 48px; white-space: nowrap; }
+        
+        .step-item.done .step-circle { background-color: var(--brand-green); border-color: var(--brand-green); color: white; }
+        .step-item.done .step-label { color: var(--brand-green); }
+        .step-item.active .step-circle { border-color: var(--brand-green); color: var(--brand-green); }
+        .step-item.active .step-label { color: var(--brand-green); }
+        
+        .step-line { flex-grow: 1; height: 2px; background-color: var(--stepper-inactive); margin: 0 16px; position: relative; top: -12px; }
+        .step-line.filled { background-color: var(--brand-green); }
+
+        /* Two Column Layout */
+        .wizard-layout { display: flex; gap: 32px; align-items: flex-start; }
+        
+        /* Left Column - Form */
+        .form-card { flex: 1; background-color: var(--bg-surface); border-radius: 12px; box-shadow: var(--card-shadow); padding: 40px; }
+        .form-header h2 { font-size: 24px; font-weight: 700; margin: 0 0 8px; }
+        .form-header p { font-size: 14px; color: var(--secondary-text); margin: 0 0 32px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { display: block; font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .form-control { width: 100%; padding: 14px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-family: var(--sans-serif); font-size: 14px; color: var(--primary-text); background-color: #f8fafc; box-sizing: border-box; outline: none; }
+        .form-control::placeholder { color: #9ca3af; }
+        textarea.form-control { resize: vertical; min-height: 100px; }
+
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+        .checkbox-item { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; }
+        .checkbox-item input { width: 18px; height: 18px; accent-color: var(--brand-green); cursor: pointer; }
+        .checkbox-item span { font-size: 14px; color: var(--primary-text); }
+
+        .form-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 48px; padding-top: 24px; }
+        .btn-text { color: var(--secondary-text); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: none; border: none; cursor: pointer; }
+        .btn-primary { background-color: var(--brand-green); color: white; border: none; border-radius: 8px; padding: 14px 24px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; text-transform: uppercase; letter-spacing: 0.5px;}
+        .btn-primary:hover { background-color: var(--brand-green-dark); }
+
+        /* Right Column - Summary */
+        .summary-sidebar { width: 400px; display: flex; flex-direction: column; gap: 24px; }
+        .summary-card { background-color: var(--bg-surface); border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden; }
+        .summary-img { width: 100%; height: 180px; object-fit: cover; }
+        .summary-content { padding: 24px; }
+        
+        .summary-subtitle { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 4px; }
+        .summary-title { font-size: 20px; font-weight: 700; margin: 0 0 24px; }
+        
+        .summary-detail { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; color: var(--secondary-text); }
+        .summary-detail .icon { color: var(--brand-green); font-size: 16px; }
+        
+        .divider { height: 1px; background-color: var(--border-color); margin: 24px 0; }
+        
+        .booking-summary h4 { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; margin: 0 0 16px; letter-spacing: 0.5px; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--secondary-text); margin-bottom: 12px; }
+        .summary-row.total { font-size: 16px; font-weight: 700; color: var(--primary-text); margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+        .summary-row.total span:last-child { font-size: 18px; }
+
+        .policy-box { background-color: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 8px; padding: 16px; display: flex; gap: 12px; }
+        .policy-box .icon { color: #0d9488; font-size: 16px; margin-top: 2px; }
+        .policy-box p { margin: 0; font-size: 12px; color: #0f766e; line-height: 1.5; }
+
+        /* Responsive */
+        @media (max-width: 1024px) { .wizard-layout { flex-direction: column; } .summary-sidebar { width: 100%; } }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } .checkbox-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-content">
+            <div class="nav-left">
+                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <div class="nav-search">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" placeholder="Search facilities...">
+                </div>
+            </div>
+            <div class="nav-center">
+                <a href="#" class="nav-link">Beranda</a>
+                <a href="#" class="nav-link">Fasilitas</a>
+                <a href="#" class="nav-link active">Reservasi</a>
+            </div>
+            <div class="nav-right">
+                <span style="font-size: 20px; color: #6b7280;">&#128276;</span>
+                <div class="profile-pic"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <a href="#" class="back-link">&larr; Kembali</a>
+
+        <div class="stepper-wrapper">
+            <div class="stepper">
+                <div class="step-item done">
+                    <div class="step-circle">&#10003;</div>
+                    <span class="step-label">Pilih Waktu</span>
+                </div>
+                <div class="step-line filled"></div>
+                <div class="step-item active">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">Detail Kegiatan</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">Konfirmasi</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="wizard-layout">
+            
+            <div class="form-card">
+                <div class="form-header">
+                    <h2>Detail Kegiatan</h2>
+                    <p>Silahkan lengkapi data berikut untuk melanjutkan proses reservasi Anda</p>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nama Kegiatan</label>
+                        <input type="text" class="form-control" placeholder="e.g. AI Ethics Symposium">
+                    </div>
+                    <div class="form-group">
+                        <label>Estimasi Jumlah Peserta</label>
+                        <input type="number" class="form-control" placeholder="45">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Organisasi</label>
+                        <input type="text" class="form-control" placeholder="Enter organization name">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Deskripsi Kegiatan</label>
+                        <textarea class="form-control" placeholder="Briefly describe the purpose of this reservation and any specific layout requirements..."></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Keperluan Tambahan</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-item">
+                                <input type="checkbox">
+                                <span>AV Support & Microphones</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox">
+                                <span>Koordinasi Logistik</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox">
+                                <span>Jasa Kebersihan Extra</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox">
+                                <span>Personel Keamanan</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn-text">Back to Search</button>
+                    <button class="btn-primary">Proceed to Confirmation</button>
+                </div>
+            </div>
+
+            <div class="summary-sidebar">
+                <div class="summary-card">
+                    <img src="https://via.placeholder.com/400x200/4a2511/ffffff?text=Auditorium" alt="Facility" class="summary-img">
+                    <div class="summary-content">
+                        <p class="summary-subtitle">LOREM IPSUM</p>
+                        <h3 class="summary-title">Lorem Ipsum Dolor Sit Amet</h3>
+                        
+                        <div class="summary-detail">
+                            <span class="icon">&#128197;</span>
+                            <span>October 24, 2024</span>
+                        </div>
+                        <div class="summary-detail">
+                            <span class="icon">&#128338;</span>
+                            <span>09:00 AM - 01:00 PM</span>
+                        </div>
+                        <div class="summary-detail">
+                            <span class="icon">&#128101;</span>
+                            <span>Capacity: 50 Persons</span>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="booking-summary">
+                            <h4>Booking Summary</h4>
+                            <div class="summary-row">
+                                <span>Facility Rate (4h)</span>
+                                <span>Rp 100.000,00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Admin Fee</span>
+                                <span>Rp 15.000,00</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total Amount</span>
+                                <span>Rp 115.000,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="policy-box">
+                    <span class="icon">&#8505;</span>
+                    <div>
+                        <span style="display:block; font-size:10px; font-weight:700; margin-bottom:4px; letter-spacing:0.5px;">DEPARTMENT POLICY</span>
+                        <p>This facility requires approval from the Dean's office for events exceeding 4 hours. Academic priority applies.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

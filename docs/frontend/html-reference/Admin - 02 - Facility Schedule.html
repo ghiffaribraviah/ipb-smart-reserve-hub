@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Facility Schedule</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Variables & Reset */
+        :root {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #0f9d58;
+            --brand-green-light: #e8f5e9;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            
+            /* Badge Colors */
+            --badge-yellow-bg: #fef3c7;
+            --badge-yellow-text: #92400e;
+            --badge-green-bg: #d1fae5;
+            --badge-green-text: #065f46;
+            --badge-red-bg: #fee2e2;
+            --badge-red-text: #991b1b;
+            --badge-gray-bg: #f3f4f6;
+            --badge-gray-text: #4b5563;
+
+            --sans-serif: 'Inter', system-ui, sans-serif;
+            --navbar-height: 80px;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: var(--sans-serif); background-color: var(--bg-main); color: var(--primary-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navbar */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .logo-nav { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
+        .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); }
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Main Container */
+        .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 40px) auto 80px; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--brand-green); font-size: 14px; font-weight: 600; margin-bottom: 24px; }
+
+        /* Header */
+        .page-header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header-text h1 { font-size: 32px; font-weight: 700; color: var(--primary-text); margin: 0 0 12px; }
+        .header-text p { font-size: 14px; color: var(--secondary-text); margin: 0; max-width: 600px; line-height: 1.6; }
+        
+        .header-actions { display: flex; gap: 16px; align-items: center; }
+        .date-picker { padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-family: var(--sans-serif); font-size: 14px; color: var(--primary-text); background-color: var(--bg-surface); outline: none; }
+        .btn-today { background-color: var(--bg-surface); color: var(--primary-text); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .btn-today:hover { background-color: #f9fafb; }
+
+        /* Calendar UI */
+        .calendar-container { background-color: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); padding: 24px; margin-bottom: 32px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .calendar-title { font-size: 18px; font-weight: 700; color: var(--primary-text); margin: 0; }
+        .calendar-nav { display: flex; gap: 8px; }
+        .btn-cal-nav { background: none; border: 1px solid var(--border-color); border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--secondary-text); }
+        .btn-cal-nav:hover { background-color: #f9fafb; color: var(--primary-text); }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+        .calendar-day-header { font-size: 11px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; text-align: center; padding-bottom: 8px; }
+        .calendar-day { aspect-ratio: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.2s; background-color: var(--bg-surface); }
+        .calendar-day:hover { border-color: var(--brand-green); }
+        .calendar-day.active { border-color: var(--brand-green); background-color: var(--brand-green-light); }
+        .calendar-day.muted { background-color: #f9fafb; color: #9ca3af; border-color: #f3f4f6; }
+        .day-number { font-size: 14px; font-weight: 600; margin-bottom: auto; }
+        .day-indicators { display: flex; gap: 4px; justify-content: flex-start; margin-top: 4px; flex-wrap: wrap; }
+        .indicator { width: 8px; height: 8px; border-radius: 50%; }
+        .indicator.green { background-color: #10b981; }
+        .indicator.yellow { background-color: #f59e0b; }
+        .indicator.red { background-color: #ef4444; }
+
+        /* Layout Grid for Top Row */
+        .top-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; align-items: start; }
+        
+        /* Compact Agenda List */
+        .agenda-container { background-color: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); padding: 24px; }
+        .agenda-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
+        .agenda-title { font-size: 18px; font-weight: 700; color: var(--primary-text); margin: 0 0 4px; }
+        .agenda-subtitle { font-size: 13px; color: var(--secondary-text); margin: 0; }
+        .agenda-list { display: flex; flex-direction: column; gap: 16px; }
+        .agenda-item { display: flex; gap: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border-color); }
+        .agenda-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .agenda-time { font-size: 13px; font-weight: 600; color: var(--primary-text); white-space: nowrap; width: 85px; }
+        .agenda-time span { display: block; font-size: 11px; color: var(--secondary-text); font-weight: 400; margin-top: 2px; }
+        .agenda-details { flex: 1; }
+        .agenda-event { font-size: 14px; font-weight: 600; color: var(--primary-text); margin: 0 0 8px; }
+        .agenda-meta { display: flex; justify-content: space-between; align-items: center; }
+
+        /* Data Table Container */
+        .table-section { background-color: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); overflow: hidden; }
+        
+        .table-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; border-bottom: 1px solid var(--border-color); }
+        .table-header h2 { font-size: 18px; font-weight: 600; margin: 0; color: var(--primary-text); }
+        .btn-filter { display: flex; align-items: center; gap: 8px; background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--secondary-text); cursor: pointer; }
+        .btn-filter:hover { background-color: #f9fafb; }
+
+        /* Table Styles */
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 32px; background-color: #f9fafb; border-bottom: 1px solid var(--border-color); }
+        .data-table td { padding: 20px 32px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        .data-table tr:last-child td { border-bottom: none; }
+        
+        .time-cell { font-size: 14px; font-weight: 600; color: var(--primary-text); white-space: nowrap; }
+        
+        .event-info { display: flex; flex-direction: column; gap: 4px; }
+        .event-title { font-size: 15px; font-weight: 600; color: var(--primary-text); margin: 0; }
+        .event-desc { font-size: 13px; color: var(--secondary-text); margin: 0; }
+
+        /* Applicant Cell */
+        .applicant-cell { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white; overflow: hidden; flex-shrink: 0; }
+        .applicant-info { display: flex; flex-direction: column; }
+        .applicant-name { font-size: 14px; font-weight: 600; color: var(--primary-text); margin: 0 0 2px; }
+        .applicant-role { font-size: 12px; color: var(--secondary-text); margin: 0; }
+        
+        /* Badges */
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-yellow { background-color: var(--badge-yellow-bg); color: var(--badge-yellow-text); }
+        .badge-green { background-color: var(--badge-green-bg); color: var(--badge-green-text); }
+        .badge-gray { background-color: var(--badge-gray-bg); color: var(--badge-gray-text); }
+
+        /* Actions */
+        .action-link { font-size: 13px; font-weight: 600; color: var(--brand-green); cursor: pointer; }
+        .action-link:hover { text-decoration: underline; }
+
+        /* Empty State */
+        .empty-state { padding: 60px 32px; text-align: center; color: var(--secondary-text); }
+        .empty-state .icon { font-size: 48px; color: #d1d5db; margin-bottom: 16px; display: block; }
+
+        /* Footer */
+        .footer { background-color: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px;}
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text); margin: 0; margin-top: 12px; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text); }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+            .summary-cards { flex-direction: column; gap: 16px; }
+        }
+        @media (max-width: 768px) {
+            .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
+            .data-table thead { display: none; }
+            .data-table tr { border-bottom: 1px solid var(--border-color); padding: 16px 0; }
+            .data-table td { border-bottom: none; padding: 8px 24px; display: flex; flex-direction: column; gap: 8px; }
+            .data-table td::before { content: attr(data-label); font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-content">
+            <div class="nav-left">
+                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <div class="nav-search">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" placeholder="Search facilities...">
+                </div>
+            </div>
+            <div class="nav-center">
+                <a href="#" class="nav-link">Reservasi</a>
+                <a href="#" class="nav-link active">Fasilitas</a>
+            </div>
+            <div class="nav-right">
+                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
+                <div class="profile-pic">
+                    <img src="https://via.placeholder.com/36x36/1e3a5f/ffffff?text=A" alt="Admin Profile">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        
+        <a href="Admin - 01 - Facility List.html" class="back-link">&larr; Back to Facility List</a>
+
+        <div class="page-header">
+            <div class="header-text">
+                <h1>Grand Auditorium Schedule</h1>
+                <p>Manage and view the daily agenda, confirmed bookings, and pending requests for this specific facility.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-today">Today</button>
+                <input type="date" class="date-picker" value="2024-10-24">
+            </div>
+        </div>
+
+        <div class="top-row">
+            <div class="calendar-container" style="margin-bottom: 0;">
+                <div class="calendar-header">
+                    <h2 class="calendar-title">October 2024</h2>
+                    <div class="calendar-nav">
+                        <button class="btn-cal-nav">&lt;</button>
+                        <button class="btn-cal-nav">&gt;</button>
+                    </div>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+                    
+                    <div class="calendar-day muted"><span class="day-number">29</span></div>
+                    <div class="calendar-day muted"><span class="day-number">30</span></div>
+                    <div class="calendar-day"><span class="day-number">1</span></div>
+                    <div class="calendar-day"><span class="day-number">2</span></div>
+                    <div class="calendar-day"><span class="day-number">3</span></div>
+                    <div class="calendar-day"><span class="day-number">4</span></div>
+                    <div class="calendar-day"><span class="day-number">5</span></div>
+
+                    <div class="calendar-day"><span class="day-number">6</span></div>
+                    <div class="calendar-day"><span class="day-number">7</span></div>
+                    <div class="calendar-day"><span class="day-number">8</span></div>
+                    <div class="calendar-day"><span class="day-number">9</span></div>
+                    <div class="calendar-day"><span class="day-number">10</span></div>
+                    <div class="calendar-day"><span class="day-number">11</span></div>
+                    <div class="calendar-day"><span class="day-number">12</span></div>
+
+                    <div class="calendar-day"><span class="day-number">13</span></div>
+                    <div class="calendar-day"><span class="day-number">14</span></div>
+                    <div class="calendar-day"><span class="day-number">15</span></div>
+                    <div class="calendar-day"><span class="day-number">16</span></div>
+                    <div class="calendar-day"><span class="day-number">17</span></div>
+                    <div class="calendar-day"><span class="day-number">18</span></div>
+                    <div class="calendar-day"><span class="day-number">19</span></div>
+
+                    <div class="calendar-day"><span class="day-number">20</span></div>
+                    <div class="calendar-day"><span class="day-number">21</span></div>
+                    <div class="calendar-day"><span class="day-number">22</span></div>
+                    <div class="calendar-day"><span class="day-number">23</span></div>
+                    <div class="calendar-day active">
+                        <span class="day-number">24</span>
+                        <div class="day-indicators">
+                            <div class="indicator green"></div>
+                            <div class="indicator green"></div>
+                            <div class="indicator yellow"></div>
+                        </div>
+                    </div>
+                    <div class="calendar-day"><span class="day-number">25</span></div>
+                    <div class="calendar-day"><span class="day-number">26</span></div>
+
+                    <div class="calendar-day"><span class="day-number">27</span></div>
+                    <div class="calendar-day"><span class="day-number">28</span></div>
+                    <div class="calendar-day"><span class="day-number">29</span></div>
+                    <div class="calendar-day"><span class="day-number">30</span></div>
+                    <div class="calendar-day"><span class="day-number">31</span></div>
+                    <div class="calendar-day muted"><span class="day-number">1</span></div>
+                    <div class="calendar-day muted"><span class="day-number">2</span></div>
+                </div>
+            </div>
+
+            <div class="agenda-container">
+                <div class="agenda-header">
+                    <h2 class="agenda-title">Agenda</h2>
+                    <p class="agenda-subtitle">October 24, 2024</p>
+                </div>
+                <div class="agenda-list">
+                    <div class="agenda-item">
+                        <div class="agenda-time">09:00 AM<span>to 12:00 PM</span></div>
+                        <div class="agenda-details">
+                            <p class="agenda-event">AI Ethics Symposium 2024</p>
+                            <div class="agenda-meta">
+                                <span class="status-badge badge-green" style="padding: 4px 8px; font-size: 10px;">Confirmed</span>
+                                <a class="action-link" style="font-size: 12px;">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="agenda-item">
+                        <div class="agenda-time">01:00 PM<span>to 03:00 PM</span></div>
+                        <div class="agenda-details">
+                            <p class="agenda-event">Guest Lecture: Climate Change</p>
+                            <div class="agenda-meta">
+                                <span class="status-badge badge-green" style="padding: 4px 8px; font-size: 10px;">Confirmed</span>
+                                <a class="action-link" style="font-size: 12px;">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="agenda-item">
+                        <div class="agenda-time">04:00 PM<span>to 06:00 PM</span></div>
+                        <div class="agenda-details">
+                            <p class="agenda-event">Debate Club Annual Championship</p>
+                            <div class="agenda-meta">
+                                <span class="status-badge badge-yellow" style="padding: 4px 8px; font-size: 10px;">Pending</span>
+                                <a class="action-link" style="font-size: 12px; color: #d97706;">Review Request</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                <h2>All Reservations</h2>
+                <button class="btn-filter">
+                    <span style="font-size: 14px;">&#8801;</span> Filter
+                </button>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>TIME</th>
+                        <th>EVENT DETAILS</th>
+                        <th>APPLICANT</th>
+                        <th>STATUS</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-cell" data-label="Time">09:00 AM - 12:00 PM</td>
+                        <td data-label="Event Details">
+                            <div class="event-info">
+                                <p class="event-title">AI Ethics Symposium 2024</p>
+                                <p class="event-desc">Department of Computer Science • Est. 150 attendees</p>
+                            </div>
+                        </td>
+                        <td data-label="Applicant">
+                            <div class="applicant-cell">
+                                <div class="avatar" style="background-color: #064e3b;">JD</div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Johnathan Doe</p>
+                                    <p class="applicant-role">Student Organization</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="Status">
+                            <div class="status-badge badge-green">
+                                Confirmed
+                            </div>
+                        </td>
+                        <td data-label="Actions">
+                            <a class="action-link">View Details</a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="time-cell" data-label="Time">01:00 PM - 03:00 PM</td>
+                        <td data-label="Event Details">
+                            <div class="event-info">
+                                <p class="event-title">Guest Lecture: Climate Change Adaptations</p>
+                                <p class="event-desc">Faculty of Forestry • Est. 200 attendees</p>
+                            </div>
+                        </td>
+                        <td data-label="Applicant">
+                            <div class="applicant-cell">
+                                <div class="avatar" style="background-color: #b45309;">ER</div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Elena Rodriguez</p>
+                                    <p class="applicant-role">Faculty Staff</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="Status">
+                            <div class="status-badge badge-green">
+                                Confirmed
+                            </div>
+                        </td>
+                        <td data-label="Actions">
+                            <a class="action-link">View Details</a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="time-cell" data-label="Time">04:00 PM - 06:00 PM</td>
+                        <td data-label="Event Details">
+                            <div class="event-info">
+                                <p class="event-title">Debate Club Annual Championship</p>
+                                <p class="event-desc">Student Union • Est. 100 attendees</p>
+                            </div>
+                        </td>
+                        <td data-label="Applicant">
+                            <div class="applicant-cell">
+                                <div class="avatar" style="background-color: #475569;">AS</div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Ahmed Syah</p>
+                                    <p class="applicant-role">Student</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="Status">
+                            <div class="status-badge badge-yellow">
+                                Pending Verification
+                            </div>
+                        </td>
+                        <td data-label="Actions">
+                            <a class="action-link" style="color: #d97706;">Review Request</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Example of Empty State (hidden by default, shown for reference if no events)
+        <div class="table-section" style="display: none;">
+            <div class="table-header">
+                <h2>Agenda for October 25, 2024</h2>
+            </div>
+            <div class="empty-state">
+                <span class="icon">&#128197;</span>
+                <h3>No events scheduled</h3>
+                <p>There are no reservations for this facility on the selected date.</p>
+            </div>
+        </div>
+        -->
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <h2 class="logo-footer">IPB SRH</h2>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

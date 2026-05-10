@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Submit Review</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Variables & Reset */
+        :root {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #0f9d58;
+            --brand-green-light: #e8f5e9;
+            --brand-green-dark: #0b7340;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --logo-serif: 'Playfair Display', serif;
+            --sans-serif: 'Inter', system-ui, sans-serif;
+            --navbar-height: 80px;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: var(--sans-serif); background-color: var(--bg-main); color: var(--primary-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navbar */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .logo-nav { font-family: var(--logo-serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
+        .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); }
+
+        /* Layout */
+        .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 32px) auto 80px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--brand-green); font-size: 14px; font-weight: 600; margin-bottom: 32px; }
+
+        /* Two Column Layout */
+        .wizard-layout { display: flex; gap: 32px; align-items: flex-start; }
+        
+        /* Left Column - Form */
+        .form-card { flex: 1; background-color: var(--bg-surface); border-radius: 12px; box-shadow: var(--card-shadow); padding: 40px; }
+        .form-header h1 { font-size: 24px; font-weight: 700; margin: 0 0 8px; color: var(--primary-text); }
+        .form-header p { font-size: 14px; color: var(--secondary-text); margin: 0 0 32px; }
+        
+        .form-group { margin-bottom: 24px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: var(--primary-text); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-family: var(--sans-serif); font-size: 14px; background-color: #f9fafb; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+        .form-control:focus { border-color: var(--brand-green); background-color: #ffffff; }
+        textarea.form-control { resize: vertical; min-height: 120px; }
+
+        /* Rating Stars (CSS Only) */
+        .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
+        .star-rating input { display: none; }
+        .star-rating label { font-size: 32px; color: #d1d5db; cursor: pointer; transition: color 0.2s; line-height: 1; }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label { color: #fbbf24; }
+
+        .form-actions { display: flex; gap: 16px; margin-top: 48px; }
+        .btn-submit { flex: 1; background-color: var(--brand-green); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-submit:hover { background-color: var(--brand-green-dark); }
+        .btn-cancel { flex: 1; background-color: var(--bg-surface); color: var(--primary-text); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 24px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; display: flex; justify-content: center; align-items: center; }
+        .btn-cancel:hover { background-color: #f9fafb; }
+
+        /* Right Column - Summary */
+        .summary-sidebar { width: 400px; display: flex; flex-direction: column; gap: 24px; }
+        .summary-card { background-color: var(--bg-surface); border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden; }
+        .summary-img { width: 100%; height: 180px; object-fit: cover; }
+        .summary-content { padding: 24px; }
+        
+        .summary-subtitle { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 4px; }
+        .summary-title { font-size: 20px; font-weight: 700; margin: 0 0 24px; }
+        
+        .summary-detail { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; color: var(--secondary-text); }
+        .summary-detail .icon { color: var(--brand-green); font-size: 16px; }
+
+        /* Footer */
+        .footer { background-color: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; justify-content: center; padding: 60px 0; margin-top: 80px; }
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: var(--logo-serif); font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text); margin: 0; margin-top: 12px; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text); }
+
+        /* Responsive */
+        @media (max-width: 1024px) { .wizard-layout { flex-direction: column; } .summary-sidebar { width: 100%; } }
+        @media (max-width: 768px) { .form-actions { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-content">
+            <div class="nav-left">
+                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <div class="nav-search">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" placeholder="Search facilities...">
+                </div>
+            </div>
+            <div class="nav-center">
+                <a href="#" class="nav-link">Beranda</a>
+                <a href="#" class="nav-link">Fasilitas</a>
+                <a href="#" class="nav-link active">Reservasi</a>
+            </div>
+            <div class="nav-right">
+                <span style="font-size: 20px; color: #6b7280;">&#128276;</span>
+                <div class="profile-pic"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        
+        <a href="#" class="back-link">&larr; Kembali ke Detail Reservasi</a>
+
+        <div class="wizard-layout">
+            
+            <div class="form-card">
+                <div class="form-header">
+                    <h1>Tulis Ulasan</h1>
+                    <p>Bagikan pengalaman Anda menggunakan fasilitas ini untuk membantu mahasiswa lain.</p>
+                </div>
+
+                <form action="#" method="POST">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Penilaian Fasilitas <span style="color: #ef4444;">*</span></label>
+                        <div class="star-rating">
+                            <input type="radio" id="star5" name="rating" value="5" />
+                            <label for="star5" title="5 stars">&#9733;</label>
+                            <input type="radio" id="star4" name="rating" value="4" />
+                            <label for="star4" title="4 stars">&#9733;</label>
+                            <input type="radio" id="star3" name="rating" value="3" />
+                            <label for="star3" title="3 stars">&#9733;</label>
+                            <input type="radio" id="star2" name="rating" value="2" />
+                            <label for="star2" title="2 stars">&#9733;</label>
+                            <input type="radio" id="star1" name="rating" value="1" />
+                            <label for="star1" title="1 star">&#9733;</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="review-title" class="form-label">Judul Ulasan <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="review-title" name="review-title" class="form-control" placeholder="Contoh: Fasilitas sangat memadai dan bersih" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="review-content" class="form-label">Deskripsi Pengalaman <span style="color: #ef4444;">*</span></label>
+                        <textarea id="review-content" name="review-content" class="form-control" placeholder="Ceritakan pengalaman Anda terkait kebersihan, kelengkapan alat, pelayanan, dll." required></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel">Batal</button>
+                        <button type="submit" class="btn-submit">Kirim Ulasan &#10148;</button>
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="summary-sidebar">
+                <div class="summary-card">
+                    <img src="https://via.placeholder.com/400x200/4a2511/ffffff?text=Auditorium" alt="Facility" class="summary-img">
+                    <div class="summary-content">
+                        <p class="summary-subtitle">FACILITY SUMMARY</p>
+                        <h3 class="summary-title">Grand Auditorium</h3>
+                        
+                        <div class="summary-detail">
+                            <span class="icon">&#128197;</span>
+                            <span>October 24, 2024</span>
+                        </div>
+                        <div class="summary-detail">
+                            <span class="icon">&#128338;</span>
+                            <span>09:00 AM - 12:00 PM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <h2 class="logo-footer">IPB SRH</h2>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Katalog Fasilitas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Variables & Reset */
+        :root {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #10b981;
+            --brand-green-dark: #059669;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --logo-font: 'Playfair Display', serif;
+            --main-font: 'Inter', system-ui, sans-serif;
+            --navbar-height: 80px;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: var(--main-font); background-color: var(--bg-main); color: var(--primary-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navbar */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
+        .nav-container { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .nav-left { display: flex; align-items: center; gap: 24px; }
+        .nav-logo { font-family: var(--logo-font); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .search-bar { position: relative; }
+        .search-bar input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 260px; background-color: #f1f5f9; outline: none; transition: border-color 0.2s; }
+        .search-bar input:focus { border-color: var(--brand-green); background-color: #ffffff; }
+        .search-bar .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        .nav-links { display: flex; gap: 40px; }
+        .nav-links a { font-size: 14px; font-weight: 600; color: var(--secondary-text); padding-bottom: 4px; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--primary-text); }
+        .nav-links a.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); }
+        .nav-right { display: flex; align-items: center; gap: 24px; }
+        .profile-btn { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid transparent; cursor: pointer; }
+
+        /* Main Page Container */
+        .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 40px) auto 80px; }
+
+        /* Page Header & Search Filter Bar */
+        .page-header { margin-bottom: 32px; }
+        .page-header h1 { font-size: 32px; font-weight: 700; margin: 0 0 8px; color: var(--primary-text); }
+        .page-header p { font-size: 14px; color: var(--secondary-text); margin: 0; }
+
+        .filter-container { background: var(--bg-surface); border-radius: 12px; padding: 24px; display: flex; gap: 16px; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); margin-bottom: 32px; flex-wrap: wrap; align-items: flex-end; }
+        
+        .filter-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 200px; }
+        .filter-group label { font-size: 12px; font-weight: 600; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .filter-input { display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: 8px; padding: 0 16px; background: var(--bg-surface); transition: border-color 0.2s; }
+        .filter-input:focus-within { border-color: var(--brand-green); }
+        .filter-input .icon { color: var(--secondary-text); font-size: 16px; margin-right: 12px; }
+        .filter-input input, .filter-input select { width: 100%; border: none; padding: 12px 0; outline: none; font-family: var(--main-font); font-size: 14px; color: var(--primary-text); background: transparent; cursor: pointer; }
+        .filter-input input::placeholder { color: #9ca3af; }
+
+        .btn-cari { background-color: var(--brand-green); color: white; border: none; border-radius: 8px; padding: 12px 32px; font-weight: 600; font-size: 15px; cursor: pointer; transition: background 0.2s; height: 44px; display: flex; align-items: center; justify-content: center; }
+        .btn-cari:hover { background-color: var(--brand-green-dark); }
+
+        /* Results Meta Info */
+        .results-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .results-count { font-size: 14px; color: var(--secondary-text); font-weight: 500; }
+        .results-count span { color: var(--primary-text); font-weight: 700; }
+        .sort-by { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--secondary-text); }
+        .sort-by select { border: none; font-weight: 600; color: var(--primary-text); background: transparent; outline: none; cursor: pointer; font-family: var(--main-font); }
+
+        /* Facility Cards Grid */
+        .cards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 48px; }
+        
+        .card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); border-color: #d1d5db; }
+        
+        .card-img { height: 180px; background-color: #e5e7eb; position: relative; }
+        .card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .badge-type { position: absolute; top: 12px; right: 12px; background: rgba(255, 255, 255, 0.9); color: var(--primary-text); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .card-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .card-content h3 { font-size: 16px; font-weight: 700; margin: 0 0 8px; color: var(--primary-text); }
+        .card-rating { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--primary-text); margin-bottom: 12px; }
+        .card-rating .star { color: var(--brand-green); font-size: 14px; }
+        .card-rating .reviews { color: var(--secondary-text); font-weight: 400; }
+        
+        .card-content p { font-size: 13px; color: var(--secondary-text); margin: 0 0 20px; line-height: 1.5; flex-grow: 1; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .card-footer { display: flex; justify-content: space-between; font-size: 12px; color: var(--secondary-text); font-weight: 500; padding-top: 16px; border-top: 1px solid var(--border-color); }
+        .card-footer .data-point { display: flex; align-items: center; gap: 6px; }
+        .card-footer .data-point .icon { font-size: 14px; }
+
+        /* Pagination */
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 48px; }
+        .page-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--secondary-text); font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .page-btn:hover { background: #f1f5f9; color: var(--primary-text); }
+        .page-btn.active { background: var(--brand-green); color: white; border-color: var(--brand-green); }
+
+        /* Footer */
+        .footer { background-color: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 60px 0; display: flex; justify-content: center; }
+        .footer-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .footer-logo-text { font-family: var(--logo-font); font-size: 64px; font-weight: 700; color: #4da38b; line-height: 1; margin: 0 0 12px; letter-spacing: -1px; }
+        .footer-copyright { font-size: 14px; color: var(--secondary-text); margin: 0; }
+        .footer-links { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; font-size: 15px; color: var(--secondary-text); }
+        .footer-links a:hover { color: var(--brand-green); }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .cards-grid { grid-template-columns: repeat(3, 1fr); }
+            .filter-container { flex-direction: column; align-items: stretch; }
+            .btn-cari { width: 100%; }
+        }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+            .footer-content { flex-direction: column; gap: 32px; align-items: center; text-align: center; }
+            .footer-links { align-items: center; }
+        }
+        @media (max-width: 480px) {
+            .cards-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="nav-logo">IPB<br>SRH</div>
+                <div class="search-bar">
+                    <span class="icon">&#128269;</span>
+                    <input type="text" placeholder="Cari fasilitas cepat...">
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="#">Beranda</a>
+                <a href="#" class="active">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+            <div class="nav-right">
+                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
+                <div class="profile-btn">
+                    <img src="https://via.placeholder.com/36x36/1e3a5f/ffffff?text=U" alt="User Profile">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-container">
+        
+        <div class="page-header">
+            <h1>Katalog Fasilitas</h1>
+            <p>Temukan dan reservasi ruangan yang sesuai dengan kebutuhan kegiatan Anda.</p>
+        </div>
+
+        <div class="filter-container">
+            <div class="filter-group">
+                <label>Pencarian</label>
+                <div class="filter-input">
+                    <span class="icon">&#128269;</span>
+                    <input type="text" placeholder="Nama ruangan atau gedung...">
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label>Organisasi / Fakultas</label>
+                <div class="filter-input">
+                    <span class="icon">&#127976;</span>
+                    <select>
+                        <option value="">Semua Organisasi</option>
+                        <option value="faperta">Fakultas Pertanian</option>
+                        <option value="fkh">Fakultas Kedokteran Hewan</option>
+                        <option value="fmipa">Fakultas MIPA</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Tipe Fasilitas</label>
+                <div class="filter-input">
+                    <span class="icon">&#127979;</span>
+                    <select>
+                        <option value="">Semua Tipe</option>
+                        <option value="auditorium">Auditorium / Seminar</option>
+                        <option value="kelas">Ruang Kelas</option>
+                        <option value="olahraga">Fasilitas Olahraga</option>
+                        <option value="landskap">Landskap / Outdoor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Min. Kapasitas</label>
+                <div class="filter-input">
+                    <span class="icon">&#128101;</span>
+                    <input type="number" placeholder="Contoh: 50">
+                </div>
+            </div>
+
+            <button class="btn-cari">Terapkan Filter</button>
+        </div>
+
+        <div class="results-meta">
+            <div class="results-count">Menampilkan <span>12</span> dari <span>48</span> fasilitas</div>
+            <div class="sort-by">
+                Urutkan berdasarkan:
+                <select>
+                    <option>Relevansi</option>
+                    <option>Abjad (A-Z)</option>
+                    <option>Kapasitas Terbanyak</option>
+                    <option>Rating Tertinggi</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="cards-grid">
+            
+            <div class="card">
+                <div class="card-img">
+                    <span class="badge-type">Seminar</span>
+                    <img src="https://via.placeholder.com/400x300/4a2511/ffffff?text=Grand+Auditorium" alt="Grand Auditorium">
+                </div>
+                <div class="card-content">
+                    <h3>Grand Auditorium</h3>
+                    <div class="card-rating">
+                        <span class="star">&#9733;</span> 4.9 <span class="reviews">(124 reviews)</span>
+                    </div>
+                    <p>Fasilitas premium untuk acara seminar nasional dan internasional dengan kapasitas besar dan sistem audio visual mutakhir.</p>
+                    <div class="card-footer">
+                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 1,200</div>
+                        <div class="data-point">Rp 100k / sesi</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <span class="badge-type">Ruang Kelas</span>
+                    <img src="https://via.placeholder.com/400x300/1e3a5f/ffffff?text=Smart+Classroom" alt="Smart Classroom">
+                </div>
+                <div class="card-content">
+                    <h3>Smart Classroom A1</h3>
+                    <div class="card-rating">
+                        <span class="star">&#9733;</span> 4.7 <span class="reviews">(89 reviews)</span>
+                    </div>
+                    <p>Ruang kelas modern yang dilengkapi dengan smart board interaktif dan tata letak meja yang modular untuk diskusi kelompok.</p>
+                    <div class="card-footer">
+                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 45</div>
+                        <div class="data-point">Gratis</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <span class="badge-type">Olahraga</span>
+                    <img src="https://via.placeholder.com/400x300/2f4f4f/ffffff?text=Indoor+Court" alt="Gymnasium">
+                </div>
+                <div class="card-content">
+                    <h3>Gymnasium Utama</h3>
+                    <div class="card-rating">
+                        <span class="star">&#9733;</span> 4.8 <span class="reviews">(210 reviews)</span>
+                    </div>
+                    <p>Fasilitas olahraga indoor serbaguna yang dapat digunakan untuk basket, voli, dan bulu tangkis dengan tribun penonton.</p>
+                    <div class="card-footer">
+                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 500</div>
+                        <div class="data-point">Rp 50k / sesi</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <span class="badge-type">Ruang Kelas</span>
+                    <img src="https://via.placeholder.com/400x300/1e3a5f/ffffff?text=Lecture+Hall" alt="Lecture Hall">
+                </div>
+                <div class="card-content">
+                    <h3>Lecture Hall B</h3>
+                    <div class="card-rating">
+                        <span class="star">&#9733;</span> 4.5 <span class="reviews">(56 reviews)</span>
+                    </div>
+                    <p>Ruang kuliah teater standar dengan proyektor ganda dan sistem pengeras suara. Cocok untuk perkuliahan umum.</p>
+                    <div class="card-footer">
+                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 150</div>
+                        <div class="data-point">Gratis</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <span class="badge-type">Landskap</span>
+                    <img src="https://via.placeholder.com/400x300/0b7340/ffffff?text=Plaza" alt="Plaza">
+                </div>
+                <div class="card-content">
+                    <h3>Plaza Rektorat</h3>
+                    <div class="card-rating">
+                        <span class="star">&#9733;</span> 4.9 <span class="reviews">(312 reviews)</span>
+                    </div>
+                    <p>Area terbuka hijau di pusat kampus, sangat ideal untuk kegiatan pameran mahasiswa, festival, atau acara outdoor lainnya.</p>
+                    <div class="card-footer">
+                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 2,000</div>
+                        <div class="data-point">Rp 200k / hari</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <span class="badge-type">Seminar</span>
+                    <img src="https://via.placeholder.com/400x300/4a2511/ffffff?text=Conference+Room" alt="Conference Room">
+                </div>
+                <div class="card-content">
+                    <h3>Ruang Sidang Senat</h3>
+                    <div class="card-rating">
+                        <span class="star">&#9733;</span> 4.6 <span class="reviews">(45 reviews)</span>
+                    </div>
+                    <p>Ruang pertemuan eksklusif dengan meja bundar besar, mikrofon delegasi, dan fasilitas video conference.</p>
+                    <div class="card-footer">
+                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 60</div>
+                        <div class="data-point">Rp 150k / sesi</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <span class="badge-type">Peralatan</span>
+                    <img src="https://via.placeholder.com/400x300/475569/ffffff?text=Media+Lab" alt="Media Lab">
+                </div>
+                <div class="card-content">
+                    <h3>Multimedia Studio</h3>
+                    <div class="card-rating">
+                        <span class="star">&#9733;</span> 4.8 <span class="reviews">(77 reviews)</span>
+                    </div>
+                    <p>Studio rekaman kedap suara dilengkapi dengan kamera profesional, lighting rig, dan green screen untuk produksi konten.</p>
+                    <div class="card-footer">
+                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 15</div>
+                        <div class="data-point">Rp 75k / sesi</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <span class="badge-type">Olahraga</span>
+                    <img src="https://via.placeholder.com/400x300/2f4f4f/ffffff?text=Tennis+Court" alt="Tennis Court">
+                </div>
+                <div class="card-content">
+                    <h3>Lapangan Tenis Outdoor</h3>
+                    <div class="card-rating">
+                        <span class="star">&#9733;</span> 4.4 <span class="reviews">(112 reviews)</span>
+                    </div>
+                    <p>Lapangan tenis standar turnamen dengan permukaan hard court. Dilengkapi lampu penerangan untuk permainan malam hari.</p>
+                    <div class="card-footer">
+                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 4</div>
+                        <div class="data-point">Rp 30k / jam</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="pagination">
+            <div class="page-btn">&larr;</div>
+            <div class="page-btn active">1</div>
+            <div class="page-btn">2</div>
+            <div class="page-btn">3</div>
+            <div class="page-btn">...</div>
+            <div class="page-btn">8</div>
+            <div class="page-btn">&rarr;</div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <h2 class="footer-logo-text">IPB SRH</h2>
+                <p class="footer-copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

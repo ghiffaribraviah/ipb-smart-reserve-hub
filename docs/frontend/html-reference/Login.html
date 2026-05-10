@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - IPB Smart Reserve Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-green: #0A9361;
+            --text-dark: #2D3748;
+            --text-muted: #718096;
+            --border-color: #E2E8F0;
+            --bg-light: #F8FAFC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            height: 100vh;
+            display: flex;
+        }
+
+        /* Layout Split Screen */
+        .split-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .left-panel {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .right-panel {
+            flex: 1;
+            /* Ganti URL di bawah ini dengan path foto rektorat IPB milikmu (misal: '../assets/gedung.jpg') */
+            background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-size: cover;
+            background-position: center;
+            display: none; /* Hide on mobile */
+        }
+
+        @media (min-width: 768px) {
+            .right-panel {
+                display: block;
+            }
+        }
+
+        /* Form Container */
+        .form-container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        /* Logo & Branding */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brand-logo {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary-green);
+            font-size: 3rem;
+            line-height: 1.1;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Typography */
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        /* Form Inputs */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .label-row label {
+            margin-bottom: 0;
+        }
+
+        .forgot-link {
+            color: var(--primary-green);
+            font-size: 0.875rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            transition: border-color 0.3s ease;
+            background-color: var(--bg-light);
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            background-color: #ffffff;
+        }
+
+        /* Button */
+        .btn-submit {
+            width: 100%;
+            padding: 0.875rem;
+            background-color: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            background-color: #087a50;
+        }
+
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 2rem;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer-links {
+            margin-top: 0.25rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin: 0 0.5rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-green);
+        }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .register-link a {
+            color: var(--primary-green);
+            font-weight: 600;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="split-layout">
+        <div class="left-panel">
+            <div class="form-container">
+                <div class="brand-header">
+                    <h1 class="brand-logo">IPB<br>SRH</h1>
+                    <div class="brand-title">IPB Smart Reserve Hub</div>
+                </div>
+
+                <h2>Sign In</h2>
+                <p class="subtitle">Enter your credentials to access your facility dashboard.</p>
+
+                <form action="#" method="POST">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input type="email" id="email" placeholder="name@apps.ipb.ac.id" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="password">Password</label>
+                            <a href="#" class="forgot-link">Forgot password?</a>
+                        </div>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="password" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        Sign In <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    
+                    <div class="register-link">
+                        Don't have an account? <a href="register.html">Register here</a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="footer">
+                &copy; 2026 IPB Smart Reserve Hub.<br>
+                <div class="footer-links">
+                    <a href="#">Security Protocol</a> &middot; <a href="#">Terms of Access</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel"></div>
+    </div>
+
+</body>
+</html>

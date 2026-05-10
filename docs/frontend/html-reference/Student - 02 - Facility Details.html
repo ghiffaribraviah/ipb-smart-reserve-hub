@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Admin Facility Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Variables & Reset */
+        :root {
+            --bg-main: #ffffff; /* Page background is white here based on mockup */
+            --bg-surface: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #0f9d58;
+            --brand-green-light: #e8f5e9;
+            --brand-green-dark: #0b7340;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            --logo-serif: 'Playfair Display', serif;
+            --sans-serif: 'Inter', system-ui, sans-serif;
+            --navbar-height: 80px;
+        }
+
+        body { margin: 0; padding: 0; font-family: var(--sans-serif); background-color: var(--bg-main); color: var(--primary-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navbar */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .logo-nav { font-family: var(--logo-serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
+        .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); }
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Main Container */
+        .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 40px) auto 80px; }
+
+        /* Header Section */
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--brand-green); font-size: 14px; font-weight: 600; margin-bottom: 24px; }
+        .facility-title { font-size: 32px; font-weight: 700; margin: 0 0 12px; color: var(--primary-text); }
+        .facility-meta { display: flex; align-items: center; gap: 16px; font-size: 14px; color: var(--secondary-text); margin-bottom: 32px; }
+        .rating { display: flex; align-items: center; gap: 4px; font-weight: 600; color: var(--primary-text); }
+        .star-icon { color: var(--brand-green); font-size: 16px; }
+        .location { display: flex; align-items: center; gap: 6px; }
+
+        /* Image Gallery Grid */
+        .gallery-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: 200px 200px; gap: 16px; margin-bottom: 48px; border-radius: 16px; overflow: hidden; }
+        .gallery-item { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+        .item-main { grid-column: 1 / 2; grid-row: 1 / 3; }
+        .item-top-right-1 { grid-column: 2 / 3; grid-row: 1 / 2; }
+        .item-top-right-2 { grid-column: 3 / 4; grid-row: 1 / 2; }
+        .item-bottom-right { grid-column: 2 / 4; grid-row: 2 / 3; }
+
+        /* Content Layout */
+        .content-layout { display: flex; gap: 60px; align-items: flex-start; }
+        .main-details { flex: 1; min-width: 0; }
+        .sidebar { width: 380px; position: sticky; top: calc(var(--navbar-height) + 40px); }
+
+        /* Left Column Details */
+        .section-heading { font-size: 20px; font-weight: 600; margin: 0 0 16px; color: var(--primary-text); }
+        .description-text { font-size: 14px; color: var(--secondary-text); line-height: 1.6; margin-bottom: 32px; max-width: 600px; }
+
+        /* Feature Cards */
+        .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 48px; }
+        .feature-card { border: 1px solid var(--border-color); border-radius: 12px; padding: 20px 12px; display: flex; flex-direction: column; align-items: center; text-align: center; background-color: var(--bg-surface); }
+        .feature-icon { color: var(--brand-green); font-size: 24px; margin-bottom: 12px; }
+        .feature-value { font-size: 14px; font-weight: 600; color: var(--primary-text); margin: 0 0 4px; }
+        .feature-label { font-size: 12px; color: var(--secondary-text); margin: 0; }
+
+        /* Reviews Section */
+        .reviews-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .review-card { border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; margin-bottom: 16px; background-color: var(--bg-surface); }
+        .review-user { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+        .avatar-initials { width: 40px; height: 40px; background-color: var(--brand-green-light); color: var(--brand-green-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .user-info h4 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+        .user-info p { margin: 0; font-size: 12px; color: var(--secondary-text); }
+        .review-text { font-size: 14px; color: var(--secondary-text); line-height: 1.6; margin: 0; }
+        .show-all-link { display: inline-block; margin-top: 16px; color: var(--brand-green); font-size: 14px; font-weight: 600; text-decoration: underline; }
+
+        /* Sidebar Widget (Admin Version) */
+        .admin-widget { border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; background-color: var(--bg-surface); box-shadow: var(--card-shadow); }
+        .price-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+        .price-label { font-size: 12px; color: var(--secondary-text); margin: 0 0 8px; }
+        .price-value { font-size: 24px; font-weight: 700; color: var(--primary-text); margin: 0; }
+        .price-value span { font-size: 14px; font-weight: 400; color: var(--secondary-text); }
+        .badge-available { background-color: var(--brand-green-light); color: var(--brand-green-dark); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        
+        .widget-notes { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+        .note-item { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--secondary-text); }
+        .note-icon { color: var(--brand-green); font-size: 16px; }
+
+        .btn-edit { width: 100%; background-color: var(--brand-green); color: #ffffff; border: none; border-radius: 8px; padding: 16px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .btn-edit:hover { background-color: var(--brand-green-dark); }
+
+        /* Footer */
+        .footer { background-color: var(--bg-main); border-top: 1px solid var(--border-color); display: flex; justify-content: center; padding: 60px 0; margin-top: 60px; }
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: var(--logo-serif); font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text); margin: 0; margin-top: 12px; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text); }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .content-layout { flex-direction: column; }
+            .sidebar { width: 100%; position: static; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; }
+            .item-main { grid-column: 1 / 3; grid-row: 1 / 2; }
+            .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
+            .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+            .item-bottom-right { display: none; }
+        }
+        @media (max-width: 768px) {
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-content">
+            <div class="nav-left">
+                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <div class="nav-search">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" placeholder="Search facilities...">
+                </div>
+            </div>
+            <div class="nav-center">
+                <a href="#" class="nav-link">Reservasi</a>
+                <a href="#" class="nav-link active">Fasilitas</a>
+            </div>
+            <div class="nav-right">
+                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
+                <div class="profile-pic">
+                    <img src="https://via.placeholder.com/36x36/1e3a5f/ffffff?text=A" alt="Admin Profile">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        
+        <a href="#" class="back-link">&larr; Kembali</a>
+        <h1 class="facility-title">Grand Auditorium</h1>
+        <div class="facility-meta">
+            <div class="rating">
+                <span class="star-icon">&#9733;</span> 4.9 
+                <span style="color: var(--secondary-text); font-weight: 400;">(124 Reviews)</span>
+            </div>
+            <div class="location">
+                <span style="color: var(--secondary-text); font-size: 16px;">&#128205;</span> East Campus, Central Plaza
+            </div>
+        </div>
+
+        <div class="gallery-grid">
+            <img src="https://via.placeholder.com/800x600/4a2511/ffffff?text=Main+Auditorium" alt="Main" class="gallery-item item-main">
+            <img src="https://via.placeholder.com/400x300/1e3a5f/ffffff?text=Stage" alt="Stage" class="gallery-item item-top-right-1">
+            <img src="https://via.placeholder.com/400x300/802020/ffffff?text=Seats" alt="Seats" class="gallery-item item-top-right-2">
+            <img src="https://via.placeholder.com/800x300/1e3a5f/ffffff?text=Curtains" alt="Curtain" class="gallery-item item-bottom-right">
+        </div>
+
+        <div class="content-layout">
+            
+            <div class="main-details">
+                <h2 class="section-heading">Tentang Fasilitas</h2>
+                <p class="description-text">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ac massa id ex hendrerit iaculis et et eros. Pellentesque odio ex, mollis eget aliquet ut, interdum luctus lectus.
+                </p>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">&#128101;</span>
+                        <p class="feature-value">1,200</p>
+                        <p class="feature-label">Kapasitas</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">&#128227;</span>
+                        <p class="feature-value">Atmos 7.1</p>
+                        <p class="feature-label">Audio System</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">&#128246;</span>
+                        <p class="feature-value">Gigabit</p>
+                        <p class="feature-label">Network</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">&#9855;</span>
+                        <p class="feature-value">ADA</p>
+                        <p class="feature-label">Compliant</p>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 40px 0;">
+
+                <div class="reviews-header">
+                    <h2 class="section-heading" style="margin:0;">Ulasan Peminjam</h2>
+                    <div class="rating">
+                        <span class="star-icon">&#9733;</span> 4.9 <span style="color: var(--secondary-text); font-weight: 400;">/ 124 reviews</span>
+                    </div>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-user">
+                        <div class="avatar-initials">LI</div>
+                        <div class="user-info">
+                            <h4>Lorem Ipsum</h4>
+                            <p>October 2023 • Lorem Ipsum Dolor</p>
+                        </div>
+                    </div>
+                    <p class="review-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur et libero odio. Duis congue nec tellus nec laoreet. Aliquam congue dictum lorem, vel suscipit ipsum ornare sed.</p>
+                </div>
+
+                <div class="review-card">
+                    <div class="review-user">
+                        <div class="avatar-initials">LI</div>
+                        <div class="user-info">
+                            <h4>Lorem Ipsum</h4>
+                            <p>October 2023 • Lorem Ipsum Dolor</p>
+                        </div>
+                    </div>
+                    <p class="review-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur et libero odio. Duis congue nec tellus nec laoreet. Aliquam congue dictum lorem, vel suscipit ipsum ornare sed.</p>
+                </div>
+
+                <a href="#" class="show-all-link">Tampilkan semua review</a>
+            </div>
+
+            <div class="sidebar">
+                <div class="admin-widget">
+                    <div class="price-header">
+                        <div>
+                            <p class="price-label">Biaya peminjaman</p>
+                            <p class="price-value">Rp100.000 <span>/ sesi</span></p>
+                        </div>
+                        <span class="badge-available">Available</span>
+                    </div>
+
+                    <div class="widget-notes">
+                        <div class="note-item">
+                            <span class="note-icon">&#10004;</span>
+                            <span>Proteksi kerusakan</span>
+                        </div>
+                        <div class="note-item">
+                            <span class="note-icon">&#128197;</span>
+                            <span>Perubahan tanggal harus mengajukan ulang</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-edit">Edit Detail</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <h2 class="logo-footer">IPB SRH</h2>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

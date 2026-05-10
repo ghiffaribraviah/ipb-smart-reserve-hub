@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Admin Verification Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Variables & Reset */
+        :root {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #0f9d58;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            
+            /* Badge Colors */
+            --badge-yellow-bg: #fef3c7;
+            --badge-yellow-text: #92400e;
+            --badge-green-bg: #d1fae5;
+            --badge-green-text: #065f46;
+            --badge-red-bg: #fee2e2;
+            --badge-red-text: #991b1b;
+            --badge-gray-bg: #f3f4f6;
+            --badge-gray-text: #4b5563;
+
+            --sans-serif: 'Inter', system-ui, sans-serif;
+            --navbar-height: 80px;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: var(--sans-serif); background-color: var(--bg-main); color: var(--primary-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navbar */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .logo-nav { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
+        .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); }
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Main Container */
+        .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 40px) auto 80px; }
+
+        /* Header */
+        .page-header { margin-bottom: 32px; }
+        .page-header h1 { font-size: 32px; font-weight: 700; color: var(--primary-text); margin: 0 0 12px; }
+        .page-header p { font-size: 14px; color: var(--secondary-text); margin: 0; max-width: 600px; line-height: 1.6; }
+
+        /* Metric Card */
+        .metrics-card { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px 32px; width: 380px; box-shadow: var(--card-shadow); margin-bottom: 40px; }
+        .metric-info { display: flex; flex-direction: column; gap: 8px; }
+        .metric-label { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric-value { font-size: 36px; font-weight: 700; color: var(--primary-text); line-height: 1; }
+        .metric-icon { width: 48px; height: 48px; background-color: #fef3c7; color: #d97706; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
+        /* Data Table Container */
+        .table-section { background-color: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); overflow: hidden; }
+        
+        .table-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; border-bottom: 1px solid var(--border-color); }
+        .table-header h2 { font-size: 18px; font-weight: 600; margin: 0; color: var(--primary-text); }
+        .btn-filter { display: flex; align-items: center; gap: 8px; background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--secondary-text); cursor: pointer; }
+        .btn-filter:hover { background-color: #f9fafb; }
+
+        /* Table Styles */
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 32px; background-color: #f9fafb; border-bottom: 1px solid var(--border-color); }
+        .data-table td { padding: 20px 32px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .data-table tr:last-child td { border-bottom: none; }
+        
+        /* Applicant Cell */
+        .applicant-cell { display: flex; align-items: center; gap: 16px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white; overflow: hidden; flex-shrink: 0; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .applicant-info { display: flex; flex-direction: column; }
+        .applicant-name { font-size: 14px; font-weight: 600; color: var(--primary-text); margin: 0 0 2px; }
+        .applicant-role { font-size: 12px; color: var(--secondary-text); margin: 0; }
+
+        /* General Table Cells */
+        .cell-text { font-size: 14px; color: var(--primary-text); }
+        
+        /* Badges */
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-badge .icon { font-size: 10px; }
+        .badge-yellow { background-color: var(--badge-yellow-bg); color: var(--badge-yellow-text); }
+        .badge-green { background-color: var(--badge-green-bg); color: var(--badge-green-text); }
+        .badge-red { background-color: var(--badge-red-bg); color: var(--badge-red-text); }
+        .badge-gray { background-color: var(--badge-gray-bg); color: var(--badge-gray-text); }
+
+        /* Actions */
+        .actions-cell { display: flex; align-items: center; gap: 16px; }
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
+        .action-btn:hover { opacity: 0.7; }
+        .action-download { color: var(--secondary-text); }
+        .action-verify { color: #10b981; } /* Green check */
+        .action-reject { color: #ef4444; } /* Red cross */
+
+        /* Table Footer / Pagination */
+        .table-footer { display: flex; justify-content: space-between; align-items: center; padding: 20px 32px; border-top: 1px solid var(--border-color); background-color: var(--bg-surface); }
+        .footer-text { font-size: 13px; color: var(--secondary-text); }
+        .pagination { display: flex; gap: 8px; }
+        .btn-page { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--primary-text); cursor: pointer; }
+        .btn-page:disabled { color: #9ca3af; cursor: not-allowed; background-color: #f9fafb; }
+        .btn-page:not(:disabled):hover { background-color: #f3f4f6; }
+
+        /* Footer */
+        .footer { background-color: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px;}
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text); margin: 0; margin-top: 12px; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text); }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-content">
+            <div class="nav-left">
+                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <div class="nav-search">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" placeholder="Search facilities...">
+                </div>
+            </div>
+            <div class="nav-center">
+                <a href="#" class="nav-link active">Reservasi</a>
+                <a href="#" class="nav-link">Fasilitas</a>
+            </div>
+            <div class="nav-right">
+                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
+                <div class="profile-pic">
+                    <img src="https://via.placeholder.com/36x36/1e3a5f/ffffff?text=A" alt="Admin Profile">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        
+        <div class="page-header">
+            <h1>Verification Hub</h1>
+            <p>Strategic oversight of campus resource allocation. Review, verify, and manage facility access credentials to ensure optimal academic stewardship.</p>
+        </div>
+
+        <div class="metrics-card">
+            <div class="metric-info">
+                <span class="metric-label">PENDING VERIFICATIONS</span>
+                <span class="metric-value">24</span>
+            </div>
+            <div class="metric-icon">&#128196; </div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                <h2>Reservation Submissions</h2>
+                <button class="btn-filter">
+                    <span style="font-size: 14px;">&#8801;</span> Filter
+                </button>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>APPLICANT</th>
+                        <th>FACILITY NAME</th>
+                        <th>SUBMISSION DATE</th>
+                        <th>DOCUMENT STATUS</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="applicant-cell">
+                                <div class="avatar" style="background-color: #064e3b;">JD</div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Johnathan Doe</p>
+                                    <p class="applicant-role">PhD Candidate, Physics</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="cell-text">Bio-Labs Complex A</td>
+                        <td class="cell-text">Oct 24, 2023</td>
+                        <td>
+                            <div class="status-badge badge-yellow">
+                                <span class="icon">&#8679;</span> Document Uploaded
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-download" title="Download">&#8681;</button>
+                                <button class="action-btn action-verify" title="Verify">&#10003;</button>
+                                <button class="action-btn action-reject" title="Reject">&#10005;</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="applicant-cell">
+                                <div class="avatar">
+                                    <img src="https://via.placeholder.com/40x40/475569/ffffff?text=E" alt="Elena">
+                                </div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Elena Rodriguez</p>
+                                    <p class="applicant-role">Senior Researcher</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="cell-text">Materials Sci Wing</td>
+                        <td class="cell-text">Oct 23, 2023</td>
+                        <td>
+                            <div class="status-badge badge-yellow">
+                                <span class="icon">&#8679;</span> Payment Uploaded
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-download" title="Download">&#8681;</button>
+                                <button class="action-btn action-verify" title="Verify">&#10003;</button>
+                                <button class="action-btn action-reject" title="Reject">&#10005;</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="applicant-cell">
+                                <div class="avatar" style="background-color: #a7f3d0; color: #065f46;">MK</div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Marcus Knight</p>
+                                    <p class="applicant-role">External Partner</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="cell-text">Innovation Hub Pod 4</td>
+                        <td class="cell-text">Oct 22, 2023</td>
+                        <td>
+                            <div class="status-badge badge-green">
+                                <span class="icon">&#10003;</span> Document Verified
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-download" title="Download">&#8681;</button>
+                                <button class="action-btn action-verify" title="Verify">&#10003;</button>
+                                <button class="action-btn action-reject" title="Reject">&#10005;</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="applicant-cell">
+                                <div class="avatar" style="background-color: #065f46;">SC</div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Sarah Chen</p>
+                                    <p class="applicant-role">Graduate Researcher</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="cell-text">Quantum Computing Lab</td>
+                        <td class="cell-text">Oct 21, 2023</td>
+                        <td>
+                            <div class="status-badge badge-green">
+                                <span class="icon">&#10003;</span> Payment Verified
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-download" title="Download">&#8681;</button>
+                                <button class="action-btn action-verify" title="Verify">&#10003;</button>
+                                <button class="action-btn action-reject" title="Reject">&#10005;</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="applicant-cell">
+                                <div class="avatar" style="background-color: #e5e7eb; color: #4b5563;">AH</div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Arthur Hansen</p>
+                                    <p class="applicant-role">Faculty Staff</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="cell-text">Agri-Tech Greenhouses</td>
+                        <td class="cell-text">Oct 20, 2023</td>
+                        <td>
+                            <div class="status-badge badge-red">
+                                <span class="icon">&#10005;</span> Document Rejected
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-download" title="Download">&#8681;</button>
+                                <button class="action-btn action-verify" title="Verify">&#10003;</button>
+                                <button class="action-btn action-reject" title="Reject">&#10005;</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="applicant-cell">
+                                <div class="avatar" style="background-color: #a7f3d0; color: #065f46;">LW</div>
+                                <div class="applicant-info">
+                                    <p class="applicant-name">Linda Wu</p>
+                                    <p class="applicant-role">Post-Doc Research</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="cell-text">Neuroscience Center</td>
+                        <td class="cell-text">Oct 19, 2023</td>
+                        <td>
+                            <div class="status-badge badge-gray">
+                                <span class="icon">&#8987;</span> Pending Review
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn action-download" title="Download">&#8681;</button>
+                                <button class="action-btn action-verify" title="Verify">&#10003;</button>
+                                <button class="action-btn action-reject" title="Reject">&#10005;</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="table-footer">
+                <span class="footer-text">Showing 6 of 24 applications awaiting verification</span>
+                <div class="pagination">
+                    <button class="btn-page" disabled>Previous</button>
+                    <button class="btn-page">Next</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <h2 class="logo-footer">IPB SRH</h2>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Unggah Dokumen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-surface: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #0f9d58;
+            --brand-green-light: #e8f5e9;
+            --brand-green-dark: #0b7340;
+            --border-color: #e5e7eb;
+            --stepper-inactive: #d1d5db;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --sans-serif: 'Inter', system-ui, sans-serif;
+            --navbar-height: 80px;
+        }
+
+        body { margin: 0; font-family: var(--sans-serif); background-color: var(--bg-main); color: var(--primary-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Simplified Navbar style for brevity (Assume same as Step 2) */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .logo-nav { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .nav-links { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
+        .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
+
+        .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 32px) auto 80px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--brand-green); font-size: 14px; font-weight: 600; margin-bottom: 32px; }
+
+        /* Stepper */
+        .stepper-wrapper { display: flex; justify-content: center; margin-bottom: 48px; }
+        .stepper { display: flex; align-items: center; width: 600px; max-width: 100%; }
+        .step-item { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 2; }
+        .step-circle { width: 36px; height: 36px; border-radius: 50%; background-color: var(--bg-surface); border: 2px solid var(--stepper-inactive); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: var(--secondary-text); }
+        .step-label { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; position: absolute; top: 48px; white-space: nowrap; }
+        
+        .step-item.done .step-circle { background-color: var(--brand-green); border-color: var(--brand-green); color: white; }
+        .step-item.done .step-label { color: var(--brand-green); }
+        .step-item.active .step-circle { border-color: var(--brand-green); color: var(--brand-green); }
+        .step-item.active .step-label { color: var(--brand-green); }
+        
+        .step-line { flex-grow: 1; height: 2px; background-color: var(--stepper-inactive); margin: 0 16px; position: relative; top: -12px; }
+        .step-line.filled { background-color: var(--brand-green); }
+
+        /* Two Column Layout */
+        .wizard-layout { display: flex; gap: 32px; align-items: flex-start; }
+        
+        /* Left Column - Documents */
+        .docs-section { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+        .doc-card { background-color: var(--bg-surface); border-radius: 12px; box-shadow: var(--card-shadow); padding: 32px; }
+        .doc-card h3 { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+        .doc-card p { font-size: 14px; color: var(--secondary-text); margin: 0 0 24px; }
+
+        .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .template-box { display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--brand-green); border-radius: 8px; padding: 16px; background-color: var(--bg-surface); }
+        .template-info { display: flex; align-items: center; gap: 16px; }
+        .template-icon { width: 40px; height: 40px; background-color: var(--brand-green-light); color: var(--brand-green); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .template-text h4 { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--primary-text); }
+        .template-text span { font-size: 12px; color: var(--secondary-text); }
+        .download-icon { color: var(--brand-green); font-size: 20px; cursor: pointer; }
+
+        .dropzone { border: 2px dashed #a7f3d0; border-radius: 12px; background-color: #f0fdfa; padding: 48px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .dropzone-icon { width: 48px; height: 48px; background-color: var(--brand-green-light); color: var(--brand-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; }
+        .dropzone h4 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+        .dropzone p { margin: 0 0 24px; font-size: 13px; color: var(--secondary-text); }
+        .btn-choose { background-color: var(--brand-green); color: white; border: none; border-radius: 6px; padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+        .uploaded-files { margin-top: 32px; }
+        .uploaded-label { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-main); border-radius: 8px; padding: 12px 16px; }
+        .file-info { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; }
+        .file-info .icon-check { color: var(--brand-green); font-size: 16px; background: var(--brand-green-light); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;}
+        .icon-trash { color: #ef4444; cursor: pointer; font-size: 16px; }
+
+        /* Right Column - Summary */
+        .summary-sidebar { width: 380px; }
+        .summary-card { background-color: var(--bg-surface); border-radius: 12px; box-shadow: var(--card-shadow); padding: 32px; }
+        .summary-card h3 { font-size: 18px; font-weight: 600; margin: 0 0 24px; }
+        
+        .summary-block { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+        .summary-block-text h4 { font-size: 10px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 4px; }
+        .summary-block-text p { margin: 0; font-size: 14px; color: var(--primary-text); font-weight: 500; }
+        .summary-block .icon { color: var(--brand-green); font-size: 18px; }
+
+        .btn-submit { width: 100%; background-color: var(--brand-green); color: white; border: none; border-radius: 8px; padding: 16px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 16px; transition: background 0.2s; }
+        .btn-submit:hover { background-color: var(--brand-green-dark); }
+        .submit-note { text-align: center; font-size: 12px; color: var(--secondary-text); margin: 0; }
+
+        @media (max-width: 1024px) { .wizard-layout { flex-direction: column; } .summary-sidebar { width: 100%; } .template-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="logo-nav">IPB SRH</a>
+            <div class="nav-links">
+                <a href="#" class="nav-link">Beranda</a>
+                <a href="#" class="nav-link">Fasilitas</a>
+                <a href="#" class="nav-link active">Reservasi</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <a href="#" class="back-link">&larr; Kembali</a>
+
+        <div class="stepper-wrapper">
+            <div class="stepper">
+                <div class="step-item done">
+                    <div class="step-circle">&#10003;</div>
+                    <span class="step-label">Pilih Waktu</span>
+                </div>
+                <div class="step-line filled"></div>
+                <div class="step-item done">
+                    <div class="step-circle">&#10003;</div>
+                    <span class="step-label">Detail Kegiatan</span>
+                </div>
+                <div class="step-line filled"></div>
+                <div class="step-item active">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">Konfirmasi</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="wizard-layout">
+            
+            <div class="docs-section">
+                <div class="doc-card">
+                    <h3><span style="color:var(--brand-green)">&#8681;</span> Template Surat</h3>
+                    <p>Please download and complete the following legal and safety documents before proceeding to the upload section.</p>
+                    
+                    <div class="template-grid">
+                        <div class="template-box">
+                            <div class="template-info">
+                                <div class="template-icon">&#128196;</div>
+                                <div class="template-text">
+                                    <h4>Surat Pengajuan Peminjaman</h4>
+                                    <span>PDF • 1.2 MB</span>
+                                </div>
+                            </div>
+                            <span class="download-icon">&#8681;</span>
+                        </div>
+                        <div class="template-box">
+                            <div class="template-info">
+                                <div class="template-icon">&#128196;</div>
+                                <div class="template-text">
+                                    <h4>Surat Ketentuan Khusus</h4>
+                                    <span>PDF • 840 KB</span>
+                                </div>
+                            </div>
+                            <span class="download-icon">&#8681;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <h3><span style="color:var(--brand-green)">&#128196;</span> Unggah Dokumen</h3>
+                    <p>Scan and upload the signed copies of the documents downloaded above. All files must be in PDF format.</p>
+                    
+                    <div class="dropzone">
+                        <div class="dropzone-icon">&#8679;</div>
+                        <h4>Drag and drop files here</h4>
+                        <p>Or browse files from your computer</p>
+                        <button class="btn-choose">Choose Files</button>
+                    </div>
+
+                    <div class="uploaded-files">
+                        <div class="uploaded-label">UPLOADED FILES</div>
+                        <div class="file-item">
+                            <div class="file-info">
+                                <span class="icon-check">&#10003;</span>
+                                Signed_Equipment_LoremIpsum.pdf
+                            </div>
+                            <span class="icon-trash">&#128465;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-sidebar">
+                <div class="summary-card">
+                    <h3>Rangkuman Reservasi</h3>
+                    
+                    <div class="summary-block">
+                        <div class="summary-block-text">
+                            <h4>FASILITAS</h4>
+                            <p>Lorem Ipsum Dolor Sit Amet</p>
+                        </div>
+                        <span class="icon">&#128205;</span> </div>
+
+                    <div class="summary-block">
+                        <div class="summary-block-text">
+                            <h4>DATE & TIME</h4>
+                            <p>Oct 24, 2024 • 09:00 - 13:00</p>
+                        </div>
+                        <span class="icon">&#128197;</span> </div>
+
+                    <button class="btn-submit">Submit Reservation <span>&#10148;</span></button>
+                    <p class="submit-note">Final review before institutional submission</p>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+</body>
+</html>

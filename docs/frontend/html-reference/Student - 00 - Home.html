@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPB Smart Reserve Hub - Beranda</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Variables & Reset */
+        :root {
+            --bg-color: #ffffff;
+            --primary-text: #111827;
+            --secondary-text: #6b7280;
+            --brand-green: #10b981;
+            --brand-green-dark: #059669;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --logo-font: 'Playfair Display', serif;
+            --main-font: 'Inter', system-ui, sans-serif;
+            --nav-height: 80px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--main-font);
+            background-color: var(--bg-color);
+            color: var(--primary-text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            width: 1200px;
+            max-width: 95%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .nav-logo {
+            font-family: var(--logo-font);
+            font-size: 24px;
+            font-weight: 700;
+            color: #1d7667;
+            line-height: 1.1;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-bar input {
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 14px;
+            width: 260px;
+            background-color: #f8fafc;
+            outline: none;
+        }
+
+        .search-bar .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-text);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--secondary-text);
+            padding-bottom: 4px;
+        }
+
+        .nav-links a.active {
+            color: var(--brand-green);
+            border-bottom: 2px solid var(--brand-green);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .profile-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #ddd;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: var(--nav-height);
+            position: relative;
+            height: 400px;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('https://via.placeholder.com/1600x600/1a365d/ffffff?text=Campus+Building');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #ffffff;
+            padding: 0 20px;
+        }
+
+        .hero h2 {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0 0 8px;
+            letter-spacing: 1px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 0 0 16px;
+        }
+
+        .hero p {
+            max-width: 700px;
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0 0 40px;
+        }
+
+        /* Floating Search Panel */
+        .search-panel {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            width: 900px;
+            max-width: 95%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: absolute;
+            bottom: -40px;
+        }
+
+        .search-input {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 16px;
+            background: #fff;
+        }
+
+        .search-input input, .search-input select {
+            width: 100%;
+            border: none;
+            padding: 12px 8px;
+            outline: none;
+            font-family: var(--main-font);
+            font-size: 14px;
+            color: var(--primary-text);
+            background: transparent;
+        }
+
+        .btn-cari {
+            background-color: var(--brand-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 32px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-cari:hover {
+            background-color: var(--brand-green-dark);
+        }
+
+        /* Facility Types Section */
+        .facility-types {
+            width: 1200px;
+            max-width: 95%;
+            margin: 120px auto 80px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: var(--primary-text);
+        }
+
+        .types-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 24px;
+        }
+
+        .type-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .type-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--primary-text);
+        }
+
+        .type-item h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 8px;
+        }
+
+        .type-item p {
+            font-size: 12px;
+            color: var(--secondary-text);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Facility Showcase Grid */
+        .showcase {
+            width: 1200px;
+            max-width: 95%;
+            margin: 0 auto 100px;
+        }
+
+        .showcase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .showcase-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .view-all {
+            color: var(--brand-green);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--secondary-text);
+            cursor: pointer;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-img {
+            height: 180px;
+            background-color: #e5e7eb;
+            background-image: url('https://via.placeholder.com/400x300/4a2511/ffffff?text=Auditorium');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-content h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 12px;
+        }
+
+        .card-content p {
+            font-size: 13px;
+            color: var(--secondary-text);
+            margin: 0 0 20px;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--secondary-text);
+            font-weight: 500;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid var(--border-color);
+            padding: 60px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .footer-content {
+            width: 1200px;
+            max-width: 95%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .footer-logo-text {
+            font-family: var(--logo-font);
+            font-size: 64px;
+            font-weight: 700;
+            color: #4da38b;
+            line-height: 1;
+            margin: 0 0 12px;
+            letter-spacing: -1px;
+        }
+
+        .footer-copyright {
+            font-size: 14px;
+            color: var(--secondary-text);
+            margin: 0;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 16px;
+            font-size: 15px;
+            color: var(--secondary-text);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .types-grid { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+            .search-panel { flex-direction: column; bottom: -100px; }
+            .facility-types { margin-top: 160px; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; } /* Hide on mobile for simplicity */
+            .hero h1 { font-size: 32px; }
+            .types-grid { grid-template-columns: repeat(2, 1fr); }
+            .cards-grid { grid-template-columns: 1fr; }
+            .showcase-header { flex-direction: column; gap: 16px; align-items: flex-start; }
+            .footer-content { flex-direction: column; gap: 32px; align-items: center; text-align: center; }
+            .footer-links { align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="nav-logo">IPB<br>SRH</div>
+                <div class="search-bar">
+                    <span class="icon">&#128269;</span>
+                    <input type="text" placeholder="Search facilities...">
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="active">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+            <div class="nav-right">
+                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
+                <div class="profile-btn"></div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h2>Lorem ipsum dolor sit amet.</h2>
+        <h1>IPB Smart Reserve Hub</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ac massa id ex hendrerit iaculis et et sem. Pellentesque odio eu, mollis eget aliquet ut, interdum luctus lectus.</p>
+        
+        <div class="search-panel">
+            <div class="search-input">
+                <span style="color: #9ca3af;">&#128269;</span>
+                <input type="text" placeholder="Nama Ruangan">
+            </div>
+            <div class="search-input">
+                <select>
+                    <option value="">Semua Fakultas</option>
+                    <option value="faperta">Pertanian</option>
+                    <option value="fkh">Kedokteran Hewan</option>
+                </select>
+            </div>
+            <div class="search-input">
+                <span style="color: #9ca3af;">&#128101;</span>
+                <input type="number" placeholder="Kapasitas">
+            </div>
+            <button class="btn-cari">Cari</button>
+        </div>
+    </section>
+
+    <section class="facility-types">
+        <h2 class="section-title">Tipe Fasilitas</h2>
+        <div class="types-grid">
+            <div class="type-item">
+                <div class="type-icon">&#9917;</div>
+                <h3>Olahraga</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>
+            <div class="type-item">
+                <div class="type-icon">&#127979;</div>
+                <h3>Kelas</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>
+            <div class="type-item">
+                <div class="type-icon">&#127908;</div>
+                <h3>Seminar</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>
+            <div class="type-item">
+                <div class="type-icon">&#127795;</div>
+                <h3>Landskap</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>
+            <div class="type-item">
+                <div class="type-icon">&#128187;</div>
+                <h3>Peralatan</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="showcase">
+        <div class="showcase-header">
+            <h2>Jelajah fasilitas</h2>
+            <a href="#" class="view-all">LIHAT SEMUA FASILITAS</a>
+            <div class="filter-btn">
+                Filter <span style="font-size: 12px;">&#9660;</span>
+            </div>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-img"></div>
+                <div class="card-content">
+                    <h3>Lorem ipsum</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <div class="card-footer">
+                        <span>&#128101; Kapasitas: XX</span>
+                        <span>Tipe: XX</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-img"></div>
+                <div class="card-content">
+                    <h3>Lorem ipsum</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <div class="card-footer">
+                        <span>&#128101; Kapasitas: XX</span>
+                        <span>Tipe: XX</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-img"></div>
+                <div class="card-content">
+                    <h3>Lorem ipsum</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <div class="card-footer">
+                        <span>&#128101; Kapasitas: XX</span>
+                        <span>Tipe: XX</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-img"></div>
+                <div class="card-content">
+                    <h3>Lorem ipsum</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <div class="card-footer">
+                        <span>&#128101; Kapasitas: XX</span>
+                        <span>Tipe: XX</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img"></div>
+                <div class="card-content">
+                    <h3>Lorem ipsum</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <div class="card-footer">
+                        <span>&#128101; Kapasitas: XX</span>
+                        <span>Tipe: XX</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-img"></div>
+                <div class="card-content">
+                    <h3>Lorem ipsum</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <div class="card-footer">
+                        <span>&#128101; Kapasitas: XX</span>
+                        <span>Tipe: XX</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-img"></div>
+                <div class="card-content">
+                    <h3>Lorem ipsum</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <div class="card-footer">
+                        <span>&#128101; Kapasitas: XX</span>
+                        <span>Tipe: XX</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-img"></div>
+                <div class="card-content">
+                    <h3>Lorem ipsum</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <div class="card-footer">
+                        <span>&#128101; Kapasitas: XX</span>
+                        <span>Tipe: XX</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <h2 class="footer-logo-text">IPB SRH</h2>
+                <p class="footer-copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -3,6 +3,14 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class ReservationExtraRequirementsRequest(BaseModel):
+    av_support: bool = False
+    logistics_coordination: bool = False
+    extra_cleaning: bool = False
+    security_personnel: bool = False
+    notes: str | None = None
+
+
 class ReservationSubmissionRequest(BaseModel):
     activity_title: str
     event_description: str
@@ -11,6 +19,7 @@ class ReservationSubmissionRequest(BaseModel):
     contact_phone: str
     starts_at: datetime
     ends_at: datetime
+    extra_requirements: ReservationExtraRequirementsRequest = ReservationExtraRequirementsRequest()
 
 
 class ReservationFacilityResponse(BaseModel):
@@ -31,6 +40,14 @@ class StudentReservationReviewResponse(BaseModel):
     admin_removal_reason: str | None
 
 
+class ReservationExtraRequirementsResponse(BaseModel):
+    av_support: bool
+    logistics_coordination: bool
+    extra_cleaning: bool
+    security_personnel: bool
+    notes: str | None
+
+
 class StudentReservationResponse(BaseModel):
     id: str
     reservation_code: str
@@ -44,6 +61,7 @@ class StudentReservationResponse(BaseModel):
     starts_at: datetime
     ends_at: datetime
     price_rupiah: int
+    extra_requirements: ReservationExtraRequirementsResponse
     document_upload_due_at: datetime | None = None
     document_verification_due_at: datetime | None = None
     payment_upload_due_at: datetime | None = None

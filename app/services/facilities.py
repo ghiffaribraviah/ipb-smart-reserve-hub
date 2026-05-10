@@ -1,8 +1,11 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Literal
 
 from app.repositories.facility_catalog_reader import FacilityCatalogReader, FacilityCatalogRecord
 from app.services.public_facility_reviews import PublicFacilityReviewModule
+
+FacilityCatalogSort = Literal["name_asc", "capacity_desc", "rating_desc", "price_asc", "price_desc"]
 
 
 class FacilityNotFound(Exception):
@@ -21,6 +24,15 @@ class FacilityCatalogItem:
     review_count: int
     price_summary: str
     open_hours_summary: str
+
+
+@dataclass(frozen=True)
+class FacilityCatalogPage:
+    items: list[FacilityCatalogItem]
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
 
 
 @dataclass(frozen=True)
@@ -121,9 +133,42 @@ class FacilityCatalogModule:
             for category in self._facility_catalog_reader.list_public_categories()
         ]
 
-    def list_active_facilities(self) -> list[FacilityCatalogItem]:
+    def list_active_facilities(
+        self,
+        *,
+        q: str | None = None,
+        category: str | None = None,
+        min_capacity: int | None = None,
+        sort: FacilityCatalogSort = "name_asc",
+        page: int = 1,
+        page_size: int = 12,
+    ) -> FacilityCatalogPage:
+        page_size = min(page_size, 50)
         facilities = self._facility_catalog_reader.list_active_facilities()
-        return [self._catalog_item(facility) for facility in facilities]
+        if q:
+            normalized_q = q.casefold()
+            facilities = [
+                facility
+                for facility in facilities
+                if normalized_q in facility.name.casefold() or normalized_q in facility.location.casefold()
+            ]
+        if category:
+            facilities = [facility for facility in facilities if facility.category_slug == category]
+        if min_capacity is not None:
+            facilities = [facility for facility in facilities if facility.capacity >= min_capacity]
+        facilities = _sort_facilities(facilities, sort)
+        items = [self._catalog_item(facility) for facility in facilities]
+        total_items = len(items)
+        total_pages = (total_items + page_size - 1) // page_size if total_items else 0
+        start = (page - 1) * page_size
+        end = start + page_size
+        return FacilityCatalogPage(
+            items=items[start:end],
+            page=page,
+            page_size=page_size,
+            total_items=total_items,
+            total_pages=total_pages,
+        )
 
     def get_public_detail(self, facility_id: str) -> FacilityPublicDetail:
         facility = self._facility_catalog_reader.get_active_facility_by_id(facility_id)
@@ -221,3 +266,25 @@ def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
         return value.replace(tzinfo=UTC)
     return value.astimezone(UTC)
+
+
+def _sort_facilities(
+    facilities: list[FacilityCatalogRecord],
+    sort: FacilityCatalogSort,
+) -> list[FacilityCatalogRecord]:
+    if sort == "capacity_desc":
+        return sorted(facilities, key=lambda facility: (-facility.capacity, facility.name.casefold()))
+    if sort == "rating_desc":
+        return sorted(facilities, key=lambda facility: (-_public_rating_average(facility), facility.name.casefold()))
+    if sort == "price_asc":
+        return sorted(facilities, key=lambda facility: (facility.price_rupiah, facility.name.casefold()))
+    if sort == "price_desc":
+        return sorted(facilities, key=lambda facility: (-facility.price_rupiah, facility.name.casefold()))
+    return sorted(facilities, key=lambda facility: facility.name.casefold())
+
+
+def _public_rating_average(facility: FacilityCatalogRecord) -> float:
+    visible_reviews = [review for review in facility.reviews if not review.is_deleted]
+    if not visible_reviews:
+        return 0
+    return round(sum(review.rating for review in visible_reviews) / len(visible_reviews), 1)

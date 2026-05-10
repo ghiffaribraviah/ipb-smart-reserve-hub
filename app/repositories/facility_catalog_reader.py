@@ -24,6 +24,7 @@ class FacilityCatalogRecord:
     location: str
     capacity: int
     category: str
+    category_slug: str
     description: str
     contact_name: str
     contact_phone: str
@@ -179,6 +180,7 @@ class SqlAlchemyFacilityCatalogReader:
             location=facility.location,
             capacity=facility.capacity,
             category=facility.category.name,
+            category_slug=facility.category.slug,
             description=facility.description,
             contact_name=facility.contact_name,
             contact_phone=facility.contact_phone,

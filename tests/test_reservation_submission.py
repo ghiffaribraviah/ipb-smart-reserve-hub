@@ -134,6 +134,13 @@ async def test_student_submits_reservation_details_and_views_held_reservation():
     assert created_body["organization_unit"]["name"] == "BEM KM IPB"
     assert created_body["participant_count"] == 80
     assert created_body["document_upload_due_at"] == "2026-05-04T00:00:00Z"
+    assert created_body["extra_requirements"] == {
+        "av_support": False,
+        "logistics_coordination": False,
+        "extra_cleaning": False,
+        "security_personnel": False,
+        "notes": None,
+    }
 
     assert reservation_list.status_code == 200
     assert reservation_list.json() == [created_body]
@@ -146,6 +153,69 @@ async def test_student_submits_reservation_details_and_views_held_reservation():
 
     assert detail.status_code == 200
     assert detail.json() == created_body
+
+
+@pytest.mark.anyio
+async def test_student_submits_extra_requirements_and_views_them_in_reservation_responses():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    test_data = DataBuilder(app)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="08:00", closes_at="16:00")
+    organization_unit_id = test_data.create_organization_unit(name="BEM KM IPB")
+    transport = ASGITransport(app=app)
+
+    extra_requirements = {
+        "av_support": True,
+        "logistics_coordination": True,
+        "extra_cleaning": False,
+        "security_personnel": True,
+        "notes": "Butuh dua mic wireless dan meja registrasi.",
+    }
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        await client.post(
+            "/auth/register",
+            json={
+                "email": "budi@apps.ipb.ac.id",
+                "password": "secret123",
+                "full_name": "Budi Santoso",
+                "nim": "G64190001",
+                "phone": "08123456789",
+            },
+        )
+        login = await client.post("/auth/login", json={"email": "budi@apps.ipb.ac.id", "password": "secret123"})
+        token = login.json()["access_token"]
+
+        created = await client.post(
+            f"/facilities/{facility_id}/reservations",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "activity_title": "Seminar Karier",
+                "event_description": "Seminar persiapan karier untuk mahasiswa tingkat akhir.",
+                "participant_count": 80,
+                "organization_unit_id": organization_unit_id,
+                "contact_phone": "08123456789",
+                "starts_at": "2026-06-01T02:00:00+00:00",
+                "ends_at": "2026-06-01T04:00:00+00:00",
+                "extra_requirements": extra_requirements,
+            },
+        )
+
+        reservation_list = await client.get("/student/reservations", headers={"Authorization": f"Bearer {token}"})
+        detail = await client.get(
+            f"/student/reservations/{created.json()['id']}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert created.status_code == 201
+    assert created.json()["extra_requirements"] == extra_requirements
+    assert reservation_list.status_code == 200
+    assert reservation_list.json()[0]["extra_requirements"] == extra_requirements
+    assert detail.status_code == 200
+    assert detail.json()["extra_requirements"] == extra_requirements
 
 
 @pytest.mark.anyio

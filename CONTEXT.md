@@ -62,7 +62,7 @@ Facility Images are shown in student browsing. Exactly one active Facility Image
 
 The Facility Catalog is the student browsing Module for public Facility information.
 
-It lists active Facilities for comparison and exposes Facility detail with public information: images, contact details, price or free status, open-hours summary, and review summary placeholders. The Facility Catalog should not expose private staff, reservation, payment, or student data.
+It lists active Facilities for comparison through a paginated public collection with keyword search, Facility Category slug filtering, minimum capacity filtering, and explicit sorting by name, capacity, public rating, or price. It also exposes Facility detail with public information: images, contact details, price or free status, open-hours summary, and review summary placeholders. The Facility Catalog should not expose private staff, reservation, payment, or student data.
 
 ## Public Facility Reviews
 
@@ -111,6 +111,14 @@ Reservation Time Selection can tell students whether a candidate time appears ac
 Facility Reservation Lifecycle owns the status transitions and effective-status rules for a Facility Reservation.
 
 Reservation, Approval Letter, Payment, Cancellation, Deadline Worker, and Review callers should ask the Facility Reservation Lifecycle to move or interpret a Facility Reservation instead of comparing raw reservation statuses directly.
+
+## Reservation Extra Requirements
+
+Reservation Extra Requirements are structured operational requests submitted with a Facility Reservation.
+
+They capture AV support, logistics coordination, extra cleaning, security personnel, and optional notes. The four flags are stored as explicit Reservation facts so future staff workflows can filter or report on them, while student reservation create, list, and detail responses expose them as one nested `extra_requirements` object.
+
+If a student omits Reservation Extra Requirements during submission, the Reservation records no requested flags and no notes.
 
 ## Staff Reservation Review Access
 

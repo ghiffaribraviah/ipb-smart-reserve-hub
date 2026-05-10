@@ -70,6 +70,7 @@ class DataBuilder:
         category_name: str = "Auditorium",
         category_slug: str = "auditorium",
         category_icon_hint: str | None = "presentation",
+        capacity: int = 120,
         price_rupiah: int = 0,
         payment_instructions: str | None = None,
     ) -> str:
@@ -85,7 +86,7 @@ class DataBuilder:
                 name=name,
                 category=category,
                 location="Kampus IPB Dramaga",
-                capacity=120,
+                capacity=capacity,
                 description="Ruang kegiatan mahasiswa",
                 contact_name="TU Fasilitas",
                 contact_phone="0251-8620000",
@@ -156,6 +157,11 @@ class DataBuilder:
         document_verification_due_at: str | None = None,
         payment_upload_due_at: str | None = None,
         payment_verification_due_at: str | None = None,
+        extra_requirement_av_support: bool = False,
+        extra_requirement_logistics_coordination: bool = False,
+        extra_requirement_extra_cleaning: bool = False,
+        extra_requirement_security_personnel: bool = False,
+        extra_requirement_notes: str | None = None,
         has_payment_receipt: bool = False,
     ) -> str:
         with self._session_factory() as session:
@@ -181,6 +187,11 @@ class DataBuilder:
                 document_verification_due_at=_datetime_or_none(document_verification_due_at),
                 payment_upload_due_at=_datetime_or_none(payment_upload_due_at),
                 payment_verification_due_at=_datetime_or_none(payment_verification_due_at),
+                extra_requirement_av_support=extra_requirement_av_support,
+                extra_requirement_logistics_coordination=extra_requirement_logistics_coordination,
+                extra_requirement_extra_cleaning=extra_requirement_extra_cleaning,
+                extra_requirement_security_personnel=extra_requirement_security_personnel,
+                extra_requirement_notes=extra_requirement_notes,
                 status=status,
             )
             if has_payment_receipt:

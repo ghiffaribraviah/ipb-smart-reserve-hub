@@ -16,6 +16,14 @@ class FacilityCatalogItemResponse(BaseModel):
     open_hours_summary: str
 
 
+class FacilityCatalogPageResponse(BaseModel):
+    items: list[FacilityCatalogItemResponse]
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
 class FacilityCategoryResponse(BaseModel):
     id: str
     name: str

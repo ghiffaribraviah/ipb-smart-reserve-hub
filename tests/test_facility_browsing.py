@@ -6,7 +6,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app.services.facility_availability import FacilityAvailabilityModule
 from app.repositories.facility_availability_reader import FacilityAvailabilityFacts, FacilityOpenHourRecord
-from app.repositories.facility_catalog_reader import FacilityCatalogImageRecord, FacilityCatalogRecord
+from app.repositories.facility_catalog_reader import FacilityCatalogImageRecord, FacilityCatalogRecord, FacilityReviewRecord
 from app.services.facilities import FacilityCatalogModule
 from app.main import create_app
 from app.models import Facility, FacilityCategory, FacilityImage, ReservationStatus, UserRole
@@ -83,6 +83,7 @@ def test_facility_catalog_module_projects_public_catalog_items_through_repositor
                     location="Kampus IPB Dramaga",
                     capacity=120,
                     category="Auditorium",
+                    category_slug="auditorium",
                     description="Ruang kegiatan mahasiswa",
                     contact_name="TU Fasilitas",
                     contact_phone="0251-8620000",
@@ -104,11 +105,79 @@ def test_facility_catalog_module_projects_public_catalog_items_through_repositor
         )
     )
 
-    catalog_items = facility_catalog.list_active_facilities()
+    catalog_page = facility_catalog.list_active_facilities()
 
-    assert catalog_items[0].name == "Auditorium Andi Hakim Nasoetion"
-    assert catalog_items[0].cover_image_url == "https://cdn.example.test/auditorium-cover.jpg"
-    assert catalog_items[0].price_summary == "Gratis"
+    assert catalog_page.page == 1
+    assert catalog_page.page_size == 12
+    assert catalog_page.total_items == 1
+    assert catalog_page.items[0].name == "Auditorium Andi Hakim Nasoetion"
+    assert catalog_page.items[0].cover_image_url == "https://cdn.example.test/auditorium-cover.jpg"
+    assert catalog_page.items[0].price_summary == "Gratis"
+
+
+def test_facility_catalog_module_sorts_by_public_rating_descending():
+    lower_rated = FacilityCatalogRecord(
+        id="facility-lower",
+        name="Alpha Lower Rated Facility",
+        location="Kampus IPB Dramaga",
+        capacity=120,
+        category="Auditorium",
+        category_slug="auditorium",
+        description="Ruang kegiatan mahasiswa",
+        contact_name="TU Fasilitas",
+        contact_phone="0251-8620000",
+        contact_email=None,
+        price_rupiah=0,
+        open_hours_summary="Senin-Jumat 08.00-16.00",
+        rating_average=None,
+        review_count=0,
+        images=[],
+        reviews=[
+            FacilityReviewRecord(
+                id="review-lower",
+                rating=3,
+                comment=None,
+                author_name="Student",
+                created_at=datetime.fromisoformat("2026-01-01T00:00:00+00:00"),
+                is_deleted=False,
+            )
+        ],
+    )
+    higher_rated = FacilityCatalogRecord(
+        id="facility-higher",
+        name="Zulu Higher Rated Facility",
+        location="Kampus IPB Dramaga",
+        capacity=120,
+        category="Auditorium",
+        category_slug="auditorium",
+        description="Ruang kegiatan mahasiswa",
+        contact_name="TU Fasilitas",
+        contact_phone="0251-8620000",
+        contact_email=None,
+        price_rupiah=0,
+        open_hours_summary="Senin-Jumat 08.00-16.00",
+        rating_average=None,
+        review_count=0,
+        images=[],
+        reviews=[
+            FacilityReviewRecord(
+                id="review-higher",
+                rating=5,
+                comment=None,
+                author_name="Student",
+                created_at=datetime.fromisoformat("2026-01-01T00:00:00+00:00"),
+                is_deleted=False,
+            )
+        ],
+    )
+    facility_catalog = FacilityCatalogModule(
+        facility_catalog_reader=StubFacilityCatalogReader([lower_rated, higher_rated])
+    )
+
+    page = facility_catalog.list_active_facilities(sort="rating_desc")
+
+    assert [item.id for item in page.items] == ["facility-higher", "facility-lower"]
+    assert [item.rating_average for item in page.items] == [5.0, 3.0]
 
 
 def test_facility_availability_module_concentrates_reservation_time_rules():
@@ -138,20 +207,123 @@ async def test_students_browse_active_facilities_from_catalog():
         response = await client.get("/facilities")
 
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": active_id,
-            "name": "Auditorium Andi Hakim Nasoetion",
-            "location": "Kampus IPB Dramaga",
-            "capacity": 120,
-            "category": "Auditorium",
-            "cover_image_url": "https://cdn.example.test/auditorium-cover.jpg",
-            "rating_average": None,
-            "review_count": 0,
-            "price_summary": "Gratis",
-            "open_hours_summary": "Senin-Jumat 08.00-16.00",
-        }
+    assert response.json() == {
+        "items": [
+            {
+                "id": active_id,
+                "name": "Auditorium Andi Hakim Nasoetion",
+                "location": "Kampus IPB Dramaga",
+                "capacity": 120,
+                "category": "Auditorium",
+                "cover_image_url": "https://cdn.example.test/auditorium-cover.jpg",
+                "rating_average": None,
+                "review_count": 0,
+                "price_summary": "Gratis",
+                "open_hours_summary": "Senin-Jumat 08.00-16.00",
+            }
+        ],
+        "page": 1,
+        "page_size": 12,
+        "total_items": 1,
+        "total_pages": 1,
+    }
+
+
+@pytest.mark.anyio
+async def test_facility_catalog_paginates_with_requested_page_and_caps_page_size():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    facility_ids = [
+        test_data.create_facility(name=f"Facility {index:02d}")
+        for index in range(1, 62)
     ]
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/facilities?page=2&page_size=60")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["page"] == 2
+    assert payload["page_size"] == 50
+    assert payload["total_items"] == 61
+    assert payload["total_pages"] == 2
+    assert [item["id"] for item in payload["items"]] == facility_ids[50:]
+
+
+@pytest.mark.anyio
+async def test_facility_catalog_filters_by_keyword_and_category_slug():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    test_data.create_facility(
+        name="Auditorium Andi Hakim Nasoetion",
+        category_name="Auditorium",
+        category_slug="auditorium",
+    )
+    classroom_id = test_data.create_facility(
+        name="Ruang Kelas CCR",
+        category_name="Ruang Kelas",
+        category_slug="ruang-kelas",
+        category_icon_hint="school",
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/facilities?q=kelas&category=ruang-kelas")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_items"] == 1
+    assert [item["id"] for item in payload["items"]] == [classroom_id]
+
+
+@pytest.mark.anyio
+async def test_facility_catalog_filters_by_minimum_capacity():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    test_data.create_facility(name="Ruang Seminar", capacity=80)
+    auditorium_id = test_data.create_facility(name="Auditorium Besar", capacity=450)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/facilities?min_capacity=200")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_items"] == 1
+    assert [item["id"] for item in payload["items"]] == [auditorium_id]
+
+
+@pytest.mark.anyio
+async def test_facility_catalog_sorts_by_name_capacity_and_price():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    small_paid_id = test_data.create_facility(name="Beta Room", capacity=40, price_rupiah=200000)
+    large_free_id = test_data.create_facility(name="Alpha Hall", capacity=300, price_rupiah=0)
+    medium_paid_id = test_data.create_facility(name="Gamma Studio", capacity=120, price_rupiah=100000)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        by_name = await client.get("/facilities?sort=name_asc")
+        by_capacity = await client.get("/facilities?sort=capacity_desc")
+        by_price_asc = await client.get("/facilities?sort=price_asc")
+        by_price_desc = await client.get("/facilities?sort=price_desc")
+
+    assert [item["id"] for item in by_name.json()["items"]] == [large_free_id, small_paid_id, medium_paid_id]
+    assert [item["id"] for item in by_capacity.json()["items"]] == [large_free_id, medium_paid_id, small_paid_id]
+    assert [item["id"] for item in by_price_asc.json()["items"]] == [large_free_id, medium_paid_id, small_paid_id]
+    assert [item["id"] for item in by_price_desc.json()["items"]] == [small_paid_id, medium_paid_id, large_free_id]
+
+
+@pytest.mark.anyio
+async def test_facility_catalog_rejects_unknown_sort_values():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/facilities?sort=distance_asc")
+
+    assert response.status_code == 422
 
 
 @pytest.mark.anyio

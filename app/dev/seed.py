@@ -355,6 +355,11 @@ def _ensure_reservation(
     reservation.contact_phone = "081234599999"
     reservation.price_rupiah = facility.price_rupiah
     reservation.organization_unit_name = organization_unit.name
+    reservation.extra_requirement_av_support = False
+    reservation.extra_requirement_logistics_coordination = False
+    reservation.extra_requirement_extra_cleaning = False
+    reservation.extra_requirement_security_personnel = False
+    reservation.extra_requirement_notes = None
     reservation.starts_at = starts_at
     reservation.ends_at = ends_at
     reservation.status = status

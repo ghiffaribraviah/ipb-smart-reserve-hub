@@ -20,12 +20,12 @@ Severity labels:
 
 ## Facility Catalog
 
-- Blocking for integration: `GET /facilities` currently returns an unpaginated list and has no documented query params for search, category, minimum capacity, sort, page, or page size.
+- Resolved: `GET /facilities` returns a paginated envelope with `items`, `page`, `page_size`, `total_items`, and `total_pages`, and supports `q`, `category`, `min_capacity`, `sort`, `page`, and `page_size`.
 - Resolved: public Facility Category data exposes stored slugs through `GET /facility-categories` for URL filters.
 
 ## Reservation Detail Form
 
-- Blocking for integration: reservation submission does not currently accept structured extra requirements such as AV support, logistics coordination, extra cleaning, or security personnel.
+- Resolved: reservation submission accepts optional structured `extra_requirements` for AV support, logistics coordination, extra cleaning, security personnel, and notes. Student reservation create/list/detail responses return the persisted nested object, with omitted requirements defaulting to false flags and null notes.
 
 ## Reservation Payment States
 

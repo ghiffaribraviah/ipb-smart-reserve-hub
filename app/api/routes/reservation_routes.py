@@ -42,6 +42,7 @@ from app.services.reservations import (
     ReservationCancellationUnavailable,
     ReservationCancellationReasonRequired,
     ReservationNotFound,
+    ReservationExtraRequirements,
     ReservationSubmission,
     ReservationTimeUnavailable,
     StaffCancellationReviewAccessDenied,
@@ -100,6 +101,13 @@ def register_reservation_routes(
                     contact_phone=payload.contact_phone,
                     starts_at=payload.starts_at,
                     ends_at=payload.ends_at,
+                    extra_requirements=ReservationExtraRequirements(
+                        av_support=payload.extra_requirements.av_support,
+                        logistics_coordination=payload.extra_requirements.logistics_coordination,
+                        extra_cleaning=payload.extra_requirements.extra_cleaning,
+                        security_personnel=payload.extra_requirements.security_personnel,
+                        notes=payload.extra_requirements.notes,
+                    ),
                 ),
             )
         except FacilityNotFound:

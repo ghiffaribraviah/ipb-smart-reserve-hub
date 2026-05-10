@@ -1,16 +1,16 @@
 from collections.abc import Callable
 from datetime import datetime
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 
 from app.services.facility_availability import FacilityAvailabilityModule
 from app.services.facility_availability import FacilityNotFound as FacilityAvailabilityNotFound
-from app.services.facilities import FacilityCatalogModule, FacilityNotFound
+from app.services.facilities import FacilityCatalogModule, FacilityCatalogSort, FacilityNotFound
 from app.schemas.facility_schemas import (
     FacilityAvailabilityResponse,
     FacilityCalendarEntryResponse,
     FacilityCategoryResponse,
-    FacilityCatalogItemResponse,
+    FacilityCatalogPageResponse,
     FacilityDetailResponse,
 )
 from app.services.reservation_time_selection import FacilityNotFound as ReservationTimeSelectionFacilityNotFound
@@ -34,11 +34,24 @@ def register_facility_routes(
     ) -> list:
         return facility_catalog.list_public_categories()
 
-    @app.get("/facilities", response_model=list[FacilityCatalogItemResponse])
+    @app.get("/facilities", response_model=FacilityCatalogPageResponse)
     async def list_facilities(
+        q: str | None = None,
+        category: str | None = None,
+        min_capacity: int | None = Query(default=None, ge=0),
+        sort: FacilityCatalogSort = "name_asc",
+        page: int = Query(default=1, ge=1),
+        page_size: int = Query(default=12, ge=1),
         facility_catalog: FacilityCatalogModule = Depends(get_facility_catalog),
-    ) -> list:
-        return facility_catalog.list_active_facilities()
+    ):
+        return facility_catalog.list_active_facilities(
+            q=q,
+            category=category,
+            min_capacity=min_capacity,
+            sort=sort,
+            page=page,
+            page_size=page_size,
+        )
 
     @app.get("/facilities/{facility_id}", response_model=FacilityDetailResponse)
     async def get_facility_detail(

@@ -60,7 +60,7 @@ Contoh alur reservasi:
 1. Mahasiswa login dan mengirim `POST /facilities/{facility_id}/reservations`.
 2. Route memvalidasi role student.
 3. `ReservationModule` mengecek fasilitas aktif, unit organisasi aktif, open hour, blackout, dan konflik reservasi.
-4. Repository menyimpan reservation dengan status `pending_document_upload`.
+4. Repository menyimpan reservation dengan status `pending_document_upload`, termasuk `extra_requirements` bila mahasiswa meminta dukungan AV, koordinasi logistik, cleaning tambahan, personel keamanan, atau catatan operasional.
 5. Notification module membuat notifikasi awal untuk mahasiswa.
 
 ## Menjalankan Project Lokal
@@ -187,7 +187,7 @@ Role yang dipakai:
 | Method | Endpoint | Role | Kegunaan |
 | --- | --- | --- | --- |
 | `GET` | `/facility-categories` | Public | Daftar kategori fasilitas aktif untuk shortcut/filter, berisi `id`, `name`, `slug`, `icon_hint`, dan `facility_count` fasilitas aktif. |
-| `GET` | `/facilities` | Public | Daftar fasilitas aktif dengan ringkasan dan rating. |
+| `GET` | `/facilities` | Public | Daftar fasilitas aktif dalam envelope paginated berisi `items`, `page`, `page_size`, `total_items`, dan `total_pages`. Query: `q`, `category`, `min_capacity`, `sort`, `page`, `page_size`. |
 | `GET` | `/facilities/{facility_id}` | Public | Detail fasilitas aktif. |
 | `GET` | `/facilities/{facility_id}/calendar` | Public | Kalender publik slot yang terblokir tanpa data privat. Query: `start`, `end`. |
 | `GET` | `/facilities/{facility_id}/availability` | Public | Cek ketersediaan berdasarkan open hour, blackout, dan reservasi blocking. Query: `start`, `end`. |
@@ -202,6 +202,8 @@ Role yang dipakai:
 | `GET` | `/student/reservations/{reservation_id}` | Student | Melihat detail reservasi sendiri. |
 | `POST` | `/student/reservations/{reservation_id}/cancel` | Student | Membatalkan reservasi sebelum approval. |
 | `POST` | `/student/reservations/{reservation_id}/cancellation-request` | Student | Mengajukan pembatalan reservasi yang sudah approved dengan alasan. |
+
+`POST /facilities/{facility_id}/reservations` menerima objek opsional `extra_requirements` berisi `av_support`, `logistics_coordination`, `extra_cleaning`, `security_personnel`, dan `notes`. Jika objek ini tidak dikirim, semua flag bernilai `false` dan `notes` bernilai `null`. Response create, list, dan detail reservasi mahasiswa mengembalikan objek `extra_requirements` yang tersimpan.
 
 ### Surat Persetujuan dan Review Dokumen
 

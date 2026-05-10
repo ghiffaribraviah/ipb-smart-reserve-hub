@@ -83,6 +83,15 @@ class ReservationSubmissionConflictGuard:
 
 
 @dataclass(frozen=True)
+class ReservationExtraRequirements:
+    av_support: bool = False
+    logistics_coordination: bool = False
+    extra_cleaning: bool = False
+    security_personnel: bool = False
+    notes: str | None = None
+
+
+@dataclass(frozen=True)
 class ReservationSubmission:
     facility_id: str
     activity_title: str
@@ -92,6 +101,7 @@ class ReservationSubmission:
     contact_phone: str
     starts_at: datetime
     ends_at: datetime
+    extra_requirements: ReservationExtraRequirements = ReservationExtraRequirements()
 
 
 @dataclass(frozen=True)
@@ -129,6 +139,7 @@ class StudentReservation:
     starts_at: datetime
     ends_at: datetime
     price_rupiah: int
+    extra_requirements: ReservationExtraRequirements
     document_upload_due_at: datetime | None = None
     document_verification_due_at: datetime | None = None
     payment_upload_due_at: datetime | None = None
@@ -213,6 +224,11 @@ class ReservationModule:
             contact_phone=submission.contact_phone,
             price_rupiah=facility.price_rupiah,
             organization_unit_name=organization_unit.name,
+            extra_requirement_av_support=submission.extra_requirements.av_support,
+            extra_requirement_logistics_coordination=submission.extra_requirements.logistics_coordination,
+            extra_requirement_extra_cleaning=submission.extra_requirements.extra_cleaning,
+            extra_requirement_security_personnel=submission.extra_requirements.security_personnel,
+            extra_requirement_notes=submission.extra_requirements.notes,
             starts_at=starts_at,
             ends_at=ends_at,
             status=ReservationStatus.pending_document_upload,
@@ -391,6 +407,13 @@ def _to_student_reservation(reservation: Reservation, *, effective_status: Reser
         starts_at=_as_utc(reservation.starts_at),
         ends_at=_as_utc(reservation.ends_at),
         price_rupiah=reservation.price_rupiah,
+        extra_requirements=ReservationExtraRequirements(
+            av_support=reservation.extra_requirement_av_support,
+            logistics_coordination=reservation.extra_requirement_logistics_coordination,
+            extra_cleaning=reservation.extra_requirement_extra_cleaning,
+            security_personnel=reservation.extra_requirement_security_personnel,
+            notes=reservation.extra_requirement_notes,
+        ),
         document_upload_due_at=_optional_utc(reservation.document_upload_due_at),
         document_verification_due_at=_optional_utc(reservation.document_verification_due_at),
         payment_upload_due_at=_optional_utc(reservation.payment_upload_due_at),

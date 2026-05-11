@@ -5,6 +5,7 @@ import { StudentAppShell } from "./features/student-shell/StudentAppShell";
 import { FacilityCatalogPage } from "./features/facilities/FacilityCatalogPage";
 import { FacilityDetailsPage } from "./features/facilities/FacilityDetailsPage";
 import { ReservationWorkflowPreview } from "./features/reservations/ReservationWorkflowPreview";
+import { LoginPage } from "./features/auth/LoginPage";
 
 export function App() {
   return (
@@ -15,7 +16,7 @@ export function App() {
           <Route element={<DesignFoundationPreview />} path="/design-foundation" />
           <Route element={<ReservationWorkflowPreview />} path="/reservation-workflow-components" />
           <Route element={<RequirePublic />}>
-            <Route element={<LoginPlaceholder />} path="/login" />
+            <Route element={<LoginPage />} path="/login" />
           </Route>
           <Route element={<RequireStudent />}>
             <Route element={<StudentShellRoute />}>
@@ -112,18 +113,6 @@ function ReservationWorkflowPlaceholder({ title }: { title: string }) {
         <p className="text-body-md text-on-surface-variant">Navigasi utama tetap tersedia, sementara konteks langkah dikelola oleh halaman workflow.</p>
       </div>
     </section>
-  );
-}
-
-function LoginPlaceholder() {
-  return (
-    <main className="grid min-h-screen place-items-center bg-surface px-md">
-      <section className="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-lg shadow-ambient">
-        <p className="text-label-bold text-secondary">IPB SRH</p>
-        <h1 className="mt-sm text-h2 text-primary-container">Masuk</h1>
-        <p className="mt-sm text-body-md text-on-surface-variant">Form login lengkap berada di slice autentikasi. Halaman ini menjadi target redirect shell.</p>
-      </section>
-    </main>
   );
 }
 

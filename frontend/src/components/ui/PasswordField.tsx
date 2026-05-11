@@ -1,15 +1,16 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, ReactNode } from "react";
 
 type PasswordFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   error?: string;
   helpText?: string;
   id: string;
   label: string;
+  leadingIcon?: ReactNode;
 };
 
-export function PasswordField({ error, helpText, id, label, required, className = "", ...props }: PasswordFieldProps) {
+export function PasswordField({ error, helpText, id, label, leadingIcon, required, className = "", ...props }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const helpId = helpText ? `${id}-help` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -23,10 +24,12 @@ export function PasswordField({ error, helpText, id, label, required, className 
         {required ? <span aria-hidden="true"> *</span> : null}
       </label>
       <div className="relative">
+        {leadingIcon ? <span className="pointer-events-none absolute left-md top-1/2 flex -translate-y-1/2 text-on-surface-variant">{leadingIcon}</span> : null}
         <input
           className={[
-            "min-h-11 w-full rounded border bg-surface-container-lowest px-md py-sm pr-xl text-body-md text-on-surface shadow-control",
-            "focus:border-secondary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-secondary",
+            "min-h-11 w-full rounded border bg-surface-container-low px-md py-sm pr-xl text-body-md text-on-surface",
+            leadingIcon ? "pl-xl" : "",
+            "focus:border-secondary focus:bg-surface-container-lowest focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-secondary",
             "disabled:cursor-not-allowed disabled:bg-surface-container disabled:text-on-surface-variant",
             error ? "border-error" : "border-outline-variant",
             className,

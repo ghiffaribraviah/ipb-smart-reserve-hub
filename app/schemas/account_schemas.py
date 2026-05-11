@@ -24,12 +24,22 @@ class AdminCreateUserRequest(BaseModel):
     is_active: bool = True
 
 
+class AcademicProfileResponse(BaseModel):
+    program_studi: str | None
+    faculty: str | None
+    entry_year: int | None
+    degree: str | None
+
+
 class UserResponse(BaseModel):
     id: str
     email: str
     full_name: str
     role: UserRole
     is_active: bool
+    nim: str | None = None
+    phone: str | None = None
+    academic_profile: AcademicProfileResponse | None = None
 
 
 class TokenResponse(BaseModel):

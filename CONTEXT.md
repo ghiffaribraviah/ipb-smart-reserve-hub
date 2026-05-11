@@ -38,6 +38,18 @@ A User Repository is the persistence Seam for User account records.
 
 It lets account workflows store a User account and look one up by email address or ID without knowing the database Adapter or query Implementation.
 
+## Student Academic Profile
+
+Student Academic Profile is the best-effort academic identity derived from a Student User account's NIM.
+
+It exposes program study, faculty, entry year, and degree for frontend profile display without making the frontend parse NIM. Unknown or unparsable NIM values do not block registration, login, token refresh, or current-user lookup; missing academic facts are represented as null fields.
+
+## Academic Profile Deriver
+
+Academic Profile Deriver owns NIM prefix and year parsing for Student Academic Profile.
+
+It keeps academic code mapping behind a small service interface so HTTP routes and account workflows can ask for a profile without embedding IPB NIM parsing rules. The derivation is intentionally best-effort, not strict admissions-grade validation.
+
 ## Facility
 
 A Facility is a reservable campus place that students can discover and later reserve.

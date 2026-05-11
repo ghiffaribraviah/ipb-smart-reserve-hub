@@ -177,10 +177,13 @@ Role yang dipakai:
 | `POST` | `/auth/register` | Public | Registrasi mahasiswa memakai domain email yang diizinkan. |
 | `POST` | `/auth/login` | Public | Login dan mendapatkan access token. |
 | `POST` | `/auth/refresh` | Authenticated | Refresh token aktif. |
+| `GET` | `/auth/me` | Authenticated | Mengambil identitas user aktif. Untuk mahasiswa, response menyertakan `nim`, `phone`, dan `academic_profile` best-effort dari NIM. |
 | `POST` | `/admin/users` | Super Admin | Membuat akun staff atau Super Admin. |
 | `GET` | `/student/shell` | Student | Verifikasi akses shell student. |
 | `GET` | `/staff/shell` | Staff | Verifikasi akses shell staff. |
 | `GET` | `/admin/shell` | Super Admin | Verifikasi akses shell admin. |
+
+`academic_profile` untuk mahasiswa berisi `program_studi`, `faculty`, `entry_year`, dan `degree`. Derivasi profil akademik bersifat best-effort: NIM yang tidak dikenal atau tidak bisa diparse tetap menghasilkan response auth yang sukses dengan field akademik bernilai `null`. Registrasi, login, refresh token, dan `/auth/me` tidak menjadikan keberhasilan derivasi akademik sebagai syarat akses.
 
 ### Fasilitas Publik
 

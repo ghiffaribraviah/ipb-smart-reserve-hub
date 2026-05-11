@@ -189,6 +189,14 @@ async def test_active_authenticated_user_can_get_current_user_identity():
             "full_name": "Budi Santoso",
             "role": "student",
             "is_active": True,
+            "nim": "G64190001",
+            "phone": "08123456789",
+            "academic_profile": {
+                "program_studi": "Ilmu Komputer",
+                "faculty": "Fakultas Matematika dan Ilmu Pengetahuan Alam",
+                "entry_year": 2019,
+                "degree": "Sarjana",
+            },
         }
 
 
@@ -231,6 +239,49 @@ async def test_current_user_identity_rejects_inactive_user_tokens():
 
 
 @pytest.mark.anyio
+async def test_unknown_nim_keeps_auth_flows_available_with_null_academic_profile():
+    transport = ASGITransport(app=create_app(database_url="sqlite+pysqlite:///:memory:"))
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        registered = await client.post(
+            "/auth/register",
+            json={
+                "email": "budi@apps.ipb.ac.id",
+                "password": "secret123",
+                "full_name": "Budi Santoso",
+                "nim": "UNKNOWN-NIM",
+                "phone": "08123456789",
+            },
+        )
+        logged_in = await client.post(
+            "/auth/login",
+            json={"email": "budi@apps.ipb.ac.id", "password": "secret123"},
+        )
+        refreshed = await client.post(
+            "/auth/refresh",
+            headers={"Authorization": f"Bearer {logged_in.json()['access_token']}"},
+        )
+
+        response = await client.get(
+            "/auth/me",
+            headers={"Authorization": f"Bearer {refreshed.json()['access_token']}"},
+        )
+
+        assert registered.status_code == 201
+        assert logged_in.status_code == 200
+        assert refreshed.status_code == 200
+        assert response.status_code == 200
+        assert response.json()["nim"] == "UNKNOWN-NIM"
+        assert response.json()["phone"] == "08123456789"
+        assert response.json()["academic_profile"] == {
+            "program_studi": None,
+            "faculty": None,
+            "entry_year": None,
+            "degree": None,
+        }
+
+
+@pytest.mark.anyio
 async def test_super_admin_creates_staff_and_role_shells_are_guarded():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
     DataBuilder(app).create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
@@ -265,6 +316,7 @@ async def test_super_admin_creates_staff_and_role_shells_are_guarded():
 
         staff_shell = await client.get("/staff/shell", headers={"Authorization": f"Bearer {staff_token}"})
         admin_shell = await client.get("/admin/shell", headers={"Authorization": f"Bearer {admin_token}"})
+        staff_identity = await client.get("/auth/me", headers={"Authorization": f"Bearer {staff_token}"})
         forbidden_student_shell = await client.get(
             "/student/shell",
             headers={"Authorization": f"Bearer {staff_token}"},
@@ -274,6 +326,10 @@ async def test_super_admin_creates_staff_and_role_shells_are_guarded():
         assert staff_shell.json() == {"shell": "staff", "email": "staff@ipb.ac.id"}
         assert admin_shell.status_code == 200
         assert admin_shell.json() == {"shell": "admin", "email": "admin@ipb.ac.id"}
+        assert staff_identity.status_code == 200
+        assert staff_identity.json()["nim"] is None
+        assert staff_identity.json()["phone"] is None
+        assert staff_identity.json()["academic_profile"] is None
         assert forbidden_student_shell.status_code == 403
 
 

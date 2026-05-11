@@ -47,5 +47,5 @@ Severity labels:
 
 ## Student Profile
 
-- Blocking for integration: `GET /auth/me` currently returns account fields only and does not expose NIM, phone, or academic profile fields.
-- Blocking for integration: backend needs academic profile derivation from NIM for program study, faculty, entry year, and strata.
+- Resolved: `GET /auth/me` returns student `nim`, `phone`, and an `academic_profile` object with `program_studi`, `faculty`, `entry_year`, and `degree`.
+- Resolved: backend-owned academic profile derivation maps known NIM prefixes and entry-year information best-effort. Unknown or unparsable NIM values keep auth flows available and expose null academic fields.

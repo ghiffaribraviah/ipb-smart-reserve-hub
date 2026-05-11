@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from app.models import User, UserRole
 from app.core.security import (
     InvalidTokenError,
     create_access_token,
@@ -10,7 +9,9 @@ from app.core.security import (
     verify_password,
 )
 from app.core.student_email_policy import AllowedStudentEmailDomains
+from app.models import User, UserRole
 from app.repositories.user_repository import DuplicateUserEmail, UserRepository
+from app.services.academic_profiles import AcademicProfile, AcademicProfileDeriver
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,9 @@ class UserAccount:
     full_name: str
     role: UserRole
     is_active: bool
+    nim: str | None = None
+    phone: str | None = None
+    academic_profile: AcademicProfile | None = None
 
 
 class StudentEmailPolicy(Protocol):
@@ -128,11 +132,13 @@ class UserAccountModule:
         student_email_policy: StudentEmailPolicy,
         password_hasher: PasswordHasher | None = None,
         account_session_codec: AccountSessionCodec | None = None,
+        academic_profile_deriver: AcademicProfileDeriver | None = None,
     ) -> None:
         self._user_repository = user_repository
         self._student_email_policy = student_email_policy
         self._password_hasher = password_hasher or SecurityPasswordHasher()
         self._account_session_codec = account_session_codec or JwtAccountSessionCodec(secret_key=secret_key)
+        self._academic_profile_deriver = academic_profile_deriver or AcademicProfileDeriver()
 
     def register_student(self, registration: StudentRegistration) -> UserAccount:
         email = self._normalize_email(registration.email)
@@ -196,12 +202,17 @@ class UserAccountModule:
         return AccountSession(access_token=self._account_session_codec.issue(user.id))
 
     def _to_user_account(self, user: User) -> UserAccount:
+        nim = user.nim if user.role == UserRole.student else None
+        phone = user.phone if user.role == UserRole.student else None
         return UserAccount(
             id=user.id,
             email=user.email,
             full_name=user.full_name,
             role=user.role,
             is_active=user.is_active,
+            nim=nim,
+            phone=phone,
+            academic_profile=self._academic_profile_deriver.derive(nim) if user.role == UserRole.student else None,
         )
 
     def _normalize_email(self, email: str) -> str:

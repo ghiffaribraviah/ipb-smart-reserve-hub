@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from app.models import Reservation, ReservationStatus
+from app.models import Reservation, ReservationRejectionSource, ReservationStatus
 from app.services.booking_settings import BookingSettings
 from app.services.reservation_lifecycle import DeadlineTransition, FacilityReservationLifecycleModule
 
@@ -96,6 +96,7 @@ def test_document_rejection_records_reason_and_rejects_reservation():
 
     assert reservation.status == ReservationStatus.rejected
     assert reservation.rejection_reason == "Dokumen tidak lengkap."
+    assert reservation.rejection_source == ReservationRejectionSource.document
 
 
 def test_payment_receipt_upload_records_verification_deadline_without_changing_payment_status():
@@ -125,6 +126,7 @@ def test_payment_review_approves_or_rejects_reservation():
     assert approved.status == ReservationStatus.approved
     assert rejected.status == ReservationStatus.rejected
     assert rejected.rejection_reason == "Bukti pembayaran tidak valid."
+    assert rejected.rejection_source == ReservationRejectionSource.payment
 
 
 def test_cancellation_transitions_record_request_and_review_decisions():
@@ -146,6 +148,7 @@ def test_cancellation_transitions_record_request_and_review_decisions():
     assert approved.status == ReservationStatus.cancelled
     assert rejected.status == ReservationStatus.approved
     assert rejected.cancellation_rejection_reason == "Sudah terlalu dekat dengan jadwal."
+    assert rejected.rejection_source is None
 
 
 def test_effective_status_treats_past_approved_reservation_as_completed():

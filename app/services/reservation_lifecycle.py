@@ -2,7 +2,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import enum
 
-from app.models import Reservation, ReservationStatus
+from app.models import Reservation, ReservationRejectionSource, ReservationStatus
 from app.services.booking_settings import BookingSettings
 
 
@@ -43,6 +43,7 @@ class FacilityReservationLifecycleModule:
     def reject_document(self, reservation: Reservation, *, reason: str) -> None:
         reservation.status = ReservationStatus.rejected
         reservation.rejection_reason = reason
+        reservation.rejection_source = ReservationRejectionSource.document
 
     def record_payment_receipt_uploaded(self, reservation: Reservation) -> None:
         uploaded_at = _as_utc(self._clock())
@@ -56,6 +57,7 @@ class FacilityReservationLifecycleModule:
     def reject_payment(self, reservation: Reservation, *, reason: str) -> None:
         reservation.status = ReservationStatus.rejected
         reservation.rejection_reason = reason
+        reservation.rejection_source = ReservationRejectionSource.payment
 
     def cancel_before_approval(self, reservation: Reservation) -> None:
         reservation.status = ReservationStatus.cancelled

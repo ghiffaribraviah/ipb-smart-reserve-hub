@@ -108,6 +108,9 @@ class SqlAlchemyReservationRepository:
                     joinedload(Reservation.facility),
                     joinedload(Reservation.organization_unit),
                     joinedload(Reservation.review),
+                    joinedload(Reservation.approval_letter),
+                    joinedload(Reservation.signed_approval_letter),
+                    joinedload(Reservation.payment_receipt),
                 )
                 .where(Reservation.student_id == student_id)
                 .order_by(Reservation.created_at.desc())
@@ -121,6 +124,9 @@ class SqlAlchemyReservationRepository:
                 joinedload(Reservation.facility),
                 joinedload(Reservation.organization_unit),
                 joinedload(Reservation.review),
+                joinedload(Reservation.approval_letter),
+                joinedload(Reservation.signed_approval_letter),
+                joinedload(Reservation.payment_receipt),
             )
             .where(Reservation.id == reservation_id, Reservation.student_id == student_id)
         )

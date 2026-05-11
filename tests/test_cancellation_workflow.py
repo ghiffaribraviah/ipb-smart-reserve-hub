@@ -208,5 +208,6 @@ async def test_assigned_staff_reviews_cancellation_request_while_slot_stays_bloc
     assert unassigned_approve.status_code == 403
     assert reject_without_reason.status_code == 400
     assert rejected.json()["status"] == "approved"
+    assert rejected.json()["rejection"] is None
     assert rejected.json()["cancellation_rejection_reason"] == "Fasilitas sudah disiapkan."
     assert approved.json()["status"] == "cancelled"

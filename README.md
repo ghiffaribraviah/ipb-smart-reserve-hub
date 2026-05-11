@@ -205,6 +205,14 @@ Role yang dipakai:
 
 `POST /facilities/{facility_id}/reservations` menerima objek opsional `extra_requirements` berisi `av_support`, `logistics_coordination`, `extra_cleaning`, `security_personnel`, dan `notes`. Jika objek ini tidak dikirim, semua flag bernilai `false` dan `notes` bernilai `null`. Response create, list, dan detail reservasi mahasiswa mengembalikan objek `extra_requirements` yang tersimpan.
 
+Response create, list, dan detail reservasi mahasiswa juga mengembalikan proyeksi workflow:
+
+- `document`: metadata `approval_letter` dan `signed_approval_letter` jika sudah ada, `review_status`, dan `rejection_reason` untuk penolakan dokumen.
+- `payment`: `required`, metadata `receipt` jika sudah ada, `review_status`, dan `rejection_reason` untuk penolakan pembayaran.
+- `rejection`: `source` dan `reason` hanya untuk reservasi terminal `rejected`.
+
+Nilai `ReservationStatus` tetap status lifecycle utama. Substate UI seperti upload-needed, waiting-review, dan declined harus dibaca dari proyeksi workflow, bukan dari enum status baru. Penolakan dokumen menyimpan `rejection_source=document`, penolakan pembayaran menyimpan `rejection_source=payment`, dan data rejected lama tanpa source diekspos sebagai `source=unknown`. Penolakan pembatalan tetap memakai `cancellation_rejection_reason` dan tidak mengisi `rejection`.
+
 ### Surat Persetujuan dan Review Dokumen
 
 | Method | Endpoint | Role | Kegunaan |

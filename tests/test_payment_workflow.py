@@ -188,6 +188,10 @@ async def test_student_uploads_payment_receipt_for_pending_paid_reservation():
             f"/student/reservations/{reservation['id']}",
             headers={"Authorization": f"Bearer {student_token}"},
         )
+        reservation_list = await client.get(
+            "/student/reservations",
+            headers={"Authorization": f"Bearer {student_token}"},
+        )
 
     assert upload.status_code == 201
     assert upload.json() == {
@@ -199,6 +203,19 @@ async def test_student_uploads_payment_receipt_for_pending_paid_reservation():
     }
     assert updated.json()["status"] == "pending_payment"
     assert updated.json()["payment_verification_due_at"] == "2026-05-02T03:00:00Z"
+    assert updated.json()["payment"] == {
+        "required": True,
+        "receipt": {
+            "filename": "receipt.jpg",
+            "content_type": "image/jpeg",
+            "size_bytes": 18,
+            "generated_at": None,
+            "uploaded_at": "2026-05-01T03:00:00Z",
+        },
+        "review_status": "waiting_review",
+        "rejection_reason": None,
+    }
+    assert reservation_list.json()[0]["payment"] == updated.json()["payment"]
 
 
 @pytest.mark.anyio
@@ -384,6 +401,12 @@ async def test_assigned_staff_payment_rejection_requires_reason_and_rejects_rese
         "rejection_reason": "Nominal transfer tidak sesuai.",
     }
     assert updated.json()["status"] == "rejected"
+    assert updated.json()["payment"]["review_status"] == "rejected"
+    assert updated.json()["payment"]["rejection_reason"] == "Nominal transfer tidak sesuai."
+    assert updated.json()["rejection"] == {
+        "source": "payment",
+        "reason": "Nominal transfer tidak sesuai.",
+    }
 
 
 @pytest.mark.anyio

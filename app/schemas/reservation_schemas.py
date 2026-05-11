@@ -48,6 +48,33 @@ class ReservationExtraRequirementsResponse(BaseModel):
     notes: str | None
 
 
+class ReservationDocumentMetadataResponse(BaseModel):
+    filename: str
+    content_type: str
+    size_bytes: int
+    generated_at: datetime | None = None
+    uploaded_at: datetime | None = None
+
+
+class StudentReservationDocumentProjectionResponse(BaseModel):
+    approval_letter: ReservationDocumentMetadataResponse | None
+    signed_approval_letter: ReservationDocumentMetadataResponse | None
+    review_status: str
+    rejection_reason: str | None = None
+
+
+class StudentReservationPaymentProjectionResponse(BaseModel):
+    required: bool
+    receipt: ReservationDocumentMetadataResponse | None
+    review_status: str
+    rejection_reason: str | None = None
+
+
+class StudentReservationRejectionProjectionResponse(BaseModel):
+    source: str
+    reason: str | None
+
+
 class StudentReservationResponse(BaseModel):
     id: str
     reservation_code: str
@@ -62,6 +89,9 @@ class StudentReservationResponse(BaseModel):
     ends_at: datetime
     price_rupiah: int
     extra_requirements: ReservationExtraRequirementsResponse
+    document: StudentReservationDocumentProjectionResponse
+    payment: StudentReservationPaymentProjectionResponse
+    rejection: StudentReservationRejectionProjectionResponse | None = None
     document_upload_due_at: datetime | None = None
     document_verification_due_at: datetime | None = None
     payment_upload_due_at: datetime | None = None

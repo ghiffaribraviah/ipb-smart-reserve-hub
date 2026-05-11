@@ -297,6 +297,7 @@ async def test_student_uploads_signed_approval_letter_after_generated_letter_exi
             f"/student/reservations/{reservation_id}",
             headers={"Authorization": f"Bearer {token}"},
         )
+        reservation_list = await client.get("/student/reservations", headers={"Authorization": f"Bearer {token}"})
 
     assert upload.status_code == 201
     assert upload.json() == {
@@ -308,6 +309,25 @@ async def test_student_uploads_signed_approval_letter_after_generated_letter_exi
     }
     assert updated.json()["status"] == "pending_document_review"
     assert updated.json()["document_verification_due_at"] == "2026-05-03T03:00:00Z"
+    assert updated.json()["document"] == {
+        "approval_letter": {
+            "filename": f"{reservation['reservation_code']}-surat-persetujuan.pdf",
+            "content_type": "application/pdf",
+            "size_bytes": updated.json()["document"]["approval_letter"]["size_bytes"],
+            "generated_at": "2026-05-01T03:00:00Z",
+            "uploaded_at": None,
+        },
+        "signed_approval_letter": {
+            "filename": "signed-letter.pdf",
+            "content_type": "application/pdf",
+            "size_bytes": 22,
+            "generated_at": None,
+            "uploaded_at": "2026-05-01T03:00:00Z",
+        },
+        "review_status": "waiting_review",
+        "rejection_reason": None,
+    }
+    assert reservation_list.json()[0]["document"] == updated.json()["document"]
 
 
 @pytest.mark.anyio
@@ -755,3 +775,9 @@ async def test_assigned_staff_rejection_rejects_reservation_without_revision():
         "rejection_reason": "Tanda tangan penanggung jawab fasilitas tidak lengkap.",
     }
     assert updated.json()["status"] == "rejected"
+    assert updated.json()["document"]["review_status"] == "rejected"
+    assert updated.json()["document"]["rejection_reason"] == "Tanda tangan penanggung jawab fasilitas tidak lengkap."
+    assert updated.json()["rejection"] == {
+        "source": "document",
+        "reason": "Tanda tangan penanggung jawab fasilitas tidak lengkap.",
+    }

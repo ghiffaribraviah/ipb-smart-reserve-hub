@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from typing import Callable, Protocol
 import uuid
 
-from app.models import Reservation, ReservationStatus
+from app.models import Reservation, ReservationRejectionSource, ReservationStatus
 from app.repositories.reservation_repository import ReservationRepository
 from app.services.accounts import UserAccount
 from app.services.audit_logs import AuditLogModule
@@ -126,6 +126,37 @@ class StudentReservationReviewSummary:
 
 
 @dataclass(frozen=True)
+class ReservationDocumentMetadata:
+    filename: str
+    content_type: str
+    size_bytes: int
+    generated_at: datetime | None = None
+    uploaded_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class StudentReservationDocumentProjection:
+    approval_letter: ReservationDocumentMetadata | None
+    signed_approval_letter: ReservationDocumentMetadata | None
+    review_status: str
+    rejection_reason: str | None = None
+
+
+@dataclass(frozen=True)
+class StudentReservationPaymentProjection:
+    required: bool
+    receipt: ReservationDocumentMetadata | None
+    review_status: str
+    rejection_reason: str | None = None
+
+
+@dataclass(frozen=True)
+class StudentReservationRejectionProjection:
+    source: str
+    reason: str | None
+
+
+@dataclass(frozen=True)
 class StudentReservation:
     id: str
     reservation_code: str
@@ -140,6 +171,9 @@ class StudentReservation:
     ends_at: datetime
     price_rupiah: int
     extra_requirements: ReservationExtraRequirements
+    document: StudentReservationDocumentProjection
+    payment: StudentReservationPaymentProjection
+    rejection: StudentReservationRejectionProjection | None = None
     document_upload_due_at: datetime | None = None
     document_verification_due_at: datetime | None = None
     payment_upload_due_at: datetime | None = None
@@ -414,6 +448,9 @@ def _to_student_reservation(reservation: Reservation, *, effective_status: Reser
             security_personnel=reservation.extra_requirement_security_personnel,
             notes=reservation.extra_requirement_notes,
         ),
+        document=_to_student_reservation_document_projection(reservation),
+        payment=_to_student_reservation_payment_projection(reservation),
+        rejection=_to_student_reservation_rejection_projection(reservation),
         document_upload_due_at=_optional_utc(reservation.document_upload_due_at),
         document_verification_due_at=_optional_utc(reservation.document_verification_due_at),
         payment_upload_due_at=_optional_utc(reservation.payment_upload_due_at),
@@ -422,6 +459,105 @@ def _to_student_reservation(reservation: Reservation, *, effective_status: Reser
         cancellation_rejection_reason=reservation.cancellation_rejection_reason,
         review=_to_student_reservation_review(reservation),
     )
+
+
+def _to_student_reservation_document_projection(reservation: Reservation) -> StudentReservationDocumentProjection:
+    rejection_reason = None
+    if reservation.status == ReservationStatus.rejected and reservation.rejection_source == ReservationRejectionSource.document:
+        rejection_reason = reservation.rejection_reason
+    return StudentReservationDocumentProjection(
+        approval_letter=_approval_letter_metadata(reservation),
+        signed_approval_letter=_signed_approval_letter_metadata(reservation),
+        review_status=_document_review_status(reservation),
+        rejection_reason=rejection_reason,
+    )
+
+
+def _to_student_reservation_payment_projection(reservation: Reservation) -> StudentReservationPaymentProjection:
+    rejection_reason = None
+    if reservation.status == ReservationStatus.rejected and reservation.rejection_source == ReservationRejectionSource.payment:
+        rejection_reason = reservation.rejection_reason
+    return StudentReservationPaymentProjection(
+        required=reservation.price_rupiah > 0,
+        receipt=_payment_receipt_metadata(reservation),
+        review_status=_payment_review_status(reservation),
+        rejection_reason=rejection_reason,
+    )
+
+
+def _to_student_reservation_rejection_projection(reservation: Reservation) -> StudentReservationRejectionProjection | None:
+    if reservation.status != ReservationStatus.rejected:
+        return None
+    source = reservation.rejection_source.value if reservation.rejection_source is not None else "unknown"
+    return StudentReservationRejectionProjection(source=source, reason=reservation.rejection_reason)
+
+
+def _approval_letter_metadata(reservation: Reservation) -> ReservationDocumentMetadata | None:
+    if reservation.approval_letter is None:
+        return None
+    return ReservationDocumentMetadata(
+        filename=reservation.approval_letter.filename,
+        content_type=reservation.approval_letter.content_type,
+        size_bytes=reservation.approval_letter.size_bytes,
+        generated_at=_as_utc(reservation.approval_letter.generated_at),
+    )
+
+
+def _signed_approval_letter_metadata(reservation: Reservation) -> ReservationDocumentMetadata | None:
+    if reservation.signed_approval_letter is None:
+        return None
+    return ReservationDocumentMetadata(
+        filename=reservation.signed_approval_letter.filename,
+        content_type=reservation.signed_approval_letter.content_type,
+        size_bytes=reservation.signed_approval_letter.size_bytes,
+        uploaded_at=_as_utc(reservation.signed_approval_letter.uploaded_at),
+    )
+
+
+def _payment_receipt_metadata(reservation: Reservation) -> ReservationDocumentMetadata | None:
+    if reservation.payment_receipt is None:
+        return None
+    return ReservationDocumentMetadata(
+        filename=reservation.payment_receipt.filename,
+        content_type=reservation.payment_receipt.content_type,
+        size_bytes=reservation.payment_receipt.size_bytes,
+        uploaded_at=_as_utc(reservation.payment_receipt.uploaded_at),
+    )
+
+
+def _document_review_status(reservation: Reservation) -> str:
+    if reservation.status == ReservationStatus.pending_document_upload:
+        return "upload_needed"
+    if reservation.status == ReservationStatus.pending_document_review:
+        return "waiting_review"
+    if reservation.status == ReservationStatus.rejected and reservation.rejection_source == ReservationRejectionSource.document:
+        return "rejected"
+    if reservation.status in (
+        ReservationStatus.pending_payment,
+        ReservationStatus.approved,
+        ReservationStatus.cancellation_requested,
+        ReservationStatus.completed,
+    ):
+        return "approved"
+    return "not_ready"
+
+
+def _payment_review_status(reservation: Reservation) -> str:
+    if reservation.price_rupiah <= 0:
+        return "not_required"
+    if reservation.status == ReservationStatus.pending_payment:
+        if reservation.payment_receipt is None:
+            return "upload_needed"
+        return "waiting_review"
+    if reservation.status == ReservationStatus.rejected and reservation.rejection_source == ReservationRejectionSource.payment:
+        return "rejected"
+    if reservation.status in (
+        ReservationStatus.approved,
+        ReservationStatus.cancellation_requested,
+        ReservationStatus.completed,
+    ):
+        return "approved"
+    return "not_ready"
 
 
 def _to_student_reservation_review(reservation: Reservation) -> StudentReservationReviewSummary | None:

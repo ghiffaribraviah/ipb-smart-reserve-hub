@@ -134,6 +134,19 @@ async def test_student_submits_reservation_details_and_views_held_reservation():
     assert created_body["organization_unit"]["name"] == "BEM KM IPB"
     assert created_body["participant_count"] == 80
     assert created_body["document_upload_due_at"] == "2026-05-04T00:00:00Z"
+    assert created_body["document"] == {
+        "approval_letter": None,
+        "signed_approval_letter": None,
+        "review_status": "upload_needed",
+        "rejection_reason": None,
+    }
+    assert created_body["payment"] == {
+        "required": True,
+        "receipt": None,
+        "review_status": "not_ready",
+        "rejection_reason": None,
+    }
+    assert created_body["rejection"] is None
     assert created_body["extra_requirements"] == {
         "av_support": False,
         "logistics_coordination": False,
@@ -216,6 +229,51 @@ async def test_student_submits_extra_requirements_and_views_them_in_reservation_
     assert reservation_list.json()[0]["extra_requirements"] == extra_requirements
     assert detail.status_code == 200
     assert detail.json()["extra_requirements"] == extra_requirements
+
+
+@pytest.mark.anyio
+async def test_student_rejected_reservation_without_persisted_source_exposes_unknown_rejection_source():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    test_data = DataBuilder(app)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    organization_unit_id = test_data.create_organization_unit(name="BEM KM IPB")
+    reservation_id = test_data.create_reservation(
+        facility_id=facility_id,
+        organization_unit_id=organization_unit_id,
+        activity_title="Legacy Rejection",
+        starts_at="2026-06-01T02:00:00+00:00",
+        ends_at="2026-06-01T04:00:00+00:00",
+        status=ReservationStatus.rejected,
+        rejection_reason="Data lama tidak memiliki sumber penolakan.",
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login = await client.post(
+            "/auth/login",
+            json={"email": "student-legacy-rejection@apps.ipb.ac.id", "password": "secret123"},
+        )
+        token = login.json()["access_token"]
+
+        reservation_list = await client.get("/student/reservations", headers={"Authorization": f"Bearer {token}"})
+        detail = await client.get(
+            f"/student/reservations/{reservation_id}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert reservation_list.status_code == 200
+    assert detail.status_code == 200
+    assert reservation_list.json()[0]["rejection"] == {
+        "source": "unknown",
+        "reason": "Data lama tidak memiliki sumber penolakan.",
+    }
+    assert detail.json()["rejection"] == {
+        "source": "unknown",
+        "reason": "Data lama tidak memiliki sumber penolakan.",
+    }
 
 
 @pytest.mark.anyio

@@ -120,6 +120,16 @@ They capture AV support, logistics coordination, extra cleaning, security person
 
 If a student omits Reservation Extra Requirements during submission, the Reservation records no requested flags and no notes.
 
+## Student Reservation Workflow Projections
+
+Student Reservation Workflow Projections are the student-facing read model for document, payment, and terminal rejection workflow facts.
+
+Student reservation create, list, and detail responses expose `document`, `payment`, and `rejection` projections so frontend routing can distinguish upload-needed, waiting-review, approved, declined, accepted, completed, and detail states without adding UI substates to Reservation Status.
+
+The document projection owns generated approval letter metadata, signed approval letter metadata, document review status, and document rejection reason. The payment projection owns payment required state, receipt metadata, payment review status, and payment rejection reason. Missing files are represented as null metadata, never fake filenames or dates.
+
+Terminal Reservation rejection records a nullable rejection source on the Reservation. Document review rejection stores `document`, payment review rejection stores `payment`, and old rejected Reservations without a source are exposed as `unknown`. Cancellation rejection is a separate review outcome and does not set terminal rejection source.
+
 ## Staff Reservation Review Access
 
 Staff Reservation Review Access decides whether a Staff User account may review a Facility Reservation for a Facility they are assigned to.

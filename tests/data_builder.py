@@ -12,6 +12,7 @@ from app.models import (
     OrganizationUnit,
     Reservation,
     ReservationPaymentReceipt,
+    ReservationRejectionSource,
     ReservationStatus,
     User,
     UserRole,
@@ -207,6 +208,8 @@ class DataBuilder:
         extra_requirement_security_personnel: bool = False,
         extra_requirement_notes: str | None = None,
         has_payment_receipt: bool = False,
+        rejection_reason: str | None = None,
+        rejection_source: ReservationRejectionSource | None = None,
     ) -> str:
         with self._session_factory() as session:
             facility = session.get(Facility, facility_id)
@@ -237,6 +240,8 @@ class DataBuilder:
                 extra_requirement_security_personnel=extra_requirement_security_personnel,
                 extra_requirement_notes=extra_requirement_notes,
                 status=status,
+                rejection_reason=rejection_reason,
+                rejection_source=rejection_source,
             )
             if has_payment_receipt:
                 reservation.payment_receipt = ReservationPaymentReceipt(

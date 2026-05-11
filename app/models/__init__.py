@@ -27,6 +27,11 @@ class ReservationStatus(str, enum.Enum):
     expired = "expired"
 
 
+class ReservationRejectionSource(str, enum.Enum):
+    document = "document"
+    payment = "payment"
+
+
 class SystemSetting(Base):
     __tablename__ = "system_settings"
 
@@ -235,6 +240,7 @@ class Reservation(Base):
     payment_verification_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[ReservationStatus] = mapped_column(Enum(ReservationStatus), nullable=False)
     rejection_reason: Mapped[str | None] = mapped_column(Text)
+    rejection_source: Mapped[ReservationRejectionSource | None] = mapped_column(Enum(ReservationRejectionSource))
     cancellation_reason: Mapped[str | None] = mapped_column(Text)
     cancellation_rejection_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(

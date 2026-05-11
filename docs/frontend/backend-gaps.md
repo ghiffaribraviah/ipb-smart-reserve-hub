@@ -29,18 +29,19 @@ Severity labels:
 
 ## Reservation Payment States
 
-- Blocking for integration: student reservation responses need payment receipt/review state so the frontend can distinguish payment upload needed, payment verification waiting, and payment declined states.
-- Blocking for integration: student reservation responses need payment rejection reason for the payment declined page.
+- Resolved: student reservation create/list/detail responses include a `payment` projection with `required`, receipt metadata when uploaded, `review_status`, and payment rejection reason when relevant.
+- Resolved: payment review rejection persists `rejection_source=payment`, and terminal rejected student reservation responses include `rejection.source=payment` with the rejection reason.
 
 ## Reservation Document States
 
-- Blocking for integration: student reservation responses need enough rejection context to distinguish document rejection from payment rejection when status is `rejected`.
-- Blocking for integration: student reservation responses need signed approval letter upload metadata if the UI must distinguish uploaded/waiting states from upload-needed states.
+- Resolved: student reservation create/list/detail responses include a `document` projection with generated approval letter metadata, signed approval letter metadata when uploaded, `review_status`, and document rejection reason when relevant.
+- Resolved: document review rejection persists `rejection_source=document`, and terminal rejected student reservation responses include `rejection.source=document` with the rejection reason.
+- Resolved: legacy rejected reservations without a persisted rejection source are exposed as `rejection.source=unknown`.
 
 ## Reservation Details
 
-- Blocking for integration: student reservation detail responses do not expose signed approval letter metadata for the document hub.
-- Blocking for integration: student reservation detail responses do not expose payment receipt metadata for paid reservations.
+- Resolved: student reservation detail responses expose signed approval letter metadata through `document.signed_approval_letter`.
+- Resolved: student reservation detail responses expose payment receipt metadata through `payment.receipt`.
 - Nice-to-have: student-facing view/download support for uploaded signed approval letters and payment receipts, if students should be able to reopen submitted files.
 
 ## Student Profile

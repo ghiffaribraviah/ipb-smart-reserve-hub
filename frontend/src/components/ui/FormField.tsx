@@ -1,6 +1,7 @@
 import type { InputHTMLAttributes, ReactNode } from "react";
 
 type FormFieldProps = InputHTMLAttributes<HTMLInputElement> & {
+  compact?: boolean;
   error?: string;
   helpText?: string;
   id: string;
@@ -8,14 +9,17 @@ type FormFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   leadingIcon?: ReactNode;
 };
 
-export function FormField({ error, helpText, id, label, leadingIcon, required, className = "", ...props }: FormFieldProps) {
+export function FormField({ compact = false, error, helpText, id, label, leadingIcon, required, className = "", ...props }: FormFieldProps) {
   const helpId = helpText ? `${id}-help` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [helpId, errorId].filter(Boolean).join(" ") || undefined;
+  const inputDensity = compact ? "min-h-10 text-[15px]" : "min-h-11 text-body-md";
+  const iconPadding = "pl-xl";
+  const labelClass = compact ? "text-[13px] font-bold leading-4 text-on-surface" : "text-label-bold text-on-surface";
 
   return (
-    <div className="grid gap-xs">
-      <label className="text-label-bold text-on-surface" htmlFor={id}>
+    <div className={compact ? "grid gap-[3px]" : "grid gap-xs"}>
+      <label className={labelClass} htmlFor={id}>
         {label}
         {required ? <span className="sr-only"> wajib</span> : null}
         {required ? <span aria-hidden="true"> *</span> : null}
@@ -24,8 +28,9 @@ export function FormField({ error, helpText, id, label, leadingIcon, required, c
         {leadingIcon ? <span className="pointer-events-none absolute left-md top-1/2 flex -translate-y-1/2 text-on-surface-variant">{leadingIcon}</span> : null}
         <input
           className={[
-            "min-h-11 w-full rounded border bg-surface-container-low px-md text-body-md text-on-surface",
-            leadingIcon ? "pl-xl" : "",
+            "w-full rounded border bg-surface-container-low px-md text-on-surface",
+            inputDensity,
+            leadingIcon ? iconPadding : "",
             "placeholder:text-on-surface-variant",
             "focus:border-secondary focus:bg-surface-container-lowest focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-secondary",
             "disabled:cursor-not-allowed disabled:bg-surface-container disabled:text-on-surface-variant",

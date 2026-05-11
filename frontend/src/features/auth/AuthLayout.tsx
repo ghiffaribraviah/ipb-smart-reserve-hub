@@ -2,14 +2,15 @@ import type { ReactNode } from "react";
 
 type AuthLayoutProps = {
   children: ReactNode;
+  maxWidthClassName?: string;
 };
 
-export function AuthLayout({ children }: AuthLayoutProps) {
+export function AuthLayout({ children, maxWidthClassName = "max-w-[420px]" }: AuthLayoutProps) {
   return (
     <main className="min-h-screen bg-surface-container-lowest text-on-surface">
       <div className="grid min-h-screen md:grid-cols-2">
         <section className="relative grid min-h-screen place-items-center bg-surface-container-lowest px-lg py-lg sm:py-xl">
-          <div className="w-full max-w-[420px]">{children}</div>
+          <div className={["w-full", maxWidthClassName].join(" ")}>{children}</div>
           <p className="absolute bottom-lg left-0 hidden w-full px-lg text-center text-label-sm text-on-surface-variant sm:block">
             © 2026 IPB Smart Reserve Hub.
           </p>

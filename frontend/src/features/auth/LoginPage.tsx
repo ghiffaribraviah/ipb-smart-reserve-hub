@@ -103,26 +103,27 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <div className="w-full">
-        <header className={["text-center", pageMessage ? "mb-lg" : "mb-xl"].join(" ")}>
-          <p className="text-[44px] font-bold leading-[1.03] text-secondary sm:text-[48px]">
+        <header className={["text-center", pageMessage ? "mb-md" : "mb-lg"].join(" ")}>
+          <p className="text-[38px] font-bold leading-[1.03] text-secondary sm:text-[42px]">
             IPB
             <br />
             SRH
           </p>
-          <p className="mt-sm text-h3 font-bold text-on-surface">IPB Smart Reserve Hub</p>
+          <p className="mt-xs text-h3 font-bold text-on-surface">IPB Smart Reserve Hub</p>
         </header>
 
-        <div className={pageMessage ? "mb-md" : "mb-lg"}>
+        <div className={pageMessage ? "mb-sm" : "mb-md"}>
           <h1 className="text-h3 font-bold text-on-surface">Masuk</h1>
           <p className="mt-sm text-label-bold font-medium normal-case tracking-normal text-on-surface-variant">
             Masukkan kredensial Anda untuk mengakses dashboard fasilitas.
           </p>
         </div>
 
-        <form aria-describedby={pageMessage ? "login-message" : undefined} className={["grid", pageMessage ? "gap-md" : "gap-lg"].join(" ")} noValidate onSubmit={handleSubmit(onSubmit, onInvalid)}>
+        <form aria-describedby={pageMessage ? "login-message" : undefined} className={["grid", pageMessage ? "gap-sm" : "gap-md"].join(" ")} noValidate onSubmit={handleSubmit(onSubmit, onInvalid)}>
           {pageMessage ? <LoginMessage message={pageMessage} ref={messageRef} /> : null}
           <FormField
             autoComplete="email"
+            compact
             error={errors.email?.message}
             id="login-email"
             label="Email institusi"
@@ -134,6 +135,7 @@ export function LoginPage() {
           />
           <PasswordField
             autoComplete="current-password"
+            compact
             error={errors.password?.message}
             id="login-password"
             label="Kata sandi"
@@ -142,13 +144,13 @@ export function LoginPage() {
             required
             {...register("password")}
           />
-          <Button className="w-full" isLoading={isSubmitting} size="lg" type="submit">
+          <Button className="min-h-11 w-full" isLoading={isSubmitting} size="md" type="submit">
             Masuk ke Akun
             <ArrowRight aria-hidden="true" size={18} />
           </Button>
         </form>
 
-        <p className={["text-center text-label-bold font-medium normal-case tracking-normal text-on-surface-variant", pageMessage ? "mt-md" : "mt-lg"].join(" ")}>
+        <p className={["text-center text-label-bold font-medium normal-case tracking-normal text-on-surface-variant", pageMessage ? "mt-sm" : "mt-md"].join(" ")}>
           Belum punya akun?{" "}
           <Link className="font-bold text-secondary underline-offset-4 hover:underline" to={registerHref}>
             Daftar

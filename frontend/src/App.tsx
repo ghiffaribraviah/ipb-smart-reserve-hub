@@ -6,6 +6,7 @@ import { FacilityCatalogPage } from "./features/facilities/FacilityCatalogPage";
 import { FacilityDetailsPage } from "./features/facilities/FacilityDetailsPage";
 import { ReservationWorkflowPreview } from "./features/reservations/ReservationWorkflowPreview";
 import { LoginPage } from "./features/auth/LoginPage";
+import { RegisterPage } from "./features/auth/RegisterPage";
 
 export function App() {
   return (
@@ -17,6 +18,7 @@ export function App() {
           <Route element={<ReservationWorkflowPreview />} path="/reservation-workflow-components" />
           <Route element={<RequirePublic />}>
             <Route element={<LoginPage />} path="/login" />
+            <Route element={<RegisterPage />} path="/register" />
           </Route>
           <Route element={<RequireStudent />}>
             <Route element={<StudentShellRoute />}>

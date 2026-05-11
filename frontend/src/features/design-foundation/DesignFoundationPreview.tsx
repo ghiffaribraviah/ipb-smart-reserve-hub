@@ -3,6 +3,24 @@ import { Button } from "../../components/ui/Button";
 import { FormField } from "../../components/ui/FormField";
 import { PasswordField } from "../../components/ui/PasswordField";
 import { StatePanel } from "../../components/ui/StatePanel";
+import { UserAccount } from "../auth/types";
+import { StudentAppShell } from "../student-shell/StudentAppShell";
+
+const previewStudent: UserAccount = {
+  academic_profile: {
+    degree: "S1",
+    entry_year: 2022,
+    faculty: "FMIPA",
+    program_studi: "Ilmu Komputer",
+  },
+  email: "rani@apps.ipb.ac.id",
+  full_name: "Rani Prameswari",
+  id: "student-preview",
+  is_active: true,
+  nim: "G64000000",
+  phone: "08123456789",
+  role: "student",
+};
 
 export function DesignFoundationPreview() {
   return (
@@ -92,7 +110,55 @@ export function DesignFoundationPreview() {
             <p className="mt-xs text-body-md">Loading, empty, and error panels stay calm and stable.</p>
           </div>
         </section>
+
+        <section className="grid gap-md">
+          <div>
+            <p className="text-label-bold uppercase text-secondary">Implemented components</p>
+            <h2 className="mt-xs text-h3 text-primary-container">Student application shell</h2>
+            <p className="mt-sm max-w-3xl text-body-md text-on-surface-variant">
+              Authenticated student navigation, global Facility search, notification and profile affordances, and mobile bottom navigation.
+            </p>
+          </div>
+          <StudentAppShell
+            currentUser={previewStudent}
+            isPreview
+            logout={() => undefined}
+            notificationCount={2}
+            previewContent={<StudentShellPreviewContent />}
+            previewPath="/student"
+          />
+        </section>
       </section>
     </main>
+  );
+}
+
+function StudentShellPreviewContent() {
+  return (
+    <section className="grid gap-lg">
+      <div className="grid gap-md rounded-lg bg-primary-container p-lg text-primary-on shadow-ambient md:grid-cols-[1.3fr_0.7fr]">
+        <div>
+          <p className="text-label-bold uppercase text-secondary-fixed">Beranda Mahasiswa</p>
+          <h3 className="mt-sm text-h2">Shell preview</h3>
+          <p className="mt-sm max-w-2xl text-body-md text-primary-on/82">
+            Preview ini memakai data fixture untuk menunjukkan navigasi mahasiswa tanpa sesi backend.
+          </p>
+        </div>
+        <div className="rounded-lg bg-primary-on/8 p-md">
+          <p className="text-label-sm text-primary-on/70">Reservasi aktif</p>
+          <p className="mt-sm text-h3">3</p>
+          <p className="mt-xs text-body-md text-primary-on/78">Satu pembayaran menunggu unggahan bukti.</p>
+        </div>
+      </div>
+      <div className="grid gap-md md:grid-cols-3">
+        {["Auditorium CCR", "Ruang Seminar FMIPA", "Graha Widya Wisuda"].map((facility) => (
+          <article className="rounded-lg border border-outline-variant bg-surface-container-lowest p-md shadow-control" key={facility}>
+            <p className="text-label-sm text-secondary">Fasilitas unggulan</p>
+            <h4 className="mt-xs text-body-lg font-bold text-primary-container">{facility}</h4>
+            <p className="mt-xs text-body-md text-on-surface-variant">Tampilan ringkas untuk memeriksa spacing shell dan card.</p>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }

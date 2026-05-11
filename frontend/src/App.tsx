@@ -4,6 +4,7 @@ import { AuthProvider, RequirePublic, RequireStudent, useAuth } from "./features
 import { StudentAppShell } from "./features/student-shell/StudentAppShell";
 import { FacilityCatalogPage } from "./features/facilities/FacilityCatalogPage";
 import { FacilityDetailsPage } from "./features/facilities/FacilityDetailsPage";
+import { ReservationWorkflowPreview } from "./features/reservations/ReservationWorkflowPreview";
 
 export function App() {
   return (
@@ -12,6 +13,7 @@ export function App() {
         <Routes>
           <Route element={<DesignFoundationPreview />} path="/" />
           <Route element={<DesignFoundationPreview />} path="/design-foundation" />
+          <Route element={<ReservationWorkflowPreview />} path="/reservation-workflow-components" />
           <Route element={<RequirePublic />}>
             <Route element={<LoginPlaceholder />} path="/login" />
           </Route>

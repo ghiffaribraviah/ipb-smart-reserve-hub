@@ -316,6 +316,62 @@ async def test_facility_catalog_sorts_by_name_capacity_and_price():
 
 
 @pytest.mark.anyio
+async def test_featured_facility_catalog_returns_paginated_public_ranking():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    no_cover_id = test_data.create_facility(name="Alpha No Cover", include_cover_image=False)
+    lower_review_count_id = test_data.create_facility(name="Beta One Review")
+    higher_rating_id = test_data.create_facility(name="Delta Higher Rating")
+    higher_review_count_id = test_data.create_facility(name="Zulu More Reviews")
+    test_data.create_facility(name="Inactive Featured Candidate", is_active=False)
+    test_data.add_facility_review(no_cover_id, rating=5, activity_title="No Cover Review")
+    test_data.add_facility_review(lower_review_count_id, rating=4, activity_title="One Review")
+    test_data.add_facility_review(lower_review_count_id, rating=5, activity_title="Deleted Review", is_deleted=True)
+    test_data.add_facility_review(higher_rating_id, rating=5, activity_title="Higher Rating Review")
+    test_data.add_facility_review(higher_review_count_id, rating=3, activity_title="More Reviews One")
+    test_data.add_facility_review(higher_review_count_id, rating=3, activity_title="More Reviews Two")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/facilities?featured=true")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["page"] == 1
+    assert payload["page_size"] == 12
+    assert payload["total_items"] == 4
+    assert payload["total_pages"] == 1
+    assert [item["id"] for item in payload["items"]] == [
+        higher_review_count_id,
+        higher_rating_id,
+        lower_review_count_id,
+        no_cover_id,
+    ]
+
+
+@pytest.mark.anyio
+async def test_featured_facility_catalog_accepts_limit_as_page_size_alias():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    facility_ids = [
+        test_data.create_facility(name=f"Featured Facility {index:02d}")
+        for index in range(1, 5)
+    ]
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/facilities?featured=true&limit=2")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["page"] == 1
+    assert payload["page_size"] == 2
+    assert payload["total_items"] == 4
+    assert payload["total_pages"] == 2
+    assert [item["id"] for item in payload["items"]] == facility_ids[:2]
+
+
+@pytest.mark.anyio
 async def test_facility_catalog_rejects_unknown_sort_values():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
     transport = ASGITransport(app=app)

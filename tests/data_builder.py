@@ -8,6 +8,7 @@ from app.models import (
     FacilityCategory,
     FacilityImage,
     FacilityOpenHour,
+    FacilityReview,
     OrganizationUnit,
     Reservation,
     ReservationPaymentReceipt,
@@ -73,6 +74,7 @@ class DataBuilder:
         capacity: int = 120,
         price_rupiah: int = 0,
         payment_instructions: str | None = None,
+        include_cover_image: bool = True,
     ) -> str:
         with self._session_factory() as session:
             category = session.scalar(select(FacilityCategory).where(FacilityCategory.name == category_name))
@@ -97,18 +99,60 @@ class DataBuilder:
                 review_count=0,
                 is_active=is_active,
             )
-            facility.images.append(
-                FacilityImage(
-                    url="https://cdn.example.test/auditorium-cover.jpg",
-                    alt_text="Auditorium cover",
-                    display_order=1,
-                    is_cover=True,
-                    is_active=True,
+            if include_cover_image:
+                facility.images.append(
+                    FacilityImage(
+                        url="https://cdn.example.test/auditorium-cover.jpg",
+                        alt_text="Auditorium cover",
+                        display_order=1,
+                        is_cover=True,
+                        is_active=True,
+                    )
                 )
-            )
             session.add(facility)
             session.commit()
             return facility.id
+
+    def add_facility_review(
+        self,
+        facility_id: str,
+        *,
+        rating: int,
+        activity_title: str,
+        is_deleted: bool = False,
+    ) -> str:
+        with self._session_factory() as session:
+            student = User(
+                email=f"reviewer-{activity_title.lower().replace(' ', '-')}@apps.ipb.ac.id",
+                password_hash=hash_password("secret123"),
+                full_name="Student Reviewer",
+                role=UserRole.student,
+                is_active=True,
+            )
+            organization_unit = OrganizationUnit(name=f"Reviewer Unit {activity_title}", type="student_organization")
+            reservation = Reservation(
+                facility_id=facility_id,
+                student=student,
+                organization_unit=organization_unit,
+                reservation_code=f"RSV-REVIEW-{activity_title.upper().replace(' ', '-')}",
+                activity_title=activity_title,
+                event_description="Reviewed event",
+                price_rupiah=0,
+                starts_at=datetime.fromisoformat("2026-06-01T01:00:00+00:00"),
+                ends_at=datetime.fromisoformat("2026-06-01T03:00:00+00:00"),
+                status=ReservationStatus.completed,
+            )
+            review = FacilityReview(
+                reservation=reservation,
+                facility_id=facility_id,
+                student=student,
+                rating=rating,
+                comment=None,
+                is_deleted=is_deleted,
+            )
+            session.add(review)
+            session.commit()
+            return review.id
 
     def add_facility_image(
         self,

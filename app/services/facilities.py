@@ -139,6 +139,7 @@ class FacilityCatalogModule:
         q: str | None = None,
         category: str | None = None,
         min_capacity: int | None = None,
+        featured: bool = False,
         sort: FacilityCatalogSort = "name_asc",
         page: int = 1,
         page_size: int = 12,
@@ -156,7 +157,7 @@ class FacilityCatalogModule:
             facilities = [facility for facility in facilities if facility.category_slug == category]
         if min_capacity is not None:
             facilities = [facility for facility in facilities if facility.capacity >= min_capacity]
-        facilities = _sort_facilities(facilities, sort)
+        facilities = _sort_featured_facilities(facilities) if featured else _sort_facilities(facilities, sort)
         items = [self._catalog_item(facility) for facility in facilities]
         total_items = len(items)
         total_pages = (total_items + page_size - 1) // page_size if total_items else 0
@@ -281,6 +282,26 @@ def _sort_facilities(
     if sort == "price_desc":
         return sorted(facilities, key=lambda facility: (-facility.price_rupiah, facility.name.casefold()))
     return sorted(facilities, key=lambda facility: facility.name.casefold())
+
+
+def _sort_featured_facilities(facilities: list[FacilityCatalogRecord]) -> list[FacilityCatalogRecord]:
+    return sorted(
+        facilities,
+        key=lambda facility: (
+            not _has_active_cover_image(facility),
+            -_public_review_count(facility),
+            -_public_rating_average(facility),
+            facility.name.casefold(),
+        ),
+    )
+
+
+def _has_active_cover_image(facility: FacilityCatalogRecord) -> bool:
+    return any(image.is_active and image.is_cover for image in facility.images)
+
+
+def _public_review_count(facility: FacilityCatalogRecord) -> int:
+    return len([review for review in facility.reviews if not review.is_deleted])
 
 
 def _public_rating_average(facility: FacilityCatalogRecord) -> float:

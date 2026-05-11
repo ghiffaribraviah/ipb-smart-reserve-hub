@@ -62,7 +62,7 @@ Facility Images are shown in student browsing. Exactly one active Facility Image
 
 The Facility Catalog is the student browsing Module for public Facility information.
 
-It lists active Facilities for comparison through a paginated public collection with keyword search, Facility Category slug filtering, minimum capacity filtering, and explicit sorting by name, capacity, public rating, or price. It also exposes Facility detail with public information: images, contact details, price or free status, open-hours summary, and review summary placeholders. The Facility Catalog should not expose private staff, reservation, payment, or student data.
+It lists active Facilities for comparison through a paginated public collection with keyword search, Facility Category slug filtering, minimum capacity filtering, and explicit sorting by name, capacity, public rating, or price. The same collection can return a featured student-home ranking with active cover images first, then higher visible review count, higher visible rating average, and name ascending, using `limit` as a featured page-size alias. It also exposes Facility detail with public information: images, contact details, price or free status, open-hours summary, and review summary placeholders. The Facility Catalog should not expose private staff, reservation, payment, or student data.
 
 ## Public Facility Reviews
 

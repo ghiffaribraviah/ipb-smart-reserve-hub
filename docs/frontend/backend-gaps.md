@@ -15,12 +15,12 @@ Severity labels:
 
 ## Student Home
 
-- Blocking for integration: student home needs a backend-supported featured/explorable facilities query, such as `GET /facilities/featured` or `GET /facilities?featured=true&limit=8`.
+- Resolved: student home can request featured/explorable facilities with `GET /facilities?featured=true&limit=8`, receiving the standard paginated envelope ranked by active cover image, visible review count, visible rating average, and name.
 - Resolved: `GET /facility-categories` provides active public Facility Categories with stable slugs, optional icon hints, and active facility counts for home shortcuts.
 
 ## Facility Catalog
 
-- Resolved: `GET /facilities` returns a paginated envelope with `items`, `page`, `page_size`, `total_items`, and `total_pages`, and supports `q`, `category`, `min_capacity`, `sort`, `page`, and `page_size`.
+- Resolved: `GET /facilities` returns a paginated envelope with `items`, `page`, `page_size`, `total_items`, and `total_pages`, and supports `q`, `category`, `min_capacity`, `sort`, `page`, `page_size`, `featured`, and featured `limit`.
 - Resolved: public Facility Category data exposes stored slugs through `GET /facility-categories` for URL filters.
 
 ## Reservation Detail Form

@@ -187,7 +187,7 @@ Role yang dipakai:
 | Method | Endpoint | Role | Kegunaan |
 | --- | --- | --- | --- |
 | `GET` | `/facility-categories` | Public | Daftar kategori fasilitas aktif untuk shortcut/filter, berisi `id`, `name`, `slug`, `icon_hint`, dan `facility_count` fasilitas aktif. |
-| `GET` | `/facilities` | Public | Daftar fasilitas aktif dalam envelope paginated berisi `items`, `page`, `page_size`, `total_items`, dan `total_pages`. Query: `q`, `category`, `min_capacity`, `sort`, `page`, `page_size`. |
+| `GET` | `/facilities` | Public | Daftar fasilitas aktif dalam envelope paginated berisi `items`, `page`, `page_size`, `total_items`, dan `total_pages`. Query: `q`, `category`, `min_capacity`, `sort`, `page`, `page_size`, `featured`, `limit`. `featured=true` meranking fasilitas untuk student home berdasarkan cover aktif, jumlah review, rating, lalu nama; `limit` menjadi alias ukuran halaman featured. |
 | `GET` | `/facilities/{facility_id}` | Public | Detail fasilitas aktif. |
 | `GET` | `/facilities/{facility_id}/calendar` | Public | Kalender publik slot yang terblokir tanpa data privat. Query: `start`, `end`. |
 | `GET` | `/facilities/{facility_id}/availability` | Public | Cek ketersediaan berdasarkan open hour, blackout, dan reservasi blocking. Query: `start`, `end`. |

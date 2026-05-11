@@ -39,18 +39,22 @@ def register_facility_routes(
         q: str | None = None,
         category: str | None = None,
         min_capacity: int | None = Query(default=None, ge=0),
+        featured: bool = False,
         sort: FacilityCatalogSort = "name_asc",
         page: int = Query(default=1, ge=1),
         page_size: int = Query(default=12, ge=1),
+        limit: int | None = Query(default=None, ge=1),
         facility_catalog: FacilityCatalogModule = Depends(get_facility_catalog),
     ):
+        effective_page_size = limit if featured and limit is not None else page_size
         return facility_catalog.list_active_facilities(
             q=q,
             category=category,
             min_capacity=min_capacity,
+            featured=featured,
             sort=sort,
             page=page,
-            page_size=page_size,
+            page_size=effective_page_size,
         )
 
     @app.get("/facilities/{facility_id}", response_model=FacilityDetailResponse)

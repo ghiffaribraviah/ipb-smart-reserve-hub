@@ -214,6 +214,8 @@ Response create, list, dan detail reservasi mahasiswa juga mengembalikan proyeks
 - `payment`: `required`, metadata `receipt` jika sudah ada, `review_status`, dan `rejection_reason` untuk penolakan pembayaran.
 - `rejection`: `source` dan `reason` hanya untuk reservasi terminal `rejected`.
 
+Metadata file pada `document.approval_letter`, `document.signed_approval_letter`, dan `payment.receipt` memakai shape bersama: `filename`, `content_type`, `size_bytes`, `generated_at`, dan `uploaded_at`. Field waktu yang tidak relevan untuk jenis file tertentu bernilai `null`.
+
 Nilai `ReservationStatus` tetap status lifecycle utama. Substate UI seperti upload-needed, waiting-review, dan declined harus dibaca dari proyeksi workflow, bukan dari enum status baru. Penolakan dokumen menyimpan `rejection_source=document`, penolakan pembayaran menyimpan `rejection_source=payment`, dan data rejected lama tanpa source diekspos sebagai `source=unknown`. Penolakan pembatalan tetap memakai `cancellation_rejection_reason` dan tidak mengisi `rejection`.
 
 ### Surat Persetujuan dan Review Dokumen

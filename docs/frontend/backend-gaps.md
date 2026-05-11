@@ -1,6 +1,11 @@
 # Frontend-Discovered Backend Gaps
 
-This file summarizes backend gaps discovered while planning frontend pages and shared components. Page and component plans keep local context; this index is the entry point for later backend grilling and implementation sessions.
+This file records backend gaps discovered while planning frontend pages and shared components. The frontend integration backend slices have landed, so resolved entries below now act as a closure index instead of an implementation backlog.
+
+## Stable Contract Documentation
+
+- `README.md` is the stable API reference for endpoint names, query parameters, request fields, response projections, private file downloads, and reservation status notes.
+- `CONTEXT.md` is the stable domain glossary for Facility Categories, Facility Catalog behavior, Reservation Extra Requirements, Student Reservation Workflow Projections, Student-owned Private File Downloads, terminal rejection source, and Student Academic Profile derivation.
 
 Severity labels:
 

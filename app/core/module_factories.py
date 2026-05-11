@@ -89,42 +89,10 @@ class FacilityModuleFactory:
         )
 
     def build_reservations(self, session: Session) -> ReservationModule:
-        reservation_repository = SqlAlchemyReservationRepository(session)
-        notifications = self.build_notifications(session)
-        audit_logs = self.build_audit_logs(session)
-        booking_settings = BookingSettingsModule(
-            booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
-            defaults=self._default_booking_settings,
-        ).get_booking_settings()
-        return ReservationModule(
-            reservation_repository=reservation_repository,
-            reservation_time_selection=self.build_reservation_time_selection(session),
-            submission_conflict_guard=ReservationSubmissionConflictGuard(conflict_reader=reservation_repository),
-            booking_settings=booking_settings,
-            clock=self._clock,
-            reservation_lifecycle=FacilityReservationLifecycleModule(
-                booking_settings=booking_settings,
-                clock=self._clock,
-            ),
-            staff_review_access=StaffReservationReviewAccessModule(reservation_repository=reservation_repository),
-            notifications=notifications,
-            audit_logs=audit_logs,
-        )
+        return self._build_reservation_workflow(session).build_reservations()
 
     def build_reviews(self, session: Session) -> ReviewModule:
-        booking_settings = BookingSettingsModule(
-            booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
-            defaults=self._default_booking_settings,
-        ).get_booking_settings()
-        return ReviewModule(
-            review_repository=SqlAlchemyReviewRepository(session),
-            clock=self._clock,
-            reservation_lifecycle=FacilityReservationLifecycleModule(
-                booking_settings=booking_settings,
-                clock=self._clock,
-            ),
-            audit_logs=self.build_audit_logs(session),
-        )
+        return self._build_reservation_workflow(session).build_reviews()
 
     def build_audit_logs(self, session: Session) -> AuditLogModule:
         return AuditLogModule(audit_log_repository=SqlAlchemyAuditLogRepository(session), clock=self._clock)
@@ -136,45 +104,10 @@ class FacilityModuleFactory:
         )
 
     def build_approval_letters(self, session: Session) -> ApprovalLetterModule:
-        booking_settings = BookingSettingsModule(
-            booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
-            defaults=self._default_booking_settings,
-        ).get_booking_settings()
-        reservation_repository = SqlAlchemyReservationRepository(session)
-        return ApprovalLetterModule(
-            reservation_repository=reservation_repository,
-            storage=self._private_storage,
-            pdf_generator=self._approval_letter_pdf_generator,
-            booking_settings=booking_settings,
-            clock=self._clock,
-            reservation_lifecycle=FacilityReservationLifecycleModule(
-                booking_settings=booking_settings,
-                clock=self._clock,
-            ),
-            staff_review_access=StaffReservationReviewAccessModule(reservation_repository=reservation_repository),
-            notifications=self.build_notifications(session),
-            audit_logs=self.build_audit_logs(session),
-        )
+        return self._build_reservation_workflow(session).build_approval_letters()
 
     def build_payments(self, session: Session) -> PaymentModule:
-        booking_settings = BookingSettingsModule(
-            booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
-            defaults=self._default_booking_settings,
-        ).get_booking_settings()
-        reservation_repository = SqlAlchemyReservationRepository(session)
-        return PaymentModule(
-            reservation_repository=reservation_repository,
-            storage=self._private_storage,
-            booking_settings=booking_settings,
-            clock=self._clock,
-            reservation_lifecycle=FacilityReservationLifecycleModule(
-                booking_settings=booking_settings,
-                clock=self._clock,
-            ),
-            staff_review_access=StaffReservationReviewAccessModule(reservation_repository=reservation_repository),
-            notifications=self.build_notifications(session),
-            audit_logs=self.build_audit_logs(session),
-        )
+        return self._build_reservation_workflow(session).build_payments()
 
     def build_management(self, session: Session) -> FacilityManagementModule:
         facility_management_repository = SqlAlchemyFacilityManagementRepository(session)
@@ -184,6 +117,105 @@ class FacilityModuleFactory:
                 facility_repository=facility_management_repository
             ),
             audit_logs=self.build_audit_logs(session),
+        )
+
+    def _build_reservation_workflow(self, session: Session) -> "FacilityReservationWorkflowAssembly":
+        return FacilityReservationWorkflowAssembly(
+            session=session,
+            default_booking_settings=self._default_booking_settings,
+            clock=self._clock,
+            private_storage=self._private_storage,
+            approval_letter_pdf_generator=self._approval_letter_pdf_generator,
+        )
+
+
+class FacilityReservationWorkflowAssembly:
+    def __init__(
+        self,
+        *,
+        session: Session,
+        default_booking_settings: BookingSettings,
+        clock: Callable[[], datetime],
+        private_storage: PrivateStorage,
+        approval_letter_pdf_generator: ApprovalLetterPdfGenerator | None = None,
+    ) -> None:
+        self._session = session
+        self._clock = clock
+        self._private_storage = private_storage
+        self._approval_letter_pdf_generator = approval_letter_pdf_generator or ApprovalLetterPdfGenerator()
+        self.booking_settings = BookingSettingsModule(
+            booking_settings_repository=SqlAlchemyBookingSettingsRepository(session),
+            defaults=default_booking_settings,
+        ).get_booking_settings()
+        self.reservation_repository = SqlAlchemyReservationRepository(session)
+        self.reservation_lifecycle = FacilityReservationLifecycleModule(
+            booking_settings=self.booking_settings,
+            clock=clock,
+        )
+        self.staff_review_access = StaffReservationReviewAccessModule(
+            reservation_repository=self.reservation_repository
+        )
+        self.notifications = NotificationModule(
+            notification_repository=SqlAlchemyNotificationRepository(session),
+            clock=clock,
+        )
+        self.audit_logs = AuditLogModule(
+            audit_log_repository=SqlAlchemyAuditLogRepository(session),
+            clock=clock,
+        )
+
+    def build_reservations(self) -> ReservationModule:
+        return ReservationModule(
+            reservation_repository=self.reservation_repository,
+            reservation_time_selection=ReservationTimeSelectionModule(
+                facility_availability=FacilityAvailabilityModule(
+                    facility_availability_reader=SqlAlchemyFacilityAvailabilityReader(self._session)
+                ),
+                booking_settings=self.booking_settings,
+                clock=self._clock,
+            ),
+            submission_conflict_guard=ReservationSubmissionConflictGuard(
+                conflict_reader=self.reservation_repository
+            ),
+            booking_settings=self.booking_settings,
+            clock=self._clock,
+            reservation_lifecycle=self.reservation_lifecycle,
+            staff_review_access=self.staff_review_access,
+            notifications=self.notifications,
+            audit_logs=self.audit_logs,
+        )
+
+    def build_reviews(self) -> ReviewModule:
+        return ReviewModule(
+            review_repository=SqlAlchemyReviewRepository(self._session),
+            clock=self._clock,
+            reservation_lifecycle=self.reservation_lifecycle,
+            audit_logs=self.audit_logs,
+        )
+
+    def build_approval_letters(self) -> ApprovalLetterModule:
+        return ApprovalLetterModule(
+            reservation_repository=self.reservation_repository,
+            storage=self._private_storage,
+            pdf_generator=self._approval_letter_pdf_generator,
+            booking_settings=self.booking_settings,
+            clock=self._clock,
+            reservation_lifecycle=self.reservation_lifecycle,
+            staff_review_access=self.staff_review_access,
+            notifications=self.notifications,
+            audit_logs=self.audit_logs,
+        )
+
+    def build_payments(self) -> PaymentModule:
+        return PaymentModule(
+            reservation_repository=self.reservation_repository,
+            storage=self._private_storage,
+            booking_settings=self.booking_settings,
+            clock=self._clock,
+            reservation_lifecycle=self.reservation_lifecycle,
+            staff_review_access=self.staff_review_access,
+            notifications=self.notifications,
+            audit_logs=self.audit_logs,
         )
 
 

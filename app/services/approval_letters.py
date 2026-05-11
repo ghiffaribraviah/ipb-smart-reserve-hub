@@ -7,9 +7,15 @@ from app.models import ReservationApprovalLetter, ReservationSignedApprovalLette
 from app.pdf import ApprovalLetterInput, ApprovalLetterPdfGenerator
 from app.repositories.reservation_repository import ReservationRepository
 from app.services.accounts import UserAccount
-from app.services.audit_logs import AuditLogModule
+from app.services.audit_logs import AuditLogModule, AuditLogRecorder
 from app.services.booking_settings import BookingSettings
 from app.services.notifications import NotificationModule
+from app.services.reservation_private_files import (
+    PrivateFileTooLarge,
+    PrivateFileUpload,
+    ReservationPrivateFileModule,
+    UnsupportedPrivateFileType,
+)
 from app.services.reservation_lifecycle import FacilityReservationLifecycleModule
 from app.services.reservations import ReservationNotFound
 from app.services.staff_reservation_review_access import (
@@ -116,11 +122,12 @@ class ApprovalLetterModule:
             booking_settings=booking_settings,
             clock=clock,
         )
+        self._private_files = ReservationPrivateFileModule(storage=storage, clock=clock)
         self._staff_review_access = staff_review_access or StaffReservationReviewAccessModule(
             reservation_repository=reservation_repository
         )
         self._notifications = notifications
-        self._audit_logs = audit_logs
+        self._audit_recorder = AuditLogRecorder(audit_logs)
 
     def get_student_approval_letter(self, student: UserAccount, reservation_id: str) -> StudentApprovalLetter:
         letter = self._get_or_create_student_approval_letter(student, reservation_id)
@@ -150,21 +157,31 @@ class ApprovalLetterModule:
         if reservation.approval_letter is None:
             raise ApprovalLetterNotGenerated
 
-        if not _is_allowed_signed_approval_letter_file(upload):
+        try:
+            file_metadata = self._private_files.store_upload(
+                reservation_id=reservation.id,
+                folder="signed-approval-letters",
+                upload=PrivateFileUpload(
+                    filename=upload.filename,
+                    content_type=upload.content_type,
+                    content=upload.content,
+                ),
+                allowed_content_types={"application/pdf", "image/jpeg", "image/png"},
+                allowed_extensions=(".pdf", ".jpg", ".jpeg", ".png"),
+                max_size_bytes=5 * 1024 * 1024,
+            )
+        except UnsupportedPrivateFileType:
             raise InvalidSignedApprovalLetterFile
-        if len(upload.content) > 5 * 1024 * 1024:
+        except PrivateFileTooLarge:
             raise SignedApprovalLetterFileTooLarge
 
-        uploaded_at = _as_utc(self._clock())
-        storage_key = f"signed-approval-letters/{reservation.id}/{uuid.uuid4().hex}-{upload.filename}"
-        self._storage.put(storage_key, upload.content, content_type=upload.content_type)
         reservation.signed_approval_letter = ReservationSignedApprovalLetter(
             reservation_id=reservation.id,
-            storage_key=storage_key,
-            filename=upload.filename,
-            content_type=upload.content_type,
-            size_bytes=len(upload.content),
-            uploaded_at=uploaded_at,
+            storage_key=file_metadata.storage_key,
+            filename=file_metadata.filename,
+            content_type=file_metadata.content_type,
+            size_bytes=file_metadata.size_bytes,
+            uploaded_at=file_metadata.uploaded_at,
         )
         self._reservation_lifecycle.record_signed_document_uploaded(reservation)
         if self._notifications is not None:
@@ -190,11 +207,11 @@ class ApprovalLetterModule:
             raise ReservationNotFound
         if reservation.signed_approval_letter is None:
             raise ApprovalLetterNotGenerated
-        letter = reservation.signed_approval_letter
+        download = self._private_files.download(reservation.signed_approval_letter)
         return StudentSignedApprovalLetterDownload(
-            filename=letter.filename,
-            content_type=letter.content_type,
-            content=self._storage.get(letter.storage_key),
+            filename=download.filename,
+            content_type=download.content_type,
+            content=download.content,
         )
 
     def approve_signed_approval_letter(self, staff: UserAccount, reservation_id: str) -> StaffDocumentReview:
@@ -211,7 +228,7 @@ class ApprovalLetterModule:
             message = f"Reservasi {reservation.activity_title} disetujui dokumennya dan menunggu pembayaran."
         if self._notifications is not None:
             self._notifications.student_action_recorded(reservation, title=title, message=message)
-        self._record_audit(
+        self._audit_recorder.record(
             actor=staff,
             action_type="document.approved",
             target_type="reservation",
@@ -230,11 +247,11 @@ class ApprovalLetterModule:
         reservation = self._get_staff_review_reservation(staff, reservation_id)
         if reservation.signed_approval_letter is None:
             raise ApprovalLetterNotGenerated
-        letter = reservation.signed_approval_letter
+        download = self._private_files.download(reservation.signed_approval_letter)
         return StaffSignedApprovalLetterDownload(
-            filename=letter.filename,
-            content_type=letter.content_type,
-            content=self._storage.get(letter.storage_key),
+            filename=download.filename,
+            content_type=download.content_type,
+            content=download.content,
         )
 
     def reject_signed_approval_letter(
@@ -259,7 +276,7 @@ class ApprovalLetterModule:
                 title="Surat ditolak",
                 message=f"Surat persetujuan {reservation.activity_title} ditolak: {reason}",
             )
-        self._record_audit(
+        self._audit_recorder.record(
             actor=staff,
             action_type="document.rejected",
             target_type="reservation",
@@ -281,28 +298,6 @@ class ApprovalLetterModule:
             raise StaffDocumentReviewAccessDenied
         except StaffReservationReviewReservationNotFound:
             raise ReservationNotFound
-
-    def _record_audit(
-        self,
-        *,
-        actor: UserAccount | None,
-        action_type: str,
-        target_type: str,
-        target_id: str,
-        facility_id: str | None = None,
-        student_id: str | None = None,
-        reservation_id: str | None = None,
-    ) -> None:
-        if self._audit_logs is not None:
-            self._audit_logs.record(
-                actor=actor,
-                action_type=action_type,
-                target_type=target_type,
-                target_id=target_id,
-                facility_id=facility_id,
-                student_id=student_id,
-                reservation_id=reservation_id,
-            )
 
     def _get_or_create_student_approval_letter(
         self,
@@ -353,12 +348,6 @@ def _to_student_signed_approval_letter(letter: ReservationSignedApprovalLetter) 
         size_bytes=letter.size_bytes,
         uploaded_at=_as_utc(letter.uploaded_at),
     )
-
-
-def _is_allowed_signed_approval_letter_file(upload: SignedApprovalLetterUpload) -> bool:
-    allowed_content_types = {"application/pdf", "image/jpeg", "image/png"}
-    allowed_extensions = (".pdf", ".jpg", ".jpeg", ".png")
-    return upload.content_type.lower() in allowed_content_types and upload.filename.lower().endswith(allowed_extensions)
 
 
 def _as_utc(value: datetime) -> datetime:

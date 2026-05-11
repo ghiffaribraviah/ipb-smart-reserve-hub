@@ -1,12 +1,15 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Protocol
+from typing import Literal, Protocol
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import Facility, FacilityCategory, FacilityReview, Reservation
 from app.services.public_facility_calendar import PublicFacilityCalendarModule
+
+
+FacilityCatalogSort = Literal["name_asc", "capacity_desc", "rating_desc", "price_asc", "price_desc"]
 
 
 @dataclass(frozen=True)
@@ -65,11 +68,31 @@ class FacilityCalendarReservationRecord:
     ends_at: datetime
 
 
+@dataclass(frozen=True)
+class FacilityCatalogQuery:
+    q: str | None = None
+    category_slug: str | None = None
+    min_capacity: int | None = None
+    featured: bool = False
+    sort: FacilityCatalogSort = "name_asc"
+    page: int = 1
+    page_size: int = 12
+
+
+@dataclass(frozen=True)
+class FacilityCatalogResult:
+    records: list[FacilityCatalogRecord]
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
 class FacilityCatalogReader(Protocol):
     def list_public_categories(self) -> list[FacilityCategoryRecord]:
         raise NotImplementedError
 
-    def list_active_facilities(self) -> list[FacilityCatalogRecord]:
+    def list_active_facilities(self, query: FacilityCatalogQuery) -> FacilityCatalogResult:
         raise NotImplementedError
 
     def get_active_facility_by_id(self, facility_id: str) -> FacilityCatalogRecord | None:
@@ -117,7 +140,7 @@ class SqlAlchemyFacilityCatalogReader:
             for category, facility_count in rows
         ]
 
-    def list_active_facilities(self) -> list[FacilityCatalogRecord]:
+    def list_active_facilities(self, query: FacilityCatalogQuery) -> FacilityCatalogResult:
         facilities = self._session.scalars(
             select(Facility)
             .options(
@@ -128,7 +151,8 @@ class SqlAlchemyFacilityCatalogReader:
             .where(Facility.is_active.is_(True))
             .order_by(Facility.name)
         ).unique()
-        return [self._to_catalog_record(facility) for facility in facilities]
+        records = [self._to_catalog_record(facility) for facility in facilities]
+        return apply_facility_catalog_query(records, query)
 
     def get_active_facility_by_id(self, facility_id: str) -> FacilityCatalogRecord | None:
         facility = self._session.scalar(
@@ -210,3 +234,76 @@ class SqlAlchemyFacilityCatalogReader:
                 for review in facility.reviews
             ],
         )
+
+
+def apply_facility_catalog_query(
+    facilities: list[FacilityCatalogRecord],
+    query: FacilityCatalogQuery,
+) -> FacilityCatalogResult:
+    page_size = min(query.page_size, 50)
+    if query.q:
+        normalized_q = query.q.casefold()
+        facilities = [
+            facility
+            for facility in facilities
+            if normalized_q in facility.name.casefold() or normalized_q in facility.location.casefold()
+        ]
+    if query.category_slug:
+        facilities = [facility for facility in facilities if facility.category_slug == query.category_slug]
+    if query.min_capacity is not None:
+        facilities = [facility for facility in facilities if facility.capacity >= query.min_capacity]
+
+    facilities = _sort_featured_facilities(facilities) if query.featured else _sort_facilities(facilities, query.sort)
+    total_items = len(facilities)
+    total_pages = (total_items + page_size - 1) // page_size if total_items else 0
+    start = (query.page - 1) * page_size
+    end = start + page_size
+    return FacilityCatalogResult(
+        records=facilities[start:end],
+        page=query.page,
+        page_size=page_size,
+        total_items=total_items,
+        total_pages=total_pages,
+    )
+
+
+def _sort_facilities(
+    facilities: list[FacilityCatalogRecord],
+    sort: FacilityCatalogSort,
+) -> list[FacilityCatalogRecord]:
+    if sort == "capacity_desc":
+        return sorted(facilities, key=lambda facility: (-facility.capacity, facility.name.casefold()))
+    if sort == "rating_desc":
+        return sorted(facilities, key=lambda facility: (-_public_rating_average(facility), facility.name.casefold()))
+    if sort == "price_asc":
+        return sorted(facilities, key=lambda facility: (facility.price_rupiah, facility.name.casefold()))
+    if sort == "price_desc":
+        return sorted(facilities, key=lambda facility: (-facility.price_rupiah, facility.name.casefold()))
+    return sorted(facilities, key=lambda facility: facility.name.casefold())
+
+
+def _sort_featured_facilities(facilities: list[FacilityCatalogRecord]) -> list[FacilityCatalogRecord]:
+    return sorted(
+        facilities,
+        key=lambda facility: (
+            not _has_active_cover_image(facility),
+            -_public_review_count(facility),
+            -_public_rating_average(facility),
+            facility.name.casefold(),
+        ),
+    )
+
+
+def _has_active_cover_image(facility: FacilityCatalogRecord) -> bool:
+    return any(image.is_active and image.is_cover for image in facility.images)
+
+
+def _public_review_count(facility: FacilityCatalogRecord) -> int:
+    return len([review for review in facility.reviews if not review.is_deleted])
+
+
+def _public_rating_average(facility: FacilityCatalogRecord) -> float:
+    visible_reviews = [review for review in facility.reviews if not review.is_deleted]
+    if not visible_reviews:
+        return 0
+    return round(sum(review.rating for review in visible_reviews) / len(visible_reviews), 1)

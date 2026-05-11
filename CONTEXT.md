@@ -94,6 +94,8 @@ A Facility Catalog Reader is the read Seam for public Facility Catalog records.
 
 It gives the Facility Catalog public Facility records and public calendar reservation records without exposing database records, private reservation data, or ORM relationship loading details.
 
+Facility Catalog Query is the filtering, sorting, and pagination contract between the Facility Catalog and the Facility Catalog Reader. It keeps query semantics near the read Adapter while letting the Facility Catalog own public response projection, pricing labels, image selection, and review summaries.
+
 ## Facility Availability Reader
 
 A Facility Availability Reader is the read Seam for Facility availability facts.
@@ -142,6 +144,8 @@ The document projection owns generated approval letter metadata, signed approval
 
 Student-owned Private File Downloads let students reopen uploaded signed approval letters and payment receipts for their own Reservations. These downloads use Reservation ownership checks and return stored bytes, stored content type, and the uploaded filename as an attachment. Frontend callers should show these actions from non-null signed approval letter or receipt metadata in the Student Reservation Workflow Projections.
 
+Reservation Private Files are reservation-scoped private storage facts for generated approval letters, uploaded signed approval letters, and uploaded payment receipts. The Reservation Private File Module owns upload validation, file metadata, download bytes, content type, and attachment filename mapping so document and payment workflows do not duplicate storage rules.
+
 Terminal Reservation rejection records a nullable rejection source on the Reservation. Document review rejection stores `document`, payment review rejection stores `payment`, and old rejected Reservations without a source are exposed as `unknown`. Cancellation rejection is a separate review outcome and does not set terminal rejection source.
 
 ## Staff Reservation Review Access
@@ -180,8 +184,14 @@ The HTTP Application is the runtime shell that adapts HTTP requests to User acco
 
 It owns FastAPI route registration and dependency assembly, but it should not own account, policy, settings, or persistence rules.
 
+Reservation workflow routes are grouped by student reservation, approval letter, payment, and review responsibilities. Each route group receives the smallest dependency set it needs instead of sharing one broad reservation dependency bundle.
+
 ## Runtime Dependency Registry
 
 A Runtime Dependency Registry is the HTTP Application assembly Module that provides grouped route dependencies and owns database schema creation.
 
 It lets the HTTP Application register routes without knowing every workflow factory, storage Adapter, session dependency, or authentication dependency Implementation.
+
+Facility Reservation Workflow Assembly is the runtime assembly Module for Reservation, Approval Letter, Payment, Review, lifecycle, staff review access, notification, audit, booking settings, and private storage collaborators. It gives reservation-adjacent workflows the same per-session collaborators without making HTTP route setup know each workflow's internal object graph.
+
+Audit Log Recorder is the workflow-facing wrapper for optional audit recording. Reservation-adjacent workflows use it to record audit facts through one small interface without knowing whether audit logging is configured for that execution path.

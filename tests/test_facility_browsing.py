@@ -6,7 +6,12 @@ from httpx import ASGITransport, AsyncClient
 
 from app.services.facility_availability import FacilityAvailabilityModule
 from app.repositories.facility_availability_reader import FacilityAvailabilityFacts, FacilityOpenHourRecord
-from app.repositories.facility_catalog_reader import FacilityCatalogImageRecord, FacilityCatalogRecord, FacilityReviewRecord
+from app.repositories.facility_catalog_reader import (
+    FacilityCatalogImageRecord,
+    FacilityCatalogQuery,
+    FacilityCatalogRecord,
+    FacilityReviewRecord,
+)
 from app.services.facilities import FacilityCatalogModule
 from app.main import create_app
 from app.models import Facility, FacilityCategory, FacilityImage, ReservationStatus, UserRole
@@ -17,8 +22,10 @@ class StubFacilityCatalogReader:
     def __init__(self, facilities: list[FacilityCatalogRecord]) -> None:
         self._facilities = facilities
 
-    def list_active_facilities(self) -> list[FacilityCatalogRecord]:
-        return self._facilities
+    def list_active_facilities(self, query: FacilityCatalogQuery):
+        from app.repositories.facility_catalog_reader import apply_facility_catalog_query
+
+        return apply_facility_catalog_query(self._facilities, query)
 
     def get_active_facility_by_id(self, facility_id: str) -> FacilityCatalogRecord | None:
         return next((facility for facility in self._facilities if facility.id == facility_id), None)

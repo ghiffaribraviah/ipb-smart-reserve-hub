@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.access_policy import AccessDenied, AccessPolicyAction, AccessPolicyModule
 from app.api.routes.audit_log_routes import register_audit_log_routes
+from app.api.routes.approval_letter_routes import register_approval_letter_routes
 from app.services.accounts import (
     AccountInactive,
     AccountTokenInvalid,
@@ -24,7 +25,9 @@ from app.api.routes.facility_management_routes import register_facility_manageme
 from app.api.routes.facility_routes import register_facility_routes
 from app.api.routes.notification_routes import register_notification_routes
 from app.api.routes.organization_unit_routes import register_organization_unit_routes
+from app.api.routes.payment_routes import register_payment_routes
 from app.api.routes.reservation_routes import register_reservation_routes
+from app.api.routes.review_routes import register_review_routes
 from app.api.routes.system_status_routes import register_system_status_routes
 from app.core.module_factories import (
     BookingSettingsModuleFactory,
@@ -55,9 +58,24 @@ class FacilityRouteDependencies:
 @dataclass(frozen=True)
 class ReservationRouteDependencies:
     get_reservations: Callable
-    get_reviews: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class ApprovalLetterRouteDependencies:
     get_approval_letters: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class PaymentRouteDependencies:
     get_payments: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class ReviewRouteDependencies:
+    get_reviews: Callable
     require_access: Callable[[AccessPolicyAction], Callable]
 
 
@@ -110,6 +128,15 @@ class HttpRuntimeDependencyRegistry(Protocol):
         raise NotImplementedError
 
     def reservation_routes(self) -> ReservationRouteDependencies:
+        raise NotImplementedError
+
+    def approval_letter_routes(self) -> ApprovalLetterRouteDependencies:
+        raise NotImplementedError
+
+    def payment_routes(self) -> PaymentRouteDependencies:
+        raise NotImplementedError
+
+    def review_routes(self) -> ReviewRouteDependencies:
         raise NotImplementedError
 
     def notification_routes(self) -> NotificationRouteDependencies:
@@ -202,9 +229,24 @@ class HttpRuntimeModule:
     def reservation_routes(self) -> ReservationRouteDependencies:
         return ReservationRouteDependencies(
             get_reservations=self.get_reservations,
-            get_reviews=self.get_reviews,
+            require_access=self.require_access,
+        )
+
+    def approval_letter_routes(self) -> ApprovalLetterRouteDependencies:
+        return ApprovalLetterRouteDependencies(
             get_approval_letters=self.get_approval_letters,
+            require_access=self.require_access,
+        )
+
+    def payment_routes(self) -> PaymentRouteDependencies:
+        return PaymentRouteDependencies(
             get_payments=self.get_payments,
+            require_access=self.require_access,
+        )
+
+    def review_routes(self) -> ReviewRouteDependencies:
+        return ReviewRouteDependencies(
+            get_reviews=self.get_reviews,
             require_access=self.require_access,
         )
 
@@ -415,10 +457,25 @@ class HttpApplicationModule:
         register_reservation_routes(
             app,
             get_reservations=reservation_dependencies.get_reservations,
-            get_reviews=reservation_dependencies.get_reviews,
-            get_approval_letters=reservation_dependencies.get_approval_letters,
-            get_payments=reservation_dependencies.get_payments,
             require_access=reservation_dependencies.require_access,
+        )
+        approval_letter_dependencies = runtime.approval_letter_routes()
+        register_approval_letter_routes(
+            app,
+            get_approval_letters=approval_letter_dependencies.get_approval_letters,
+            require_access=approval_letter_dependencies.require_access,
+        )
+        payment_dependencies = runtime.payment_routes()
+        register_payment_routes(
+            app,
+            get_payments=payment_dependencies.get_payments,
+            require_access=payment_dependencies.require_access,
+        )
+        review_dependencies = runtime.review_routes()
+        register_review_routes(
+            app,
+            get_reviews=review_dependencies.get_reviews,
+            require_access=review_dependencies.require_access,
         )
         notification_dependencies = runtime.notification_routes()
         register_notification_routes(

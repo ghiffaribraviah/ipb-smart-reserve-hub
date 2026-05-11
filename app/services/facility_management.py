@@ -9,7 +9,7 @@ from app.services.assigned_facility_access import (
     AssignedFacilityAccessModule,
     AssignedFacilityNotFound,
 )
-from app.services.audit_logs import AuditLogModule
+from app.services.audit_logs import AuditLogModule, AuditLogRecorder
 from app.services.facilities import summarize_price
 
 
@@ -128,7 +128,7 @@ class FacilityManagementModule:
         self._assigned_facility_access = assigned_facility_access or AssignedFacilityAccessModule(
             facility_repository=facility_management_repository
         )
-        self._audit_logs = audit_logs
+        self._audit_recorder = AuditLogRecorder(audit_logs)
 
     def assign_staff(self, facility_id: str, staff_id: str, *, actor: UserAccount | None = None) -> StaffAssignment:
         if self._facility_management_repository.get_facility(facility_id) is None:
@@ -137,7 +137,7 @@ class FacilityManagementModule:
             raise StaffUserNotFound
 
         assignment = self._facility_management_repository.add_staff_assignment(facility_id, staff_id)
-        self._record_audit(
+        self._audit_recorder.record(
             actor=actor,
             action_type="staff_assignment.created",
             target_type="staff_assignment",
@@ -148,7 +148,7 @@ class FacilityManagementModule:
 
     def unassign_staff(self, facility_id: str, staff_id: str, *, actor: UserAccount | None = None) -> None:
         self._facility_management_repository.remove_staff_assignment(facility_id, staff_id)
-        self._record_audit(
+        self._audit_recorder.record(
             actor=actor,
             action_type="staff_assignment.removed",
             target_type="staff_assignment",
@@ -258,25 +258,6 @@ class FacilityManagementModule:
             raise FacilityNotFound
         except AssignedFacilityAccessDenied:
             raise StaffFacilityAccessDenied
-
-    def _record_audit(
-        self,
-        *,
-        actor: UserAccount | None,
-        action_type: str,
-        target_type: str,
-        target_id: str,
-        facility_id: str | None = None,
-    ) -> None:
-        if self._audit_logs is not None:
-            self._audit_logs.record(
-                actor=actor,
-                action_type=action_type,
-                target_type=target_type,
-                target_id=target_id,
-                facility_id=facility_id,
-            )
-
 
 def _to_facility_profile(facility: Facility) -> FacilityManagementProfile:
     return FacilityManagementProfile(

@@ -49,6 +49,30 @@ class NotificationModule:
             message=f"Reservasi {reservation.activity_title} menunggu unggah surat persetujuan.",
         )
 
+    def reservation_completed_by_deadline(self, reservation: Reservation) -> None:
+        self._create_student_notification(
+            reservation,
+            title="Reservasi selesai",
+            message=f"Reservasi {reservation.activity_title} sudah selesai.",
+        )
+
+    def reservation_expired_by_deadline(self, reservation: Reservation) -> None:
+        self._create_student_notification(
+            reservation,
+            title="Reservasi kedaluwarsa",
+            message=f"Reservasi {reservation.activity_title} kedaluwarsa karena melewati batas waktu.",
+        )
+
+    def reservation_overdue_verification_by_deadline(self, reservation: Reservation) -> None:
+        self._create_student_notification(
+            reservation,
+            title="Verifikasi melewati batas waktu",
+            message=(
+                f"Reservasi {reservation.activity_title} membutuhkan tindak lanjut TU. "
+                f"Hubungi {reservation.facility.contact_name} di {reservation.facility.contact_phone}."
+            ),
+        )
+
     def student_action_recorded(self, reservation: Reservation, *, title: str, message: str) -> None:
         self._create_student_notification(reservation, title=title, message=message)
 

@@ -54,6 +54,33 @@ class AuditLogModule:
         return [_to_audit_log_entry(audit_log) for audit_log in self._audit_log_repository.list(filters)]
 
 
+class AuditLogRecorder:
+    def __init__(self, audit_logs: AuditLogModule | None) -> None:
+        self._audit_logs = audit_logs
+
+    def record(
+        self,
+        *,
+        actor: UserAccount | None,
+        action_type: str,
+        target_type: str,
+        target_id: str,
+        facility_id: str | None = None,
+        student_id: str | None = None,
+        reservation_id: str | None = None,
+    ) -> None:
+        if self._audit_logs is not None:
+            self._audit_logs.record(
+                actor=actor,
+                action_type=action_type,
+                target_type=target_type,
+                target_id=target_id,
+                facility_id=facility_id,
+                student_id=student_id,
+                reservation_id=reservation_id,
+            )
+
+
 def _to_audit_log_entry(audit_log: AuditLog) -> AuditLogEntry:
     return AuditLogEntry(
         id=audit_log.id,

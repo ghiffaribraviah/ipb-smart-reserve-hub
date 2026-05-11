@@ -1,12 +1,15 @@
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.orm import object_session
 
-from app.models import AuditLog, Notification, Reservation
+from app.models import Reservation
+from app.repositories.audit_log_repository import SqlAlchemyAuditLogRepository
+from app.repositories.notification_repository import SqlAlchemyNotificationRepository
+from app.services.audit_logs import AuditLogModule, AuditLogRecorder
 from app.services.booking_settings import BookingSettings
+from app.services.notifications import NotificationModule
 from app.services.reservation_lifecycle import DeadlineTransition, FacilityReservationLifecycleModule
 
 
@@ -34,47 +37,33 @@ class DeadlineWorkerModule:
         )
 
     def process_due_reservations(self) -> DeadlineWorkerResult:
-        now = _as_utc(self._clock())
         expired = 0
         overdue_verification = 0
         completed = 0
         with self._session_factory() as session:
+            audit_logs = AuditLogModule(
+                audit_log_repository=SqlAlchemyAuditLogRepository(session),
+                clock=self._clock,
+            )
+            audit_recorder = AuditLogRecorder(audit_logs)
+            notifications = NotificationModule(
+                notification_repository=SqlAlchemyNotificationRepository(session),
+                clock=self._clock,
+            )
             reservations = list(session.scalars(select(Reservation)))
             for reservation in reservations:
                 transition = self._reservation_lifecycle.process_deadline(reservation)
                 if transition == DeadlineTransition.completed:
-                    _record_deadline_audit(reservation, action_type="deadline.completed", created_at=now)
-                    _notify_student(
-                        reservation,
-                        title="Reservasi selesai",
-                        message=f"Reservasi {reservation.activity_title} sudah selesai.",
-                        created_at=now,
-                    )
+                    _record_deadline_audit(audit_recorder, reservation, action_type="deadline.completed")
+                    notifications.reservation_completed_by_deadline(reservation)
                     completed += 1
                 elif transition == DeadlineTransition.expired:
-                    _record_deadline_audit(reservation, action_type="deadline.expired", created_at=now)
-                    _notify_student(
-                        reservation,
-                        title="Reservasi kedaluwarsa",
-                        message=f"Reservasi {reservation.activity_title} kedaluwarsa karena melewati batas waktu.",
-                        created_at=now,
-                    )
+                    _record_deadline_audit(audit_recorder, reservation, action_type="deadline.expired")
+                    notifications.reservation_expired_by_deadline(reservation)
                     expired += 1
                 elif transition == DeadlineTransition.overdue_verification:
-                    _record_deadline_audit(
-                        reservation,
-                        action_type="deadline.overdue_verification",
-                        created_at=now,
-                    )
-                    _notify_student(
-                        reservation,
-                        title="Verifikasi melewati batas waktu",
-                        message=(
-                            f"Reservasi {reservation.activity_title} membutuhkan tindak lanjut TU. "
-                            f"Hubungi {reservation.facility.contact_name} di {reservation.facility.contact_phone}."
-                        ),
-                        created_at=now,
-                    )
+                    _record_deadline_audit(audit_recorder, reservation, action_type="deadline.overdue_verification")
+                    notifications.reservation_overdue_verification_by_deadline(reservation)
                     overdue_verification += 1
             session.commit()
         return DeadlineWorkerResult(
@@ -84,39 +73,13 @@ class DeadlineWorkerModule:
         )
 
 
-def _as_utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
-
-
-def _notify_student(reservation: Reservation, *, title: str, message: str, created_at: datetime) -> None:
-    session = object_session(reservation)
-    if session is not None:
-        session.add(
-            Notification(
-                recipient_id=reservation.student_id,
-                reservation_id=reservation.id,
-                title=title,
-                message=message,
-                created_at=created_at,
-            )
-        )
-
-
-def _record_deadline_audit(reservation: Reservation, *, action_type: str, created_at: datetime) -> None:
-    session = object_session(reservation)
-    if session is not None:
-        session.add(
-            AuditLog(
-                actor_id=None,
-                actor_email=None,
-                action_type=action_type,
-                target_type="reservation",
-                target_id=reservation.id,
-                facility_id=reservation.facility_id,
-                student_id=reservation.student_id,
-                reservation_id=reservation.id,
-                created_at=created_at,
-            )
-        )
+def _record_deadline_audit(audit_recorder: AuditLogRecorder, reservation: Reservation, *, action_type: str) -> None:
+    audit_recorder.record(
+        actor=None,
+        action_type=action_type,
+        target_type="reservation",
+        target_id=reservation.id,
+        facility_id=reservation.facility_id,
+        student_id=reservation.student_id,
+        reservation_id=reservation.id,
+    )

@@ -1,14 +1,19 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-import uuid
 
 from app.models import ReservationPaymentReceipt, ReservationStatus
 from app.repositories.reservation_repository import ReservationRepository
 from app.services.accounts import UserAccount
-from app.services.audit_logs import AuditLogModule
+from app.services.audit_logs import AuditLogModule, AuditLogRecorder
 from app.services.booking_settings import BookingSettings
 from app.services.notifications import NotificationModule
+from app.services.reservation_private_files import (
+    PrivateFileTooLarge,
+    PrivateFileUpload,
+    ReservationPrivateFileModule,
+    UnsupportedPrivateFileType,
+)
 from app.services.reservation_lifecycle import FacilityReservationLifecycleModule
 from app.services.reservations import ReservationNotFound
 from app.services.staff_reservation_review_access import (
@@ -108,11 +113,12 @@ class PaymentModule:
             booking_settings=booking_settings,
             clock=clock,
         )
+        self._private_files = ReservationPrivateFileModule(storage=storage, clock=clock)
         self._staff_review_access = staff_review_access or StaffReservationReviewAccessModule(
             reservation_repository=reservation_repository
         )
         self._notifications = notifications
-        self._audit_logs = audit_logs
+        self._audit_recorder = AuditLogRecorder(audit_logs)
 
     def get_student_payment(self, student: UserAccount, reservation_id: str) -> StudentReservationPayment:
         reservation = self._reservation_repository.get_for_student(reservation_id, student.id)
@@ -141,21 +147,31 @@ class PaymentModule:
             raise ReservationNotFound
         if reservation.status != ReservationStatus.pending_payment or reservation.price_rupiah <= 0:
             raise ReservationPaymentUnavailable
-        if not _is_allowed_payment_receipt_file(upload):
+        try:
+            file_metadata = self._private_files.store_upload(
+                reservation_id=reservation.id,
+                folder="payment-receipts",
+                upload=PrivateFileUpload(
+                    filename=upload.filename,
+                    content_type=upload.content_type,
+                    content=upload.content,
+                ),
+                allowed_content_types={"image/jpeg", "image/png"},
+                allowed_extensions=(".jpg", ".jpeg", ".png"),
+                max_size_bytes=5 * 1024 * 1024,
+            )
+        except UnsupportedPrivateFileType:
             raise InvalidPaymentReceiptFile
-        if len(upload.content) > 5 * 1024 * 1024:
+        except PrivateFileTooLarge:
             raise PaymentReceiptFileTooLarge
 
-        uploaded_at = _as_utc(self._clock())
-        storage_key = f"payment-receipts/{reservation.id}/{uuid.uuid4().hex}-{upload.filename}"
-        self._storage.put(storage_key, upload.content, content_type=upload.content_type)
         reservation.payment_receipt = ReservationPaymentReceipt(
             reservation_id=reservation.id,
-            storage_key=storage_key,
-            filename=upload.filename,
-            content_type=upload.content_type,
-            size_bytes=len(upload.content),
-            uploaded_at=uploaded_at,
+            storage_key=file_metadata.storage_key,
+            filename=file_metadata.filename,
+            content_type=file_metadata.content_type,
+            size_bytes=file_metadata.size_bytes,
+            uploaded_at=file_metadata.uploaded_at,
         )
         self._reservation_lifecycle.record_payment_receipt_uploaded(reservation)
         if self._notifications is not None:
@@ -181,22 +197,22 @@ class PaymentModule:
             raise ReservationNotFound
         if reservation.payment_receipt is None:
             raise PaymentReceiptNotUploaded
-        receipt = reservation.payment_receipt
+        download = self._private_files.download(reservation.payment_receipt)
         return StudentPaymentReceiptDownload(
-            filename=receipt.filename,
-            content_type=receipt.content_type,
-            content=self._storage.get(receipt.storage_key),
+            filename=download.filename,
+            content_type=download.content_type,
+            content=download.content,
         )
 
     def download_staff_payment_receipt(self, staff: UserAccount, reservation_id: str) -> StaffPaymentReceiptDownload:
         reservation = self._get_staff_payment_review_reservation(staff, reservation_id)
         if reservation.payment_receipt is None:
             raise PaymentReceiptNotUploaded
-        receipt = reservation.payment_receipt
+        download = self._private_files.download(reservation.payment_receipt)
         return StaffPaymentReceiptDownload(
-            filename=receipt.filename,
-            content_type=receipt.content_type,
-            content=self._storage.get(receipt.storage_key),
+            filename=download.filename,
+            content_type=download.content_type,
+            content=download.content,
         )
 
     def approve_payment_receipt(self, staff: UserAccount, reservation_id: str) -> StaffPaymentReview:
@@ -210,7 +226,7 @@ class PaymentModule:
                 title="Pembayaran disetujui",
                 message=f"Pembayaran {reservation.activity_title} disetujui dan reservasi aktif.",
             )
-        self._record_audit(
+        self._audit_recorder.record(
             actor=staff,
             action_type="payment.approved",
             target_type="reservation",
@@ -235,7 +251,7 @@ class PaymentModule:
                 title="Pembayaran ditolak",
                 message=f"Bukti pembayaran {reservation.activity_title} ditolak: {reason}",
             )
-        self._record_audit(
+        self._audit_recorder.record(
             actor=staff,
             action_type="payment.rejected",
             target_type="reservation",
@@ -258,29 +274,6 @@ class PaymentModule:
         except StaffReservationReviewReservationNotFound:
             raise ReservationNotFound
 
-    def _record_audit(
-        self,
-        *,
-        actor: UserAccount | None,
-        action_type: str,
-        target_type: str,
-        target_id: str,
-        facility_id: str | None = None,
-        student_id: str | None = None,
-        reservation_id: str | None = None,
-    ) -> None:
-        if self._audit_logs is not None:
-            self._audit_logs.record(
-                actor=actor,
-                action_type=action_type,
-                target_type=target_type,
-                target_id=target_id,
-                facility_id=facility_id,
-                student_id=student_id,
-                reservation_id=reservation_id,
-            )
-
-
 def _to_student_payment_receipt(receipt: ReservationPaymentReceipt) -> StudentPaymentReceipt:
     return StudentPaymentReceipt(
         reservation_id=receipt.reservation_id,
@@ -289,12 +282,6 @@ def _to_student_payment_receipt(receipt: ReservationPaymentReceipt) -> StudentPa
         size_bytes=receipt.size_bytes,
         uploaded_at=_as_utc(receipt.uploaded_at),
     )
-
-
-def _is_allowed_payment_receipt_file(upload: PaymentReceiptUpload) -> bool:
-    allowed_content_types = {"image/jpeg", "image/png"}
-    allowed_extensions = (".jpg", ".jpeg", ".png")
-    return upload.content_type.lower() in allowed_content_types and upload.filename.lower().endswith(allowed_extensions)
 
 
 def _as_utc(value: datetime) -> datetime:

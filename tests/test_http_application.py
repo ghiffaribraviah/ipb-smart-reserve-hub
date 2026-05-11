@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from fastapi.security import HTTPBearer
 
 from app.api.http_application import AccountRouteDependencies
+from app.api.http_application import ApprovalLetterRouteDependencies
 from app.api.http_application import AuditLogRouteDependencies
 from app.api.http_application import BookingSettingRouteDependencies
 from app.api.http_application import FacilityManagementRouteDependencies
@@ -12,9 +13,16 @@ from app.api.http_application import HttpApplicationModule
 from app.api.http_application import HttpRuntimeModule
 from app.api.http_application import NotificationRouteDependencies
 from app.api.http_application import OrganizationUnitRouteDependencies
+from app.api.http_application import PaymentRouteDependencies
 from app.api.http_application import ReservationRouteDependencies
+from app.api.http_application import ReviewRouteDependencies
 from app.api.http_application import SystemStatusRouteDependencies
+from app.core.database import Base, build_session_factory
+from app.core.module_factories import FacilityReservationWorkflowAssembly
 from app.core.settings import SettingsModule
+from app.models import SystemSetting
+from app.services.booking_settings import BookingSettings
+from app.storage import InMemoryPrivateStorage
 
 
 async def placeholder_dependency():
@@ -55,9 +63,24 @@ class StubHttpRuntimeDependencyRegistry:
     def reservation_routes(self):
         return ReservationRouteDependencies(
             get_reservations=placeholder_dependency,
-            get_reviews=placeholder_dependency,
+            require_access=placeholder_require_access,
+        )
+
+    def approval_letter_routes(self):
+        return ApprovalLetterRouteDependencies(
             get_approval_letters=placeholder_dependency,
+            require_access=placeholder_require_access,
+        )
+
+    def payment_routes(self):
+        return PaymentRouteDependencies(
             get_payments=placeholder_dependency,
+            require_access=placeholder_require_access,
+        )
+
+    def review_routes(self):
+        return ReviewRouteDependencies(
+            get_reviews=placeholder_dependency,
             require_access=placeholder_require_access,
         )
 
@@ -184,3 +207,23 @@ def test_http_application_module_builds_app_with_foundation_routes():
     assert "/staff/shell" in route_paths
     assert "/admin/shell" in route_paths
     assert app.state.session_factory is not None
+
+
+def test_facility_reservation_workflow_assembly_loads_shared_booking_settings():
+    session_factory = build_session_factory("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(bind=session_factory.kw["bind"])
+    session = session_factory()
+    session.add(SystemSetting(key="document_upload_due_hours", value="24"))
+    session.commit()
+
+    try:
+        workflow = FacilityReservationWorkflowAssembly(
+            session=session,
+            default_booking_settings=BookingSettings.defaults(),
+            clock=lambda: None,
+            private_storage=InMemoryPrivateStorage(),
+        )
+
+        assert workflow.booking_settings.document_upload_due_hours == 24
+    finally:
+        session.close()

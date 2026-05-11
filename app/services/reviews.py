@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from app.models import FacilityReview, ReservationStatus
 from app.repositories.review_repository import ReviewRepository
 from app.services.accounts import UserAccount
-from app.services.audit_logs import AuditLogModule
+from app.services.audit_logs import AuditLogModule, AuditLogRecorder
 from app.services.booking_settings import BookingSettings
 from app.services.reservation_lifecycle import FacilityReservationLifecycleModule
 
@@ -110,7 +110,7 @@ class ReviewModule:
             booking_settings=BookingSettings.defaults(),
             clock=clock,
         )
-        self._audit_logs = audit_logs
+        self._audit_recorder = AuditLogRecorder(audit_logs)
 
     def submit_student_review(
         self,
@@ -134,7 +134,7 @@ class ReviewModule:
             comment=_optional_comment(submission.comment),
         )
         review = self._review_repository.add(review)
-        self._record_audit(
+        self._audit_recorder.record(
             actor=student,
             action_type="review.created",
             target_type="review",
@@ -152,7 +152,7 @@ class ReviewModule:
         review.is_deleted = True
         review.deleted_by = "student"
         review.deleted_at = _as_utc(self._clock())
-        self._record_audit(
+        self._audit_recorder.record(
             actor=student,
             action_type="review.student_deleted",
             target_type="review",
@@ -196,7 +196,7 @@ class ReviewModule:
         review.deleted_by = "admin"
         review.deleted_at = _as_utc(self._clock())
         review.admin_removal_reason = normalized_reason
-        self._record_audit(
+        self._audit_recorder.record(
             actor=admin,
             action_type="review.admin_deleted",
             target_type="review",
@@ -215,7 +215,7 @@ class ReviewModule:
         review.deleted_by = None
         review.deleted_at = None
         review.admin_removal_reason = None
-        self._record_audit(
+        self._audit_recorder.record(
             actor=admin,
             action_type="review.admin_restored",
             target_type="review",
@@ -259,29 +259,6 @@ class ReviewModule:
     def _require_staff_assignment(self, staff: UserAccount, facility_id: str) -> None:
         if not self._review_repository.staff_is_assigned(facility_id, staff.id):
             raise StaffReviewAccessDenied
-
-    def _record_audit(
-        self,
-        *,
-        actor: UserAccount | None,
-        action_type: str,
-        target_type: str,
-        target_id: str,
-        facility_id: str | None = None,
-        student_id: str | None = None,
-        reservation_id: str | None = None,
-    ) -> None:
-        if self._audit_logs is not None:
-            self._audit_logs.record(
-                actor=actor,
-                action_type=action_type,
-                target_type=target_type,
-                target_id=target_id,
-                facility_id=facility_id,
-                student_id=student_id,
-                reservation_id=reservation_id,
-            )
-
 
 def _to_student_review(review: FacilityReview, *, author_name: str) -> StudentReview:
     return StudentReview(

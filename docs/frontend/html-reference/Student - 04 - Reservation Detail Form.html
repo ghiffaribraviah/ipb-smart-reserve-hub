@@ -80,8 +80,8 @@
         .checkbox-item span { font-size: 14px; color: var(--primary-text); }
 
         .form-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 48px; padding-top: 24px; }
-        .btn-text { color: var(--secondary-text); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: none; border: none; cursor: pointer; }
-        .btn-primary { background-color: var(--brand-green); color: white; border: none; border-radius: 8px; padding: 14px 24px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; text-transform: uppercase; letter-spacing: 0.5px;}
+        .btn-text { color: var(--secondary-text); font-size: 14px; font-weight: 600; background: none; border: none; cursor: pointer; }
+        .btn-primary { background-color: var(--brand-green); color: white; border: none; border-radius: 8px; padding: 14px 24px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .btn-primary:hover { background-color: var(--brand-green-dark); }
 
         /* Right Column - Summary */
@@ -109,18 +109,354 @@
 
         /* Responsive */
         @media (max-width: 1024px) { .wizard-layout { flex-direction: column; } .summary-sidebar { width: 100%; } }
-        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } .checkbox-grid { grid-template-columns: 1fr; } }
+        
+        
+        
+        /* =========================================
+           RESPONSIVE MOBILE STYLES
+           ========================================= */
+        @media (max-width: 992px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+            .top-row { grid-template-columns: 1fr; }
+            .content-layout, .details-layout, .profile-layout, .wizard-layout, .dashboard-layout { flex-direction: column; align-items: stretch; gap: 24px; }
+            .main-details, .sidebar, .time-sidebar, .summary-sidebar, .profile-sidebar, .profile-main, .docs-section, .form-card { width: 100%; box-sizing: border-box; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 200px; }
+            .item-main { grid-column: 1 / 3; grid-row: 1 / 2; }
+            .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
+            .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+            .item-bottom-right { display: none; }
+            .info-cards-row { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-cards { flex-direction: column; gap: 16px; }
+            .doc-item { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
+
+        @media (max-width: 768px) {
+            /* Mobile Navbar */
+            :root { --navbar-height: 64px; }
+            .mobile-menu-btn { display: block; font-size: 24px; color: var(--secondary-text); cursor: pointer; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+
+            /* Mobile Layout Spacing */
+            .page-container { margin-top: calc(var(--navbar-height) + 24px) !important; width: 100%; padding: 0 16px; box-sizing: border-box; }
+            
+            /* Mobile Header & Metrics */
+            .page-header { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 24px; }
+            .header-text h1 { font-size: 28px; margin-bottom: 8px; }
+            .metrics-card { padding: 20px; margin-bottom: 32px; width: 100%; box-sizing: border-box; flex-direction: row; }
+            .metric-value { font-size: 32px; }
+            .header-actions { flex-direction: row; gap: 12px; width: 100%; }
+            .btn-today { flex: 1; text-align: center; }
+            .date-picker { flex: 2; }
+            .btn-add { width: 100%; justify-content: center; padding: 12px; }
+
+            /* Mobile Table to Card Transformation */
+            .table-section { background: transparent; border: none; box-shadow: none; border-radius: 0; }
+            .table-header { padding: 0 0 16px 0; border-bottom: none; flex-direction: row; }
+            .table-header h2 { font-size: 20px; }
+            
+            .data-table, .data-table tbody, .dash-table, .dash-table tbody { display: block; width: 100%; }
+            .data-table thead, .dash-table thead { display: none; }
+            
+            .data-table tr, .dash-table tr { 
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: 
+                    "applicant status"
+                    "facility date"
+                    "actions actions";
+                gap: 16px;
+                background-color: var(--bg-surface); 
+                border: 1px solid var(--border-color); 
+                border-radius: 12px; 
+                margin-bottom: 16px; 
+                padding: 16px;
+                box-shadow: var(--card-shadow);
+            }
+            
+            .data-table td, .dash-table td { 
+                display: block;
+                padding: 0; 
+                border: none;
+                text-align: left;
+            }
+            
+            .data-table td:nth-child(1), .dash-table td:nth-child(1) { grid-area: applicant; }
+            .data-table td:nth-child(2), .dash-table td:nth-child(2) { grid-area: facility; }
+            .data-table td:nth-child(3), .dash-table td:nth-child(3) { grid-area: date; text-align: right; }
+            .data-table td:nth-child(4), .dash-table td:nth-child(4) { grid-area: status; align-self: start; justify-self: end; }
+            .data-table td:nth-child(5), .dash-table td:nth-child(5) { grid-area: actions; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 4px; }
+            
+            /* Labels */
+            .data-table td::before, .dash-table td::before { 
+                display: block;
+                font-size: 10px; 
+                font-weight: 700; 
+                color: var(--secondary-text); 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+                margin-bottom: 4px;
+                content: attr(data-label);
+            }
+            .data-table td:nth-child(1)::before, .dash-table td:nth-child(1)::before { display: none; }
+            .data-table td:nth-child(4)::before, .dash-table td:nth-child(4)::before { display: none; }
+            .data-table td:nth-child(5)::before, .dash-table td:nth-child(5)::before { display: none; }
+
+            .applicant-cell { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+            .applicant-cell .avatar { width: 36px; height: 36px; margin: 0; }
+            .applicant-info { display: flex; flex-direction: column; align-items: flex-start; }
+            .applicant-name { font-size: 14px; margin-bottom: 2px; }
+            .status-badge { font-size: 11px; padding: 4px 8px; width: fit-content; }
+            
+            .actions-cell { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; justify-content: flex-start; }
+            .action-btn { background-color: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 16px; }
+            .action-download { color: var(--secondary-text); }
+            .action-download::after { content: 'Unduh'; font-size: 11px; font-weight: 600; color: var(--secondary-text); }
+            .action-verify { color: #10b981; }
+            .action-verify::after { content: 'Verifikasi'; font-size: 11px; font-weight: 600; color: #10b981; }
+            .action-reject { color: #ef4444; }
+            .action-reject::after { content: 'Tolak'; font-size: 11px; font-weight: 600; color: #ef4444; }
+
+            .table-footer { flex-direction: column; gap: 16px; padding: 24px 0; background: transparent; border: none; align-items: center; text-align: center; }
+
+            /* Grid Layout adjustments */
+            .calendar-container, .agenda-container { width: 100%; padding: 16px; box-sizing: border-box; }
+            .calendar-grid-wrapper { width: 100%; overflow-x: visible; padding: 0; margin: 0; }
+            .calendar-grid { min-width: 0; gap: 6px; }
+            .calendar-day { padding: 4px; border-radius: 6px; align-items: center; justify-content: center; min-height: 40px; }
+            .calendar-day-header { font-size: 10px; padding-bottom: 6px; }
+            .day-number { font-size: 13px; margin-bottom: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+            .day-indicators { justify-content: center; gap: 2px; margin-top: 4px; width: 100%; }
+            .indicator { width: 5px; height: 5px; }
+            
+            .agenda-item { flex-direction: column; gap: 8px; align-items: stretch; }
+            .agenda-time { display: flex; gap: 8px; align-items: center; width: 100%; }
+            .agenda-time span { display: inline; margin-top: 0; }
+            .agenda-meta { display: grid; grid-template-columns: 1fr; gap: 8px; justify-items: start; }
+            .agenda-meta .action-link { text-align: center; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+            .action-link { width: 100%; display: block; text-align: center; background-color: #f9fafb; padding: 12px 0; border-radius: 8px; border: 1px solid var(--border-color); }
+
+            .actions-bar, .filter-container { flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; }
+            .filter-group { flex-direction: row; gap: 12px; width: 100%; }
+            .filter-select { flex: 1; padding: 10px; }
+            .filter-input { width: 100%; }
+
+            .facilities-grid { grid-template-columns: 1fr; gap: 20px; }
+            
+            .gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+            .item-main { grid-column: 1 / 2; grid-row: 1 / 2; }
+            .item-top-right-1, .item-top-right-2 { grid-column: 1 / 2; grid-row: auto; }
+            
+            .kpi-grid { grid-template-columns: 1fr; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+
+            .reservation-layout { flex-direction: column; }
+            .calendar-card, .time-sidebar { width: 100%; padding: 24px; box-sizing: border-box; }
+            .stepper { width: 100%; justify-content: space-between; }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+
+            /* Mobile Footer */
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
+        }
+
+        /* Student 00 shared header/footer chrome */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height, 80px); background-color: var(--bg-surface, #ffffff); border-bottom: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; z-index: 1000; transition: all 0.3s ease; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; height: 100%; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .mobile-menu-btn { display: none; padding: 0; border: 0; background: transparent; font-size: 24px; color: var(--secondary-text, #6b7280); cursor: pointer; }
+        .logo-nav { font-family: Playfair Display, var(--logo-serif, serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; display: block; }
+        .logo-nav-mobile-text { display: inline; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; transition: border-color 0.2s; }
+        .nav-search input:focus { border-color: var(--brand-green, #10b981); background-color: #ffffff; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text, #6b7280); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text, #6b7280); transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-text, #111827); }
+        .nav-link.active { color: var(--brand-green, #10b981); border-bottom: 2px solid var(--brand-green, #10b981); padding-bottom: 4px; }
+        .nav-notifications { font-size: 20px; color: var(--secondary-text, #6b7280); cursor: pointer; transition: color 0.2s; }
+        .nav-notifications:hover { color: var(--primary-text, #111827); }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #e5e7eb; overflow: hidden; border: 2px solid var(--brand-green, #10b981); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .footer { background-color: var(--bg-surface, #ffffff); border-top: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px; }
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: Playfair Display, var(--logo-serif, serif); font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text, #6b7280); margin: 12px 0 0; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text, #6b7280); }
+        @media (max-width: 768px) {
+            :root { --navbar-height: 64px; }
+            .navbar { height: var(--navbar-height); }
+            .navbar-content { max-width: 100%; padding: 0 12px; }
+            .mobile-menu-btn { display: block; flex: 0 0 28px; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+            .footer { padding: 56px 0; }
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
+            .logo-footer { font-size: 48px; }
+        }
+
+        /* Student 04 reservation detail polish */
+        @media (max-width: 768px) {
+            .page-container {
+                max-width: none;
+                margin-bottom: 56px;
+                padding: 0 26px;
+            }
+            .back-link {
+                margin-bottom: 28px;
+            }
+            .stepper-wrapper {
+                margin: 0 0 28px;
+                padding: 0 2px;
+            }
+            .stepper {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 56px 1fr 70px 1fr 64px;
+                align-items: start;
+            }
+            .step-item {
+                min-width: 0;
+                gap: 8px;
+            }
+            .step-circle {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+                background-color: #ffffff;
+            }
+            .step-label {
+                position: static;
+                max-width: 76px;
+                white-space: normal;
+                text-align: center;
+                font-size: 10px;
+                line-height: 1.2;
+                letter-spacing: 0.35px;
+            }
+            .step-line {
+                width: 100%;
+                margin: 18px 0 0;
+                top: 0;
+            }
+            .wizard-layout {
+                gap: 20px;
+            }
+            .form-card,
+            .summary-card,
+            .policy-box {
+                border: 1px solid rgba(226, 232, 240, 0.9);
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            }
+            .form-card {
+                padding: 28px 24px;
+                border-radius: 14px;
+            }
+            .form-header h2 {
+                font-size: 24px;
+                line-height: 1.2;
+            }
+            .form-header p {
+                margin-bottom: 28px;
+                line-height: 1.55;
+            }
+            .form-grid {
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+            .form-group label {
+                font-size: 10px;
+                line-height: 1.3;
+            }
+            .form-control {
+                min-height: 52px;
+                padding: 14px 16px;
+                border-radius: 10px;
+                background-color: #f8fafc;
+            }
+            textarea.form-control {
+                min-height: 118px;
+            }
+            .checkbox-grid {
+                gap: 12px;
+            }
+            .checkbox-item {
+                box-sizing: border-box;
+                min-height: 58px;
+                padding: 14px 16px;
+                border-radius: 10px;
+            }
+            .checkbox-item span {
+                font-size: 13px;
+                line-height: 1.35;
+                text-transform: none;
+                letter-spacing: 0;
+            }
+            .form-actions {
+                gap: 14px;
+                align-items: stretch;
+                margin-top: 30px;
+                padding-top: 10px;
+            }
+            .btn-text {
+                order: 2;
+                width: 100%;
+                min-height: 44px;
+                color: var(--secondary-text);
+                font-size: 13px;
+            }
+            .btn-primary {
+                order: 1;
+                width: 100%;
+                min-height: 52px;
+                border-radius: 8px;
+                padding: 14px 18px;
+                line-height: 1.2;
+                font-size: 15px;
+            }
+            .summary-img {
+                height: 170px;
+            }
+            .summary-content {
+                padding: 22px;
+            }
+            .summary-title {
+                font-size: 20px;
+                line-height: 1.25;
+            }
+            .policy-box {
+                border-radius: 10px;
+            }
+        }
+
     </style>
 </head>
 <body>
 
-    <header class="navbar">
+                <header class="navbar">
         <div class="navbar-content">
             <div class="nav-left">
-                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
+                <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
                 <div class="nav-search">
                     <span class="search-icon">&#128269;</span>
-                    <input type="text" placeholder="Search facilities...">
+                    <input type="search" placeholder="Cari fasilitas..." aria-label="Cari fasilitas">
                 </div>
             </div>
             <div class="nav-center">
@@ -129,8 +465,8 @@
                 <a href="#" class="nav-link active">Reservasi</a>
             </div>
             <div class="nav-right">
-                <span style="font-size: 20px; color: #6b7280;">&#128276;</span>
-                <div class="profile-pic"></div>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
+                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #e5e7eb; border: none; display: flex; align-items: center; justify-content: center; color: transparent;"></a>
             </div>
         </div>
     </header>
@@ -168,7 +504,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Nama Kegiatan</label>
-                        <input type="text" class="form-control" placeholder="e.g. AI Ethics Symposium">
+                        <input type="text" class="form-control" placeholder="Contoh: Simposium Etika AI">
                     </div>
                     <div class="form-group">
                         <label>Estimasi Jumlah Peserta</label>
@@ -177,12 +513,12 @@
                     
                     <div class="form-group full-width">
                         <label>Organisasi</label>
-                        <input type="text" class="form-control" placeholder="Enter organization name">
+                        <input type="text" class="form-control" placeholder="Masukkan nama organisasi">
                     </div>
 
                     <div class="form-group full-width">
                         <label>Deskripsi Kegiatan</label>
-                        <textarea class="form-control" placeholder="Briefly describe the purpose of this reservation and any specific layout requirements..."></textarea>
+                        <textarea class="form-control" placeholder="Jelaskan tujuan reservasi dan kebutuhan tata ruang secara singkat..."></textarea>
                     </div>
 
                     <div class="form-group full-width">
@@ -190,7 +526,7 @@
                         <div class="checkbox-grid">
                             <label class="checkbox-item">
                                 <input type="checkbox">
-                                <span>AV Support & Microphones</span>
+                                <span>Dukungan AV & mikrofon</span>
                             </label>
                             <label class="checkbox-item">
                                 <input type="checkbox">
@@ -198,7 +534,7 @@
                             </label>
                             <label class="checkbox-item">
                                 <input type="checkbox">
-                                <span>Jasa Kebersihan Extra</span>
+                                <span>Jasa kebersihan ekstra</span>
                             </label>
                             <label class="checkbox-item">
                                 <input type="checkbox">
@@ -209,8 +545,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button class="btn-text">Back to Search</button>
-                    <button class="btn-primary">Proceed to Confirmation</button>
+                    <button class="btn-text">Kembali ke Pencarian</button>
+                    <button class="btn-primary">Lanjut ke Konfirmasi</button>
                 </div>
             </div>
 
@@ -218,36 +554,36 @@
                 <div class="summary-card">
                     <img src="https://via.placeholder.com/400x200/4a2511/ffffff?text=Auditorium" alt="Facility" class="summary-img">
                     <div class="summary-content">
-                        <p class="summary-subtitle">LOREM IPSUM</p>
-                        <h3 class="summary-title">Lorem Ipsum Dolor Sit Amet</h3>
+                        <p class="summary-subtitle">GRAND AUDITORIUM</p>
+                        <h3 class="summary-title">Reservasi Ruang Auditorium</h3>
                         
                         <div class="summary-detail">
                             <span class="icon">&#128197;</span>
-                            <span>October 24, 2024</span>
+                            <span>24 Oktober 2024</span>
                         </div>
                         <div class="summary-detail">
                             <span class="icon">&#128338;</span>
-                            <span>09:00 AM - 01:00 PM</span>
+                            <span>09:00 - 13:00</span>
                         </div>
                         <div class="summary-detail">
                             <span class="icon">&#128101;</span>
-                            <span>Capacity: 50 Persons</span>
+                            <span>Kapasitas: 50 orang</span>
                         </div>
 
                         <div class="divider"></div>
 
                         <div class="booking-summary">
-                            <h4>Booking Summary</h4>
+                            <h4>Ringkasan Biaya</h4>
                             <div class="summary-row">
-                                <span>Facility Rate (4h)</span>
+                                <span>Biaya fasilitas (4 jam)</span>
                                 <span>Rp 100.000,00</span>
                             </div>
                             <div class="summary-row">
-                                <span>Admin Fee</span>
+                                <span>Biaya admin</span>
                                 <span>Rp 15.000,00</span>
                             </div>
                             <div class="summary-row total">
-                                <span>Total Amount</span>
+                                <span>Total Biaya</span>
                                 <span>Rp 115.000,00</span>
                             </div>
                         </div>
@@ -257,12 +593,27 @@
                 <div class="policy-box">
                     <span class="icon">&#8505;</span>
                     <div>
-                        <span style="display:block; font-size:10px; font-weight:700; margin-bottom:4px; letter-spacing:0.5px;">DEPARTMENT POLICY</span>
-                        <p>This facility requires approval from the Dean's office for events exceeding 4 hours. Academic priority applies.</p>
+                        <span style="display:block; font-size:10px; font-weight:700; margin-bottom:4px; letter-spacing:0.5px;">KEBIJAKAN DEPARTEMEN</span>
+                        <p>Fasilitas ini memerlukan persetujuan dekanat untuk kegiatan lebih dari 4 jam. Prioritas akademik tetap berlaku.</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+                <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <h2 class="logo-footer">IPB SRH</h2>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Beranda</a>
+                <a href="#">Fasilitas</a>
+                <a href="#">Reservasi</a>
+            </div>
+        </div>
+    </footer>
+
 </body>
 </html>

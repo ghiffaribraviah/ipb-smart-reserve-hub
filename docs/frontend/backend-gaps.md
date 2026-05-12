@@ -1,58 +1,78 @@
-# Frontend-Discovered Backend Gaps
+# Frontend Backend Gap Ledger
 
-This file records backend gaps discovered while planning frontend pages and shared components. The frontend integration backend slices have landed, so resolved entries below now act as a closure index instead of an implementation backlog.
-
-Current status: no blocking frontend integration backend gaps are identified in the student/auth page and shared component plans.
+This file is an index. Detailed backend integration requirements and backend gap definitions live in page briefs under `docs/frontend/per-page-brief/`.
 
 ## Stable Contract Documentation
 
-- `README.md` is the stable API reference for endpoint names, query parameters, request fields, response projections, private file downloads, and reservation status notes.
-- `CONTEXT.md` is the stable domain glossary for Facility Categories, Facility Catalog behavior, Reservation Extra Requirements, Student Reservation Workflow Projections, Student-owned Private File Downloads, terminal rejection source, and Student Academic Profile derivation.
+- `README.md` contains the current backend API tables and reservation status notes.
+- `CONTEXT.md` contains domain language for frontend/backend integration concepts.
+- `docs/frontend/per-page-brief/` contains page-owned integration details and backend gap entries.
+- `docs/frontend/frontend-stack.md` contains frontend stack, session, and testing conventions.
 
-Severity labels:
+Gap statuses:
 
-- Blocking for integration: design can proceed with fixtures, but real API integration cannot satisfy the planned MVP behavior yet.
-- Workaround: the frontend can ship a constrained MVP, but backend support should improve later.
-- Nice-to-have: not required for MVP behavior, but improves UX or maintainability.
+- `open`: backend support is missing.
+- `resolved`: verified from current route/schema/docs or code.
+- `needs-verification`: likely implemented, but exact behavior needs test or deeper code verification.
+- `deferred`: intentionally outside current frontend scope.
 
-## Auth
+## Auth And Session
 
-- Nice-to-have: `POST /auth/register` returns a user response but no access token. Registration will show success and link to login instead of auto-login.
-- Nice-to-have: auth token responses do not expose expiry metadata needed for proactive refresh UX.
-
-## Student Home
-
-- Resolved: student home can request featured/explorable facilities with `GET /facilities?featured=true&limit=8`, receiving the standard paginated envelope ranked by active cover image, visible review count, visible rating average, and name.
-- Resolved: `GET /facility-categories` provides active public Facility Categories with stable slugs, optional icon hints, and active facility counts for home shortcuts.
+| Gap ID | Page Brief | Status | Label |
+| --- | --- | --- | --- |
+| [BG-AUTH-LOGIN-01](per-page-brief/login.md#bg-auth-login-01-login-and-session-contract) | `login.md` | resolved | Login and session contract |
+| [BG-AUTH-REGISTER-01](per-page-brief/register.md#bg-auth-register-01-student-registration-contract) | `register.md` | resolved | Student registration contract |
+| [BG-STUDENT-20-01](per-page-brief/student-20-profile-page.md#bg-student-20-01-current-user-profile-identity) | `student-20-profile-page.md` | resolved | Current user profile identity |
 
 ## Facility Catalog
 
-- Resolved: `GET /facilities` returns a paginated envelope with `items`, `page`, `page_size`, `total_items`, and `total_pages`, and supports `q`, `category`, `min_capacity`, `sort`, `page`, `page_size`, `featured`, and featured `limit`.
-- Resolved: public Facility Category data exposes stored slugs through `GET /facility-categories` for URL filters.
+| Gap ID | Page Brief | Status | Label |
+| --- | --- | --- | --- |
+| [BG-STUDENT-00-01](per-page-brief/student-00-home.md#bg-student-00-01-home-categories-and-featured-facilities) | `student-00-home.md` | resolved | Home categories and featured facilities |
+| [BG-STUDENT-01-01](per-page-brief/student-01-facility-catalog.md#bg-student-01-01-paginated-filterable-facility-catalog) | `student-01-facility-catalog.md` | resolved | Paginated filterable facility catalog |
+| [BG-STUDENT-02-01](per-page-brief/student-02-facility-details.md#bg-student-02-01-public-facility-detail-and-calendar) | `student-02-facility-details.md` | resolved | Public facility detail and calendar |
 
-## Reservation Detail Form
+## Reservation Workflow
 
-- Resolved: reservation submission accepts optional structured `extra_requirements` for AV support, logistics coordination, extra cleaning, security personnel, and notes. Student reservation create/list/detail responses return the persisted nested object, with omitted requirements defaulting to false flags and null notes.
+| Gap ID | Page Brief | Status | Label |
+| --- | --- | --- | --- |
+| [BG-STUDENT-03-01](per-page-brief/student-03-reservation-time-form.md#bg-student-03-01-reservation-time-validation) | `student-03-reservation-time-form.md` | resolved | Reservation time validation |
+| [BG-STUDENT-04-01](per-page-brief/student-04-reservation-detail-form.md#bg-student-04-01-reservation-submission-extra-requirements) | `student-04-reservation-detail-form.md` | resolved | Reservation submission and extra requirements |
+| [BG-STUDENT-05-01](per-page-brief/student-05-reservation-letter.md#bg-student-05-01-approval-letter-generation-and-upload) | `student-05-reservation-letter.md` | resolved | Approval letter generation and upload |
+| [BG-STUDENT-06-WAITING-01](per-page-brief/student-06-reservation-verification-waiting.md#bg-student-06-waiting-01-document-waiting-projection) | `student-06-reservation-verification-waiting.md` | resolved | Document waiting projection |
+| [BG-STUDENT-06-DECLINED-01](per-page-brief/student-06-reservation-verification-declined.md#bg-student-06-declined-01-document-declined-projection) | `student-06-reservation-verification-declined.md` | resolved | Document declined projection |
+| [BG-STUDENT-08-01](per-page-brief/student-08-reservation-accepted.md#bg-student-08-01-accepted-reservation-projection) | `student-08-reservation-accepted.md` | resolved | Accepted reservation projection |
+| [BG-STUDENT-10-01](per-page-brief/student-10-reservation-list.md#bg-student-10-01-student-reservation-list-projections) | `student-10-reservation-list.md` | resolved | Student reservation list projections |
+| [BG-STUDENT-11-ACCEPTED-01](per-page-brief/student-11-reservation-details-accepted.md#bg-student-11-accepted-01-approved-detail-and-private-file-actions) | `student-11-reservation-details-accepted.md` | resolved | Approved detail and private file actions |
+| [BG-STUDENT-11-COMPLETED-01](per-page-brief/student-11-reservation-details-completed.md#bg-student-11-completed-01-completed-detail-and-review-eligibility) | `student-11-reservation-details-completed.md` | resolved | Completed detail and review eligibility |
 
-## Reservation Payment States
+## Payment
 
-- Resolved: student reservation create/list/detail responses include a `payment` projection with `required`, receipt metadata when uploaded, `review_status`, and payment rejection reason when relevant.
-- Resolved: payment review rejection persists `rejection_source=payment`, and terminal rejected student reservation responses include `rejection.source=payment` with the rejection reason.
+| Gap ID | Page Brief | Status | Label |
+| --- | --- | --- | --- |
+| [BG-STUDENT-07-01](per-page-brief/student-07-payment.md#bg-student-07-01-payment-instructions-and-receipt-upload) | `student-07-payment.md` | resolved | Payment instructions and receipt upload |
+| [BG-STUDENT-07-WAITING-01](per-page-brief/student-07-payment-waiting.md#bg-student-07-waiting-01-payment-waiting-projection) | `student-07-payment-waiting.md` | resolved | Payment waiting projection |
+| [BG-STUDENT-07-DECLINED-01](per-page-brief/student-07-payment-declined.md#bg-student-07-declined-01-payment-declined-projection) | `student-07-payment-declined.md` | resolved | Payment declined projection |
 
-## Reservation Document States
+## Reviews
 
-- Resolved: student reservation create/list/detail responses include a `document` projection with generated approval letter metadata, signed approval letter metadata when uploaded, `review_status`, and document rejection reason when relevant.
-- Resolved: document review rejection persists `rejection_source=document`, and terminal rejected student reservation responses include `rejection.source=document` with the rejection reason.
-- Resolved: legacy rejected reservations without a persisted rejection source are exposed as `rejection.source=unknown`.
+| Gap ID | Page Brief | Status | Label |
+| --- | --- | --- | --- |
+| [BG-STUDENT-12-01](per-page-brief/student-12-reservation-review-form.md#bg-student-12-01-student-review-submission) | `student-12-reservation-review-form.md` | resolved | Student review submission |
 
-## Reservation Details
+## Staff Operations
 
-- Resolved: student reservation detail responses expose signed approval letter metadata through `document.signed_approval_letter`.
-- Resolved: student reservation detail responses expose payment receipt metadata through `payment.receipt`.
-- Resolved: students can reopen uploaded signed approval letters with `GET /student/reservations/{reservation_id}/signed-approval-letter/download` when `document.signed_approval_letter` metadata is non-null.
-- Resolved: students can reopen uploaded payment receipts with `GET /student/reservations/{reservation_id}/payment-receipt/download` when `payment.receipt` metadata is non-null.
+| Gap ID | Page Brief | Status | Label |
+| --- | --- | --- | --- |
+| [BG-STAFF-00-01](per-page-brief/staff-00-home.md#bg-staff-00-01-staff-verification-queue) | `staff-00-home.md` | open | Staff verification queue |
+| [BG-STAFF-01-01](per-page-brief/staff-01-facility-list.md#bg-staff-01-01-staff-assigned-facility-list) | `staff-01-facility-list.md` | resolved | Staff assigned facility list |
+| [BG-STAFF-02-01](per-page-brief/staff-02-facility-schedule.md#bg-staff-02-01-staff-facility-schedule) | `staff-02-facility-schedule.md` | needs-verification | Staff facility schedule |
+| [BG-STAFF-03-01](per-page-brief/staff-03-edit-facility-details.md#bg-staff-03-01-staff-facility-profile-editing) | `staff-03-edit-facility-details.md` | resolved | Staff facility profile editing |
+| [BG-STAFF-10-01](per-page-brief/staff-10-reservation-lists.md#bg-staff-10-01-staff-reservation-list-read-model) | `staff-10-reservation-lists.md` | open | Staff reservation list read model |
+| [BG-STAFF-11-01](per-page-brief/staff-11-reservation-details.md#bg-staff-11-01-staff-reservation-detail-read-model) | `staff-11-reservation-details.md` | open | Staff reservation detail read model |
 
-## Student Profile
+## Super Admin
 
-- Resolved: `GET /auth/me` returns student `nim`, `phone`, and an `academic_profile` object with `program_studi`, `faculty`, `entry_year`, and `degree`.
-- Resolved: backend-owned academic profile derivation maps known NIM prefixes and entry-year information best-effort. Unknown or unparsable NIM values keep auth flows available and expose null academic fields.
+| Gap ID | Page Brief | Status | Label |
+| --- | --- | --- | --- |
+| [BG-SUPER-00-01](per-page-brief/super-00-dashboard.md#bg-super-00-01-super-admin-dashboard-read-model) | `super-00-dashboard.md` | open | Super Admin dashboard read model |

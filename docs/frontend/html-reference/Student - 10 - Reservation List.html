@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPB Smart Reserve Hub - My Reservations</title>
+    <title>Reservasi Saya - IPB Smart Reserve Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -20,6 +20,8 @@
             /* Badge Colors */
             --badge-green-bg: #d1fae5;
             --badge-green-text: #065f46;
+            --badge-amber-bg: #fef3c7;
+            --badge-amber-text: #92400e;
             --badge-gray-bg: #e5e7eb;
             --badge-gray-text: #374151;
             --badge-red-bg: #fee2e2;
@@ -50,8 +52,8 @@
         
         /* Header & Tabs */
         .page-header { margin-bottom: 32px; }
-        .page-header h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; color: var(--primary-text); }
-        .page-header p { font-size: 14px; color: var(--secondary-text); margin: 0 0 32px; }
+        .page-header h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px; color: var(--primary-text); }
+        .page-header p { font-size: 14px; color: var(--secondary-text); margin: 0 0 32px; max-width: 520px; }
 
         .tabs-container { display: flex; gap: 32px; border-bottom: 1px solid var(--border-color); margin-bottom: 32px; }
         .tab { font-size: 14px; font-weight: 600; color: var(--secondary-text); padding-bottom: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; position: relative; transition: color 0.2s; }
@@ -74,8 +76,9 @@
         
         /* Status Badges */
         .badge { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-upcoming, .badge-reserved { background-color: var(--badge-green-bg); color: var(--badge-green-text); }
-        .badge-pending { background-color: #f3f4f6; color: #4b5563; }
+        .badge-approved, .badge-completed { background-color: var(--badge-green-bg); color: var(--badge-green-text); }
+        .badge-pending { background-color: var(--badge-amber-bg); color: var(--badge-amber-text); }
+        .badge-review { background-color: #f3f4f6; color: #4b5563; }
         .badge-canceled { background-color: var(--badge-gray-bg); color: var(--badge-gray-text); }
         .badge-rejected { background-color: var(--badge-red-bg); color: var(--badge-red-text); }
 
@@ -91,7 +94,8 @@
         .btn { padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; }
         .btn-primary { background-color: var(--brand-green); color: white; border: none; flex: 1; }
         .btn-primary:hover { background-color: var(--brand-green-dark); }
-        .btn-outline { background-color: transparent; color: var(--secondary-text); border: 1px solid var(--border-color); width: 120px; }
+        .btn-outline { background-color: transparent; color: var(--secondary-text); border: 1px solid var(--border-color); min-width: 120px; }
+        .btn-warning { width: auto; min-width: 168px; color: #92400e; border-color: #fde68a; background-color: #fffbeb; }
         .btn-outline:hover { background-color: #f3f4f6; color: var(--primary-text); }
 
         /* Footer */
@@ -106,17 +110,238 @@
             .card-image { width: 100%; height: 200px; }
             .info-grid { margin-bottom: 24px; }
         }
+    
+        
+        
+        /* =========================================
+           RESPONSIVE MOBILE STYLES
+           ========================================= */
+        @media (max-width: 992px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+            .top-row { grid-template-columns: 1fr; }
+            .content-layout, .details-layout, .profile-layout, .wizard-layout, .dashboard-layout { flex-direction: column; align-items: stretch; gap: 24px; }
+            .main-details, .sidebar, .time-sidebar, .summary-sidebar, .profile-sidebar, .profile-main, .docs-section, .form-card { width: 100%; box-sizing: border-box; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 200px; }
+            .item-main { grid-column: 1 / 3; grid-row: 1 / 2; }
+            .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
+            .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+            .item-bottom-right { display: none; }
+            .info-cards-row { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-cards { flex-direction: column; gap: 16px; }
+            .doc-item { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
+
+        @media (max-width: 768px) {
+            /* Mobile Navbar */
+            :root { --navbar-height: 64px; }
+            .mobile-menu-btn { display: block; font-size: 24px; color: var(--secondary-text); cursor: pointer; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+
+            /* Mobile Layout Spacing */
+            .page-container { margin-top: calc(var(--navbar-height) + 24px) !important; width: 100%; padding: 0 16px; box-sizing: border-box; }
+            
+            /* Mobile Header & Metrics */
+            .page-header { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 24px; }
+            .header-text h1 { font-size: 28px; margin-bottom: 8px; }
+            .metrics-card { padding: 20px; margin-bottom: 32px; width: 100%; box-sizing: border-box; flex-direction: row; }
+            .metric-value { font-size: 32px; }
+            .header-actions { flex-direction: row; gap: 12px; width: 100%; }
+            .btn-today { flex: 1; text-align: center; }
+            .date-picker { flex: 2; }
+            .btn-add { width: 100%; justify-content: center; padding: 12px; }
+
+            /* Mobile Table to Card Transformation */
+            .table-section { background: transparent; border: none; box-shadow: none; border-radius: 0; }
+            .table-header { padding: 0 0 16px 0; border-bottom: none; flex-direction: row; }
+            .table-header h2 { font-size: 20px; }
+            
+            .data-table, .data-table tbody, .dash-table, .dash-table tbody { display: block; width: 100%; }
+            .data-table thead, .dash-table thead { display: none; }
+            
+            .data-table tr, .dash-table tr { 
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: 
+                    "applicant status"
+                    "facility date"
+                    "actions actions";
+                gap: 16px;
+                background-color: var(--bg-surface); 
+                border: 1px solid var(--border-color); 
+                border-radius: 12px; 
+                margin-bottom: 16px; 
+                padding: 16px;
+                box-shadow: var(--card-shadow);
+            }
+            
+            .data-table td, .dash-table td { 
+                display: block;
+                padding: 0; 
+                border: none;
+                text-align: left;
+            }
+            
+            .data-table td:nth-child(1), .dash-table td:nth-child(1) { grid-area: applicant; }
+            .data-table td:nth-child(2), .dash-table td:nth-child(2) { grid-area: facility; }
+            .data-table td:nth-child(3), .dash-table td:nth-child(3) { grid-area: date; text-align: right; }
+            .data-table td:nth-child(4), .dash-table td:nth-child(4) { grid-area: status; align-self: start; justify-self: end; }
+            .data-table td:nth-child(5), .dash-table td:nth-child(5) { grid-area: actions; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 4px; }
+            
+            /* Labels */
+            .data-table td::before, .dash-table td::before { 
+                display: block;
+                font-size: 10px; 
+                font-weight: 700; 
+                color: var(--secondary-text); 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+                margin-bottom: 4px;
+                content: attr(data-label);
+            }
+            .data-table td:nth-child(1)::before, .dash-table td:nth-child(1)::before { display: none; }
+            .data-table td:nth-child(4)::before, .dash-table td:nth-child(4)::before { display: none; }
+            .data-table td:nth-child(5)::before, .dash-table td:nth-child(5)::before { display: none; }
+
+            .applicant-cell { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+            .applicant-cell .avatar { width: 36px; height: 36px; margin: 0; }
+            .applicant-info { display: flex; flex-direction: column; align-items: flex-start; }
+            .applicant-name { font-size: 14px; margin-bottom: 2px; }
+            .status-badge { font-size: 11px; padding: 4px 8px; width: fit-content; }
+            
+            .actions-cell { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; justify-content: flex-start; }
+            .action-btn { background-color: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 16px; }
+            .action-download { color: var(--secondary-text); }
+            .action-download::after { content: 'Unduh'; font-size: 11px; font-weight: 600; color: var(--secondary-text); }
+            .action-verify { color: #10b981; }
+            .action-verify::after { content: 'Verifikasi'; font-size: 11px; font-weight: 600; color: #10b981; }
+            .action-reject { color: #ef4444; }
+            .action-reject::after { content: 'Tolak'; font-size: 11px; font-weight: 600; color: #ef4444; }
+
+            .table-footer { flex-direction: column; gap: 16px; padding: 24px 0; background: transparent; border: none; align-items: center; text-align: center; }
+
+            /* Grid Layout adjustments */
+            .calendar-container, .agenda-container { width: 100%; padding: 16px; box-sizing: border-box; }
+            .calendar-grid-wrapper { width: 100%; overflow-x: visible; padding: 0; margin: 0; }
+            .calendar-grid { min-width: 0; gap: 6px; }
+            .calendar-day { padding: 4px; border-radius: 6px; align-items: center; justify-content: center; min-height: 40px; }
+            .calendar-day-header { font-size: 10px; padding-bottom: 6px; }
+            .day-number { font-size: 13px; margin-bottom: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+            .day-indicators { justify-content: center; gap: 2px; margin-top: 4px; width: 100%; }
+            .indicator { width: 5px; height: 5px; }
+            
+            .agenda-item { flex-direction: column; gap: 8px; align-items: stretch; }
+            .agenda-time { display: flex; gap: 8px; align-items: center; width: 100%; }
+            .agenda-time span { display: inline; margin-top: 0; }
+            .agenda-meta { display: grid; grid-template-columns: 1fr; gap: 8px; justify-items: start; }
+            .agenda-meta .action-link { text-align: center; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+            .action-link { width: 100%; display: block; text-align: center; background-color: #f9fafb; padding: 12px 0; border-radius: 8px; border: 1px solid var(--border-color); }
+
+            .actions-bar, .filter-container { flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; }
+            .filter-group { flex-direction: row; gap: 12px; width: 100%; }
+            .filter-select { flex: 1; padding: 10px; }
+            .filter-input { width: 100%; }
+
+            .facilities-grid { grid-template-columns: 1fr; gap: 20px; }
+            
+            .gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+            .item-main { grid-column: 1 / 2; grid-row: 1 / 2; }
+            .item-top-right-1, .item-top-right-2 { grid-column: 1 / 2; grid-row: auto; }
+            
+            .kpi-grid { grid-template-columns: 1fr; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+
+            .reservation-layout { flex-direction: column; }
+            .calendar-card, .time-sidebar { width: 100%; padding: 24px; box-sizing: border-box; }
+            .stepper { width: 100%; justify-content: space-between; }
+
+            .page-header h1 { font-size: 24px; }
+            .page-header p { margin-bottom: 24px; }
+            .tabs-container { gap: 28px; margin-bottom: 28px; overflow-x: auto; }
+            .tab { white-space: nowrap; padding-bottom: 14px; }
+            .reservations-list { gap: 24px; }
+            .card { border-radius: 14px; overflow: hidden; height: auto; }
+            .card-image { width: 100%; height: 172px; }
+            .card-content { padding: 28px; gap: 0; }
+            .card-header { align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+            .card-title { font-size: 16px; line-height: 1.35; min-width: 0; }
+            .badge { flex: 0 0 auto; padding: 6px 12px; max-width: 132px; white-space: normal; text-align: center; line-height: 1.25; }
+            .location { max-width: none; margin-bottom: 24px; }
+            .info-grid { gap: 20px; margin-bottom: 8px; }
+            .info-value { line-height: 1.45; }
+            .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+            .btn { min-height: 48px; padding: 12px 14px; display: flex; align-items: center; justify-content: center; line-height: 1.25; }
+            .btn-outline, .btn-warning { min-width: 0; width: auto; }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+
+            /* Mobile Footer */
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
+        }
+
+        /* Student 00 shared header/footer chrome */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height, 80px); background-color: var(--bg-surface, #ffffff); border-bottom: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; z-index: 1000; transition: all 0.3s ease; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; height: 100%; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .mobile-menu-btn { display: none; padding: 0; border: 0; background: transparent; font-size: 24px; color: var(--secondary-text, #6b7280); cursor: pointer; }
+        .logo-nav { font-family: Playfair Display, var(--logo-serif, serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; display: block; }
+        .logo-nav-mobile-text { display: inline; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; transition: border-color 0.2s; }
+        .nav-search input:focus { border-color: var(--brand-green, #10b981); background-color: #ffffff; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text, #6b7280); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text, #6b7280); transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-text, #111827); }
+        .nav-link.active { color: var(--brand-green, #10b981); border-bottom: 2px solid var(--brand-green, #10b981); padding-bottom: 4px; }
+        .nav-notifications { font-size: 20px; color: var(--secondary-text, #6b7280); cursor: pointer; transition: color 0.2s; }
+        .nav-notifications:hover { color: var(--primary-text, #111827); }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #e5e7eb; overflow: hidden; border: 2px solid var(--brand-green, #10b981); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .footer { background-color: var(--bg-surface, #ffffff); border-top: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px; }
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: Playfair Display, var(--logo-serif, serif); font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text, #6b7280); margin: 12px 0 0; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text, #6b7280); }
+        @media (max-width: 768px) {
+            :root { --navbar-height: 64px; }
+            .navbar { height: var(--navbar-height); }
+            .navbar-content { max-width: 100%; padding: 0 12px; }
+            .mobile-menu-btn { display: block; flex: 0 0 28px; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+            .footer { padding: 56px 0; }
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
+            .logo-footer { font-size: 48px; }
+        }
+
     </style>
 </head>
 <body>
 
-    <header class="navbar">
+                <header class="navbar">
         <div class="navbar-content">
             <div class="nav-left">
-                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
+                <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
                 <div class="nav-search">
                     <span class="search-icon">&#128269;</span>
-                    <input type="text" placeholder="Search facilities...">
+                    <input type="search" placeholder="Cari fasilitas..." aria-label="Cari fasilitas">
                 </div>
             </div>
             <div class="nav-center">
@@ -125,8 +350,8 @@
                 <a href="#" class="nav-link active">Reservasi</a>
             </div>
             <div class="nav-right">
-                <span style="font-size: 20px; color: #6b7280;">&#128276;</span>
-                <div class="profile-pic"></div>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
+                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #e5e7eb; border: none; display: flex; align-items: center; justify-content: center; color: transparent;"></a>
             </div>
         </div>
     </header>
@@ -134,15 +359,15 @@
     <main class="page-container">
         
         <div class="page-header">
-            <h1>My Reservations</h1>
-            <p>Manage your upcoming and past facility bookings across campus.</p>
+            <h1>Reservasi Saya</h1>
+            <p>Pantau status reservasi aktif, buka detail, dan kelola pengajuan fasilitas kampus Anda.</p>
         </div>
 
-        <div class="tabs-container">
-            <div class="tab active" id="tab-ongoing" onclick="switchView('ongoing')">
-                Sedang berlangsung <span class="tab-badge">3</span>
+        <div class="tabs-container" role="tablist" aria-label="Daftar reservasi">
+            <div class="tab active" id="tab-ongoing" role="tab" aria-selected="true" onclick="switchView('ongoing')">
+                Sedang Berlangsung <span class="tab-badge">3</span>
             </div>
-            <div class="tab" id="tab-history" onclick="switchView('history')">
+            <div class="tab" id="tab-history" role="tab" aria-selected="false" onclick="switchView('history')">
                 Riwayat
             </div>
         </div>
@@ -151,90 +376,90 @@
             
             <div class="card">
                 <div class="card-image">
-                    <img src="https://via.placeholder.com/400x300/4a5568/ffffff?text=Meeting+Room" alt="Study Suite">
+                    <img src="https://via.placeholder.com/400x300/4a2511/ffffff?text=Grand+Auditorium" alt="Grand Auditorium">
                 </div>
                 <div class="card-content">
                     <div class="card-header">
-                        <h3 class="card-title">North Hall Study Suite 4</h3>
-                        <span class="badge badge-upcoming">Upcoming</span>
+                        <h3 class="card-title">Grand Auditorium</h3>
+                        <span class="badge badge-approved">Disetujui</span>
                     </div>
                     <div class="location">
                         <span class="icon">&#128205;</span>
-                        <span>University Library, 3rd Floor</span>
+                        <span>Gedung Graha Widya Wisuda, Lantai 1</span>
                     </div>
                     <div class="info-grid">
                         <div class="info-block">
-                            <span class="info-label">DATE</span>
-                            <span class="info-value">Oct 26, 2024</span>
+                            <span class="info-label">Tanggal</span>
+                            <span class="info-value">24 Oktober 2024</span>
                         </div>
                         <div class="info-block">
-                            <span class="info-label">TIME</span>
-                            <span class="info-value">02:00 PM - 04:00 PM</span>
+                            <span class="info-label">Waktu</span>
+                            <span class="info-value">09:00 - 13:00</span>
                         </div>
                     </div>
                     <div class="card-actions">
                         <button class="btn btn-primary">Detail Reservasi</button>
-                        <button class="btn btn-outline">Cancel</button>
+                        <button class="btn btn-outline btn-warning">Ajukan Pembatalan</button>
                     </div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-image">
-                    <img src="https://via.placeholder.com/400x300/4a5568/ffffff?text=Meeting+Room" alt="Study Suite">
+                    <img src="https://via.placeholder.com/400x300/4a2511/ffffff?text=Ruang+Seminar" alt="Ruang Seminar Cendekia">
                 </div>
                 <div class="card-content">
                     <div class="card-header">
-                        <h3 class="card-title">North Hall Study Suite 4</h3>
-                        <span class="badge badge-upcoming">Upcoming</span>
+                        <h3 class="card-title">Ruang Seminar Cendekia</h3>
+                        <span class="badge badge-pending">Menunggu Pembayaran</span>
                     </div>
                     <div class="location">
                         <span class="icon">&#128205;</span>
-                        <span>University Library, 3rd Floor</span>
+                        <span>Fakultas Ekonomi dan Manajemen, Lantai 2</span>
                     </div>
                     <div class="info-grid">
                         <div class="info-block">
-                            <span class="info-label">DATE</span>
-                            <span class="info-value">Oct 26, 2024</span>
+                            <span class="info-label">Tanggal</span>
+                            <span class="info-value">29 Oktober 2024</span>
                         </div>
                         <div class="info-block">
-                            <span class="info-label">TIME</span>
-                            <span class="info-value">02:00 PM - 04:00 PM</span>
+                            <span class="info-label">Waktu</span>
+                            <span class="info-value">13:00 - 15:00</span>
                         </div>
                     </div>
                     <div class="card-actions">
                         <button class="btn btn-primary">Detail Reservasi</button>
-                        <button class="btn btn-outline">Cancel</button>
+                        <button class="btn btn-outline">Batalkan</button>
                     </div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-image">
-                    <img src="https://via.placeholder.com/400x300/4a5568/ffffff?text=Meeting+Room" alt="Study Suite">
+                    <img src="https://via.placeholder.com/400x300/4a2511/ffffff?text=Meeting+Room" alt="Ruang Rapat Fahutan">
                 </div>
                 <div class="card-content">
                     <div class="card-header">
-                        <h3 class="card-title">North Hall Study Suite 4</h3>
-                        <span class="badge badge-pending">Pending</span>
+                        <h3 class="card-title">Ruang Rapat Fahutan</h3>
+                        <span class="badge badge-review">Menunggu Verifikasi Dokumen</span>
                     </div>
                     <div class="location">
                         <span class="icon">&#128205;</span>
-                        <span>University Library, 3rd Floor</span>
+                        <span>Fakultas Kehutanan dan Lingkungan, Lantai 1</span>
                     </div>
                     <div class="info-grid">
                         <div class="info-block">
-                            <span class="info-label">DATE</span>
-                            <span class="info-value">Oct 26, 2024</span>
+                            <span class="info-label">Tanggal</span>
+                            <span class="info-value">31 Oktober 2024</span>
                         </div>
                         <div class="info-block">
-                            <span class="info-label">TIME</span>
-                            <span class="info-value">02:00 PM - 04:00 PM</span>
+                            <span class="info-label">Waktu</span>
+                            <span class="info-value">10:00 - 12:00</span>
                         </div>
                     </div>
                     <div class="card-actions">
                         <button class="btn btn-primary">Detail Reservasi</button>
-                        <button class="btn btn-outline">Cancel</button>
+                        <button class="btn btn-outline">Batalkan</button>
                     </div>
                 </div>
             </div>
@@ -244,25 +469,25 @@
             
             <div class="card">
                 <div class="card-image">
-                    <img src="https://via.placeholder.com/400x300/4a5568/ffffff?text=Meeting+Room" alt="Study Suite">
+                    <img src="https://via.placeholder.com/400x300/4a2511/ffffff?text=Grand+Auditorium" alt="Grand Auditorium">
                 </div>
                 <div class="card-content">
                     <div class="card-header">
-                        <h3 class="card-title">North Hall Study Suite 4</h3>
-                        <span class="badge badge-reserved">Reserved</span>
+                        <h3 class="card-title">Grand Auditorium</h3>
+                        <span class="badge badge-completed">Selesai</span>
                     </div>
                     <div class="location">
                         <span class="icon">&#128205;</span>
-                        <span>University Library, 3rd Floor</span>
+                        <span>Gedung Graha Widya Wisuda, Lantai 1</span>
                     </div>
                     <div class="info-grid">
                         <div class="info-block">
-                            <span class="info-label">DATE</span>
-                            <span class="info-value">Oct 26, 2024</span>
+                            <span class="info-label">Tanggal</span>
+                            <span class="info-value">17 Oktober 2024</span>
                         </div>
                         <div class="info-block">
-                            <span class="info-label">TIME</span>
-                            <span class="info-value">02:00 PM - 04:00 PM</span>
+                            <span class="info-label">Waktu</span>
+                            <span class="info-value">09:00 - 13:00</span>
                         </div>
                     </div>
                     <div class="card-actions">
@@ -273,25 +498,25 @@
 
             <div class="card">
                 <div class="card-image">
-                    <img src="https://via.placeholder.com/400x300/4a5568/ffffff?text=Meeting+Room" alt="Study Suite">
+                    <img src="https://via.placeholder.com/400x300/4a2511/ffffff?text=Ruang+Diskusi" alt="Ruang Diskusi Perpustakaan">
                 </div>
                 <div class="card-content">
                     <div class="card-header">
-                        <h3 class="card-title">North Hall Study Suite 4</h3>
-                        <span class="badge badge-rejected">Rejected</span>
+                        <h3 class="card-title">Ruang Diskusi Perpustakaan</h3>
+                        <span class="badge badge-rejected">Ditolak</span>
                     </div>
                     <div class="location">
                         <span class="icon">&#128205;</span>
-                        <span>University Library, 3rd Floor</span>
+                        <span>Perpustakaan IPB, Lantai 3</span>
                     </div>
                     <div class="info-grid">
                         <div class="info-block">
-                            <span class="info-label">DATE</span>
-                            <span class="info-value">Oct 26, 2024</span>
+                            <span class="info-label">Tanggal</span>
+                            <span class="info-value">11 Oktober 2024</span>
                         </div>
                         <div class="info-block">
-                            <span class="info-label">TIME</span>
-                            <span class="info-value">02:00 PM - 04:00 PM</span>
+                            <span class="info-label">Waktu</span>
+                            <span class="info-value">14:00 - 16:00</span>
                         </div>
                     </div>
                     <div class="card-actions">
@@ -302,25 +527,25 @@
 
             <div class="card">
                 <div class="card-image">
-                    <img src="https://via.placeholder.com/400x300/4a5568/ffffff?text=Meeting+Room" alt="Study Suite">
+                    <img src="https://via.placeholder.com/400x300/4a2511/ffffff?text=Laboratorium" alt="Laboratorium Komputer A">
                 </div>
                 <div class="card-content">
                     <div class="card-header">
-                        <h3 class="card-title">North Hall Study Suite 4</h3>
-                        <span class="badge badge-canceled">Canceled</span>
+                        <h3 class="card-title">Laboratorium Komputer A</h3>
+                        <span class="badge badge-canceled">Dibatalkan</span>
                     </div>
                     <div class="location">
                         <span class="icon">&#128205;</span>
-                        <span>University Library, 3rd Floor</span>
+                        <span>Sekolah Bisnis IPB, Lantai 1</span>
                     </div>
                     <div class="info-grid">
                         <div class="info-block">
-                            <span class="info-label">DATE</span>
-                            <span class="info-value">Oct 26, 2024</span>
+                            <span class="info-label">Tanggal</span>
+                            <span class="info-value">4 Oktober 2024</span>
                         </div>
                         <div class="info-block">
-                            <span class="info-label">TIME</span>
-                            <span class="info-value">02:00 PM - 04:00 PM</span>
+                            <span class="info-label">Waktu</span>
+                            <span class="info-value">08:00 - 10:00</span>
                         </div>
                     </div>
                     <div class="card-actions">
@@ -333,11 +558,11 @@
 
     </main>
 
-    <footer class="footer">
+                <footer class="footer">
         <div class="footer-content">
             <div class="footer-left">
                 <h2 class="logo-footer">IPB SRH</h2>
-                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.</p>
             </div>
             <div class="footer-right">
                 <a href="#">Beranda</a>
@@ -352,6 +577,8 @@
             // Remove active class from both tabs
             document.getElementById('tab-ongoing').classList.remove('active');
             document.getElementById('tab-history').classList.remove('active');
+            document.getElementById('tab-ongoing').setAttribute('aria-selected', 'false');
+            document.getElementById('tab-history').setAttribute('aria-selected', 'false');
             
             // Hide both views
             document.getElementById('view-ongoing').style.display = 'none';
@@ -360,9 +587,11 @@
             // Add active class and show the selected view
             if(viewName === 'ongoing') {
                 document.getElementById('tab-ongoing').classList.add('active');
+                document.getElementById('tab-ongoing').setAttribute('aria-selected', 'true');
                 document.getElementById('view-ongoing').style.display = 'flex';
             } else if (viewName === 'history') {
                 document.getElementById('tab-history').classList.add('active');
+                document.getElementById('tab-history').setAttribute('aria-selected', 'true');
                 document.getElementById('view-history').style.display = 'flex';
             }
         }

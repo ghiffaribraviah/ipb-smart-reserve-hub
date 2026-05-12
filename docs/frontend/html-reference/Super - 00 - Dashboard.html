@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPB Smart Reserve Hub - Super Admin Dashboard</title>
+    <title>Dashboard Super Admin - IPB Smart Reserve Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         /* Global Variables & Reset */
@@ -39,6 +39,7 @@
         .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
         .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
         .logo-nav { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        .mobile-menu-btn { display: none; padding: 0; border: 0; background: transparent; font-size: 24px; color: var(--secondary-text); cursor: pointer; }
         .nav-center { display: flex; gap: 32px; }
         .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
         .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
@@ -94,6 +95,8 @@
         .badge-active { background-color: #d1fae5; color: #065f46; }
         .badge-inactive { background-color: #fee2e2; color: #991b1b; }
 
+        .mobile-card-meta { display: none; }
+
         /* Activity List */
         .activity-list { padding: 0; margin: 0; list-style: none; }
         .activity-item { display: flex; gap: 16px; padding: 16px 24px; border-bottom: 1px solid var(--border-color); }
@@ -112,33 +115,207 @@
         .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text); }
 
         /* Responsive */
+        
+        
+        
+        /* =========================================
+           RESPONSIVE MOBILE STYLES
+           ========================================= */
         @media (max-width: 992px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+            .top-row { grid-template-columns: 1fr; }
+            .content-layout, .details-layout, .profile-layout, .wizard-layout, .dashboard-layout { flex-direction: column; align-items: stretch; gap: 24px; }
+            .main-details, .sidebar, .time-sidebar, .summary-sidebar, .profile-sidebar, .profile-main, .docs-section, .form-card { width: 100%; box-sizing: border-box; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 200px; }
+            .item-main { grid-column: 1 / 3; grid-row: 1 / 2; }
+            .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
+            .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+            .item-bottom-right { display: none; }
+            .info-cards-row { grid-template-columns: 1fr; }
             .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-            .dashboard-layout { grid-template-columns: 1fr; }
+            .summary-cards { flex-direction: column; gap: 16px; }
+            .doc-item { flex-direction: column; align-items: flex-start; gap: 16px; }
         }
+
         @media (max-width: 768px) {
+            /* Mobile Navbar */
+            :root { --navbar-height: 64px; }
+            .mobile-menu-btn { display: block; font-size: 24px; color: var(--secondary-text); cursor: pointer; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+
+            /* Mobile Layout Spacing */
+            .page-container { margin-top: calc(var(--navbar-height) + 24px) !important; width: 100%; padding: 0 16px; box-sizing: border-box; }
+            
+            /* Mobile Header & Metrics */
+            .page-header { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 24px; }
+            .header-text h1 { font-size: 28px; margin-bottom: 8px; }
+            .metrics-card { padding: 20px; margin-bottom: 32px; width: 100%; box-sizing: border-box; flex-direction: row; }
+            .metric-value { font-size: 32px; }
+            .header-actions { flex-direction: row; gap: 12px; width: 100%; }
+            .btn-today { flex: 1; text-align: center; }
+            .date-picker { flex: 2; }
+            .btn-add { width: 100%; justify-content: center; padding: 12px; }
+
+            /* Mobile Table to Card Transformation */
+            .table-section { background: transparent; border: none; box-shadow: none; border-radius: 0; }
+            .table-header { padding: 0 0 16px 0; border-bottom: none; flex-direction: row; }
+            .table-header h2 { font-size: 20px; }
+            
+            .data-table, .data-table tbody, .dash-table, .dash-table tbody { display: block; width: 100%; }
+            .data-table thead, .dash-table thead { display: none; }
+            
+            .data-table tr, .dash-table tr { 
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: 
+                    "applicant status"
+                    "facility date"
+                    "actions actions";
+                gap: 16px;
+                background-color: var(--bg-surface); 
+                border: 1px solid var(--border-color); 
+                border-radius: 12px; 
+                margin-bottom: 16px; 
+                padding: 16px;
+                box-shadow: var(--card-shadow);
+            }
+            
+            .data-table td, .dash-table td { 
+                display: block;
+                padding: 0; 
+                border: none;
+                text-align: left;
+            }
+            
+            .data-table td:nth-child(1), .dash-table td:nth-child(1) { grid-area: applicant; }
+            .data-table td:nth-child(2), .dash-table td:nth-child(2) { grid-area: facility; }
+            .data-table td:nth-child(3), .dash-table td:nth-child(3) { grid-area: date; text-align: right; }
+            .data-table td:nth-child(4), .dash-table td:nth-child(4) { grid-area: status; align-self: start; justify-self: end; }
+            .data-table td:nth-child(5), .dash-table td:nth-child(5) { grid-area: actions; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 4px; }
+            
+            /* Labels */
+            .data-table td::before, .dash-table td::before { 
+                display: block;
+                font-size: 10px; 
+                font-weight: 700; 
+                color: var(--secondary-text); 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+                margin-bottom: 4px;
+                content: attr(data-label);
+            }
+            .data-table td:nth-child(1)::before, .dash-table td:nth-child(1)::before { display: none; }
+            .data-table td:nth-child(4)::before, .dash-table td:nth-child(4)::before { display: none; }
+            .data-table td:nth-child(5)::before, .dash-table td:nth-child(5)::before { display: none; }
+
+            .applicant-cell { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+            .applicant-cell .avatar { width: 36px; height: 36px; margin: 0; }
+            .applicant-info { display: flex; flex-direction: column; align-items: flex-start; }
+            .applicant-name { font-size: 14px; margin-bottom: 2px; }
+            .status-badge { font-size: 11px; padding: 4px 8px; width: fit-content; }
+            
+            .actions-cell { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; justify-content: flex-start; }
+            .action-btn { background-color: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 16px; }
+            .action-download { color: var(--secondary-text); }
+            .action-download::after { content: 'Unduh'; font-size: 11px; font-weight: 600; color: var(--secondary-text); }
+            .action-verify { color: #10b981; }
+            .action-verify::after { content: 'Verifikasi'; font-size: 11px; font-weight: 600; color: #10b981; }
+            .action-reject { color: #ef4444; }
+            .action-reject::after { content: 'Tolak'; font-size: 11px; font-weight: 600; color: #ef4444; }
+
+            .table-footer { flex-direction: column; gap: 16px; padding: 24px 0; background: transparent; border: none; align-items: center; text-align: center; }
+
+            /* Grid Layout adjustments */
+            .calendar-container, .agenda-container { width: 100%; padding: 16px; box-sizing: border-box; }
+            .calendar-grid-wrapper { width: 100%; overflow-x: visible; padding: 0; margin: 0; }
+            .calendar-grid { min-width: 0; gap: 6px; }
+            .calendar-day { padding: 4px; border-radius: 6px; align-items: center; justify-content: center; min-height: 40px; }
+            .calendar-day-header { font-size: 10px; padding-bottom: 6px; }
+            .day-number { font-size: 13px; margin-bottom: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+            .day-indicators { justify-content: center; gap: 2px; margin-top: 4px; width: 100%; }
+            .indicator { width: 5px; height: 5px; }
+            
+            .agenda-item { flex-direction: column; gap: 8px; align-items: stretch; }
+            .agenda-time { display: flex; gap: 8px; align-items: center; width: 100%; }
+            .agenda-time span { display: inline; margin-top: 0; }
+            .agenda-meta { display: grid; grid-template-columns: 1fr; gap: 8px; justify-items: start; }
+            .agenda-meta .action-link { text-align: center; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+            .action-link { width: 100%; display: block; text-align: center; background-color: #f9fafb; padding: 12px 0; border-radius: 8px; border: 1px solid var(--border-color); }
+
+            .actions-bar, .filter-container { flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; }
+            .filter-group { flex-direction: row; gap: 12px; width: 100%; }
+            .filter-select { flex: 1; padding: 10px; }
+            .filter-input { width: 100%; }
+
+            .facilities-grid { grid-template-columns: 1fr; gap: 20px; }
+            
+            .gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+            .item-main { grid-column: 1 / 2; grid-row: 1 / 2; }
+            .item-top-right-1, .item-top-right-2 { grid-column: 1 / 2; grid-row: auto; }
+            
             .kpi-grid { grid-template-columns: 1fr; }
-            .header-actions { flex-direction: column; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+
+            .reservation-layout { flex-direction: column; }
+            .calendar-card, .time-sidebar { width: 100%; padding: 24px; box-sizing: border-box; }
+            .stepper { width: 100%; justify-content: space-between; }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+
+            .header-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+            .btn-primary, .btn-secondary { min-height: 44px; justify-content: center; padding: 10px 12px; line-height: 1.25; }
+            .kpi-card { min-height: 112px; }
+            .section-header { padding: 20px; }
+            .dash-table tr {
+                grid-template-columns: 1fr auto;
+                grid-template-areas:
+                    "admin status"
+                    "dept meta";
+                gap: 14px;
+            }
+            .dash-table td:nth-child(1) { grid-area: admin; }
+            .dash-table td:nth-child(2) { grid-area: dept; }
+            .dash-table td:nth-child(3) { grid-area: status; justify-self: end; align-self: center; }
+            .dash-table td:nth-child(4) { grid-area: meta; justify-self: end; align-self: center; }
+            .dash-table td:nth-child(3)::before, .dash-table td:nth-child(4)::before { display: none; }
+            .activity-item { padding: 18px 20px; }
+            .activity-text { line-height: 1.45; }
+
+            /* Mobile Footer */
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
         }
+
     </style>
 </head>
 <body>
 
-    <header class="navbar">
+                <header class="navbar">
         <div class="navbar-content">
             <div class="nav-left">
-                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
+                <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
             </div>
             <div class="nav-center">
+
                 <a href="#" class="nav-link active">Dashboard</a>
-                <a href="#" class="nav-link">Users</a>
-                <a href="#" class="nav-link">Facilities</a>
-                <a href="#" class="nav-link">Reports</a>
-                <a href="#" class="nav-link">System</a>
+                <a href="#" class="nav-link">Pengguna</a>
+                <a href="#" class="nav-link">Fasilitas</a>
+                <a href="#" class="nav-link">Laporan</a>
+                <a href="#" class="nav-link">Sistem</a>
             </div>
             <div class="nav-right">
-                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
-                <div class="profile-pic">SA</div>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
+                <div class="profile-pic" aria-label="Profil super admin" style="background-color: #6366f1; border: none; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">SA</div>
             </div>
         </div>
     </header>
@@ -147,12 +324,12 @@
         
         <div class="page-header">
             <div class="header-text">
-                <h1>Super Admin Dashboard</h1>
-                <p>System overview, user management, and platform analytics.</p>
+                <h1>Dashboard Super Admin</h1>
+                <p>Pantau kesehatan sistem, pengguna, fasilitas, dan aktivitas administratif lintas platform.</p>
             </div>
             <div class="header-actions">
-                <button class="btn-secondary">&#128196; Export Report</button>
-                <button class="btn-primary"><span>&#43;</span> Add New Admin</button>
+                <button class="btn-secondary">&#128196; Ekspor Laporan</button>
+                <button class="btn-primary"><span>&#43;</span> Tambah Admin</button>
             </div>
         </div>
 
@@ -160,33 +337,33 @@
             <div class="kpi-card">
                 <div class="kpi-icon icon-purple">&#128101;</div>
                 <div class="kpi-content">
-                    <p>Total Users</p>
+                    <p>Total Pengguna</p>
                     <h3>12,450</h3>
-                    <span class="kpi-trend trend-up">&#8593; 2.4% this month</span>
+                    <span class="kpi-trend trend-up">&#8593; 2,4% bulan ini</span>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icon icon-blue">&#127976;</div>
                 <div class="kpi-content">
-                    <p>Active Facilities</p>
+                    <p>Fasilitas Aktif</p>
                     <h3>142</h3>
-                    <span class="kpi-trend trend-up">&#8593; 5 new added</span>
+                    <span class="kpi-trend trend-up">&#8593; 5 fasilitas baru</span>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icon icon-green">&#128197;</div>
                 <div class="kpi-content">
-                    <p>Total Reservations</p>
+                    <p>Total Reservasi</p>
                     <h3>3,892</h3>
-                    <span class="kpi-trend trend-up">&#8593; 12% this month</span>
+                    <span class="kpi-trend trend-up">&#8593; 12% bulan ini</span>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icon icon-orange">&#9881;</div>
                 <div class="kpi-content">
-                    <p>System Health</p>
-                    <h3>99.9%</h3>
-                    <span class="kpi-trend" style="color: var(--secondary-text);">All services running</span>
+                    <p>Kesehatan Sistem</p>
+                    <h3>99,9%</h3>
+                    <span class="kpi-trend" style="color: var(--secondary-text);">Semua layanan aktif</span>
                 </div>
             </div>
         </div>
@@ -195,16 +372,16 @@
             
             <div class="section-block">
                 <div class="section-header">
-                    <h2 class="section-title">Department Administrators</h2>
-                    <a class="section-link">View All</a>
+                    <h2 class="section-title">Administrator Departemen</h2>
+                    <a class="section-link">Lihat Semua</a>
                 </div>
                 <table class="dash-table">
                     <thead>
                         <tr>
-                            <th>ADMINISTRATOR</th>
-                            <th>DEPARTMENT</th>
+                            <th>Administrator</th>
+                            <th>Departemen</th>
                             <th>STATUS</th>
-                            <th>LAST ACTIVE</th>
+                            <th>Terakhir Aktif</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -215,10 +392,10 @@
                             </td>
                             <td>
                                 <p class="cell-main">Biosciences</p>
-                                <p class="cell-sub">4 Facilities Managed</p>
+                                <p class="cell-sub">4 fasilitas dikelola</p>
                             </td>
-                            <td><span class="status-badge badge-active">Active</span></td>
-                            <td><span class="cell-sub">2 mins ago</span></td>
+                            <td><span class="status-badge badge-active">Aktif</span></td>
+                            <td><span class="cell-sub">2 menit lalu</span></td>
                         </tr>
                         <tr>
                             <td>
@@ -226,11 +403,11 @@
                                 <p class="cell-sub">siti.a@admin.ipb.ac.id</p>
                             </td>
                             <td>
-                                <p class="cell-main">Computer Science</p>
-                                <p class="cell-sub">6 Facilities Managed</p>
+                                <p class="cell-main">Ilmu Komputer</p>
+                                <p class="cell-sub">6 fasilitas dikelola</p>
                             </td>
-                            <td><span class="status-badge badge-active">Active</span></td>
-                            <td><span class="cell-sub">1 hour ago</span></td>
+                            <td><span class="status-badge badge-active">Aktif</span></td>
+                            <td><span class="cell-sub">1 jam lalu</span></td>
                         </tr>
                         <tr>
                             <td>
@@ -238,11 +415,11 @@
                                 <p class="cell-sub">rahmat.h@admin.ipb.ac.id</p>
                             </td>
                             <td>
-                                <p class="cell-main">Forestry</p>
-                                <p class="cell-sub">12 Facilities Managed</p>
+                                <p class="cell-main">Kehutanan</p>
+                                <p class="cell-sub">12 fasilitas dikelola</p>
                             </td>
-                            <td><span class="status-badge badge-inactive">Inactive</span></td>
-                            <td><span class="cell-sub">5 days ago</span></td>
+                            <td><span class="status-badge badge-inactive">Nonaktif</span></td>
+                            <td><span class="cell-sub">5 hari lalu</span></td>
                         </tr>
                         <tr>
                             <td>
@@ -250,11 +427,11 @@
                                 <p class="cell-sub">anita.w@admin.ipb.ac.id</p>
                             </td>
                             <td>
-                                <p class="cell-main">Business School</p>
-                                <p class="cell-sub">8 Facilities Managed</p>
+                                <p class="cell-main">Sekolah Bisnis</p>
+                                <p class="cell-sub">8 fasilitas dikelola</p>
                             </td>
-                            <td><span class="status-badge badge-active">Active</span></td>
-                            <td><span class="cell-sub">Yesterday</span></td>
+                            <td><span class="status-badge badge-active">Aktif</span></td>
+                            <td><span class="cell-sub">Kemarin</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -262,43 +439,43 @@
 
             <div class="section-block">
                 <div class="section-header">
-                    <h2 class="section-title">System Activity Log</h2>
-                    <a class="section-link">Full Log</a>
+                    <h2 class="section-title">Log Aktivitas Sistem</h2>
+                    <a class="section-link">Log Lengkap</a>
                 </div>
                 <ul class="activity-list">
                     <li class="activity-item">
                         <div class="activity-icon">&#128100;</div>
                         <div class="activity-content">
-                            <p class="activity-text"><strong>Super Admin</strong> created a new admin account for <strong>Anita Wijaya</strong> (Business School).</p>
-                            <p class="activity-time">Today, 09:42 AM</p>
+                            <p class="activity-text"><strong>Super Admin</strong> membuat akun admin baru untuk <strong>Anita Wijaya</strong> (Sekolah Bisnis).</p>
+                            <p class="activity-time">Hari ini, 09:42</p>
                         </div>
                     </li>
                     <li class="activity-item">
                         <div class="activity-icon">&#127976;</div>
                         <div class="activity-content">
-                            <p class="activity-text"><strong>Budi Santoso</strong> updated facility details for <strong>Grand Auditorium</strong>.</p>
-                            <p class="activity-time">Today, 08:15 AM</p>
+                            <p class="activity-text"><strong>Budi Santoso</strong> memperbarui detail fasilitas <strong>Grand Auditorium</strong>.</p>
+                            <p class="activity-time">Hari ini, 08:15</p>
                         </div>
                     </li>
                     <li class="activity-item">
                         <div class="activity-icon">&#9881;</div>
                         <div class="activity-content">
-                            <p class="activity-text">System completed automated daily database backup successfully.</p>
-                            <p class="activity-time">Today, 02:00 AM</p>
+                            <p class="activity-text">Sistem menyelesaikan pencadangan basis data harian secara otomatis.</p>
+                            <p class="activity-time">Hari ini, 02:00</p>
                         </div>
                     </li>
                     <li class="activity-item">
                         <div class="activity-icon">&#10005;</div>
                         <div class="activity-content">
-                            <p class="activity-text"><strong>Rahmat Hidayat</strong> account temporarily suspended due to inactivity.</p>
-                            <p class="activity-time">Yesterday, 11:30 PM</p>
+                            <p class="activity-text">Akun <strong>Rahmat Hidayat</strong> dinonaktifkan sementara karena tidak aktif.</p>
+                            <p class="activity-time">Kemarin, 23:30</p>
                         </div>
                     </li>
                     <li class="activity-item">
                         <div class="activity-icon">&#128197;</div>
                         <div class="activity-content">
-                            <p class="activity-text"><strong>Siti Aminah</strong> approved 12 pending reservations for Computer Science Dept.</p>
-                            <p class="activity-time">Yesterday, 04:20 PM</p>
+                            <p class="activity-text"><strong>Siti Aminah</strong> menyetujui 12 reservasi tertunda untuk Departemen Ilmu Komputer.</p>
+                            <p class="activity-time">Kemarin, 16:20</p>
                         </div>
                     </li>
                 </ul>
@@ -308,16 +485,18 @@
 
     </main>
 
-    <footer class="footer">
+                <footer class="footer">
         <div class="footer-content">
             <div class="footer-left">
                 <h2 class="logo-footer">IPB SRH</h2>
-                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.</p>
             </div>
             <div class="footer-right">
-                <a href="#">Beranda</a>
+                <a href="#">Dashboard</a>
+                <a href="#">Pengguna</a>
                 <a href="#">Fasilitas</a>
-                <a href="#">Reservasi</a>
+                <a href="#">Laporan</a>
+                <a href="#">Sistem</a>
             </div>
         </div>
     </footer>

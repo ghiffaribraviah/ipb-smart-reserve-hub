@@ -485,37 +485,351 @@
                 width: 100%;
             }
         }
+        
+        
+        
+        /* =========================================
+           RESPONSIVE MOBILE STYLES
+           ========================================= */
+        @media (max-width: 992px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+            .top-row { grid-template-columns: 1fr; }
+            .content-layout, .details-layout, .profile-layout, .wizard-layout, .dashboard-layout { flex-direction: column; align-items: stretch; gap: 24px; }
+            .main-details, .sidebar, .time-sidebar, .summary-sidebar, .profile-sidebar, .profile-main, .docs-section, .form-card { width: 100%; box-sizing: border-box; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 200px; }
+            .item-main { grid-column: 1 / 3; grid-row: 1 / 2; }
+            .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
+            .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+            .item-bottom-right { display: none; }
+            .info-cards-row { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-cards { flex-direction: column; gap: 16px; }
+            .doc-item { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
+
         @media (max-width: 768px) {
-            .stepper { width: 100%; }
-            .calendar-grid { gap: 12px 8px; }
-            .day-number { width: 36px; height: 36px; font-size: 14px; }
-            .calendar-card { padding: 24px; }
-            .footer-content { flex-direction: column; gap: 32px; align-items: center; text-align: center; }
+            /* Mobile Navbar */
+            :root { --navbar-height: 64px; }
+            .mobile-menu-btn { display: block; font-size: 24px; color: var(--secondary-text); cursor: pointer; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+
+            /* Mobile Layout Spacing */
+            .page-container { margin-top: calc(var(--navbar-height) + 24px) !important; width: 100%; padding: 0 16px; box-sizing: border-box; }
+            
+            /* Mobile Header & Metrics */
+            .page-header { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 24px; }
+            .header-text h1 { font-size: 28px; margin-bottom: 8px; }
+            .metrics-card { padding: 20px; margin-bottom: 32px; width: 100%; box-sizing: border-box; flex-direction: row; }
+            .metric-value { font-size: 32px; }
+            .header-actions { flex-direction: row; gap: 12px; width: 100%; }
+            .btn-today { flex: 1; text-align: center; }
+            .date-picker { flex: 2; }
+            .btn-add { width: 100%; justify-content: center; padding: 12px; }
+
+            /* Mobile Table to Card Transformation */
+            .table-section { background: transparent; border: none; box-shadow: none; border-radius: 0; }
+            .table-header { padding: 0 0 16px 0; border-bottom: none; flex-direction: row; }
+            .table-header h2 { font-size: 20px; }
+            
+            .data-table, .data-table tbody, .dash-table, .dash-table tbody { display: block; width: 100%; }
+            .data-table thead, .dash-table thead { display: none; }
+            
+            .data-table tr, .dash-table tr { 
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: 
+                    "applicant status"
+                    "facility date"
+                    "actions actions";
+                gap: 16px;
+                background-color: var(--bg-surface); 
+                border: 1px solid var(--border-color); 
+                border-radius: 12px; 
+                margin-bottom: 16px; 
+                padding: 16px;
+                box-shadow: var(--card-shadow);
+            }
+            
+            .data-table td, .dash-table td { 
+                display: block;
+                padding: 0; 
+                border: none;
+                text-align: left;
+            }
+            
+            .data-table td:nth-child(1), .dash-table td:nth-child(1) { grid-area: applicant; }
+            .data-table td:nth-child(2), .dash-table td:nth-child(2) { grid-area: facility; }
+            .data-table td:nth-child(3), .dash-table td:nth-child(3) { grid-area: date; text-align: right; }
+            .data-table td:nth-child(4), .dash-table td:nth-child(4) { grid-area: status; align-self: start; justify-self: end; }
+            .data-table td:nth-child(5), .dash-table td:nth-child(5) { grid-area: actions; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 4px; }
+            
+            /* Labels */
+            .data-table td::before, .dash-table td::before { 
+                display: block;
+                font-size: 10px; 
+                font-weight: 700; 
+                color: var(--secondary-text); 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+                margin-bottom: 4px;
+                content: attr(data-label);
+            }
+            .data-table td:nth-child(1)::before, .dash-table td:nth-child(1)::before { display: none; }
+            .data-table td:nth-child(4)::before, .dash-table td:nth-child(4)::before { display: none; }
+            .data-table td:nth-child(5)::before, .dash-table td:nth-child(5)::before { display: none; }
+
+            .applicant-cell { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+            .applicant-cell .avatar { width: 36px; height: 36px; margin: 0; }
+            .applicant-info { display: flex; flex-direction: column; align-items: flex-start; }
+            .applicant-name { font-size: 14px; margin-bottom: 2px; }
+            .status-badge { font-size: 11px; padding: 4px 8px; width: fit-content; }
+            
+            .actions-cell { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; justify-content: flex-start; }
+            .action-btn { background-color: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 16px; }
+            .action-download { color: var(--secondary-text); }
+            .action-download::after { content: 'Unduh'; font-size: 11px; font-weight: 600; color: var(--secondary-text); }
+            .action-verify { color: #10b981; }
+            .action-verify::after { content: 'Verifikasi'; font-size: 11px; font-weight: 600; color: #10b981; }
+            .action-reject { color: #ef4444; }
+            .action-reject::after { content: 'Tolak'; font-size: 11px; font-weight: 600; color: #ef4444; }
+
+            .table-footer { flex-direction: column; gap: 16px; padding: 24px 0; background: transparent; border: none; align-items: center; text-align: center; }
+
+            /* Grid Layout adjustments */
+            .calendar-container, .agenda-container { width: 100%; padding: 16px; box-sizing: border-box; }
+            .calendar-grid-wrapper { width: 100%; overflow-x: visible; padding: 0; margin: 0; }
+            .calendar-grid { min-width: 0; gap: 6px; }
+            .calendar-day { padding: 4px; border-radius: 6px; align-items: center; justify-content: center; min-height: 40px; }
+            .calendar-day-header { font-size: 10px; padding-bottom: 6px; }
+            .day-number { font-size: 13px; margin-bottom: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+            .day-indicators { justify-content: center; gap: 2px; margin-top: 4px; width: 100%; }
+            .indicator { width: 5px; height: 5px; }
+            
+            .agenda-item { flex-direction: column; gap: 8px; align-items: stretch; }
+            .agenda-time { display: flex; gap: 8px; align-items: center; width: 100%; }
+            .agenda-time span { display: inline; margin-top: 0; }
+            .agenda-meta { display: grid; grid-template-columns: 1fr; gap: 8px; justify-items: start; }
+            .agenda-meta .action-link { text-align: center; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+            .action-link { width: 100%; display: block; text-align: center; background-color: #f9fafb; padding: 12px 0; border-radius: 8px; border: 1px solid var(--border-color); }
+
+            .actions-bar, .filter-container { flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; }
+            .filter-group { flex-direction: row; gap: 12px; width: 100%; }
+            .filter-select { flex: 1; padding: 10px; }
+            .filter-input { width: 100%; }
+
+            .facilities-grid { grid-template-columns: 1fr; gap: 20px; }
+            
+            .gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+            .item-main { grid-column: 1 / 2; grid-row: 1 / 2; }
+            .item-top-right-1, .item-top-right-2 { grid-column: 1 / 2; grid-row: auto; }
+            
+            .kpi-grid { grid-template-columns: 1fr; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+
+            .reservation-layout { flex-direction: column; }
+            .calendar-card, .time-sidebar { width: 100%; padding: 24px; box-sizing: border-box; }
+            .stepper { width: 100%; justify-content: space-between; }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+
+            /* Mobile Footer */
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
             .footer-right { align-items: center; }
         }
+
+        /* Student 00 shared header/footer chrome */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height, 80px); background-color: var(--bg-surface, #ffffff); border-bottom: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; z-index: 1000; transition: all 0.3s ease; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; height: 100%; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .mobile-menu-btn { display: none; padding: 0; border: 0; background: transparent; font-size: 24px; color: var(--secondary-text, #6b7280); cursor: pointer; }
+        .logo-nav { font-family: Playfair Display, var(--logo-serif, serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; display: block; }
+        .logo-nav-mobile-text { display: inline; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; transition: border-color 0.2s; }
+        .nav-search input:focus { border-color: var(--brand-green, #10b981); background-color: #ffffff; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text, #6b7280); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text, #6b7280); transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-text, #111827); }
+        .nav-link.active { color: var(--brand-green, #10b981); border-bottom: 2px solid var(--brand-green, #10b981); padding-bottom: 4px; }
+        .nav-notifications { font-size: 20px; color: var(--secondary-text, #6b7280); cursor: pointer; transition: color 0.2s; }
+        .nav-notifications:hover { color: var(--primary-text, #111827); }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #e5e7eb; overflow: hidden; border: 2px solid var(--brand-green, #10b981); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .footer { background-color: var(--bg-surface, #ffffff); border-top: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px; }
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: Playfair Display, var(--logo-serif, serif); font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text, #6b7280); margin: 12px 0 0; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text, #6b7280); }
+        @media (max-width: 768px) {
+            :root { --navbar-height: 64px; }
+            .navbar { height: var(--navbar-height); }
+            .navbar-content { max-width: 100%; padding: 0 12px; }
+            .mobile-menu-btn { display: block; flex: 0 0 28px; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+            .footer { padding: 56px 0; }
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
+            .logo-footer { font-size: 48px; }
+        }
+
+        /* Student 03 reservation time polish */
+        @media (max-width: 768px) {
+            body { background-color: #f8fafc; }
+            .page-container {
+                max-width: none;
+                margin-bottom: 56px;
+                padding: 0 26px;
+            }
+            .back-link {
+                margin-bottom: 28px;
+            }
+            .stepper-wrapper {
+                margin: 0 0 28px;
+                padding: 0 2px;
+            }
+            .stepper {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 56px 1fr 70px 1fr 64px;
+                align-items: start;
+            }
+            .step-item {
+                min-width: 0;
+                gap: 8px;
+            }
+            .step-circle {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+                background-color: #ffffff;
+            }
+            .step-label {
+                position: static;
+                max-width: 76px;
+                white-space: normal;
+                text-align: center;
+                font-size: 10px;
+                line-height: 1.2;
+                letter-spacing: 0.35px;
+            }
+            .step-line {
+                width: 100%;
+                margin: 18px 0 0;
+                top: 0;
+            }
+            .reservation-layout {
+                gap: 20px;
+            }
+            .calendar-card,
+            .time-card {
+                border: 1px solid rgba(226, 232, 240, 0.9);
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            }
+            .calendar-card {
+                padding: 24px 22px;
+                border-radius: 14px;
+            }
+            .calendar-header {
+                margin-bottom: 26px;
+            }
+            .calendar-header h2 {
+                font-size: 24px;
+            }
+            .calendar-nav {
+                gap: 18px;
+                font-size: 17px;
+            }
+            .calendar-grid {
+                gap: 14px 8px;
+            }
+            .day-name {
+                margin-bottom: 8px;
+                font-size: 12px;
+                letter-spacing: 0.02em;
+            }
+            .day-number {
+                width: 34px;
+                height: 34px;
+                font-size: 14px;
+                border-radius: 9px;
+            }
+            .time-sidebar {
+                gap: 14px;
+                padding: 0 !important;
+            }
+            .time-card {
+                padding: 28px 24px;
+                border-radius: 14px;
+            }
+            .time-header {
+                margin-bottom: 14px;
+            }
+            .time-header h3 {
+                font-size: 21px;
+            }
+            .time-desc {
+                margin-bottom: 24px;
+            }
+            .input-group {
+                margin-bottom: 18px;
+            }
+            .input-group label {
+                font-size: 10px;
+            }
+            .time-input-container {
+                min-height: 52px;
+                padding: 0 16px;
+                border-radius: 10px;
+            }
+            .duration-info {
+                margin-top: 22px;
+                padding: 16px;
+                border-radius: 10px;
+            }
+            .btn-continue {
+                min-height: 52px;
+                border-radius: 8px;
+                margin-top: 4px;
+            }
+        }
+
     </style>
 </head>
 <body>
 
-    <header class="navbar">
+                <header class="navbar">
         <div class="navbar-content">
             <div class="nav-left">
-                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
+                <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
                 <div class="nav-search">
                     <span class="search-icon">&#128269;</span>
-                    <input type="text" placeholder="Search facilities...">
+                    <input type="search" placeholder="Cari fasilitas..." aria-label="Cari fasilitas">
                 </div>
             </div>
             <div class="nav-center">
-                <a href="#" class="nav-link active">Beranda</a>
+                <a href="#" class="nav-link">Beranda</a>
                 <a href="#" class="nav-link">Fasilitas</a>
-                <a href="#" class="nav-link">Reservasi</a>
+                <a href="#" class="nav-link active">Reservasi</a>
             </div>
             <div class="nav-right">
-                <span class="icon">&#128276;</span>
-                <div class="profile-pic">
-                    <img src="https://via.placeholder.com/36x36/1e3a5f/ffffff?text=User" alt="Profile">
-                </div>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
+                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #e5e7eb; border: none; display: flex; align-items: center; justify-content: center; color: transparent;"></a>
             </div>
         </div>
     </header>
@@ -555,13 +869,13 @@
                 </div>
 
                 <div class="calendar-grid">
-                    <div class="day-name">SUN</div>
-                    <div class="day-name">MON</div>
-                    <div class="day-name">TUE</div>
-                    <div class="day-name">WED</div>
-                    <div class="day-name">THU</div>
-                    <div class="day-name">FRI</div>
-                    <div class="day-name">SAT</div>
+                    <div class="day-name">MIN</div>
+                    <div class="day-name">SEN</div>
+                    <div class="day-name">SEL</div>
+                    <div class="day-name">RAB</div>
+                    <div class="day-name">KAM</div>
+                    <div class="day-name">JUM</div>
+                    <div class="day-name">SAB</div>
 
                     <div class="day-number faded">29</div>
                     <div class="day-number faded">30</div>
@@ -595,14 +909,14 @@
                     <p class="time-desc">Pilih jadwal mulai dan selesai untuk reservasi. Ketersediaan jadwal dapat dilihat pada kalender</p>
 
                     <div class="input-group">
-                        <label>START TIME</label>
+                        <label>WAKTU MULAI</label>
                         <div class="time-input-container">
                             <input type="text" value="09 : 00" readonly>
                             <span class="icon">&#10142;</span> </div>
                     </div>
 
                     <div class="input-group">
-                        <label>END TIME</label>
+                        <label>WAKTU SELESAI</label>
                         <div class="time-input-container">
                             <input type="text" value="13 : 00" readonly>
                             <span class="icon">&#10144;</span> </div>
@@ -610,7 +924,7 @@
 
                     <div class="duration-info">
                         <span class="icon">&#8505;</span> <div class="duration-text">
-                            <h4>Total Durasi: 1 Jam 30 Menit</h4>
+                            <h4>Total Durasi: 4 Jam</h4>
                             <p>Waktu minimum reservasi adalah 30 menit. Zona waktu mengikuti zona waktu lokal kampus.</p>
                         </div>
                     </div>
@@ -622,11 +936,11 @@
         </div>
     </main>
 
-    <footer class="footer">
+                <footer class="footer">
         <div class="footer-content">
             <div class="footer-left">
                 <h2 class="logo-footer">IPB SRH</h2>
-                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.</p>
             </div>
             <div class="footer-right">
                 <a href="#">Beranda</a>

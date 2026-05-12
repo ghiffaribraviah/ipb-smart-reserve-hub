@@ -2,7 +2,7 @@
 
 The `.out-of-scope/` directory in a repo stores persistent records of rejected feature requests. It serves two purposes:
 
-1. **Institutional memory** — why a feature was rejected, so the reasoning isn't lost when the issue is closed
+1. **Institutional memory** — why a feature was rejected, so the reasoning isn't lost when the issue moves to `wontfix`
 2. **Deduplication** — when a new issue comes in that matches a prior rejection, the skill can surface the previous decision instead of re-litigating it
 
 ## Directory structure
@@ -77,7 +77,7 @@ During triage (Step 1: Gather context), read all files in `.out-of-scope/`. When
 
 The maintainer may:
 
-- **Confirm** — the new issue gets added to the existing file's "Prior requests" list, then closed
+- **Confirm** — the new issue gets added to the existing file's "Prior requests" list, then moves to `wontfix`
 - **Reconsider** — the out-of-scope file gets deleted or updated, and the issue proceeds through normal triage
 - **Disagree** — the issues are related but distinct, proceed with normal triage
 
@@ -89,8 +89,8 @@ Only when an **enhancement** (not a bug) is rejected as `wontfix`. The flow:
 2. Check if a matching `.out-of-scope/` file already exists
 3. If yes: append the new issue to the "Prior requests" list
 4. If no: create a new file with the concept name, decision, reason, and first prior request
-5. Post a comment on the issue explaining the decision and mentioning the `.out-of-scope/` file
-6. Close the issue with the `wontfix` label
+5. Append triage notes to the issue explaining the decision and linking the `.out-of-scope/` file
+6. Set the issue frontmatter to `status: wontfix`
 
 ## Updating or removing out-of-scope files
 

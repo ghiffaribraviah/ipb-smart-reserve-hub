@@ -1,81 +1,66 @@
 ---
 name: to-issues
-description: Break a plan, spec, or PRD into independently-grabbable issues on the project issue tracker using tracer-bullet vertical slices. Use when user wants to convert a plan into issues, create implementation tickets, or break down work into issues.
+description: Break a plan, spec, or PRD into local Markdown issues using tracer-bullet vertical slices. Use when user wants to convert a plan into implementation issues.
 ---
 
 # To Issues
 
-Break a plan into independently-grabbable issues using vertical slices (tracer bullets).
+Break a plan into independently grabbable local Markdown issues using vertical slices.
 
-The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
+## References
+
+- Tracker contract: `docs/agents/issue-tracker.md`
+- State schema: `docs/agents/issue-states.md`
+- Domain docs: `docs/agents/domain.md`
+- Output template: `template.md`
 
 ## Process
 
-### 1. Gather context
+### 1. Gather Context
 
-Work from whatever is already in the conversation context. If the user passes an issue reference (issue number, URL, or path) as an argument, fetch it from the issue tracker and read its full body and comments.
+Work from the conversation context. If the user passes a PRD ID, issue ID, or file path, read the matching local Markdown file.
 
-### 2. Explore the codebase (optional)
+### 2. Explore The Codebase
 
-If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+Explore enough code to understand the current state. Use the project's domain glossary vocabulary and respect ADRs.
 
-### 3. Draft vertical slices
+### 3. Draft Vertical Slices
 
-Break the plan into **tracer bullet** issues. Each issue is a thin vertical slice that cuts through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
+Draft tracer-bullet issues. Each issue must be a thin vertical slice through all relevant integration layers, not a horizontal slice of one layer.
 
-Slices may be 'HITL' or 'AFK'. HITL slices require human interaction, such as an architectural decision or a design review. AFK slices can be implemented and merged without human interaction. Prefer AFK over HITL where possible.
+For each proposed slice, show:
 
-<vertical-slice-rules>
-- Each slice delivers a narrow but COMPLETE path through every layer (schema, API, UI, tests)
-- A completed slice is demoable or verifiable on its own
-- Prefer many thin slices over few thick ones
-</vertical-slice-rules>
+- **Title**
+- **Type**: `HITL` or `AFK`
+- **Blocked by**
+- **User stories covered**, if the source material has them
 
-### 4. Quiz the user
+Ask the user to approve granularity, dependencies, and HITL/AFK markings before writing files.
 
-Present the proposed breakdown as a numbered list. For each slice, show:
+### 4. Publish Local Issue Files
 
-- **Title**: short descriptive name
-- **Type**: HITL / AFK
-- **Blocked by**: which other slices (if any) must complete first
-- **User stories covered**: which user stories this addresses (if the source material has them)
+After approval:
 
-Ask the user:
+1. Get IDs in dependency order:
 
-- Does the granularity feel right? (too coarse / too fine)
-- Are the dependency relationships correct?
-- Should any slices be merged or split further?
-- Are the correct slices marked as HITL and AFK?
+```bash
+python .agents/scripts/local_tracker.py next-id issue
+```
 
-Iterate until the user approves the breakdown.
+2. Create `docs/issues/ISSUE-####-slug.md` files using `template.md`.
+3. Use frontmatter for source-of-truth metadata:
+   - `status: needs-triage`
+   - `category: bug` or `enhancement`
+   - `agent_mode: AFK`, `HITL`, or `TBD`
+   - `area` as broad advisory areas
+   - `prd` when created from a PRD
+   - `blocked_by` with issue IDs
+4. If issues are created from a PRD, update the PRD frontmatter `issues` list.
+5. Validate and regenerate the status index:
 
-### 5. Publish the issues to the issue tracker
+```bash
+python .agents/scripts/local_tracker.py validate
+python .agents/scripts/local_tracker.py status
+```
 
-For each approved slice, publish a new issue to the issue tracker. Use the issue body template below. Apply the `needs-triage` triage label so each issue enters the normal triage flow.
-
-Publish issues in dependency order (blockers first) so you can reference real issue identifiers in the "Blocked by" field.
-
-<issue-template>
-## Parent
-
-A reference to the parent issue on the issue tracker (if the source was an existing issue, otherwise omit this section).
-
-## What to build
-
-A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
-
-## Acceptance criteria
-
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-## Blocked by
-
-- A reference to the blocking ticket (if any)
-
-Or "None - can start immediately" if no blockers.
-
-</issue-template>
-
-Do NOT close or modify any parent issue.
+Do not close or modify parent PRD narrative sections.

@@ -1,22 +1,40 @@
-# Issue tracker: GitHub
+# Issue Tracker: Local Markdown
 
-Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
+Issues and PRDs for this repo live as local Markdown files. Do not use GitHub Issues for repository workflow.
 
-## Conventions
+## Locations
 
-- **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.
-- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
-- **Comment on an issue**: `gh issue comment <number> --body "..."`
-- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- **Close**: `gh issue close <number> --comment "..."`
+- PRDs: `docs/prd/PRD-####-slug.md`
+- Issues: `docs/issues/ISSUE-####-slug.md`
+- Generated issue status index: `docs/issues/STATUS.md`
 
-Infer the repo from `git remote -v` -- `gh` does this automatically when run inside a clone.
+Individual PRD and issue files are the source of truth. `STATUS.md` is derived from issue frontmatter and can be regenerated.
 
-## When a skill says "publish to the issue tracker"
+## Helper Commands
 
-Create a GitHub issue.
+Use the local tracker helper for mechanical operations:
 
-## When a skill says "fetch the relevant ticket"
+```bash
+python .agents/scripts/local_tracker.py next-id prd
+python .agents/scripts/local_tracker.py next-id issue
+python .agents/scripts/local_tracker.py validate
+python .agents/scripts/local_tracker.py status
+```
 
-Run `gh issue view <number> --comments`.
+## Publishing
+
+When a skill says "publish to the issue tracker":
+
+- For a PRD, create a schema-valid file in `docs/prd/`.
+- For an issue, create a schema-valid file in `docs/issues/`.
+- Run `python .agents/scripts/local_tracker.py validate`.
+- Regenerate `docs/issues/STATUS.md` after issue changes.
+
+## Fetching
+
+When a skill says "fetch the relevant ticket", read the matching local Markdown file by ID or path.
+
+Examples:
+
+- `PRD-0001` resolves to `docs/prd/PRD-0001-*.md`.
+- `ISSUE-0001` resolves to `docs/issues/ISSUE-0001-*.md`.

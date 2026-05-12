@@ -17,10 +17,14 @@
 
 ## Styling & Design System
 
-- `docs/frontend/DESIGN.md` is the design-system source for typography, colors, spacing, radii, and general component tone.
-- HTML references in `docs/frontend/html-reference/` provide layout and interaction intent, but do not override the design system unless a page/component plan explicitly says so.
-- Use Satoshi typography from `DESIGN.md`; do not carry over Inter/Playfair from the HTML references unless a later plan explicitly changes the typography direction.
+- HTML references in `docs/frontend/html-reference/` and target screenshots in `docs/frontend/screenshots/` are the mandatory visual source of truth for page layout, component composition, spacing, hierarchy, typography direction, and visual tone.
+- `docs/frontend/DESIGN.md` documents the reference-derived design system. If it disagrees with the HTML references or target screenshots, update `DESIGN.md`; do not reinterpret the reference through the old generic design system.
+- Page briefs in `docs/frontend/per-page-brief/` and component briefs in `docs/frontend/per-component-brief/` are required implementation inputs.
+- Page briefs own page-specific backend integration details and backend gap entries. `docs/frontend/backend-gaps.md` only indexes those page-owned gaps.
+- Preserve the Inter + Playfair Display direction from the references unless a later approved design decision changes it.
 - Use deterministic local fixture images/assets for design screenshot tests. Do not depend on remote placeholder or Unsplash URLs in screenshot baselines.
+- Generate canonical reference screenshots with `npm run capture:html-reference` from `frontend/`.
+- Track missing page, state, and component references in `docs/frontend/missing-design.md`.
 
 ## Data Fetching
 

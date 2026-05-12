@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - IPB Smart Reserve Hub</title>
+    <title>Masuk - IPB Smart Reserve Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
             --primary-green: #0A9361;
+            --primary-green-dark: #064e3b;
+            --gold: #d9b45d;
             --text-dark: #2D3748;
             --text-muted: #718096;
             --border-color: #E2E8F0;
             --bg-light: #F8FAFC;
+            --card-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+            --hero-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
         }
 
         * {
@@ -25,15 +29,16 @@
         body {
             font-family: 'Inter', sans-serif;
             color: var(--text-dark);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
+            background-color: #ffffff;
         }
 
         /* Layout Split Screen */
         .split-layout {
             display: flex;
             width: 100%;
-            height: 100%;
+            min-height: 100vh;
         }
 
         .left-panel {
@@ -44,12 +49,13 @@
             background-color: #ffffff;
             padding: 2rem;
             position: relative;
+            overflow: hidden;
         }
 
         .right-panel {
             flex: 1;
             /* Ganti URL di bawah ini dengan path foto rektorat IPB milikmu (misal: '../assets/gedung.jpg') */
-            background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-image: linear-gradient(135deg, rgba(6, 78, 59, 0.22), rgba(217, 180, 93, 0.24)), var(--hero-image);
             background-size: cover;
             background-position: center;
             display: none; /* Hide on mobile */
@@ -65,6 +71,8 @@
         .form-container {
             width: 100%;
             max-width: 420px;
+            position: relative;
+            z-index: 1;
         }
 
         /* Logo & Branding */
@@ -140,12 +148,14 @@
             position: relative;
         }
 
-        .input-wrapper i {
+        .input-icon {
             position: absolute;
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1;
         }
 
         .input-wrapper input {
@@ -224,6 +234,124 @@
             font-weight: 600;
             text-decoration: none;
         }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 767px) {
+            body {
+                min-height: 100vh;
+                background: var(--bg-light);
+            }
+
+            .split-layout {
+                min-height: 100vh;
+                display: block;
+                background:
+                    linear-gradient(180deg, rgba(6, 78, 59, 0.08), rgba(248, 250, 252, 0) 42%),
+                    var(--bg-light);
+            }
+
+            .left-panel {
+                min-height: 100vh;
+                align-items: flex-start;
+                justify-content: flex-start;
+                flex-direction: column;
+                padding: 132px 20px 24px;
+                background: transparent;
+            }
+
+            .left-panel::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 230px;
+                background-image:
+                    linear-gradient(135deg, rgba(6, 78, 59, 0.92), rgba(10, 147, 97, 0.72), rgba(217, 180, 93, 0.48)),
+                    var(--hero-image);
+                background-size: cover;
+                background-position: center;
+            }
+
+            .left-panel::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 230px;
+                background-image:
+                    linear-gradient(rgba(255,255,255,0.09) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px);
+                background-size: 32px 32px;
+                opacity: 0.72;
+                pointer-events: none;
+            }
+
+            .form-container {
+                max-width: none;
+                background: #ffffff;
+                border: 1px solid rgba(226, 232, 240, 0.95);
+                border-radius: 16px;
+                box-shadow: var(--card-shadow);
+                padding: 28px 20px 24px;
+            }
+
+            .brand-header {
+                margin-bottom: 2rem;
+                padding-bottom: 1.25rem;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .brand-logo {
+                font-size: 2.55rem;
+                margin-bottom: 0.35rem;
+            }
+
+            .brand-title {
+                font-size: 1rem;
+            }
+
+            h2 {
+                font-size: 1.45rem;
+            }
+
+            .subtitle {
+                margin-bottom: 1.5rem;
+            }
+
+            .form-group {
+                margin-bottom: 1.25rem;
+            }
+
+            .input-wrapper input {
+                min-height: 48px;
+                border-radius: 10px;
+                background-color: #ffffff;
+            }
+
+            .btn-submit {
+                min-height: 48px;
+                border-radius: 10px;
+                box-shadow: 0 10px 18px rgba(10, 147, 97, 0.2);
+            }
+
+            .register-link {
+                margin-top: 1.25rem;
+            }
+
+            .footer {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                margin-top: 22px;
+                padding: 0 8px;
+                z-index: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -236,35 +364,35 @@
                     <div class="brand-title">IPB Smart Reserve Hub</div>
                 </div>
 
-                <h2>Sign In</h2>
-                <p class="subtitle">Enter your credentials to access your facility dashboard.</p>
+                <h2>Masuk</h2>
+                <p class="subtitle">Masukkan kredensial untuk mengakses dashboard fasilitas Anda.</p>
 
                 <form action="#" method="POST">
                     <div class="form-group">
-                        <label for="email">Email Address</label>
+                        <label for="email">Email Kampus</label>
                         <div class="input-wrapper">
-                            <i class="fa-regular fa-envelope"></i>
+                            <span class="input-icon" aria-hidden="true">&#9993;</span>
                             <input type="email" id="email" placeholder="name@apps.ipb.ac.id" required>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <div class="label-row">
-                            <label for="password">Password</label>
-                            <a href="#" class="forgot-link">Forgot password?</a>
+                            <label for="password">Kata Sandi</label>
+                            <a href="#" class="forgot-link">Lupa kata sandi?</a>
                         </div>
                         <div class="input-wrapper">
-                            <i class="fa-solid fa-lock"></i>
+                            <span class="input-icon" aria-hidden="true">&#128274;</span>
                             <input type="password" id="password" placeholder="••••••••" required>
                         </div>
                     </div>
 
                     <button type="submit" class="btn-submit">
-                        Sign In <i class="fa-solid fa-arrow-right"></i>
+                        Masuk <span aria-hidden="true">&#8594;</span>
                     </button>
                     
                     <div class="register-link">
-                        Don't have an account? <a href="register.html">Register here</a>
+                        Belum punya akun? <a href="register.html">Daftar di sini</a>
                     </div>
                 </form>
             </div>
@@ -272,7 +400,7 @@
             <div class="footer">
                 &copy; 2026 IPB Smart Reserve Hub.<br>
                 <div class="footer-links">
-                    <a href="#">Security Protocol</a> &middot; <a href="#">Terms of Access</a>
+                    <a href="#">Protokol Keamanan</a> &middot; <a href="#">Ketentuan Akses</a>
                 </div>
             </div>
         </div>

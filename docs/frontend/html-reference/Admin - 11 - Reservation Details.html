@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPB Smart Reserve Hub - Reservation Details</title>
+    <title>Detail Reservasi Admin - IPB Smart Reserve Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         /* Global Variables & Reset */
@@ -34,14 +34,29 @@
         a { text-decoration: none; color: inherit; }
 
         /* Navbar */
-        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; }
-        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; }
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; transition: all 0.3s ease; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; height: 100%; }
         .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
-        .logo-nav { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; }
+        
+        .mobile-menu-btn { display: none; padding: 0; border: 0; background: transparent; font-size: 24px; color: var(--secondary-text); cursor: pointer; }
+        .logo-nav { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; display: block; }
+        .logo-nav-mobile-text { display: inline; }
+        
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; transition: border-color 0.2s; }
+        .nav-search input:focus { border-color: var(--brand-green); background-color: #ffffff; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        
         .nav-center { display: flex; gap: 40px; }
-        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-text); }
         .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
-        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; background-color: #1e3a5f;}
+        
+        .nav-notifications { font-size: 20px; color: var(--secondary-text); cursor: pointer; transition: color 0.2s; }
+        .nav-notifications:hover { color: var(--primary-text); }
+        
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); cursor: pointer; }
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
 
         /* Main Container */
         .page-container { width: 1200px; max-width: 95%; margin: calc(var(--navbar-height) + 40px) auto 80px; }
@@ -104,6 +119,11 @@
         .btn-reject { background-color: #fee2e2; color: #dc2626; }
         .btn-reject:hover { background-color: #fecaca; }
 
+        .summary-img {
+            background-size: cover;
+            background-position: center;
+        }
+
         /* Footer */
         .footer { background-color: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px; }
         .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -112,36 +132,241 @@
         .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text); }
 
         /* Responsive */
+        
+        
+        
+        /* =========================================
+           RESPONSIVE MOBILE STYLES
+           ========================================= */
         @media (max-width: 992px) {
-            .details-layout { flex-direction: column; }
-            .sidebar { width: 100%; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+            .top-row { grid-template-columns: 1fr; }
+            .content-layout, .details-layout, .profile-layout, .wizard-layout, .dashboard-layout { flex-direction: column; align-items: stretch; gap: 24px; }
+            .main-details, .sidebar, .time-sidebar, .summary-sidebar, .profile-sidebar, .profile-main, .docs-section, .form-card { width: 100%; box-sizing: border-box; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 200px; }
+            .item-main { grid-column: 1 / 3; grid-row: 1 / 2; }
+            .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
+            .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+            .item-bottom-right { display: none; }
+            .info-cards-row { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-cards { flex-direction: column; gap: 16px; }
+            .doc-item { flex-direction: column; align-items: flex-start; gap: 16px; }
         }
+
         @media (max-width: 768px) {
-            .info-grid { grid-template-columns: 1fr; }
+            /* Mobile Navbar */
+            :root { --navbar-height: 64px; }
+            .navbar { height: var(--navbar-height); }
+            .navbar-content { max-width: 100%; padding: 0 12px; }
+            .mobile-menu-btn { display: block; flex: 0 0 28px; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+
+            /* Mobile Layout Spacing */
+            .page-container { margin-top: calc(var(--navbar-height) + 24px) !important; width: 100%; padding: 0 16px; box-sizing: border-box; }
+            .details-layout,
+            .main-details,
+            .sidebar,
+            .detail-card,
+            .summary-card,
+            .action-card {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+            }
+            .back-link { margin-bottom: 24px; }
+            .details-layout { gap: 20px; }
+            .main-details, .sidebar { gap: 20px; }
+            .detail-card { padding: 28px 24px; border-radius: 10px; }
+            .card-header { margin-bottom: 20px; }
+            .applicant-profile { align-items: flex-start; gap: 14px; }
+            .avatar-lg { width: 56px; height: 56px; font-size: 21px; flex: 0 0 56px; }
+            .applicant-text { min-width: 0; }
+            .applicant-text h3 { font-size: 17px; line-height: 1.25; }
+            .applicant-text p { overflow-wrap: anywhere; }
+            .info-grid { grid-template-columns: 1fr; gap: 16px; }
+            .info-item[style] { grid-column: auto !important; }
+            .info-value { overflow-wrap: anywhere; }
+            .doc-list { gap: 12px; }
+            .doc-item {
+                align-items: stretch;
+                gap: 14px;
+                padding: 16px;
+            }
+            .doc-info { align-items: flex-start; min-width: 0; }
+            .doc-info > div { min-width: 0; }
+            .doc-name, .doc-meta { overflow-wrap: anywhere; }
+            .btn-view-doc {
+                width: 100%;
+                min-height: 40px;
+                padding: 9px 12px;
+            }
+            .summary-img { height: 156px; }
+            .summary-content, .action-card { padding: 22px; }
+            .facility-name { font-size: 19px; }
+            .schedule-detail { align-items: flex-start; }
+            .admin-notes { min-height: 96px; }
+            
+            /* Mobile Header & Metrics */
+            .page-header { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 24px; }
+            .header-text h1 { font-size: 28px; margin-bottom: 8px; }
+            .metrics-card { padding: 20px; margin-bottom: 32px; width: 100%; box-sizing: border-box; flex-direction: row; }
+            .metric-value { font-size: 32px; }
+            .header-actions { flex-direction: row; gap: 12px; width: 100%; }
+            .btn-today { flex: 1; text-align: center; }
+            .date-picker { flex: 2; }
+            .btn-add { width: 100%; justify-content: center; padding: 12px; }
+
+            /* Mobile Table to Card Transformation */
+            .table-section { background: transparent; border: none; box-shadow: none; border-radius: 0; }
+            .table-header { padding: 0 0 16px 0; border-bottom: none; flex-direction: row; }
+            .table-header h2 { font-size: 20px; }
+            
+            .data-table, .data-table tbody, .dash-table, .dash-table tbody { display: block; width: 100%; }
+            .data-table thead, .dash-table thead { display: none; }
+            
+            .data-table tr, .dash-table tr { 
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: 
+                    "applicant status"
+                    "facility date"
+                    "actions actions";
+                gap: 16px;
+                background-color: var(--bg-surface); 
+                border: 1px solid var(--border-color); 
+                border-radius: 12px; 
+                margin-bottom: 16px; 
+                padding: 16px;
+                box-shadow: var(--card-shadow);
+            }
+            
+            .data-table td, .dash-table td { 
+                display: block;
+                padding: 0; 
+                border: none;
+                text-align: left;
+            }
+            
+            .data-table td:nth-child(1), .dash-table td:nth-child(1) { grid-area: applicant; }
+            .data-table td:nth-child(2), .dash-table td:nth-child(2) { grid-area: facility; }
+            .data-table td:nth-child(3), .dash-table td:nth-child(3) { grid-area: date; text-align: right; }
+            .data-table td:nth-child(4), .dash-table td:nth-child(4) { grid-area: status; align-self: start; justify-self: end; }
+            .data-table td:nth-child(5), .dash-table td:nth-child(5) { grid-area: actions; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 4px; }
+            
+            /* Labels */
+            .data-table td::before, .dash-table td::before { 
+                display: block;
+                font-size: 10px; 
+                font-weight: 700; 
+                color: var(--secondary-text); 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+                margin-bottom: 4px;
+                content: attr(data-label);
+            }
+            .data-table td:nth-child(1)::before, .dash-table td:nth-child(1)::before { display: none; }
+            .data-table td:nth-child(4)::before, .dash-table td:nth-child(4)::before { display: none; }
+            .data-table td:nth-child(5)::before, .dash-table td:nth-child(5)::before { display: none; }
+
+            .applicant-cell { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+            .applicant-cell .avatar { width: 36px; height: 36px; margin: 0; }
+            .applicant-info { display: flex; flex-direction: column; align-items: flex-start; }
+            .applicant-name { font-size: 14px; margin-bottom: 2px; }
+            .status-badge { font-size: 11px; padding: 4px 8px; width: fit-content; }
+            
+            .actions-cell { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; justify-content: flex-start; }
+            .action-btn { background-color: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 16px; }
+            .action-download { color: var(--secondary-text); }
+            .action-download::after { content: 'Unduh'; font-size: 11px; font-weight: 600; color: var(--secondary-text); }
+            .action-verify { color: #10b981; }
+            .action-verify::after { content: 'Verifikasi'; font-size: 11px; font-weight: 600; color: #10b981; }
+            .action-reject { color: #ef4444; }
+            .action-reject::after { content: 'Tolak'; font-size: 11px; font-weight: 600; color: #ef4444; }
+
+            .table-footer { flex-direction: column; gap: 16px; padding: 24px 0; background: transparent; border: none; align-items: center; text-align: center; }
+
+            /* Grid Layout adjustments */
+            .calendar-container, .agenda-container { width: 100%; padding: 16px; box-sizing: border-box; }
+            .calendar-grid-wrapper { width: 100%; overflow-x: visible; padding: 0; margin: 0; }
+            .calendar-grid { min-width: 0; gap: 6px; }
+            .calendar-day { padding: 4px; border-radius: 6px; align-items: center; justify-content: center; min-height: 40px; }
+            .calendar-day-header { font-size: 10px; padding-bottom: 6px; }
+            .day-number { font-size: 13px; margin-bottom: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+            .day-indicators { justify-content: center; gap: 2px; margin-top: 4px; width: 100%; }
+            .indicator { width: 5px; height: 5px; }
+            
+            .agenda-item { flex-direction: column; gap: 8px; align-items: stretch; }
+            .agenda-time { display: flex; gap: 8px; align-items: center; width: 100%; }
+            .agenda-time span { display: inline; margin-top: 0; }
+            .agenda-meta { display: grid; grid-template-columns: 1fr; gap: 8px; justify-items: start; }
+            .agenda-meta .action-link { text-align: center; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+            .action-link { width: 100%; display: block; text-align: center; background-color: #f9fafb; padding: 12px 0; border-radius: 8px; border: 1px solid var(--border-color); }
+
+            .actions-bar, .filter-container { flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; }
+            .filter-group { flex-direction: row; gap: 12px; width: 100%; }
+            .filter-select { flex: 1; padding: 10px; }
+            .filter-input { width: 100%; }
+
+            .facilities-grid { grid-template-columns: 1fr; gap: 20px; }
+            
+            .gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+            .item-main { grid-column: 1 / 2; grid-row: 1 / 2; }
+            .item-top-right-1, .item-top-right-2 { grid-column: 1 / 2; grid-row: auto; }
+            
+            .kpi-grid { grid-template-columns: 1fr; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+
+            .reservation-layout { flex-direction: column; }
+            .calendar-card, .time-sidebar { width: 100%; padding: 24px; box-sizing: border-box; }
+            .stepper { width: 100%; justify-content: space-between; }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+
+            /* Mobile Footer */
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
         }
+
     </style>
 </head>
 <body>
 
-    <header class="navbar">
+                <header class="navbar">
         <div class="navbar-content">
             <div class="nav-left">
-                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
+                <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
+                <div class="nav-search">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="search" placeholder="Cari reservasi..." aria-label="Cari reservasi">
+                </div>
             </div>
             <div class="nav-center">
+
                 <a href="#" class="nav-link active">Reservasi</a>
                 <a href="#" class="nav-link">Fasilitas</a>
             </div>
             <div class="nav-right">
-                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
-                <div class="profile-pic">A</div>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
+                <a href="#" class="profile-pic" aria-label="Profil admin" style="background-color: #1d7667; border: none; display: flex; align-items: center; justify-content: center; color: transparent;"></a>
             </div>
         </div>
     </header>
 
     <main class="page-container">
         
-        <a href="Admin - 10 - Reservation Lists.html" class="back-link">&larr; Back to Reservation List</a>
+        <a href="Admin - 10 - Reservation Lists.html" class="back-link">&larr; Kembali ke Daftar Reservasi</a>
 
         <div class="details-layout">
             
@@ -149,83 +374,83 @@
                 
                 <div class="detail-card">
                     <div class="card-header">
-                        <h2 class="card-title">Applicant Information</h2>
+                        <h2 class="card-title">Informasi Pemohon</h2>
                     </div>
                     <div class="applicant-profile">
                         <div class="avatar-lg">JD</div>
                         <div class="applicant-text">
                             <h3>Johnathan Doe</h3>
-                            <p>PhD Candidate • G64190001</p>
+                            <p>Kandidat Doktor • G64190001</p>
                         </div>
                     </div>
                     <div class="info-grid">
                         <div class="info-item">
-                            <span class="info-label">Faculty / Major</span>
-                            <span class="info-value">FMIPA / Computer Science</span>
+                            <span class="info-label">Fakultas / Program Studi</span>
+                            <span class="info-value">FMIPA / Ilmu Komputer</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Contact Number</span>
+                            <span class="info-label">Nomor Kontak</span>
                             <span class="info-value">+62 812-3456-7890</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Email Address</span>
+                            <span class="info-label">Email Kampus</span>
                             <span class="info-value">johnathan_doe@apps.ipb.ac.id</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Organization</span>
-                            <span class="info-value">Computer Science Student Assoc.</span>
+                            <span class="info-label">Organisasi</span>
+                            <span class="info-value">Himpunan Mahasiswa Ilmu Komputer</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="detail-card">
                     <div class="card-header">
-                        <h2 class="card-title">Event Details</h2>
+                        <h2 class="card-title">Detail Kegiatan</h2>
                     </div>
                     <div class="info-grid">
                         <div class="info-item">
-                            <span class="info-label">Event Name</span>
+                            <span class="info-label">Nama Kegiatan</span>
                             <span class="info-value">AI Ethics Symposium 2024</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Estimated Participants</span>
-                            <span class="info-value">150 Persons</span>
+                            <span class="info-label">Estimasi Peserta</span>
+                            <span class="info-value">150 orang</span>
                         </div>
                         <div class="info-item" style="grid-column: 1 / -1;">
-                            <span class="info-label">Event Description</span>
-                            <span class="info-value" style="line-height: 1.6;">An annual symposium bringing together students, faculty, and industry experts to discuss the ethical implications of emerging artificial intelligence technologies. Will include keynote speeches and panel discussions.</span>
+                            <span class="info-label">Deskripsi Kegiatan</span>
+                            <span class="info-value" style="line-height: 1.6;">Simposium tahunan yang mempertemukan mahasiswa, dosen, dan praktisi industri untuk membahas implikasi etis teknologi kecerdasan buatan.</span>
                         </div>
                         <div class="info-item" style="grid-column: 1 / -1;">
-                            <span class="info-label">Additional Needs</span>
-                            <span class="info-value">AV Support & Microphones, Extra Cleaning Services</span>
+                            <span class="info-label">Kebutuhan Tambahan</span>
+                            <span class="info-value">Dukungan AV & mikrofon, layanan kebersihan tambahan</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="detail-card">
                     <div class="card-header">
-                        <h2 class="card-title">Document Verification</h2>
+                        <h2 class="card-title">Verifikasi Dokumen</h2>
                     </div>
                     <div class="doc-list">
                         <div class="doc-item">
                             <div class="doc-info">
                                 <span class="doc-icon">&#128196;</span>
                                 <div>
-                                    <p class="doc-name">Event_Proposal_Signed.pdf</p>
-                                    <p class="doc-meta">Uploaded Oct 15, 2024 • 2.4 MB</p>
+                                    <p class="doc-name">Proposal_Kegiatan.pdf</p>
+                                    <p class="doc-meta">Diunggah 15 Oktober 2024 • 2.4 MB</p>
                                 </div>
                             </div>
-                            <button class="btn-view-doc">&#10515; Download Document</button>
+                            <button class="btn-view-doc" type="button">&#10515; Unduh Dokumen</button>
                         </div>
                         <div class="doc-item">
                             <div class="doc-info">
                                 <span class="doc-icon">&#128196;</span>
                                 <div>
-                                    <p class="doc-name">Dean_Approval_Letter.pdf</p>
-                                    <p class="doc-meta">Uploaded Oct 15, 2024 • 1.1 MB</p>
+                                    <p class="doc-name">Surat_Dekan.pdf</p>
+                                    <p class="doc-meta">Diunggah 15 Oktober 2024 • 1.1 MB</p>
                                 </div>
                             </div>
-                            <button class="btn-view-doc">&#10515; Download Document</button>
+                            <button class="btn-view-doc" type="button">&#10515; Unduh Dokumen</button>
                         </div>
                     </div>
                 </div>
@@ -241,28 +466,28 @@
                         
                         <div class="schedule-detail">
                             <span class="icon">&#128197;</span>
-                            <span>Thursday, Oct 24, 2024</span>
+                            <span>Kamis, 24 Oktober 2024</span>
                         </div>
                         <div class="schedule-detail">
                             <span class="icon">&#128338;</span>
-                            <span>09:00 AM - 01:00 PM (4 Hours)</span>
+                            <span>09:00 - 13:00 (4 jam)</span>
                         </div>
                         
                         <div class="status-box">
-                            <span class="status-label">Current Status</span>
+                            <span class="status-label">Status Saat Ini</span>
                             <div class="status-badge badge-yellow">
-                                <span class="icon">&#8987;</span> Pending Review
+                                <span class="icon">&#8987;</span> Menunggu Peninjauan
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="action-card">
-                    <h3 class="action-title">Administrator Actions</h3>
-                    <textarea class="admin-notes" placeholder="Add optional notes or reasons for rejection..."></textarea>
+                    <h3 class="action-title">Aksi Administrator</h3>
+                    <textarea class="admin-notes" placeholder="Tambahkan catatan atau alasan penolakan jika diperlukan..." aria-label="Catatan administrator"></textarea>
                     <div class="action-buttons">
-                        <button class="btn-action btn-approve">&#10003; Approve Reservation</button>
-                        <button class="btn-action btn-reject">&#10005; Reject Request</button>
+                        <button class="btn-action btn-approve" type="button">&#10003; Setujui Reservasi</button>
+                        <button class="btn-action btn-reject" type="button">&#10005; Tolak Pengajuan</button>
                     </div>
                 </div>
 
@@ -272,11 +497,11 @@
 
     </main>
 
-    <footer class="footer">
+                <footer class="footer">
         <div class="footer-content">
             <div class="footer-left">
                 <h2 class="logo-footer">IPB SRH</h2>
-                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Semua hak dilindungi.</p>
             </div>
             <div class="footer-right">
                 <a href="#">Beranda</a>

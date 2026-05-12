@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPB Smart Reserve Hub - Admin Facility Details</title>
+    <title>Detail Fasilitas - IPB Smart Reserve Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         /* Global Variables & Reset */
@@ -84,7 +84,7 @@
         .review-text { font-size: 14px; color: var(--secondary-text); line-height: 1.6; margin: 0; }
         .show-all-link { display: inline-block; margin-top: 16px; color: var(--brand-green); font-size: 14px; font-weight: 600; text-decoration: underline; }
 
-        /* Sidebar Widget (Admin Version) */
+        /* Sidebar Widget */
         .admin-widget { border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; background-color: var(--bg-surface); box-shadow: var(--card-shadow); }
         .price-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
         .price-label { font-size: 12px; color: var(--secondary-text); margin: 0 0 8px; }
@@ -107,40 +107,259 @@
         .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text); }
 
         /* Responsive */
+        
+        
+        
+        /* =========================================
+           RESPONSIVE MOBILE STYLES
+           ========================================= */
         @media (max-width: 992px) {
-            .content-layout { flex-direction: column; }
-            .sidebar { width: 100%; position: static; }
-            .gallery-grid { grid-template-columns: 1fr 1fr; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+            .top-row { grid-template-columns: 1fr; }
+            .content-layout, .details-layout, .profile-layout, .wizard-layout, .dashboard-layout { flex-direction: column; align-items: stretch; gap: 24px; }
+            .main-details, .sidebar, .time-sidebar, .summary-sidebar, .profile-sidebar, .profile-main, .docs-section, .form-card { width: 100%; box-sizing: border-box; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 200px; }
             .item-main { grid-column: 1 / 3; grid-row: 1 / 2; }
             .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
             .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
             .item-bottom-right { display: none; }
+            .info-cards-row { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-cards { flex-direction: column; gap: 16px; }
+            .doc-item { flex-direction: column; align-items: flex-start; gap: 16px; }
         }
+
         @media (max-width: 768px) {
-            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            /* Mobile Navbar */
+            :root { --navbar-height: 64px; }
+            .mobile-menu-btn { display: block; font-size: 24px; color: var(--secondary-text); cursor: pointer; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+
+            /* Mobile Layout Spacing */
+            .page-container { margin-top: calc(var(--navbar-height) + 24px) !important; width: 100%; padding: 0 16px; box-sizing: border-box; }
+            
+            /* Mobile Header & Metrics */
+            .page-header { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 24px; }
+            .header-text h1 { font-size: 28px; margin-bottom: 8px; }
+            .metrics-card { padding: 20px; margin-bottom: 32px; width: 100%; box-sizing: border-box; flex-direction: row; }
+            .metric-value { font-size: 32px; }
+            .header-actions { flex-direction: row; gap: 12px; width: 100%; }
+            .btn-today { flex: 1; text-align: center; }
+            .date-picker { flex: 2; }
+            .btn-add { width: 100%; justify-content: center; padding: 12px; }
+
+            /* Mobile Table to Card Transformation */
+            .table-section { background: transparent; border: none; box-shadow: none; border-radius: 0; }
+            .table-header { padding: 0 0 16px 0; border-bottom: none; flex-direction: row; }
+            .table-header h2 { font-size: 20px; }
+            
+            .data-table, .data-table tbody, .dash-table, .dash-table tbody { display: block; width: 100%; }
+            .data-table thead, .dash-table thead { display: none; }
+            
+            .data-table tr, .dash-table tr { 
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: 
+                    "applicant status"
+                    "facility date"
+                    "actions actions";
+                gap: 16px;
+                background-color: var(--bg-surface); 
+                border: 1px solid var(--border-color); 
+                border-radius: 12px; 
+                margin-bottom: 16px; 
+                padding: 16px;
+                box-shadow: var(--card-shadow);
+            }
+            
+            .data-table td, .dash-table td { 
+                display: block;
+                padding: 0; 
+                border: none;
+                text-align: left;
+            }
+            
+            .data-table td:nth-child(1), .dash-table td:nth-child(1) { grid-area: applicant; }
+            .data-table td:nth-child(2), .dash-table td:nth-child(2) { grid-area: facility; }
+            .data-table td:nth-child(3), .dash-table td:nth-child(3) { grid-area: date; text-align: right; }
+            .data-table td:nth-child(4), .dash-table td:nth-child(4) { grid-area: status; align-self: start; justify-self: end; }
+            .data-table td:nth-child(5), .dash-table td:nth-child(5) { grid-area: actions; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 4px; }
+            
+            /* Labels */
+            .data-table td::before, .dash-table td::before { 
+                display: block;
+                font-size: 10px; 
+                font-weight: 700; 
+                color: var(--secondary-text); 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+                margin-bottom: 4px;
+                content: attr(data-label);
+            }
+            .data-table td:nth-child(1)::before, .dash-table td:nth-child(1)::before { display: none; }
+            .data-table td:nth-child(4)::before, .dash-table td:nth-child(4)::before { display: none; }
+            .data-table td:nth-child(5)::before, .dash-table td:nth-child(5)::before { display: none; }
+
+            .applicant-cell { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+            .applicant-cell .avatar { width: 36px; height: 36px; margin: 0; }
+            .applicant-info { display: flex; flex-direction: column; align-items: flex-start; }
+            .applicant-name { font-size: 14px; margin-bottom: 2px; }
+            .status-badge { font-size: 11px; padding: 4px 8px; width: fit-content; }
+            
+            .actions-cell { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; justify-content: flex-start; }
+            .action-btn { background-color: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 16px; }
+            .action-download { color: var(--secondary-text); }
+            .action-download::after { content: 'Unduh'; font-size: 11px; font-weight: 600; color: var(--secondary-text); }
+            .action-verify { color: #10b981; }
+            .action-verify::after { content: 'Verifikasi'; font-size: 11px; font-weight: 600; color: #10b981; }
+            .action-reject { color: #ef4444; }
+            .action-reject::after { content: 'Tolak'; font-size: 11px; font-weight: 600; color: #ef4444; }
+
+            .table-footer { flex-direction: column; gap: 16px; padding: 24px 0; background: transparent; border: none; align-items: center; text-align: center; }
+
+            /* Grid Layout adjustments */
+            .calendar-container, .agenda-container { width: 100%; padding: 16px; box-sizing: border-box; }
+            .calendar-grid-wrapper { width: 100%; overflow-x: visible; padding: 0; margin: 0; }
+            .calendar-grid { min-width: 0; gap: 6px; }
+            .calendar-day { padding: 4px; border-radius: 6px; align-items: center; justify-content: center; min-height: 40px; }
+            .calendar-day-header { font-size: 10px; padding-bottom: 6px; }
+            .day-number { font-size: 13px; margin-bottom: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+            .day-indicators { justify-content: center; gap: 2px; margin-top: 4px; width: 100%; }
+            .indicator { width: 5px; height: 5px; }
+            
+            .agenda-item { flex-direction: column; gap: 8px; align-items: stretch; }
+            .agenda-time { display: flex; gap: 8px; align-items: center; width: 100%; }
+            .agenda-time span { display: inline; margin-top: 0; }
+            .agenda-meta { display: grid; grid-template-columns: 1fr; gap: 8px; justify-items: start; }
+            .agenda-meta .action-link { text-align: center; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+            .action-link { width: 100%; display: block; text-align: center; background-color: #f9fafb; padding: 12px 0; border-radius: 8px; border: 1px solid var(--border-color); }
+
+            .actions-bar, .filter-container { flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; }
+            .filter-group { flex-direction: row; gap: 12px; width: 100%; }
+            .filter-select { flex: 1; padding: 10px; }
+            .filter-input { width: 100%; }
+
+            .facilities-grid { grid-template-columns: 1fr; gap: 20px; }
+            
+            .back-link { margin-bottom: 18px; }
+            .facility-title { font-size: 32px; line-height: 1.12; margin-bottom: 16px; }
+            .facility-meta { align-items: flex-start; gap: 14px; margin-bottom: 24px; }
+            .facility-meta .rating,
+            .facility-meta .location { flex: 1; align-items: flex-start; }
+            .gallery-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-rows: 226px 76px;
+                gap: 10px;
+                margin-bottom: 24px;
+                border-radius: 14px;
+                overflow: visible;
+            }
+            .gallery-item { border-radius: 12px; }
+            .item-main { grid-column: 1 / 4; grid-row: 1 / 2; }
+            .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
+            .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+            .item-bottom-right { display: block; grid-column: 3 / 4; grid-row: 2 / 3; }
+            .content-layout { gap: 28px; }
+            .sidebar { order: -1; position: static; }
+            .admin-widget { padding: 24px; border-radius: 14px; }
+            .price-header { margin-bottom: 20px; }
+            .price-value { font-size: 22px; }
+            .widget-notes { margin-bottom: 24px; }
+            .section-heading { font-size: 20px; }
+            .description-text { margin-bottom: 24px; }
+            .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 36px; }
+            .feature-card { min-height: 108px; padding: 18px 10px; justify-content: center; }
+            .reviews-header { align-items: flex-start; gap: 12px; }
+            .reviews-header .rating { white-space: nowrap; }
+            .review-card { padding: 20px; border-radius: 14px; }
+            
+            .kpi-grid { grid-template-columns: 1fr; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+
+            .reservation-layout { flex-direction: column; }
+            .calendar-card, .time-sidebar { width: 100%; padding: 24px; box-sizing: border-box; }
+            .stepper { width: 100%; justify-content: space-between; }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+
+            /* Mobile Footer */
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
         }
+
+        /* Student 00 shared header/footer chrome */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height, 80px); background-color: var(--bg-surface, #ffffff); border-bottom: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; z-index: 1000; transition: all 0.3s ease; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; height: 100%; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .mobile-menu-btn { display: none; padding: 0; border: 0; background: transparent; font-size: 24px; color: var(--secondary-text, #6b7280); cursor: pointer; }
+        .logo-nav { font-family: Playfair Display, var(--logo-serif, serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; display: block; }
+        .logo-nav-mobile-text { display: inline; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; transition: border-color 0.2s; }
+        .nav-search input:focus { border-color: var(--brand-green, #10b981); background-color: #ffffff; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text, #6b7280); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text, #6b7280); transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-text, #111827); }
+        .nav-link.active { color: var(--brand-green, #10b981); border-bottom: 2px solid var(--brand-green, #10b981); padding-bottom: 4px; }
+        .nav-notifications { font-size: 20px; color: var(--secondary-text, #6b7280); cursor: pointer; transition: color 0.2s; }
+        .nav-notifications:hover { color: var(--primary-text, #111827); }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #e5e7eb; overflow: hidden; border: 2px solid var(--brand-green, #10b981); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .footer { background-color: var(--bg-surface, #ffffff); border-top: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px; }
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: Playfair Display, var(--logo-serif, serif); font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text, #6b7280); margin: 12px 0 0; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text, #6b7280); }
+        @media (max-width: 768px) {
+            :root { --navbar-height: 64px; }
+            .navbar { height: var(--navbar-height); }
+            .navbar-content { max-width: 100%; padding: 0 12px; }
+            .mobile-menu-btn { display: block; flex: 0 0 28px; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+            .footer { padding: 56px 0; }
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
+            .logo-footer { font-size: 48px; }
+        }
+
     </style>
 </head>
 <body>
 
-    <header class="navbar">
+                <header class="navbar">
         <div class="navbar-content">
             <div class="nav-left">
-                <a href="#" class="logo-nav">IPB<br>SRH</a>
+                <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
+                <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
                 <div class="nav-search">
                     <span class="search-icon">&#128269;</span>
-                    <input type="text" placeholder="Search facilities...">
+                    <input type="search" placeholder="Cari fasilitas..." aria-label="Cari fasilitas">
                 </div>
             </div>
             <div class="nav-center">
-                <a href="#" class="nav-link">Reservasi</a>
+                <a href="#" class="nav-link">Beranda</a>
                 <a href="#" class="nav-link active">Fasilitas</a>
+                <a href="#" class="nav-link">Reservasi</a>
             </div>
             <div class="nav-right">
-                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
-                <div class="profile-pic">
-                    <img src="https://via.placeholder.com/36x36/1e3a5f/ffffff?text=A" alt="Admin Profile">
-                </div>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
+                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #e5e7eb; border: none; display: flex; align-items: center; justify-content: center; color: transparent;"></a>
             </div>
         </div>
     </header>
@@ -152,10 +371,10 @@
         <div class="facility-meta">
             <div class="rating">
                 <span class="star-icon">&#9733;</span> 4.9 
-                <span style="color: var(--secondary-text); font-weight: 400;">(124 Reviews)</span>
+                <span style="color: var(--secondary-text); font-weight: 400;">(124 ulasan)</span>
             </div>
             <div class="location">
-                <span style="color: var(--secondary-text); font-size: 16px;">&#128205;</span> East Campus, Central Plaza
+                <span style="color: var(--secondary-text); font-size: 16px;">&#128205;</span> Kampus Timur, Plaza Tengah
             </div>
         </div>
 
@@ -171,7 +390,7 @@
             <div class="main-details">
                 <h2 class="section-heading">Tentang Fasilitas</h2>
                 <p class="description-text">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ac massa id ex hendrerit iaculis et et eros. Pellentesque odio ex, mollis eget aliquet ut, interdum luctus lectus.
+                    Grand Auditorium dirancang untuk seminar nasional, kuliah umum, pertunjukan akademik, dan acara institusi berskala besar dengan dukungan tata suara serta panggung utama.
                 </p>
 
                 <div class="features-grid">
@@ -183,17 +402,17 @@
                     <div class="feature-card">
                         <span class="feature-icon">&#128227;</span>
                         <p class="feature-value">Atmos 7.1</p>
-                        <p class="feature-label">Audio System</p>
+                        <p class="feature-label">Sistem Audio</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">&#128246;</span>
                         <p class="feature-value">Gigabit</p>
-                        <p class="feature-label">Network</p>
+                        <p class="feature-label">Jaringan</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">&#9855;</span>
                         <p class="feature-value">ADA</p>
-                        <p class="feature-label">Compliant</p>
+                        <p class="feature-label">Aksesibel</p>
                     </div>
                 </div>
 
@@ -202,7 +421,7 @@
                 <div class="reviews-header">
                     <h2 class="section-heading" style="margin:0;">Ulasan Peminjam</h2>
                     <div class="rating">
-                        <span class="star-icon">&#9733;</span> 4.9 <span style="color: var(--secondary-text); font-weight: 400;">/ 124 reviews</span>
+                        <span class="star-icon">&#9733;</span> 4.9 <span style="color: var(--secondary-text); font-weight: 400;">/ 124 ulasan</span>
                     </div>
                 </div>
 
@@ -210,25 +429,25 @@
                     <div class="review-user">
                         <div class="avatar-initials">LI</div>
                         <div class="user-info">
-                            <h4>Lorem Ipsum</h4>
-                            <p>October 2023 • Lorem Ipsum Dolor</p>
+                            <h4>Laras Indah</h4>
+                            <p>Oktober 2024 • Seminar Nasional</p>
                         </div>
                     </div>
-                    <p class="review-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur et libero odio. Duis congue nec tellus nec laoreet. Aliquam congue dictum lorem, vel suscipit ipsum ornare sed.</p>
+                    <p class="review-text">Ruangannya luas, tata suara jelas, dan proses masuk peserta cukup tertib. Cocok untuk seminar dengan jumlah peserta besar.</p>
                 </div>
 
                 <div class="review-card">
                     <div class="review-user">
                         <div class="avatar-initials">LI</div>
                         <div class="user-info">
-                            <h4>Lorem Ipsum</h4>
-                            <p>October 2023 • Lorem Ipsum Dolor</p>
+                            <h4>Laras Indah</h4>
+                            <p>Oktober 2024 • Seminar Nasional</p>
                         </div>
                     </div>
-                    <p class="review-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur et libero odio. Duis congue nec tellus nec laoreet. Aliquam congue dictum lorem, vel suscipit ipsum ornare sed.</p>
+                    <p class="review-text">Tim fasilitas membantu pengecekan panggung sebelum acara. Area registrasi juga mudah diatur untuk alur kedatangan peserta.</p>
                 </div>
 
-                <a href="#" class="show-all-link">Tampilkan semua review</a>
+                <a href="#" class="show-all-link">Tampilkan semua ulasan</a>
             </div>
 
             <div class="sidebar">
@@ -238,7 +457,7 @@
                             <p class="price-label">Biaya peminjaman</p>
                             <p class="price-value">Rp100.000 <span>/ sesi</span></p>
                         </div>
-                        <span class="badge-available">Available</span>
+                        <span class="badge-available">Tersedia</span>
                     </div>
 
                     <div class="widget-notes">
@@ -252,18 +471,18 @@
                         </div>
                     </div>
 
-                    <button class="btn-edit">Edit Detail</button>
+                    <button class="btn-edit">Reservasi Sekarang</button>
                 </div>
             </div>
 
         </div>
     </main>
 
-    <footer class="footer">
+                <footer class="footer">
         <div class="footer-content">
             <div class="footer-left">
                 <h2 class="logo-footer">IPB SRH</h2>
-                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Semua hak dilindungi.</p>
             </div>
             <div class="footer-right">
                 <a href="#">Beranda</a>

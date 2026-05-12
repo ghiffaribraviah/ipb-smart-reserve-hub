@@ -1,0 +1,128 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,top=22mm,bottom=24mm,left=24mm,right=24mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{titlesec}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\definecolor{IPBGreen}{HTML}{1D7667}
+\definecolor{BrandGreen}{HTML}{0F9D58}
+\definecolor{SoftGreen}{HTML}{E8F5E9}
+\definecolor{TextPrimary}{HTML}{111827}
+\definecolor{TextSecondary}{HTML}{6B7280}
+\definecolor{Border}{HTML}{D1D5DB}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{7pt}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.25}
+\setlist[enumerate]{leftmargin=18pt,itemsep=5pt,topsep=4pt}
+\setlist[itemize]{leftmargin=18pt,itemsep=5pt,topsep=4pt}
+\titleformat{\section}{\large\bfseries\color{TextPrimary}}{}{0pt}{}
+
+\newcommand{\fieldrow}[2]{%
+  \textcolor{TextSecondary}{#1} & \textbf{#2}\\
+}
+
+\begin{document}
+\color{TextPrimary}
+
+\begin{minipage}[t]{0.22\textwidth}
+  {\fontsize{32}{32}\selectfont\bfseries\color{IPBGreen}IPB\\[-2pt]SRH}
+\end{minipage}
+\begin{minipage}[t]{0.74\textwidth}
+  {\large\bfseries IPB SMART RESERVE HUB}\\
+  Direktorat Pengelolaan Fasilitas Kampus\\
+  Jl. Raya Dramaga, Kampus IPB Dramaga, Bogor 16680\\
+  support@ipbsrh.ac.id
+\end{minipage}
+
+\vspace{8pt}
+{\color{IPBGreen}\rule{\textwidth}{1.4pt}}
+\vspace{10pt}
+
+\begin{tabularx}{\textwidth}{@{}p{32mm}X@{}}
+  \fieldrow{Nomor}{RSV/IPBSRH/2026/00024}
+  \fieldrow{Lampiran}{1 berkas dokumen pendukung}
+  \fieldrow{Perihal}{Permohonan Reservasi Fasilitas Kampus}
+  \fieldrow{Tanggal}{24 Oktober 2024}
+\end{tabularx}
+
+\vspace{8pt}
+\begin{center}
+  {\large\bfseries\underline{Surat Permohonan Reservasi Fasilitas}}
+\end{center}
+
+Kepada Yth.\\
+Pengelola Fasilitas IPB Smart Reserve Hub\\
+di tempat
+
+Dengan hormat, melalui surat ini pemohon mengajukan permohonan penggunaan fasilitas kampus untuk mendukung pelaksanaan kegiatan akademik/kemahasiswaan berikut.
+
+\vspace{4pt}
+\fcolorbox{Border}{white}{%
+  \begin{minipage}{0.965\textwidth}
+  \vspace{6pt}
+  \begin{tabularx}{\textwidth}{@{}p{44mm}X@{}}
+    \fieldrow{Nama kegiatan}{Simposium Etika AI}
+    \fieldrow{Jenis kegiatan}{Seminar akademik}
+    \fieldrow{Organisasi pemohon}{Himpunan Mahasiswa IPB}
+    \fieldrow{Penanggung jawab}{Andi Pratama}
+    \fieldrow{NIM/NIP}{G6401201001}
+    \fieldrow{Kontak aktif}{andi.pratama@apps.ipb.ac.id / 0812-0000-0000}
+    \fieldrow{Fasilitas}{Grand Auditorium}
+    \fieldrow{Lokasi}{East Campus, Central Plaza}
+    \fieldrow{Tanggal dan waktu}{24 Oktober 2024, 09:00--13:00 WIB}
+    \fieldrow{Estimasi peserta}{50 orang}
+    \fieldrow{Kebutuhan tambahan}{Dukungan AV, mikrofon, dan koordinasi logistik}
+  \end{tabularx}
+  \vspace{6pt}
+  \end{minipage}
+}
+
+Pemohon menyatakan bahwa data yang tercantum pada surat ini benar dan dapat dipertanggungjawabkan. Pemohon juga memahami bahwa persetujuan reservasi bergantung pada ketersediaan fasilitas, kelengkapan dokumen, dan hasil verifikasi pengelola.
+
+\section*{Ketentuan Penggunaan Fasilitas}
+\begin{enumerate}
+  \item Fasilitas hanya digunakan untuk kegiatan yang sesuai dengan tujuan permohonan dan jadwal yang telah disetujui.
+  \item Pemohon wajib menjaga kebersihan, keamanan, ketertiban, serta tidak mengubah tata ruang tanpa persetujuan pengelola.
+  \item Pemohon bertanggung jawab atas kerusakan, kehilangan, atau gangguan operasional yang timbul selama masa penggunaan fasilitas.
+  \item Perubahan tanggal, waktu, jumlah peserta, atau kebutuhan teknis harus diajukan ulang melalui IPB Smart Reserve Hub.
+  \item Kegiatan yang melibatkan pihak eksternal, konsumsi, pemasangan dekorasi, atau penggunaan peralatan tambahan harus mengikuti kebijakan fakultas/unit terkait.
+  \item Pengelola berhak membatalkan reservasi apabila dokumen tidak lengkap, data tidak valid, atau kegiatan melanggar ketentuan kampus.
+\end{enumerate}
+
+\section*{Lampiran Wajib}
+\begin{itemize}
+  \item Surat permohonan ini yang telah ditandatangani oleh pemohon dan penanggung jawab organisasi.
+  \item Proposal atau rundown kegiatan apabila kegiatan berdurasi lebih dari 4 jam atau melibatkan peserta eksternal.
+  \item Daftar kebutuhan teknis tambahan apabila memerlukan dukungan AV, keamanan, kebersihan, atau logistik.
+\end{itemize}
+
+\section*{Pernyataan Pemohon}
+\fcolorbox{BrandGreen}{SoftGreen}{%
+  \begin{minipage}{0.965\textwidth}
+  Saya menyatakan bersedia mematuhi seluruh ketentuan penggunaan fasilitas IPB Smart Reserve Hub dan menerima konsekuensi administratif apabila terjadi pelanggaran terhadap ketentuan tersebut.
+  \end{minipage}
+}
+
+\vspace{16pt}
+\begin{tabularx}{\textwidth}{@{}X X@{}}
+  \centering Pemohon, & \centering Mengetahui, \tabularnewline[26mm]
+  \rule{62mm}{0.4pt} & \rule{62mm}{0.4pt} \tabularnewline
+  \centering\textbf{Andi Pratama} & \centering\textbf{Ketua Organisasi / Pembina} \tabularnewline
+  \centering NIM G6401201001 & \centering Nama terang dan tanda tangan
+\end{tabularx}
+
+\vfill
+{\footnotesize\color{TextSecondary}
+Catatan: Template ini merupakan dokumen pendukung reservasi. File akhir wajib diunggah dalam format PDF dengan ukuran maksimal 5 MB.
+}
+
+\end{document}

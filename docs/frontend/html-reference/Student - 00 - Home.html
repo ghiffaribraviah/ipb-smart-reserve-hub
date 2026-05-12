@@ -8,6 +8,8 @@
     <style>
         /* Global Variables & Reset */
         :root {
+            --navbar-height: 80px;
+            --bg-surface: #ffffff;
             --bg-color: #ffffff;
             --primary-text: #111827;
             --secondary-text: #6b7280;
@@ -40,6 +42,25 @@
         }
 
         /* Navbar */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height); background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; z-index: 1000; transition: all 0.3s ease; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; height: 100%; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .mobile-menu-btn { display: none; padding: 0; border: 0; background: transparent; font-size: 24px; color: var(--secondary-text); cursor: pointer; }
+        .logo-nav { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; display: block; }
+        .logo-nav-mobile-text { display: inline; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; transition: border-color 0.2s; }
+        .nav-search input:focus { border-color: var(--brand-green); background-color: #ffffff; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text); transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-text); }
+        .nav-link.active { color: var(--brand-green); border-bottom: 2px solid var(--brand-green); padding-bottom: 4px; }
+        .nav-notifications { font-size: 20px; color: var(--secondary-text); cursor: pointer; transition: color 0.2s; }
+        .nav-notifications:hover { color: var(--primary-text); }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #ddd; overflow: hidden; border: 2px solid var(--brand-green); cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        
         .navbar {
             position: fixed;
             top: 0;
@@ -322,6 +343,12 @@
             flex-direction: column;
         }
 
+        .card-link {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
         .card-img {
             height: 180px;
             background-color: #e5e7eb;
@@ -378,7 +405,8 @@
             align-items: flex-start;
         }
 
-        .footer-logo-text {
+        .footer-logo-text,
+        .logo-footer {
             font-family: var(--logo-font);
             font-size: 64px;
             font-weight: 700;
@@ -388,13 +416,15 @@
             letter-spacing: -1px;
         }
 
-        .footer-copyright {
+        .footer-copyright,
+        .copyright {
             font-size: 14px;
             color: var(--secondary-text);
             margin: 0;
         }
 
-        .footer-links {
+        .footer-links,
+        .footer-right {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
@@ -411,52 +441,410 @@
             .facility-types { margin-top: 160px; }
         }
 
-        @media (max-width: 768px) {
-            .nav-links { display: none; } /* Hide on mobile for simplicity */
-            .hero h1 { font-size: 32px; }
-            .types-grid { grid-template-columns: repeat(2, 1fr); }
-            .cards-grid { grid-template-columns: 1fr; }
-            .showcase-header { flex-direction: column; gap: 16px; align-items: flex-start; }
-            .footer-content { flex-direction: column; gap: 32px; align-items: center; text-align: center; }
-            .footer-links { align-items: center; }
+        
+        
+        
+        /* =========================================
+           RESPONSIVE MOBILE STYLES
+           ========================================= */
+        @media (max-width: 992px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+            .top-row { grid-template-columns: 1fr; }
+            .content-layout, .details-layout, .profile-layout, .wizard-layout, .dashboard-layout { flex-direction: column; align-items: stretch; gap: 24px; }
+            .main-details, .sidebar, .time-sidebar, .summary-sidebar, .profile-sidebar, .profile-main, .docs-section, .form-card { width: 100%; box-sizing: border-box; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 200px; }
+            .item-main { grid-column: 1 / 3; grid-row: 1 / 2; }
+            .item-top-right-1 { grid-column: 1 / 2; grid-row: 2 / 3; }
+            .item-top-right-2 { grid-column: 2 / 3; grid-row: 2 / 3; }
+            .item-bottom-right { display: none; }
+            .info-cards-row { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-cards { flex-direction: column; gap: 16px; }
+            .doc-item { flex-direction: column; align-items: flex-start; gap: 16px; }
         }
+
+        @media (max-width: 768px) {
+            /* Mobile Navbar */
+            :root { --navbar-height: 64px; }
+            .navbar { height: var(--navbar-height); }
+            .navbar-content { max-width: 100%; padding: 0 12px; }
+            .mobile-menu-btn { display: block; flex: 0 0 28px; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+
+            .hero {
+                margin-top: var(--navbar-height);
+                height: auto;
+                min-height: 0;
+                justify-content: flex-start;
+                padding: 34px 20px 32px;
+                overflow: visible;
+            }
+
+            .hero h2 {
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+
+            .hero h1 {
+                font-size: 34px;
+                line-height: 1.15;
+                max-width: 330px;
+                margin-bottom: 12px;
+            }
+
+            .hero p {
+                font-size: 13px;
+                line-height: 1.5;
+                max-width: 330px;
+                margin-bottom: 0;
+            }
+
+            .search-panel {
+                position: static;
+                width: calc(100% - 32px);
+                max-width: 358px;
+                transform: none;
+                margin-top: 24px;
+                padding: 12px;
+                gap: 10px;
+                border-radius: 12px;
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-height: 44px;
+                padding: 0 12px;
+                width: 100%;
+            }
+
+            .search-input input,
+            .search-input select {
+                padding: 10px 6px;
+                font-size: 13px;
+            }
+
+            .btn-cari {
+                min-height: 40px;
+                width: 100%;
+                padding: 0 16px;
+            }
+
+            .facility-types {
+                width: 100%;
+                max-width: 100%;
+                margin: 56px auto 56px;
+                padding: 0 16px;
+            }
+
+            .section-title {
+                margin-bottom: 28px;
+            }
+
+            .types-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 24px 18px;
+            }
+
+            .type-item {
+                min-width: 0;
+            }
+
+            .type-icon {
+                width: 52px;
+                height: 52px;
+                margin-bottom: 10px;
+                font-size: 28px;
+            }
+
+            .type-item h3 {
+                font-size: 14px;
+            }
+
+            .type-item p {
+                max-width: 130px;
+                font-size: 11px;
+            }
+
+            .showcase {
+                width: 100%;
+                max-width: 100%;
+                margin-bottom: 72px;
+                padding: 0 16px;
+            }
+
+            .showcase-header {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: 10px 16px;
+                align-items: end;
+                margin-bottom: 22px;
+            }
+
+            .showcase-header h2 {
+                font-size: 20px;
+                line-height: 1.15;
+            }
+
+            .view-all {
+                grid-column: 1 / 2;
+                font-size: 10px;
+                line-height: 1.3;
+            }
+
+            .filter-btn {
+                grid-column: 2 / 3;
+                grid-row: 1 / 3;
+                align-self: center;
+                font-size: 12px;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 18px 14px;
+            }
+
+            .card {
+                border-radius: 10px;
+            }
+
+            .card-img {
+                height: 132px;
+            }
+
+            .card-content {
+                padding: 14px;
+            }
+
+            .card-content h3 {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .card-content p {
+                font-size: 11px;
+                margin-bottom: 14px;
+            }
+
+            .card-footer {
+                gap: 10px;
+                font-size: 10px;
+                align-items: flex-start;
+            }
+
+            /* Mobile Layout Spacing */
+            .page-container { margin-top: calc(var(--navbar-height) + 24px) !important; width: 100%; padding: 0 16px; box-sizing: border-box; }
+            
+            /* Mobile Header & Metrics */
+            .page-header { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 24px; }
+            .header-text h1 { font-size: 28px; margin-bottom: 8px; }
+            .metrics-card { padding: 20px; margin-bottom: 32px; width: 100%; box-sizing: border-box; flex-direction: row; }
+            .metric-value { font-size: 32px; }
+            .header-actions { flex-direction: row; gap: 12px; width: 100%; }
+            .btn-today { flex: 1; text-align: center; }
+            .date-picker { flex: 2; }
+            .btn-add { width: 100%; justify-content: center; padding: 12px; }
+
+            /* Mobile Table to Card Transformation */
+            .table-section { background: transparent; border: none; box-shadow: none; border-radius: 0; }
+            .table-header { padding: 0 0 16px 0; border-bottom: none; flex-direction: row; }
+            .table-header h2 { font-size: 20px; }
+            
+            .data-table, .data-table tbody, .dash-table, .dash-table tbody { display: block; width: 100%; }
+            .data-table thead, .dash-table thead { display: none; }
+            
+            .data-table tr, .dash-table tr { 
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: 
+                    "applicant status"
+                    "facility date"
+                    "actions actions";
+                gap: 16px;
+                background-color: var(--bg-surface); 
+                border: 1px solid var(--border-color); 
+                border-radius: 12px; 
+                margin-bottom: 16px; 
+                padding: 16px;
+                box-shadow: var(--card-shadow);
+            }
+            
+            .data-table td, .dash-table td { 
+                display: block;
+                padding: 0; 
+                border: none;
+                text-align: left;
+            }
+            
+            .data-table td:nth-child(1), .dash-table td:nth-child(1) { grid-area: applicant; }
+            .data-table td:nth-child(2), .dash-table td:nth-child(2) { grid-area: facility; }
+            .data-table td:nth-child(3), .dash-table td:nth-child(3) { grid-area: date; text-align: right; }
+            .data-table td:nth-child(4), .dash-table td:nth-child(4) { grid-area: status; align-self: start; justify-self: end; }
+            .data-table td:nth-child(5), .dash-table td:nth-child(5) { grid-area: actions; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 4px; }
+            
+            /* Labels */
+            .data-table td::before, .dash-table td::before { 
+                display: block;
+                font-size: 10px; 
+                font-weight: 700; 
+                color: var(--secondary-text); 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px; 
+                margin-bottom: 4px;
+                content: attr(data-label);
+            }
+            .data-table td:nth-child(1)::before, .dash-table td:nth-child(1)::before { display: none; }
+            .data-table td:nth-child(4)::before, .dash-table td:nth-child(4)::before { display: none; }
+            .data-table td:nth-child(5)::before, .dash-table td:nth-child(5)::before { display: none; }
+
+            .applicant-cell { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+            .applicant-cell .avatar { width: 36px; height: 36px; margin: 0; }
+            .applicant-info { display: flex; flex-direction: column; align-items: flex-start; }
+            .applicant-name { font-size: 14px; margin-bottom: 2px; }
+            .status-badge { font-size: 11px; padding: 4px 8px; width: fit-content; }
+            
+            .actions-cell { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; justify-content: flex-start; }
+            .action-btn { background-color: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 16px; }
+            .action-download { color: var(--secondary-text); }
+            .action-download::after { content: 'Unduh'; font-size: 11px; font-weight: 600; color: var(--secondary-text); }
+            .action-verify { color: #10b981; }
+            .action-verify::after { content: 'Verifikasi'; font-size: 11px; font-weight: 600; color: #10b981; }
+            .action-reject { color: #ef4444; }
+            .action-reject::after { content: 'Tolak'; font-size: 11px; font-weight: 600; color: #ef4444; }
+
+            .table-footer { flex-direction: column; gap: 16px; padding: 24px 0; background: transparent; border: none; align-items: center; text-align: center; }
+
+            /* Grid Layout adjustments */
+            .calendar-container, .agenda-container { width: 100%; padding: 16px; box-sizing: border-box; }
+            .calendar-grid-wrapper { width: 100%; overflow-x: visible; padding: 0; margin: 0; }
+            .calendar-grid { min-width: 0; gap: 6px; }
+            .calendar-day { padding: 4px; border-radius: 6px; align-items: center; justify-content: center; min-height: 40px; }
+            .calendar-day-header { font-size: 10px; padding-bottom: 6px; }
+            .day-number { font-size: 13px; margin-bottom: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+            .day-indicators { justify-content: center; gap: 2px; margin-top: 4px; width: 100%; }
+            .indicator { width: 5px; height: 5px; }
+            
+            .agenda-item { flex-direction: column; gap: 8px; align-items: stretch; }
+            .agenda-time { display: flex; gap: 8px; align-items: center; width: 100%; }
+            .agenda-time span { display: inline; margin-top: 0; }
+            .agenda-meta { display: grid; grid-template-columns: 1fr; gap: 8px; justify-items: start; }
+            .agenda-meta .action-link { text-align: center; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+            .action-link { width: 100%; display: block; text-align: center; background-color: #f9fafb; padding: 12px 0; border-radius: 8px; border: 1px solid var(--border-color); }
+
+            .actions-bar, .filter-container { flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; }
+            .filter-group { flex-direction: row; gap: 12px; width: 100%; }
+            .filter-select { flex: 1; padding: 10px; }
+            .filter-input { width: 100%; }
+
+            .facilities-grid { grid-template-columns: 1fr; gap: 20px; }
+            
+            .gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+            .item-main { grid-column: 1 / 2; grid-row: 1 / 2; }
+            .item-top-right-1, .item-top-right-2 { grid-column: 1 / 2; grid-row: auto; }
+            
+            .kpi-grid { grid-template-columns: 1fr; }
+            .dashboard-layout { grid-template-columns: 1fr; }
+
+            .reservation-layout { flex-direction: column; }
+            .calendar-card, .time-sidebar { width: 100%; padding: 24px; box-sizing: border-box; }
+            .stepper { width: 100%; justify-content: space-between; }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+
+            /* Mobile Footer */
+            .footer { padding: 56px 0; }
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
+            .logo-footer { font-size: 48px; }
+        }
+
+        /* Student 00 shared header/footer chrome */
+        .navbar { position: fixed; top: 0; width: 100%; height: var(--navbar-height, 80px); background-color: var(--bg-surface, #ffffff); border-bottom: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; z-index: 1000; transition: all 0.3s ease; }
+        .navbar-content { width: 1200px; max-width: 95%; display: flex; justify-content: space-between; align-items: center; height: 100%; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 24px; }
+        .mobile-menu-btn { display: none; padding: 0; border: 0; background: transparent; font-size: 24px; color: var(--secondary-text, #6b7280); cursor: pointer; }
+        .logo-nav { font-family: Playfair Display, var(--logo-serif, serif); font-size: 24px; font-weight: 700; color: #1d7667; line-height: 1.1; display: block; }
+        .logo-nav-mobile-text { display: inline; }
+        .nav-search { position: relative; }
+        .nav-search input { padding: 10px 16px 10px 40px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 20px; font-size: 14px; width: 250px; background-color: #f1f5f9; outline: none; transition: border-color 0.2s; }
+        .nav-search input:focus { border-color: var(--brand-green, #10b981); background-color: #ffffff; }
+        .nav-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--secondary-text, #6b7280); }
+        .nav-center { display: flex; gap: 40px; }
+        .nav-link { font-size: 15px; font-weight: 600; color: var(--secondary-text, #6b7280); transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-text, #111827); }
+        .nav-link.active { color: var(--brand-green, #10b981); border-bottom: 2px solid var(--brand-green, #10b981); padding-bottom: 4px; }
+        .nav-notifications { font-size: 20px; color: var(--secondary-text, #6b7280); cursor: pointer; transition: color 0.2s; }
+        .nav-notifications:hover { color: var(--primary-text, #111827); }
+        .profile-pic { width: 36px; height: 36px; border-radius: 50%; background-color: #e5e7eb; overflow: hidden; border: 2px solid var(--brand-green, #10b981); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .footer { background-color: var(--bg-surface, #ffffff); border-top: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: center; padding: 60px 0; margin-top: 40px; }
+        .footer-content { width: 1200px; max-width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+        .logo-footer { font-family: Playfair Display, var(--logo-serif, serif); font-size: 64px; font-weight: 700; color: #4da38b; margin: 0; line-height: 1; letter-spacing: -1px; }
+        .copyright { font-size: 14px; color: var(--secondary-text, #6b7280); margin: 12px 0 0; }
+        .footer-right { display: flex; flex-direction: column; gap: 16px; align-items: flex-end; font-size: 16px; color: var(--secondary-text, #6b7280); }
+        @media (max-width: 768px) {
+            :root { --navbar-height: 64px; }
+            .navbar { height: var(--navbar-height); }
+            .navbar-content { max-width: 100%; padding: 0 12px; }
+            .mobile-menu-btn { display: block; flex: 0 0 28px; }
+            .nav-left { gap: 16px; }
+            .nav-search { display: none; }
+            .nav-center { display: none; }
+            .nav-right { gap: 16px; }
+            .logo-nav br { display: none; }
+            .logo-nav-mobile-text { display: inline; margin-left: 6px; }
+            .footer { padding: 56px 0; }
+            .footer-content { flex-direction: column; align-items: center; text-align: center; gap: 32px; }
+            .footer-left { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+            .footer-right { align-items: center; }
+            .logo-footer { font-size: 48px; }
+        }
+
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-container">
+                <header class="navbar">
+        <div class="navbar-content">
             <div class="nav-left">
-                <div class="nav-logo">IPB<br>SRH</div>
-                <div class="search-bar">
-                    <span class="icon">&#128269;</span>
-                    <input type="text" placeholder="Search facilities...">
+                <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
+                <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
+                <div class="nav-search">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="search" placeholder="Cari fasilitas..." aria-label="Cari fasilitas">
                 </div>
             </div>
-            <div class="nav-links">
-                <a href="#" class="active">Beranda</a>
-                <a href="#">Fasilitas</a>
-                <a href="#">Reservasi</a>
+            <div class="nav-center">
+                <a href="#" class="nav-link active">Beranda</a>
+                <a href="#" class="nav-link">Fasilitas</a>
+                <a href="#" class="nav-link">Reservasi</a>
             </div>
             <div class="nav-right">
-                <span style="font-size: 20px; color: #6b7280; cursor: pointer;">&#128276;</span>
-                <div class="profile-btn"></div>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
+                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #e5e7eb; border: none; display: flex; align-items: center; justify-content: center; color: transparent;"></a>
             </div>
         </div>
-    </nav>
+    </header>
 
     <section class="hero">
-        <h2>Lorem ipsum dolor sit amet.</h2>
+        <h2>Reservasi fasilitas kampus lebih cepat.</h2>
         <h1>IPB Smart Reserve Hub</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ac massa id ex hendrerit iaculis et et sem. Pellentesque odio eu, mollis eget aliquet ut, interdum luctus lectus.</p>
+        <p>Temukan ruang, cek ketersediaan, dan ajukan reservasi fasilitas IPB dalam satu alur yang rapi.</p>
         
         <div class="search-panel">
             <div class="search-input">
                 <span style="color: #9ca3af;">&#128269;</span>
-                <input type="text" placeholder="Nama Ruangan">
+                <input type="text" placeholder="Nama Ruangan" aria-label="Nama ruangan">
             </div>
             <div class="search-input">
-                <select>
+                <select aria-label="Pilih fakultas">
                     <option value="">Semua Fakultas</option>
                     <option value="faperta">Pertanian</option>
                     <option value="fkh">Kedokteran Hewan</option>
@@ -464,9 +852,9 @@
             </div>
             <div class="search-input">
                 <span style="color: #9ca3af;">&#128101;</span>
-                <input type="number" placeholder="Kapasitas">
+                <input type="number" placeholder="Kapasitas" aria-label="Kapasitas">
             </div>
-            <button class="btn-cari">Cari</button>
+            <button class="btn-cari" type="button">Cari</button>
         </div>
     </section>
 
@@ -476,27 +864,27 @@
             <div class="type-item">
                 <div class="type-icon">&#9917;</div>
                 <h3>Olahraga</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <p>Lapangan dan ruang aktivitas fisik untuk kegiatan mahasiswa.</p>
             </div>
             <div class="type-item">
                 <div class="type-icon">&#127979;</div>
                 <h3>Kelas</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <p>Ruang belajar, kuliah umum, dan kelas kolaboratif.</p>
             </div>
             <div class="type-item">
                 <div class="type-icon">&#127908;</div>
                 <h3>Seminar</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <p>Auditorium dan ruang acara untuk forum akademik.</p>
             </div>
             <div class="type-item">
                 <div class="type-icon">&#127795;</div>
                 <h3>Landskap</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <p>Area terbuka untuk pameran, festival, dan seremoni kampus.</p>
             </div>
             <div class="type-item">
                 <div class="type-icon">&#128187;</div>
                 <h3>Peralatan</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <p>Studio dan perangkat pendukung produksi kegiatan.</p>
             </div>
         </div>
     </section>
@@ -514,44 +902,44 @@
             <div class="card">
                 <div class="card-img"></div>
                 <div class="card-content">
-                    <h3>Lorem ipsum</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <h3>Grand Auditorium</h3>
+                    <p>Auditorium utama untuk seminar nasional, kuliah umum, dan wisuda fakultas.</p>
                     <div class="card-footer">
-                        <span>&#128101; Kapasitas: XX</span>
-                        <span>Tipe: XX</span>
+                        <span>&#128101; Kapasitas: 1,200</span>
+                        <span>Tipe: Seminar</span>
                     </div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-img"></div>
                 <div class="card-content">
-                    <h3>Lorem ipsum</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <h3>Smart Classroom A1</h3>
+                    <p>Ruang kelas interaktif dengan smart board dan tata letak fleksibel.</p>
                     <div class="card-footer">
-                        <span>&#128101; Kapasitas: XX</span>
-                        <span>Tipe: XX</span>
+                        <span>&#128101; Kapasitas: 45</span>
+                        <span>Tipe: Kelas</span>
                     </div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-img"></div>
                 <div class="card-content">
-                    <h3>Lorem ipsum</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <h3>Gymnasium Utama</h3>
+                    <p>Fasilitas olahraga indoor untuk basket, voli, dan bulu tangkis.</p>
                     <div class="card-footer">
-                        <span>&#128101; Kapasitas: XX</span>
-                        <span>Tipe: XX</span>
+                        <span>&#128101; Kapasitas: 500</span>
+                        <span>Tipe: Olahraga</span>
                     </div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-img"></div>
                 <div class="card-content">
-                    <h3>Lorem ipsum</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <h3>Plaza Rektorat</h3>
+                    <p>Area terbuka hijau untuk pameran, festival, dan kegiatan komunitas.</p>
                     <div class="card-footer">
-                        <span>&#128101; Kapasitas: XX</span>
-                        <span>Tipe: XX</span>
+                        <span>&#128101; Kapasitas: 2,000</span>
+                        <span>Tipe: Landskap</span>
                     </div>
                 </div>
             </div>
@@ -559,57 +947,57 @@
             <div class="card">
                 <div class="card-img"></div>
                 <div class="card-content">
-                    <h3>Lorem ipsum</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <h3>Ruang Sidang Senat</h3>
+                    <p>Ruang rapat formal dengan konferensi video dan audio delegasi.</p>
                     <div class="card-footer">
-                        <span>&#128101; Kapasitas: XX</span>
-                        <span>Tipe: XX</span>
+                        <span>&#128101; Kapasitas: 60</span>
+                        <span>Tipe: Seminar</span>
                     </div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-img"></div>
                 <div class="card-content">
-                    <h3>Lorem ipsum</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <h3>Multimedia Studio</h3>
+                    <p>Studio produksi konten dengan kamera, lighting, dan green screen.</p>
                     <div class="card-footer">
-                        <span>&#128101; Kapasitas: XX</span>
-                        <span>Tipe: XX</span>
+                        <span>&#128101; Kapasitas: 15</span>
+                        <span>Tipe: Peralatan</span>
                     </div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-img"></div>
                 <div class="card-content">
-                    <h3>Lorem ipsum</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <h3>Lapangan Tenis Outdoor</h3>
+                    <p>Lapangan tenis dengan lampu penerangan untuk sesi sore dan malam.</p>
                     <div class="card-footer">
-                        <span>&#128101; Kapasitas: XX</span>
-                        <span>Tipe: XX</span>
+                        <span>&#128101; Kapasitas: 4</span>
+                        <span>Tipe: Olahraga</span>
                     </div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-img"></div>
                 <div class="card-content">
-                    <h3>Lorem ipsum</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                    <h3>Ruang Seminar Cendekia</h3>
+                    <p>Ruang seminar ringkas untuk diskusi riset dan presentasi tugas akhir.</p>
                     <div class="card-footer">
-                        <span>&#128101; Kapasitas: XX</span>
-                        <span>Tipe: XX</span>
+                        <span>&#128101; Kapasitas: 80</span>
+                        <span>Tipe: Seminar</span>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="footer">
+                <footer class="footer">
         <div class="footer-content">
-            <div>
-                <h2 class="footer-logo-text">IPB SRH</h2>
-                <p class="footer-copyright">&copy; 2026 IPB Smart Reserve Hub. All rights reserved.</p>
+            <div class="footer-left">
+                <h2 class="logo-footer">IPB SRH</h2>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Semua hak dilindungi.</p>
             </div>
-            <div class="footer-links">
+            <div class="footer-right">
                 <a href="#">Beranda</a>
                 <a href="#">Fasilitas</a>
                 <a href="#">Reservasi</a>

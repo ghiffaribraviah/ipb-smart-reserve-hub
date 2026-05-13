@@ -26,3 +26,14 @@ body {
   background: #ffffff;
   color: var(--color-text-primary);
 }
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}

@@ -62,3 +62,25 @@ Generated from `docs/issues/*.md` frontmatter. Edit issue files, then regenerate
 - ISSUE-0036 - Add Super Admin Facility governance read model
 - ISSUE-0037 - Add Super Admin dashboard aggregate read model
 - ISSUE-0038 - Add Super Admin report aggregate read model
+- ISSUE-0039 - Frontend visual verification harness
+- ISSUE-0040 - UI primitives reference board
+- ISSUE-0041 - Role shells and mobile drawer
+- ISSUE-0042 - Shared states upload and calendar board
+- ISSUE-0043 - Shared workflow and data display boards
+- ISSUE-0044 - Auth login and register pages
+- ISSUE-0045 - Student home page
+- ISSUE-0046 - Student Facility Catalog page
+- ISSUE-0047 - Student Facility detail page
+- ISSUE-0048 - Student Reservation time and details pages
+- ISSUE-0049 - Student approval letter and document status pages
+- ISSUE-0050 - Student payment status pages
+- ISSUE-0051 - Student Reservation list page
+- ISSUE-0052 - Student Reservation detail pages
+- ISSUE-0053 - Student review cancellation and profile pages
+- ISSUE-0054 - Staff home and Reservation list pages
+- ISSUE-0055 - Staff Facility list and schedule pages
+- ISSUE-0056 - Staff edit Facility page
+- ISSUE-0057 - Staff Reservation detail and decision surfaces
+- ISSUE-0058 - Super Admin dashboard and users pages
+- ISSUE-0059 - Super Admin facilities and reports pages
+- ISSUE-0060 - Super Admin system page

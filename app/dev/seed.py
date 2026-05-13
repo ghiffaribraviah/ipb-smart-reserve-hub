@@ -22,6 +22,72 @@ from app.models import (
 
 DEMO_PASSWORD = "demo12345"
 
+DEMO_USERS = [
+    {
+        "email": "demo.admin@ipb.ac.id",
+        "full_name": "Demo Super Admin",
+        "role": UserRole.super_admin,
+    },
+    {
+        "email": "demo.staff.operations@ipb.ac.id",
+        "full_name": "Demo Staff Operasional",
+        "role": UserRole.staff,
+    },
+    {
+        "email": "demo.staff.facilities@ipb.ac.id",
+        "full_name": "Demo Staff Fasilitas",
+        "role": UserRole.staff,
+    },
+    {
+        "email": "demo.staff.finance@ipb.ac.id",
+        "full_name": "Demo Staff Keuangan",
+        "role": UserRole.staff,
+    },
+    {
+        "email": "demo.student@apps.ipb.ac.id",
+        "full_name": "Demo Student",
+        "role": UserRole.student,
+        "nim": "G64000001",
+        "phone": "081234500001",
+    },
+    {
+        "email": "demo.student.06@apps.ipb.ac.id",
+        "legacy_email": "demo.blocking@apps.ipb.ac.id",
+        "full_name": "Demo Student Reservasi",
+        "role": UserRole.student,
+        "nim": "G64000002",
+        "phone": "081234500002",
+    },
+    {
+        "email": "demo.student.02@apps.ipb.ac.id",
+        "full_name": "Demo Student 02",
+        "role": UserRole.student,
+        "nim": "G64000003",
+        "phone": "081234500003",
+    },
+    {
+        "email": "demo.student.03@apps.ipb.ac.id",
+        "full_name": "Demo Student 03",
+        "role": UserRole.student,
+        "nim": "G64000004",
+        "phone": "081234500004",
+    },
+    {
+        "email": "demo.student.04@apps.ipb.ac.id",
+        "full_name": "Demo Student 04",
+        "role": UserRole.student,
+        "nim": "G64000005",
+        "phone": "081234500005",
+    },
+    {
+        "email": "demo.student.05@apps.ipb.ac.id",
+        "full_name": "Demo Student 05",
+        "role": UserRole.student,
+        "nim": "G64000006",
+        "phone": "081234500006",
+    },
+]
+
 
 class ProductionSeedRefused(Exception):
     pass
@@ -37,24 +103,12 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
     Base.metadata.create_all(bind=session_factory.kw["bind"])
 
     with session_factory() as session:
-        demo_student = _ensure_user(
-            session,
-            email="demo.student@apps.ipb.ac.id",
-            full_name="Demo Student",
-            role=UserRole.student,
-            nim="G64000001",
-            phone="081234500001",
-        )
-        blocking_student = _ensure_user(
-            session,
-            email="demo.blocking@apps.ipb.ac.id",
-            full_name="Demo Calendar Blocker",
-            role=UserRole.student,
-            nim="G64000002",
-            phone="081234500002",
-        )
-        staff = _ensure_user(session, email="demo.staff@ipb.ac.id", full_name="Demo Staff", role=UserRole.staff)
-        _ensure_user(session, email="demo.admin@ipb.ac.id", full_name="Demo Super Admin", role=UserRole.super_admin)
+        users_by_email = {user.email: user for user in (_ensure_user(session, **user_data) for user_data in DEMO_USERS)}
+        demo_student = users_by_email["demo.student@apps.ipb.ac.id"]
+        reservation_student = users_by_email["demo.student.06@apps.ipb.ac.id"]
+        operations_staff = users_by_email["demo.staff.operations@ipb.ac.id"]
+        facilities_staff = users_by_email["demo.staff.facilities@ipb.ac.id"]
+        finance_staff = users_by_email["demo.staff.finance@ipb.ac.id"]
 
         auditorium = _ensure_category(
             session,
@@ -152,7 +206,9 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
             code="HIMALKOM",
         )
         session.flush()
-        _ensure_staff_assignment(session, facility=facilities[0], staff=staff)
+        _ensure_staff_assignment(session, facility=facilities[0], staff=operations_staff)
+        _ensure_staff_assignment(session, facility=facilities[1], staff=facilities_staff)
+        _ensure_staff_assignment(session, facility=facilities[2], staff=finance_staff)
 
         now = datetime.now(UTC)
         first_start = (now + timedelta(days=7)).replace(hour=2, minute=0, second=0, microsecond=0)
@@ -161,7 +217,7 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
             session,
             code="DEV-SEED-APPROVED",
             facility=facilities[0],
-            student=blocking_student,
+            student=reservation_student,
             organization_unit=bem,
             status=ReservationStatus.approved,
             activity_title="Seminar Karier",
@@ -172,7 +228,7 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
             session,
             code="DEV-SEED-PENDING",
             facility=facilities[1],
-            student=blocking_student,
+            student=reservation_student,
             organization_unit=himalkom,
             status=ReservationStatus.pending_document_upload,
             activity_title="Workshop Kewirausahaan",
@@ -192,8 +248,11 @@ def _ensure_user(
     role: UserRole,
     nim: str | None = None,
     phone: str | None = None,
+    legacy_email: str | None = None,
 ) -> User:
     user = session.scalar(select(User).where(User.email == email))
+    if user is None and legacy_email is not None:
+        user = session.scalar(select(User).where(User.email == legacy_email))
     if user is None:
         user = User(
             email=email,
@@ -205,6 +264,7 @@ def _ensure_user(
             is_active=True,
         )
         session.add(user)
+    user.email = email
     user.password_hash = hash_password(DEMO_PASSWORD)
     user.full_name = full_name
     user.role = role

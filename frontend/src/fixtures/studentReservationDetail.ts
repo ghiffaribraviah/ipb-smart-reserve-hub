@@ -26,7 +26,7 @@ const baseDocuments = [
   },
   {
     actionLabel: "Lihat Bukti",
-    fileName: "bukti-pembayaran.pdf",
+    fileName: "bukti-pembayaran.jpg",
     href: "/student/reservations/RSV-FIXTURE-001/files/payment-receipt",
     metadata: "Diunggah 18 Oktober 2024 · 840 KB",
   },

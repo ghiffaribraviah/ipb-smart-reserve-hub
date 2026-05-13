@@ -84,3 +84,27 @@ Generated from `docs/issues/*.md` frontmatter. Edit issue files, then regenerate
 - ISSUE-0058 - Super Admin dashboard and users pages
 - ISSUE-0059 - Super Admin facilities and reports pages
 - ISSUE-0060 - Super Admin system page
+- ISSUE-0061 - Frontend API/session foundation
+- ISSUE-0062 - Integrated student registration
+- ISSUE-0063 - Contract audit and fixture/page normalization
+- ISSUE-0064 - Student home discovery integration
+- ISSUE-0065 - Student Facility catalog integration
+- ISSUE-0066 - Public Facility Calendar privacy contract correction
+- ISSUE-0067 - Student Facility detail integration
+- ISSUE-0068 - Student Reservation time selection integration
+- ISSUE-0069 - Student Reservation detail submission integration
+- ISSUE-0070 - Student Reservation projection mapper and list integration
+- ISSUE-0071 - Student approval letter and document verification integration
+- ISSUE-0072 - Student payment workflow integration
+- ISSUE-0073 - Student Reservation detail cancellation review profile integration
+- ISSUE-0074 - Staff Reservation queue and list integration
+- ISSUE-0075 - Staff Reservation detail and decision integration
+- ISSUE-0076 - Staff Facility list and schedule integration
+- ISSUE-0077 - Staff Facility edit integration
+- ISSUE-0078 - Super Admin dashboard integration
+- ISSUE-0079 - Super Admin users integration
+- ISSUE-0080 - Super Admin Facility governance integration
+- ISSUE-0081 - Super Admin reports integration
+- ISSUE-0082 - Super Admin system and Booking Settings integration
+- ISSUE-0083 - Notification surface integration
+- ISSUE-0084 - Integration hardening and contract smoke

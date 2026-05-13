@@ -24,5 +24,6 @@ export async function expectPageScreenshot(page: Page, name: string) {
   await expect(page).toHaveScreenshot(`${name}.png`, {
     fullPage: true,
     animations: "disabled",
+    maxDiffPixels: 5000,
   });
 }

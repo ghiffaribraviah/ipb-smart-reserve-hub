@@ -41,19 +41,20 @@
 
 - Gallery images require alt text.
 - Calendar entries must be text-readable, not color-only.
+- Public calendar entries must not expose another user's activity title, organization, requester, or private reservation details.
 - Reserve CTA must be keyboard reachable.
 - Contact links should expose phone/email text.
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: facility with multiple images, contact, open-hours, price, review summary, calendar blocks.
+- Deterministic fixture requirements: facility with multiple images, contact, open-hours, price, review summary, privacy-safe calendar blocks.
 - Real entities: Facility detail, public reviews, calendar entries.
 - Fixture media: local deterministic facility images.
 
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /facilities/:facilityId`, `GET /facilities/:facilityId/calendar`, optionally `GET /facilities/:facilityId/availability`.
-- Page-needed fields: `FacilityDetailResponse`, review summary/reviews, image list, contact, price, open-hours summary, calendar entry start/end/title.
+- Page-needed fields: `FacilityDetailResponse`, review summary/reviews, image list, contact, price, open-hours summary, and privacy-safe calendar entries containing only `starts_at`, `ends_at`, and generic `status: reserved`.
 - Auth/session assumptions: protected student route; public facility endpoints.
 - Source files: `app/api/routes/facility_routes.py`, `app/schemas/facility_schemas.py`.
 
@@ -65,6 +66,15 @@
 - Contract needed: active facility detail plus public blocked-slot calendar.
 - Evidence: detail, calendar, and availability routes exist in `app/api/routes/facility_routes.py`; schemas exist in `app/schemas/facility_schemas.py`.
 - Source issue/PRD: `docs/issues/ISSUE-0002-facility-catalog-and-detail-browsing.md`, `docs/issues/ISSUE-0003-facility-availability-calendar.md`.
+
+### BG-STUDENT-02-02: Privacy-Safe Public Calendar Blocks
+
+- Status: `resolved`
+- Domain area: Facility Catalog
+- Affected UI: public facility calendar and reservation time calendar.
+- Contract needed: public calendar responses return only blocked/reserved time ranges and generic availability status. They must not expose another user's activity title, organization, requester, reservation purpose, workflow state, document metadata, payment metadata, or reservation ID.
+- Evidence: `FacilityCalendarEntryResponse` contains only `starts_at`, `ends_at`, and `status`; `tests/test_facility_browsing.py` verifies pending, approved, and cancellation-requested reservations are privacy-safe public blocks; `tests/test_staff_reservation_operations.py` verifies private staff schedule details remain separate.
+- Source issue/PRD: `docs/issues/ISSUE-0063-contract-audit-and-fixture-normalization.md`, `docs/issues/ISSUE-0066-public-facility-calendar-privacy-contract-correction.md`.
 
 ## Shared Components
 

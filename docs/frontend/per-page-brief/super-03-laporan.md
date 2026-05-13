@@ -30,7 +30,7 @@
 
 ## UX Behavior
 
-- Primary actions: export report, moderate review.
+- Primary actions: moderate review. Export report remains deferred unless a backend export contract is added.
 - Secondary actions: date range, detail links.
 - Loading state: KPI/chart/log skeletons.
 - Empty state: no audit rows or no moderation items.
@@ -73,6 +73,15 @@
 - Contract needed: audit log list and review moderation list/actions.
 - Evidence: `GET /admin/audit-logs`, `GET /admin/reviews`, delete, and restore routes exist.
 - Source issue/PRD: `docs/issues/ISSUE-0015-super-admin-review-moderation-and-audit-logs.md`.
+
+### BG-SUPER-03-03: Report Export Action
+
+- Status: `deferred`
+- Domain area: Super Admin
+- Affected UI: report page header export action.
+- Contract needed: report export endpoint, file format, date-range input, authorization, and download/progress behavior.
+- Evidence: aggregate report routes are implemented, but tests verify no export route exists. The frontend marks export as deferred.
+- Source issue/PRD: `docs/issues/ISSUE-0063-contract-audit-and-fixture-normalization.md`.
 
 ## Shared Components
 

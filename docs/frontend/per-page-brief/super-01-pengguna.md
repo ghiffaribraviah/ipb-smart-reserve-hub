@@ -25,7 +25,7 @@
 - Layout: Super Admin shell, KPI cards, filter toolbar, dense user table/cards.
 - Desktop behavior: KPI row, inline filters, table.
 - Mobile behavior: stacked actions, KPI cards, filters, and user cards.
-- Required copy/status labels: preserve `Pengguna`, `Tambah Pengguna`, `Aktif`, `Nonaktif`, `Perlu Data`.
+- Required copy/status labels: preserve `Pengguna`, `Tambah Pengguna`, `Aktif`, `Nonaktif`.
 - Source-of-truth notes: use Super Admin indigo accent.
 
 ## UX Behavior
@@ -52,7 +52,7 @@
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `POST /admin/users`, `GET /admin/users`, `POST /admin/users/:userId/deactivate`, `POST /admin/users/:userId/activate`.
-- Page-needed fields: user identity, role, unit/profile, active status, last activity or review flag.
+- Page-needed fields: user identity, role, unit/profile, active status. Last activity and profile-review flags are deferred unless a backend field is added.
 - Auth/session assumptions: super-admin bearer token.
 - Source files: `app/api/routes/account_routes.py`.
 

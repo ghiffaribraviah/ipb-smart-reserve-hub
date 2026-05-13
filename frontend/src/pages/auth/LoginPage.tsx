@@ -1,12 +1,36 @@
 import { Lock, Mail } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { FormEvent, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { ApiError } from "../../api/http";
+import { getRoleLanding, getSafeRedirectTarget, useAuth } from "../../auth/session";
 import { AuthField } from "../../components/auth/AuthField";
 import { AuthLayout } from "../../components/auth/AuthLayout";
 
 export function LoginPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const auth = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const showRegisterSuccess = searchParams.get("registered") === "1";
   const showExpiredSession = searchParams.get("reason") === "expired";
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const user = await auth.login(email, password);
+      navigate(getSafeRedirectTarget(searchParams.get("redirect"), getRoleLanding(user.role)), { replace: true });
+    } catch (caughtError) {
+      setError(caughtError instanceof ApiError ? caughtError.message : "Gagal masuk. Coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <AuthLayout>
@@ -33,15 +57,23 @@ export function LoginPage() {
           Sesi Anda berakhir. Masuk kembali untuk melanjutkan.
         </div>
       ) : null}
+      {error ? (
+        <div className="mb-5 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm font-semibold text-[#991b1b]">
+          {error}
+        </div>
+      ) : null}
 
-      <form>
+      <form onSubmit={handleSubmit}>
         <AuthField
           autoComplete="email"
           icon={<Mail aria-hidden="true" size={18} />}
           id="login-email"
           label="Email Kampus"
+          onChange={(event) => setEmail(event.target.value)}
           placeholder="name@apps.ipb.ac.id"
+          required
           type="email"
+          value={email}
         />
 
         <div className="mb-2 flex items-center justify-between">
@@ -60,16 +92,20 @@ export function LoginPage() {
             autoComplete="current-password"
             className="h-[43px] w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] py-3 pl-10 pr-4 text-sm text-[#2D3748] outline-none transition focus:border-[#0A9361] focus:bg-white focus:ring-2 focus:ring-[#0A9361]/10 max-md:h-12"
             id="login-password"
+            onChange={(event) => setPassword(event.target.value)}
             placeholder="••••••••"
+            required
             type="password"
+            value={password}
           />
         </div>
 
         <button
-          className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-lg border-0 bg-[#0A9361] p-3.5 text-base font-semibold text-white shadow-none transition hover:bg-[#087a50] max-md:min-h-[52px]"
-          type="button"
+          className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-lg border-0 bg-[#0A9361] p-3.5 text-base font-semibold text-white shadow-none transition hover:bg-[#087a50] disabled:cursor-not-allowed disabled:bg-[#94a3b8] max-md:min-h-[52px]"
+          disabled={isSubmitting}
+          type="submit"
         >
-          Masuk <span aria-hidden="true">→</span>
+          {isSubmitting ? "Memproses" : "Masuk"} <span aria-hidden="true">→</span>
         </button>
       </form>
 

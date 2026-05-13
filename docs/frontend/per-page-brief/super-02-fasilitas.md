@@ -30,8 +30,8 @@
 
 ## UX Behavior
 
-- Primary actions: add facility.
-- Secondary actions: import, view all, manage assignment.
+- Primary actions: view facility governance. Add facility remains deferred unless a backend creation contract is added.
+- Secondary actions: view all and manage assignment. Import remains deferred unless a backend import contract is added.
 - Loading state: KPI/list/assignment skeletons.
 - Empty state: no facilities or no assignment issues.
 - Error state: retry panels.
@@ -64,6 +64,15 @@
 - Contract implemented: Super Admin Facility governance list with active/inactive Facilities, assignment coverage, active assigned staff counts, and issue flags. Facility create/import remains out of scope.
 - Evidence: `app/api/routes/facility_management_routes.py` registers `GET /admin/facilities/governance`; `tests/test_super_admin_facility_governance.py` verifies active/inactive governance rows, assignment counts, issue flags, and non-admin denial; `tests/test_http_application.py` verifies assignment mutation routes remain and no import route exists.
 - Source issue/PRD: `docs/issues/ISSUE-0016-staff-facility-management-and-assignment-scope.md`.
+
+### BG-SUPER-02-02: Facility Create And Import Actions
+
+- Status: `deferred`
+- Domain area: Super Admin
+- Affected UI: facility page header actions.
+- Contract needed: facility create/import request schemas, validation behavior, assignment defaults, and result/error projections.
+- Evidence: verified governance endpoint is read-only for facility inventory; tests confirm no import route exists. The frontend marks create/import as deferred.
+- Source issue/PRD: `docs/issues/ISSUE-0063-contract-audit-and-fixture-normalization.md`.
 
 ## Shared Components
 

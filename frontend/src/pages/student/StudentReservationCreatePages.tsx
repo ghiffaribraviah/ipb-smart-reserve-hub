@@ -1,5 +1,4 @@
 import {
-  Bell,
   CalendarDays,
   Check,
   Clock,
@@ -8,9 +7,50 @@ import {
   Search,
   Users,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import type { FormEvent, ReactNode } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ApiError, apiRequest } from "../../api/http";
+import { NotificationSurface } from "../../components/NotificationSurface";
 import { reservationCreateFixture } from "../../fixtures/studentReservationCreate";
 import { studentHomeSession } from "../../fixtures/studentHome";
+
+type PublicCalendarEntryResponse = {
+  ends_at: string;
+  starts_at: string;
+  status: "reserved";
+};
+
+type TimeSelectionResponse = {
+  available: boolean;
+  errors: {
+    message: string;
+    reason: string;
+  }[];
+};
+
+type OrganizationUnitResponse = {
+  code?: string | null;
+  id: string;
+  name: string;
+  type?: string;
+};
+
+type StudentReservationResponse = {
+  id: string;
+};
+
+type ReservationFormErrors = Partial<Record<
+  "activityTitle" | "contactPhone" | "eventDescription" | "extraNotes" | "organizationUnitId" | "participantCount",
+  string
+>>;
+
+type ValidationState =
+  | { kind: "idle" }
+  | { kind: "available" }
+  | { kind: "unavailable"; messages: string[] }
+  | { kind: "error"; message: string };
 
 const navItems = [
   { href: "/student", label: "Beranda" },
@@ -19,49 +59,220 @@ const navItems = [
 ];
 
 const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-const calendarDays = [
-  { day: 29, muted: true },
-  { day: 30, muted: true },
-  { day: 1 },
-  { day: 2 },
-  { day: 3 },
-  { day: 4, dots: ["success"] },
-  { day: 5 },
-  { day: 6 },
-  { day: 7 },
-  { day: 8 },
-  { day: 9 },
-  { day: 10, dots: ["danger"] },
-  { day: 11, dots: ["warning"] },
-  { day: 12 },
-  { day: 13 },
-  { day: 14 },
-  { day: 15 },
-  { day: 16, dots: ["success", "success"] },
-  { day: 17 },
-  { day: 18 },
-  { day: 19 },
-  { day: 20 },
-  { day: 21 },
-  { day: 22 },
-  { day: 23, dots: ["warning"] },
-  { day: 24, selected: true, dots: ["success", "success", "warning"] },
-  { day: 25 },
-  { day: 26, dots: ["danger"] },
-  { day: 27 },
-  { day: 28 },
-  { day: 29 },
-  { day: 30 },
-  { day: 31, dots: ["success"] },
-  { day: 1, muted: true },
-  { day: 2, muted: true },
-] as const;
+const monthNames = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+];
+const defaultSelectedDateKey = "2026-06-24";
+const jakartaOffset = "+07:00";
 
-const dotColor = {
-  danger: "bg-[#ef4444]",
-  success: "bg-[#10b981]",
-  warning: "bg-[#f59e0b]",
-};
+const dotColor = "bg-[#10b981]";
+
+function dateKey(year: number, monthIndex: number, day: number) {
+  return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function parseDateKey(value: string) {
+  const [year = "2026", month = "06", day = "24"] = value.split("-");
+  return {
+    day: Number(day),
+    monthIndex: Number(month) - 1,
+    year: Number(year),
+  };
+}
+
+function calendarPath(facilityId: string, year: number, monthIndex: number) {
+  const start = `${dateKey(year, monthIndex, 1)}T00:00:00${jakartaOffset}`;
+  const nextMonth = monthIndex === 11
+    ? { monthIndex: 0, year: year + 1 }
+    : { monthIndex: monthIndex + 1, year };
+  const end = `${dateKey(nextMonth.year, nextMonth.monthIndex, 1)}T00:00:00${jakartaOffset}`;
+  const params = new URLSearchParams({ end, start });
+  return `/facilities/${facilityId}/calendar?${params.toString()}`;
+}
+
+function selectedDateTime(selectedDateKey: string, time: string) {
+  return `${selectedDateKey}T${time}:00${jakartaOffset}`;
+}
+
+function formatJakartaTime(value: string) {
+  const date = new Date(value);
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    timeZone: "Asia/Jakarta",
+  }).format(date);
+}
+
+function formatTimeRange(entry: PublicCalendarEntryResponse) {
+  return `${formatJakartaTime(entry.starts_at)} - ${formatJakartaTime(entry.ends_at)}`;
+}
+
+function formatDateLabel(value: string) {
+  const { day, monthIndex, year } = parseDateKey(value);
+  return `${day} ${monthNames[monthIndex]} ${year}`;
+}
+
+function localDateKeyFromIso(value: string) {
+  const date = new Date(value);
+  date.setUTCHours(date.getUTCHours() + 7);
+  return date.toISOString().slice(0, 10);
+}
+
+function durationLabel(startTime: string, endTime: string) {
+  const [startHour = "0", startMinute = "0"] = startTime.split(":");
+  const [endHour = "0", endMinute = "0"] = endTime.split(":");
+  const start = Number(startHour) * 60 + Number(startMinute);
+  const end = Number(endHour) * 60 + Number(endMinute);
+  const minutes = Math.max(0, end - start);
+
+  if (minutes === 0) {
+    return "0 Jam";
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return [
+    hours > 0 ? `${hours} Jam` : null,
+    remainder > 0 ? `${remainder} Menit` : null,
+  ].filter(Boolean).join(" ");
+}
+
+function monthGrid(year: number, monthIndex: number, selectedDateKey: string, entries: PublicCalendarEntryResponse[]) {
+  const firstDay = new Date(Date.UTC(year, monthIndex, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+  const previousMonthDays = new Date(Date.UTC(year, monthIndex, 0)).getUTCDate();
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  const entryCounts = entries.reduce<Record<string, number>>((counts, entry) => {
+    const key = localDateKeyFromIso(entry.starts_at);
+    counts[key] = (counts[key] ?? 0) + 1;
+    return counts;
+  }, {});
+
+  return Array.from({ length: totalCells }, (_, index) => {
+    const dayOffset = index - firstDay + 1;
+    let cellYear = year;
+    let cellMonthIndex = monthIndex;
+    let day = dayOffset;
+    let muted = false;
+
+    if (dayOffset <= 0) {
+      muted = true;
+      cellMonthIndex = monthIndex - 1;
+      day = previousMonthDays + dayOffset;
+      if (cellMonthIndex < 0) {
+        cellMonthIndex = 11;
+        cellYear -= 1;
+      }
+    } else if (dayOffset > daysInMonth) {
+      muted = true;
+      cellMonthIndex = monthIndex + 1;
+      day = dayOffset - daysInMonth;
+      if (cellMonthIndex > 11) {
+        cellMonthIndex = 0;
+        cellYear += 1;
+      }
+    }
+
+    const key = dateKey(cellYear, cellMonthIndex, day);
+    return {
+      day,
+      dots: Math.min(entryCounts[key] ?? 0, 3),
+      key,
+      muted,
+      selected: key === selectedDateKey,
+    };
+  });
+}
+
+function detailHref(facilityId: string, startsAt: string, endsAt: string) {
+  const params = new URLSearchParams({ starts_at: startsAt, ends_at: endsAt });
+  return `/student/facilities/${facilityId}/reserve/details?${params.toString()}`;
+}
+
+async function fetchPublicCalendar(facilityId: string, year: number, monthIndex: number) {
+  return apiRequest<PublicCalendarEntryResponse[]>(calendarPath(facilityId, year, monthIndex));
+}
+
+async function validateTimeSelection({
+  endsAt,
+  facilityId,
+  startsAt,
+}: {
+  endsAt: string;
+  facilityId: string;
+  startsAt: string;
+}) {
+  return apiRequest<TimeSelectionResponse>(`/facilities/${facilityId}/reservation-time-selection`, {
+    body: { ends_at: endsAt, starts_at: startsAt },
+    method: "POST",
+  });
+}
+
+async function fetchOrganizationUnits() {
+  return apiRequest<OrganizationUnitResponse[]>("/organization-units");
+}
+
+async function submitReservation({
+  activityTitle,
+  avSupport,
+  contactPhone,
+  endsAt,
+  eventDescription,
+  extraCleaning,
+  facilityId,
+  logisticsCoordination,
+  notes,
+  organizationUnitId,
+  participantCount,
+  securityPersonnel,
+  startsAt,
+}: {
+  activityTitle: string;
+  avSupport: boolean;
+  contactPhone: string;
+  endsAt: string;
+  eventDescription: string;
+  extraCleaning: boolean;
+  facilityId: string;
+  logisticsCoordination: boolean;
+  notes: string;
+  organizationUnitId: string;
+  participantCount: number;
+  securityPersonnel: boolean;
+  startsAt: string;
+}) {
+  return apiRequest<StudentReservationResponse>(`/facilities/${facilityId}/reservations`, {
+    body: {
+      activity_title: activityTitle,
+      contact_phone: contactPhone,
+      ends_at: endsAt,
+      event_description: eventDescription,
+      extra_requirements: {
+        av_support: avSupport,
+        extra_cleaning: extraCleaning,
+        logistics_coordination: logisticsCoordination,
+        notes: notes.trim() ? notes.trim() : null,
+        security_personnel: securityPersonnel,
+      },
+      organization_unit_id: organizationUnitId,
+      participant_count: participantCount,
+      starts_at: startsAt,
+    },
+    method: "POST",
+  });
+}
 
 function StudentHeader() {
   return (
@@ -119,9 +330,7 @@ function StudentHeader() {
         </nav>
 
         <div className="flex items-center gap-[22px] max-md:gap-3.5">
-          <button aria-label="Notifikasi" className="inline-flex text-slate-500" type="button">
-            <Bell aria-hidden="true" size={18} />
-          </button>
+          <NotificationSurface className="text-slate-500" role="student" />
           <a
             aria-label={`Profil ${studentHomeSession.name}`}
             className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0f9d58] text-[13px] font-bold text-white no-underline"
@@ -183,7 +392,28 @@ function Stepper({ current }: { current: 1 | 2 }) {
   );
 }
 
-function CalendarCard() {
+function CalendarCard({
+  calendarEntries,
+  isCalendarError,
+  isCalendarLoading,
+  onMonthChange,
+  onSelectDate,
+  selectedDateKey,
+  visibleMonth,
+}: {
+  calendarEntries: PublicCalendarEntryResponse[];
+  isCalendarError: boolean;
+  isCalendarLoading: boolean;
+  onMonthChange: (direction: -1 | 1) => void;
+  onSelectDate: (dateKey: string) => void;
+  selectedDateKey: string;
+  visibleMonth: { monthIndex: number; year: number };
+}) {
+  const days = monthGrid(visibleMonth.year, visibleMonth.monthIndex, selectedDateKey, calendarEntries);
+  const selectedDateLabel = formatDateLabel(selectedDateKey);
+  const selectedDateEntries = calendarEntries.filter((entry) => localDateKeyFromIso(entry.starts_at) === selectedDateKey);
+  const visibleMonthLabel = `${monthNames[visibleMonth.monthIndex]} ${visibleMonth.year}`;
+
   return (
     <section className="flex-1 rounded-xl bg-white p-10 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
       <div className="mb-8 flex items-center justify-between">
@@ -191,57 +421,71 @@ function CalendarCard() {
           <p className="m-0 mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
             Kalender Interaktif
           </p>
-          <h1 className="m-0 text-2xl font-bold">Oktober 2024</h1>
+          <h1 className="m-0 text-2xl font-bold">{visibleMonthLabel}</h1>
         </div>
         <div className="flex gap-3">
-          <button className="h-9 w-9 rounded-lg border border-[#e5e7eb] bg-white font-bold" type="button">
+          <button
+            aria-label="Bulan sebelumnya"
+            className="h-9 w-9 rounded-lg border border-[#e5e7eb] bg-white font-bold"
+            onClick={() => onMonthChange(-1)}
+            type="button"
+          >
             &lt;
           </button>
-          <button className="h-9 w-9 rounded-lg border border-[#e5e7eb] bg-white font-bold" type="button">
+          <button
+            aria-label="Bulan berikutnya"
+            className="h-9 w-9 rounded-lg border border-[#e5e7eb] bg-white font-bold"
+            onClick={() => onMonthChange(1)}
+            type="button"
+          >
             &gt;
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-7 gap-2 text-center max-md:gap-1.5" aria-label="Kalender Oktober 2024">
+      <div className="grid grid-cols-7 gap-2 text-center max-md:gap-1.5" aria-label={`Kalender ${visibleMonthLabel}`}>
         {dayNames.map((day) => (
           <div className="pb-1 text-[11px] font-bold uppercase text-[#6b7280]" key={day}>
             {day}
           </div>
         ))}
-        {calendarDays.map((day, index) => (
-          <div
+        {days.map((day) => (
+          <button
+            aria-label={`Pilih ${formatDateLabel(day.key)}`}
+            aria-pressed={day.selected}
             className={`flex aspect-square min-w-0 flex-col rounded-lg border p-2 text-left max-md:p-1.5 ${
-              "muted" in day && day.muted ? "border-[#f3f4f6] bg-[#f9fafb]" : "border-[#e5e7eb] bg-white"
+              day.muted ? "border-[#f3f4f6] bg-[#f9fafb]" : "border-[#e5e7eb] bg-white"
             }`}
-            key={`${day.day}-${index}`}
+            key={day.key}
+            onClick={() => onSelectDate(day.key)}
+            type="button"
           >
             <span
               className={`text-sm font-bold ${
-                "selected" in day && day.selected
+                day.selected
                   ? "flex h-7 w-7 items-center justify-center rounded-md bg-[#0f9d58] text-white"
-                  : "muted" in day && day.muted
+                  : day.muted
                     ? "text-slate-300"
                     : "text-[#111827]"
               }`}
             >
               {day.day}
             </span>
-            {"dots" in day ? (
+            {day.dots > 0 ? (
               <div className="mt-auto flex gap-1">
-                {day.dots.map((dot, dotIndex) => (
-                  <span className={`h-1.5 w-1.5 rounded-full ${dotColor[dot]}`} key={`${dot}-${dotIndex}`} />
+                {Array.from({ length: day.dots }, (_, dotIndex) => (
+                  <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} key={`${day.key}-${dotIndex}`} />
                 ))}
               </div>
             ) : null}
-          </div>
+          </button>
         ))}
       </div>
       <div className="mt-4 flex flex-wrap gap-2.5">
         <span className="rounded-full bg-[#d1fae5] px-3 py-1.5 text-xs font-bold text-[#065f46]">
-          Reservasi disetujui
+          Waktu dipesan
         </span>
         <span className="rounded-full bg-[#fef3c7] px-3 py-1.5 text-xs font-bold text-[#92400e]">
-          Menunggu review
+          Waktu dipesan
         </span>
         <span className="rounded-full bg-[#fee2e2] px-3 py-1.5 text-xs font-bold text-[#991b1b]">
           Blokir/perawatan
@@ -251,34 +495,73 @@ function CalendarCard() {
         </span>
       </div>
       <div className="mt-5 border-t border-[#e5e7eb] pt-4">
-        <p className="m-0 mb-3 text-sm font-bold">Jadwal pada {reservationCreateFixture.selectedDate}</p>
-        {reservationCreateFixture.agenda.map((item) => (
+        <p className="m-0 mb-3 text-sm font-bold">Jadwal pada {selectedDateLabel}</p>
+        {isCalendarLoading ? (
+          <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#6b7280]">
+            Memuat jadwal terblokir...
+          </div>
+        ) : null}
+        {isCalendarError ? (
+          <div className="rounded-lg border border-[#fee2e2] bg-[#fef2f2] p-4 text-sm text-[#991b1b]">
+            Kalender belum dapat dimuat.
+          </div>
+        ) : null}
+        {!isCalendarLoading && !isCalendarError && selectedDateEntries.length === 0 ? (
+          <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#6b7280]">
+            Belum ada jadwal terblokir pada tanggal ini.
+          </div>
+        ) : null}
+        {!isCalendarLoading && !isCalendarError ? selectedDateEntries.map((item) => (
           <div
             className="grid grid-cols-[86px_1fr_auto] gap-3 border-t border-dashed border-[#e5e7eb] py-3 first:border-t-0 first:pt-0 max-md:grid-cols-1"
-            key={item.name}
+            key={`${item.starts_at}-${item.ends_at}`}
           >
-            <strong className="text-xs">{item.time}</strong>
+            <strong className="text-xs">{formatTimeRange(item)}</strong>
             <div>
-              <p className="m-0 text-sm font-bold">{item.name}</p>
-              <p className="m-0 text-sm leading-6 text-[#6b7280]">{item.organization}</p>
+              <p className="m-0 text-sm font-bold">Waktu sudah dipesan</p>
+              <p className="m-0 text-sm leading-6 text-[#6b7280]">
+                Detail kegiatan tidak ditampilkan pada kalender publik.
+              </p>
             </div>
             <span
-              className={`h-fit w-fit rounded-full px-3 py-1.5 text-xs font-bold ${
-                item.tone === "success"
-                  ? "bg-[#d1fae5] text-[#065f46]"
-                  : "bg-[#fef3c7] text-[#92400e]"
-              }`}
+              className="h-fit w-fit rounded-full bg-[#d1fae5] px-3 py-1.5 text-xs font-bold text-[#065f46]"
             >
-              {item.badge}
+              Dipesan
             </span>
           </div>
-        ))}
+        )) : null}
       </div>
     </section>
   );
 }
 
-function TimeCard() {
+function TimeCard({
+  duration,
+  endsAt,
+  endTime,
+  facilityId,
+  onEndTimeChange,
+  onStartTimeChange,
+  onValidate,
+  startTime,
+  startsAt,
+  validationIsPending,
+  validationState,
+}: {
+  duration: string;
+  endsAt: string;
+  endTime: string;
+  facilityId: string;
+  onEndTimeChange: (value: string) => void;
+  onStartTimeChange: (value: string) => void;
+  onValidate: () => void;
+  startTime: string;
+  startsAt: string;
+  validationIsPending: boolean;
+  validationState: ValidationState;
+}) {
+  const canContinue = validationState.kind === "available" && !validationIsPending;
+
   return (
     <aside className="flex w-[400px] flex-col gap-6 max-lg:w-full">
       <section className="rounded-xl bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
@@ -297,8 +580,9 @@ function TimeCard() {
           <input
             aria-label="Waktu Mulai"
             className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-white px-4 text-[15px]"
-            defaultValue={reservationCreateFixture.startTime}
-            readOnly
+            onChange={(event) => onStartTimeChange(event.target.value)}
+            type="time"
+            value={startTime}
           />
         </label>
         <label className="block">
@@ -308,23 +592,54 @@ function TimeCard() {
           <input
             aria-label="Waktu Selesai"
             className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-white px-4 text-[15px]"
-            defaultValue={reservationCreateFixture.endTime}
-            readOnly
+            onChange={(event) => onEndTimeChange(event.target.value)}
+            type="time"
+            value={endTime}
           />
         </label>
         <div className="mt-6 flex gap-3 rounded-lg bg-[#e8f5e9] p-4 text-[#0b7340]">
           <Info aria-hidden="true" size={17} />
           <div>
-            <h3 className="m-0 mb-1 text-sm font-semibold">Total Durasi: {reservationCreateFixture.duration}</h3>
+            <h3 className="m-0 mb-1 text-sm font-semibold">Total Durasi: {duration}</h3>
             <p className="m-0 text-xs leading-5">
-              Waktu minimum reservasi adalah 30 menit. Zona waktu mengikuti zona waktu lokal kampus.
+              Waktu minimum reservasi adalah 1 jam. Zona waktu mengikuti zona waktu lokal kampus.
             </p>
           </div>
         </div>
+        <button
+          className="mt-5 flex min-h-[46px] w-full items-center justify-center rounded-lg border border-[#0f9d58] bg-white px-4 text-sm font-bold text-[#0f9d58] disabled:cursor-not-allowed disabled:border-[#d1d5db] disabled:text-[#9ca3af]"
+          disabled={validationIsPending}
+          onClick={onValidate}
+          type="button"
+        >
+          {validationIsPending ? "Memeriksa..." : "Cek Ketersediaan"}
+        </button>
+        {validationState.kind === "available" ? (
+          <div className="mt-4 rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3 text-sm font-semibold text-[#166534]">
+            Waktu tersedia. Anda dapat melanjutkan reservasi.
+          </div>
+        ) : null}
+        {validationState.kind === "unavailable" ? (
+          <div className="mt-4 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-sm font-semibold text-[#9a3412]">
+            {validationState.messages.map((message) => (
+              <p className="m-0" key={message}>{message}</p>
+            ))}
+          </div>
+        ) : null}
+        {validationState.kind === "error" ? (
+          <div className="mt-4 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm font-semibold text-[#991b1b]">
+            {validationState.message}
+          </div>
+        ) : null}
       </section>
       <a
-        className="flex min-h-[52px] items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-base font-semibold text-white no-underline shadow-[0_4px_6px_rgba(15,157,88,0.2)]"
-        href={reservationCreateFixture.detailHref}
+        aria-disabled={canContinue ? undefined : "true"}
+        className={`flex min-h-[52px] items-center justify-center rounded-lg px-5 text-base font-semibold no-underline shadow-[0_4px_6px_rgba(15,157,88,0.2)] ${
+          canContinue
+            ? "bg-[#0f9d58] text-white"
+            : "pointer-events-none bg-[#d1d5db] text-white"
+        }`}
+        href={canContinue ? detailHref(facilityId, startsAt, endsAt) : "#"}
       >
         Lanjutkan
       </a>
@@ -346,7 +661,17 @@ function SummaryMedia() {
   );
 }
 
-function ReservationSummary() {
+function ReservationSummary({
+  dateLabel = reservationCreateFixture.selectedDate,
+  duration = reservationCreateFixture.duration,
+  endTime = reservationCreateFixture.endTime,
+  startTime = reservationCreateFixture.startTime,
+}: {
+  dateLabel?: string;
+  duration?: string;
+  endTime?: string;
+  startTime?: string;
+}) {
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
       <SummaryMedia />
@@ -357,11 +682,11 @@ function ReservationSummary() {
         <h3 className="m-0 mb-6 text-xl font-bold">{reservationCreateFixture.summaryTitle}</h3>
         <p className="m-0 mb-3 flex gap-3 text-sm text-[#6b7280]">
           <CalendarDays aria-hidden="true" className="text-[#0f9d58]" size={18} />
-          {reservationCreateFixture.selectedDate}
+          {dateLabel}
         </p>
         <p className="m-0 mb-3 flex gap-3 text-sm text-[#6b7280]">
           <Clock aria-hidden="true" className="text-[#0f9d58]" size={18} />
-          {reservationCreateFixture.startTime} - {reservationCreateFixture.endTime}
+          {startTime} - {endTime}
         </p>
         <p className="m-0 mb-6 flex gap-3 text-sm text-[#6b7280]">
           <Users aria-hidden="true" className="text-[#0f9d58]" size={18} />
@@ -373,7 +698,7 @@ function ReservationSummary() {
           </h4>
           <div className="space-y-3 text-sm text-[#6b7280]">
             <p className="m-0 flex justify-between gap-4">
-              <span>Biaya fasilitas (4 jam)</span>
+              <span>Biaya fasilitas ({duration.toLowerCase()})</span>
               <strong>{reservationCreateFixture.facilityCost}</strong>
             </p>
             <p className="m-0 flex justify-between gap-4">
@@ -457,25 +782,196 @@ function PageFrame({
 }
 
 export function StudentReservationTimePage() {
+  const { facilityId = reservationCreateFixture.facilityId } = useParams();
+  const initialSelectedDate = parseDateKey(defaultSelectedDateKey);
+  const [selectedDateKey, setSelectedDateKey] = useState<string>(defaultSelectedDateKey);
+  const [visibleMonth, setVisibleMonth] = useState({
+    monthIndex: initialSelectedDate.monthIndex,
+    year: initialSelectedDate.year,
+  });
+  const [startTime, setStartTime] = useState<string>(reservationCreateFixture.startTime);
+  const [endTime, setEndTime] = useState<string>(reservationCreateFixture.endTime);
+  const [validationState, setValidationState] = useState<ValidationState>({ kind: "idle" });
+  const duration = useMemo(() => durationLabel(startTime, endTime), [startTime, endTime]);
+  const startsAt = useMemo(() => selectedDateTime(selectedDateKey, startTime), [selectedDateKey, startTime]);
+  const endsAt = useMemo(() => selectedDateTime(selectedDateKey, endTime), [selectedDateKey, endTime]);
+  const calendarQuery = useQuery({
+    enabled: facilityId.length > 0,
+    queryFn: () => fetchPublicCalendar(facilityId, visibleMonth.year, visibleMonth.monthIndex),
+    queryKey: ["reservation-time-calendar", facilityId, visibleMonth.year, visibleMonth.monthIndex],
+  });
+  const validationMutation = useMutation({
+    mutationFn: () => validateTimeSelection({ endsAt, facilityId, startsAt }),
+    onError: (error) => {
+      const message = error instanceof ApiError ? error.message : "Validasi waktu belum dapat dilakukan.";
+      setValidationState({ kind: "error", message });
+    },
+    onSuccess: (response) => {
+      if (response.available) {
+        setValidationState({ kind: "available" });
+        return;
+      }
+
+      setValidationState({
+        kind: "unavailable",
+        messages: response.errors.length > 0
+          ? response.errors.map((item) => item.message)
+          : ["Waktu tidak tersedia."],
+      });
+    },
+  });
+
+  function handleStartTimeChange(value: string) {
+    setStartTime(value);
+    setValidationState({ kind: "idle" });
+  }
+
+  function handleEndTimeChange(value: string) {
+    setEndTime(value);
+    setValidationState({ kind: "idle" });
+  }
+
+  function handleDateSelect(nextDateKey: string) {
+    const nextDate = parseDateKey(nextDateKey);
+    setSelectedDateKey(nextDateKey);
+    setVisibleMonth({ monthIndex: nextDate.monthIndex, year: nextDate.year });
+    setValidationState({ kind: "idle" });
+  }
+
+  function handleMonthChange(direction: -1 | 1) {
+    setVisibleMonth((current) => {
+      const nextMonthIndex = current.monthIndex + direction;
+      if (nextMonthIndex < 0) {
+        return { monthIndex: 11, year: current.year - 1 };
+      }
+      if (nextMonthIndex > 11) {
+        return { monthIndex: 0, year: current.year + 1 };
+      }
+      return { ...current, monthIndex: nextMonthIndex };
+    });
+  }
+
   return (
-    <PageFrame backHref={reservationCreateFixture.facilityHref} currentStep={1}>
+    <PageFrame backHref={`/student/facilities/${facilityId}`} currentStep={1}>
       <div className="flex items-start gap-8 max-lg:flex-col">
-        <CalendarCard />
-        <TimeCard />
+        <CalendarCard
+          calendarEntries={calendarQuery.data ?? []}
+          isCalendarError={calendarQuery.isError}
+          isCalendarLoading={calendarQuery.isLoading}
+          onMonthChange={handleMonthChange}
+          onSelectDate={handleDateSelect}
+          selectedDateKey={selectedDateKey}
+          visibleMonth={visibleMonth}
+        />
+        <TimeCard
+          duration={duration}
+          endsAt={endsAt}
+          endTime={endTime}
+          facilityId={facilityId}
+          onEndTimeChange={handleEndTimeChange}
+          onStartTimeChange={handleStartTimeChange}
+          onValidate={() => validationMutation.mutate()}
+          startTime={startTime}
+          startsAt={startsAt}
+          validationIsPending={validationMutation.isPending}
+          validationState={validationState}
+        />
       </div>
     </PageFrame>
   );
 }
 
 export function StudentReservationDetailPage() {
+  const { facilityId = reservationCreateFixture.facilityId } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const startsAt = searchParams.get("starts_at") ?? selectedDateTime(defaultSelectedDateKey, reservationCreateFixture.startTime);
+  const endsAt = searchParams.get("ends_at") ?? selectedDateTime(defaultSelectedDateKey, reservationCreateFixture.endTime);
+  const [activityTitle, setActivityTitle] = useState("");
+  const [participantCount, setParticipantCount] = useState("");
+  const [organizationUnitId, setOrganizationUnitId] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
+  const [avSupport, setAvSupport] = useState(false);
+  const [logisticsCoordination, setLogisticsCoordination] = useState(false);
+  const [extraCleaning, setExtraCleaning] = useState(false);
+  const [securityPersonnel, setSecurityPersonnel] = useState(false);
+  const [extraNotes, setExtraNotes] = useState("");
+  const [errors, setErrors] = useState<ReservationFormErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const organizationUnitsQuery = useQuery({
+    queryFn: fetchOrganizationUnits,
+    queryKey: ["organization-units"],
+  });
+  const organizationUnits = organizationUnitsQuery.data ?? [];
+  const organizationsUnavailable = organizationUnitsQuery.isSuccess && organizationUnits.length === 0;
+  const submitMutation = useMutation({
+    mutationFn: () => submitReservation({
+      activityTitle: activityTitle.trim(),
+      avSupport,
+      contactPhone: contactPhone.trim(),
+      endsAt,
+      eventDescription: eventDescription.trim(),
+      extraCleaning,
+      facilityId,
+      logisticsCoordination,
+      notes: extraNotes,
+      organizationUnitId,
+      participantCount: Number(participantCount),
+      securityPersonnel,
+      startsAt,
+    }),
+    onError: (error) => {
+      const message = error instanceof ApiError ? error.message : "Reservasi belum dapat disimpan.";
+      setFormError(message);
+    },
+    onSuccess: (reservation) => {
+      navigate(`/student/reservations/${reservation.id}/letter`);
+    },
+  });
+
+  function validateForm() {
+    const nextErrors: ReservationFormErrors = {};
+    if (!activityTitle.trim()) nextErrors.activityTitle = "Nama kegiatan wajib diisi.";
+    if (!participantCount || Number(participantCount) <= 0) {
+      nextErrors.participantCount = "Jumlah peserta harus lebih dari 0.";
+    }
+    if (!organizationUnitId) nextErrors.organizationUnitId = "Organisasi wajib dipilih.";
+    if (!contactPhone.trim()) nextErrors.contactPhone = "Nomor kontak wajib diisi.";
+    if (!eventDescription.trim()) nextErrors.eventDescription = "Deskripsi kegiatan wajib diisi.";
+    if (extraNotes.length > 180) nextErrors.extraNotes = "Catatan tambahan maksimal 180 karakter.";
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormError(null);
+    if (!validateForm() || organizationsUnavailable) return;
+    submitMutation.mutate();
+  }
+
   return (
-    <PageFrame backHref={reservationCreateFixture.timeHref} currentStep={2}>
+    <PageFrame backHref={`/student/facilities/${facilityId}/reserve/time`} currentStep={2}>
       <div className="flex items-start gap-8 max-lg:flex-col">
-        <section className="flex-1 rounded-xl bg-white p-10 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
+        <form
+          className="flex-1 rounded-xl bg-white p-10 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6"
+          onSubmit={handleSubmit}
+        >
           <h1 className="m-0 mb-2 text-2xl font-bold">Detail Reservasi</h1>
           <p className="m-0 mb-8 text-sm leading-6 text-[#6b7280]">
             Silahkan lengkapi data berikut untuk melanjutkan proses reservasi Anda
           </p>
+          {formError ? (
+            <div className="mb-5 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm font-semibold text-[#991b1b]">
+              {formError}
+            </div>
+          ) : null}
+          {organizationsUnavailable ? (
+            <div className="mb-5 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-sm font-semibold text-[#9a3412]">
+              Belum ada unit organisasi aktif.
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-6 max-md:grid-cols-1">
             <label>
               <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
@@ -484,8 +980,11 @@ export function StudentReservationDetailPage() {
               <input
                 aria-label="Nama Kegiatan"
                 className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm"
+                onChange={(event) => setActivityTitle(event.target.value)}
                 placeholder="Contoh: Simposium Etika AI"
+                value={activityTitle}
               />
+              {errors.activityTitle ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.activityTitle}</span> : null}
             </label>
             <label>
               <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
@@ -494,19 +993,42 @@ export function StudentReservationDetailPage() {
               <input
                 aria-label="Estimasi Jumlah Peserta"
                 className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm"
+                onChange={(event) => setParticipantCount(event.target.value)}
                 placeholder="45"
                 type="number"
+                value={participantCount}
               />
+              {errors.participantCount ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.participantCount}</span> : null}
             </label>
             <label className="col-span-2 max-md:col-span-1">
               <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
                 Organisasi
               </span>
-              <input
+              <select
                 aria-label="Organisasi"
                 className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm"
-                placeholder="Masukkan nama organisasi"
+                onChange={(event) => setOrganizationUnitId(event.target.value)}
+                value={organizationUnitId}
+              >
+                <option value="">Pilih organisasi</option>
+                {organizationUnits.map((unit) => (
+                  <option key={unit.id} value={unit.id}>{unit.name}</option>
+                ))}
+              </select>
+              {errors.organizationUnitId ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.organizationUnitId}</span> : null}
+            </label>
+            <label className="col-span-2 max-md:col-span-1">
+              <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
+                Nomor Kontak
+              </span>
+              <input
+                aria-label="Nomor Kontak"
+                className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm"
+                onChange={(event) => setContactPhone(event.target.value)}
+                placeholder="08123456789"
+                value={contactPhone}
               />
+              {errors.contactPhone ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.contactPhone}</span> : null}
             </label>
             <label className="col-span-2 max-md:col-span-1">
               <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
@@ -515,38 +1037,62 @@ export function StudentReservationDetailPage() {
               <textarea
                 aria-label="Deskripsi Kegiatan"
                 className="min-h-[118px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 text-sm"
+                onChange={(event) => setEventDescription(event.target.value)}
                 placeholder="Jelaskan tujuan reservasi dan kebutuhan tata ruang secara singkat..."
+                value={eventDescription}
               />
+              {errors.eventDescription ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.eventDescription}</span> : null}
             </label>
             <div className="col-span-2 max-md:col-span-1">
               <span className="mb-3 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
                 Keperluan Tambahan
               </span>
               <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-                {reservationCreateFixture.extraRequirements.map((label) => (
-                  <label
-                    className="flex min-h-[58px] items-center gap-3 rounded-lg border border-[#e5e7eb] px-4 text-sm font-semibold"
-                    key={label}
-                  >
-                    <input aria-label={label} className="h-[18px] w-[18px] accent-[#0f9d58]" type="checkbox" />
-                    {label}
-                  </label>
-                ))}
+                <label className="flex min-h-[58px] items-center gap-3 rounded-lg border border-[#e5e7eb] px-4 text-sm font-semibold">
+                  <input aria-label="Dukungan AV & mikrofon" checked={avSupport} className="h-[18px] w-[18px] accent-[#0f9d58]" onChange={(event) => setAvSupport(event.target.checked)} type="checkbox" />
+                  Dukungan AV & mikrofon
+                </label>
+                <label className="flex min-h-[58px] items-center gap-3 rounded-lg border border-[#e5e7eb] px-4 text-sm font-semibold">
+                  <input aria-label="Koordinasi Logistik" checked={logisticsCoordination} className="h-[18px] w-[18px] accent-[#0f9d58]" onChange={(event) => setLogisticsCoordination(event.target.checked)} type="checkbox" />
+                  Koordinasi Logistik
+                </label>
+                <label className="flex min-h-[58px] items-center gap-3 rounded-lg border border-[#e5e7eb] px-4 text-sm font-semibold">
+                  <input aria-label="Jasa kebersihan ekstra" checked={extraCleaning} className="h-[18px] w-[18px] accent-[#0f9d58]" onChange={(event) => setExtraCleaning(event.target.checked)} type="checkbox" />
+                  Jasa kebersihan ekstra
+                </label>
+                <label className="flex min-h-[58px] items-center gap-3 rounded-lg border border-[#e5e7eb] px-4 text-sm font-semibold">
+                  <input aria-label="Personel Keamanan" checked={securityPersonnel} className="h-[18px] w-[18px] accent-[#0f9d58]" onChange={(event) => setSecurityPersonnel(event.target.checked)} type="checkbox" />
+                  Personel Keamanan
+                </label>
               </div>
             </div>
+            <label className="col-span-2 max-md:col-span-1">
+              <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
+                Catatan Tambahan
+              </span>
+              <textarea
+                aria-label="Catatan Tambahan"
+                className="min-h-[86px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 text-sm"
+                onChange={(event) => setExtraNotes(event.target.value)}
+                placeholder="Opsional, maksimal 180 karakter"
+                value={extraNotes}
+              />
+              {errors.extraNotes ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.extraNotes}</span> : null}
+            </label>
           </div>
           <div className="mt-12 flex items-center justify-between gap-4 border-t border-transparent pt-3 max-md:flex-col">
-            <a className="text-sm font-semibold text-[#6b7280] no-underline max-md:order-2" href={reservationCreateFixture.timeHref}>
+            <a className="text-sm font-semibold text-[#6b7280] no-underline max-md:order-2" href={`/student/facilities/${facilityId}/reserve/time`}>
               Kembali ke Pencarian
             </a>
-            <a
-              className="rounded-lg bg-[#0f9d58] px-6 py-3.5 text-[15px] font-semibold text-white no-underline max-md:order-1 max-md:flex max-md:min-h-[52px] max-md:w-full max-md:items-center max-md:justify-center"
-              href={reservationCreateFixture.letterHref}
+            <button
+              className="rounded-lg bg-[#0f9d58] px-6 py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#d1d5db] max-md:order-1 max-md:flex max-md:min-h-[52px] max-md:w-full max-md:items-center max-md:justify-center"
+              disabled={submitMutation.isPending || organizationsUnavailable}
+              type="submit"
             >
-              Lanjut ke Surat
-            </a>
+              {submitMutation.isPending ? "Menyimpan..." : "Lanjut ke Surat"}
+            </button>
           </div>
-        </section>
+        </form>
 
         <aside className="flex w-[400px] flex-col gap-6 max-lg:w-full">
           <ReservationSummary />

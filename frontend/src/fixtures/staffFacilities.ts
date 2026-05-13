@@ -1,15 +1,16 @@
-export type StaffFacilityStatus = "active" | "maintenance";
+export type StaffFacilityStatus = "active" | "inactive";
 
 export type StaffFacility = {
   capacity: number;
-  department: string;
+  categoryLabel: string;
   description: string;
   editHref: string;
   id: string;
   imageLabel: string;
   imageTone: "amber" | "blue" | "green" | "red";
   name: string;
-  rating: string;
+  openHoursSummary?: string;
+  priceSummary?: string;
   scheduleHref: string;
   status: StaffFacilityStatus;
   statusLabel: string;
@@ -39,19 +40,12 @@ export type StaffFacilityMedia = {
 };
 
 export type StaffFacilityEditFixture = {
-  amenities: readonly {
-    checked: boolean;
-    key: string;
-    label: string;
-  }[];
   blackout: {
     date: string;
     reason: string;
   };
   description: string;
   errorMessage: string;
-  lastChangedBy: string;
-  lastChangedAt: string;
   location: string;
   media: StaffFacilityMedia[];
   name: string;
@@ -68,60 +62,56 @@ export type StaffFacilityEditFixture = {
 export const staffFacilities: StaffFacility[] = [
   {
     capacity: 300,
-    department: "Departemen Biosains",
+    categoryLabel: "Auditorium / Seminar",
     description: "Auditorium utama untuk seminar besar dan pertemuan fakultas.",
     editHref: "/staff/facilities/grand-auditorium/edit",
     id: "grand-auditorium",
     imageLabel: "Auditorium",
     imageTone: "amber",
     name: "Grand Auditorium",
-    rating: "4.9",
     scheduleHref: "/staff/facilities/grand-auditorium/schedule",
     status: "active",
     statusLabel: "Aktif",
   },
   {
     capacity: 40,
-    department: "Departemen Biosains",
+    categoryLabel: "Laboratorium",
     description: "Laboratorium riset mikrobiologi dan praktikum mahasiswa dengan peralatan lengkap.",
     editHref: "/staff/facilities/bio-labs-complex-a/edit",
     id: "bio-labs-complex-a",
     imageLabel: "Bio-Lab",
     imageTone: "blue",
     name: "Bio-Labs Complex A",
-    rating: "4.7",
     scheduleHref: "/staff/facilities/bio-labs-complex-a/schedule",
     status: "active",
     statusLabel: "Aktif",
   },
   {
     capacity: 60,
-    department: "Departemen Biosains",
+    categoryLabel: "Ruang Kelas",
     description: "Ruang seminar dengan proyektor, papan interaktif, dan sistem suara.",
     editHref: "/staff/facilities/seminar-room-101/edit",
     id: "seminar-room-101",
     imageLabel: "Seminar Room",
     imageTone: "red",
     name: "Seminar Room 101",
-    rating: "4.5",
     scheduleHref: "/staff/facilities/seminar-room-101/schedule",
     status: "active",
     statusLabel: "Aktif",
   },
   {
     capacity: 25,
-    department: "Departemen Biosains",
+    categoryLabel: "Lanskap / Outdoor",
     description:
-      "Fasilitas pertanian lingkungan terkendali yang sedang menjalani perbaikan kontrol iklim.",
+      "Fasilitas pertanian lingkungan terkendali untuk praktikum dan riset tanaman.",
     editHref: "/staff/facilities/agri-tech-greenhouses/edit",
     id: "agri-tech-greenhouses",
     imageLabel: "Greenhouse",
     imageTone: "green",
     name: "Agri-Tech Greenhouses",
-    rating: "4.2",
     scheduleHref: "/staff/facilities/agri-tech-greenhouses/schedule",
-    status: "maintenance",
-    statusLabel: "Perawatan",
+    status: "inactive",
+    statusLabel: "Nonaktif",
   },
 ];
 
@@ -215,24 +205,14 @@ export const calendarDays = [
 ] as const;
 
 export const staffFacilityEditFixture: StaffFacilityEditFixture = {
-  amenities: [
-    { checked: true, key: "audio", label: "Audio & Speaker" },
-    { checked: true, key: "network", label: "Jaringan Gigabit" },
-    { checked: true, key: "accessibility", label: "Akses Difabel" },
-    { checked: false, key: "projector", label: "Layar & Proyektor" },
-    { checked: true, key: "pantry", label: "Dapur Kecil" },
-    { checked: false, key: "hepa", label: "Filtrasi HEPA" },
-  ],
   blackout: {
     date: "30 Oktober 2024",
-    reason: "Perawatan sistem tata suara auditorium.",
+    reason: "Blokir jadwal untuk operasional internal auditorium.",
   },
   capacity: "1200",
   description:
     "Auditorium utama untuk seminar, kuliah umum, dan kegiatan institusi berskala besar dengan tata suara dan panggung terintegrasi.",
   errorMessage: "Harga sewa memerlukan verifikasi bendahara.",
-  lastChangedAt: "24 Oktober 2024 - 14:32",
-  lastChangedBy: "Admin: Sarah Jenkins",
   location: "Kampus Timur, Plaza Tengah",
   media: [
     { filename: "main-auditorium.jpg", label: "Main Auditorium", tone: "amber" },

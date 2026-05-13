@@ -11,13 +11,13 @@ export const superAdminDashboardFixture = {
     { icon: "users", label: "Total Pengguna", tone: "purple", trend: "↑ 2,4% bulan ini", value: "12,450" },
     { icon: "building", label: "Fasilitas Aktif", tone: "blue", trend: "↑ 5 fasilitas baru", value: "142" },
     { icon: "calendar", label: "Total Reservasi", tone: "green", trend: "↑ 12% bulan ini", value: "3,892" },
-    { icon: "settings", label: "Kesehatan Sistem", tone: "orange", trend: "Semua layanan aktif", value: "99,9%" },
+    { icon: "settings", label: "Status Sistem", tone: "orange", trend: "Layanan inti aktif", value: "Aktif" },
   ],
   administrators: [
     {
       department: "Biosciences",
       email: "budi.s@admin.ipb.ac.id",
-      lastActive: "2 menit lalu",
+      accessNote: "Akun staff aktif",
       name: "Budi Santoso",
       scope: "4 fasilitas dikelola",
       status: "Aktif",
@@ -25,7 +25,7 @@ export const superAdminDashboardFixture = {
     {
       department: "Ilmu Komputer",
       email: "siti.a@admin.ipb.ac.id",
-      lastActive: "1 jam lalu",
+      accessNote: "Akun staff aktif",
       name: "Siti Aminah",
       scope: "6 fasilitas dikelola",
       status: "Aktif",
@@ -33,7 +33,7 @@ export const superAdminDashboardFixture = {
     {
       department: "Kehutanan",
       email: "rahmat.h@admin.ipb.ac.id",
-      lastActive: "5 hari lalu",
+      accessNote: "Akun staff nonaktif",
       name: "Rahmat Hidayat",
       scope: "12 fasilitas dikelola",
       status: "Nonaktif",
@@ -41,7 +41,7 @@ export const superAdminDashboardFixture = {
     {
       department: "Sekolah Bisnis",
       email: "anita.w@admin.ipb.ac.id",
-      lastActive: "Kemarin",
+      accessNote: "Akun staff aktif",
       name: "Anita Wijaya",
       scope: "8 fasilitas dikelola",
       status: "Aktif",
@@ -113,8 +113,8 @@ export const superAdminUsersFixture = {
       identity: "dewi@apps.ipb.ac.id · G64200024",
       name: "Dewi Lestari",
       role: "Mahasiswa",
-      status: "Perlu Data",
-      unit: "Teknologi Industri Pertanian",
+      status: "Aktif",
+      unit: "Teknologi Industri Pertanian · profil akademik parsial",
     },
   ],
 } as const;
@@ -199,7 +199,7 @@ export const superAdminReportsFixture = {
 
 export const superAdminSystemFixture = {
   kpis: [
-    { label: "Kesehatan API", value: "99,9%" },
+    { label: "Status API", value: "Aktif" },
     { label: "Database", value: "Aktif" },
     { label: "Worker Deadline", value: "12 dtk" },
     { label: "Storage", value: "78%" },

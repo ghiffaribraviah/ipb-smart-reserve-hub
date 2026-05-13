@@ -1,6 +1,5 @@
 import {
   AlertCircle,
-  Bell,
   Check,
   Clock3,
   Download,
@@ -9,9 +8,18 @@ import {
   Search,
   UploadCloud,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ChangeEvent, ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ApiError, apiDownload, apiRequest } from "../../api/http";
+import { NotificationSurface } from "../../components/NotificationSurface";
 import { studentDocumentWorkflowFixture } from "../../fixtures/studentDocumentWorkflow";
 import { studentHomeSession } from "../../fixtures/studentHome";
+import {
+  mapStudentReservationWorkflow,
+  type StudentReservationWorkflowProjection,
+} from "../../reservations/studentReservationWorkflow";
 
 const navItems = [
   { href: "/student", label: "Beranda" },
@@ -34,6 +42,149 @@ const acceptedSummaryRows = [
   ...summaryRows,
   { label: "Kode Reservasi", value: studentDocumentWorkflowFixture.payment.code },
 ] as const;
+
+type ApprovalLetterResponse = {
+  content_type: string;
+  filename: string;
+  generated_at: string;
+  reservation_code: string;
+  reservation_id: string;
+  size_bytes: number;
+};
+
+type SignedApprovalLetterResponse = {
+  content_type: string;
+  filename: string;
+  reservation_id: string;
+  size_bytes: number;
+  uploaded_at: string;
+};
+
+type PaymentResponse = {
+  amount_rupiah: number;
+  payment_instructions: string;
+  reservation_code: string;
+  reservation_id: string;
+};
+
+type PaymentReceiptResponse = {
+  content_type: string;
+  filename: string;
+  reservation_id: string;
+  size_bytes: number;
+  uploaded_at: string;
+};
+
+const signedLetterTypes = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+]);
+const maxSignedLetterBytes = 5 * 1024 * 1024;
+const paymentReceiptTypes = new Set(["image/jpeg", "image/jpg", "image/png"]);
+const maxPaymentReceiptBytes = 5 * 1024 * 1024;
+
+function reservationPath(reservationId: string) {
+  return `/student/reservations/${reservationId}`;
+}
+
+function approvalLetterPath(reservationId: string) {
+  return `/student/reservations/${reservationId}/approval-letter`;
+}
+
+async function fetchStudentReservation(reservationId: string) {
+  return apiRequest<StudentReservationWorkflowProjection>(reservationPath(reservationId));
+}
+
+async function fetchApprovalLetter(reservationId: string) {
+  return apiRequest<ApprovalLetterResponse>(approvalLetterPath(reservationId));
+}
+
+async function uploadSignedApprovalLetter({
+  file,
+  reservationId,
+}: {
+  file: File;
+  reservationId: string;
+}) {
+  const body = new FormData();
+  body.append("file", file);
+  return apiRequest<SignedApprovalLetterResponse>(
+    `/student/reservations/${reservationId}/signed-approval-letter`,
+    { body, method: "POST" },
+  );
+}
+
+async function fetchPayment(reservationId: string) {
+  return apiRequest<PaymentResponse>(`/student/reservations/${reservationId}/payment`);
+}
+
+async function uploadPaymentReceipt({
+  file,
+  reservationId,
+}: {
+  file: File;
+  reservationId: string;
+}) {
+  const body = new FormData();
+  body.append("file", file);
+  return apiRequest<PaymentReceiptResponse>(
+    `/student/reservations/${reservationId}/payment-receipt`,
+    { body, method: "POST" },
+  );
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function formatTime(value: string) {
+  const date = new Date(value);
+  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
+}
+
+function formatBytes(value: number) {
+  if (value >= 1024 * 1024) {
+    return `${(value / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
+  }
+  return `${Math.round(value / 1024)} KB`;
+}
+
+function formatRupiah(value: number) {
+  return `Rp${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(value)}`;
+}
+
+function contentTypeLabel(contentType: string) {
+  if (contentType === "application/pdf") return "PDF";
+  if (contentType === "image/png") return "PNG";
+  if (contentType === "image/jpeg" || contentType === "image/jpg") return "JPG";
+  return contentType;
+}
+
+function summaryRowsFromReservation(reservation: StudentReservationWorkflowProjection | undefined) {
+  if (!reservation) return summaryRows;
+  return [
+    { label: "Fasilitas", value: reservation.facility.name },
+    { label: "Tanggal", value: formatDate(reservation.starts_at) },
+    { label: "Waktu", value: `${formatTime(reservation.starts_at)} - ${formatTime(reservation.ends_at)}` },
+  ];
+}
+
+function paymentRowsFromReservation(
+  reservation: StudentReservationWorkflowProjection | undefined,
+  amount = reservation?.price_rupiah,
+) {
+  return [
+    ...summaryRowsFromReservation(reservation),
+    { label: "Total Pembayaran", value: formatRupiah(amount ?? 0) },
+  ];
+}
 
 function StudentHeader() {
   return (
@@ -91,9 +242,7 @@ function StudentHeader() {
         </nav>
 
         <div className="flex items-center gap-[22px] max-md:gap-3.5">
-          <button aria-label="Notifikasi" className="inline-flex text-slate-500" type="button">
-            <Bell aria-hidden="true" size={18} />
-          </button>
+          <NotificationSurface className="text-slate-500" role="student" />
           <a
             aria-label={`Profil ${studentHomeSession.name}`}
             className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0f9d58] text-[13px] font-bold text-white no-underline"
@@ -173,9 +322,11 @@ function Stepper() {
 }
 
 function PageFrame({
+  backHref = studentDocumentWorkflowFixture.backHref,
   children,
   showBack = true,
 }: {
+  backHref?: string;
   children: ReactNode;
   showBack?: boolean;
 }) {
@@ -186,7 +337,7 @@ function PageFrame({
         {showBack ? (
           <a
             className="mb-8 inline-flex text-sm font-semibold text-[#0f9d58] no-underline"
-            href={studentDocumentWorkflowFixture.backHref}
+            href={backHref}
           >
             ← Kembali
           </a>
@@ -312,8 +463,95 @@ function StatusBadge({
 }
 
 export function StudentApprovalLetterPage() {
+  const { reservationId = studentDocumentWorkflowFixture.payment.code } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const reservationQuery = useQuery({
+    queryFn: () => fetchStudentReservation(reservationId),
+    queryKey: ["student-reservation", reservationId],
+  });
+  const approvalLetterQuery = useQuery({
+    queryFn: () => fetchApprovalLetter(reservationId),
+    queryKey: ["student-approval-letter", reservationId],
+  });
+  const rows = useMemo(
+    () => summaryRowsFromReservation(reservationQuery.data),
+    [reservationQuery.data],
+  );
+  const downloadMutation = useMutation({
+    mutationFn: () => apiDownload(`/student/reservations/${reservationId}/approval-letter/download`),
+    onError: (error) => {
+      const message = error instanceof ApiError ? error.message : "Surat belum dapat diunduh.";
+      setDownloadMessage(message);
+    },
+    onSuccess: ({ filename }) => {
+      setDownloadMessage(`${filename ?? approvalLetterQuery.data?.filename ?? "Surat persetujuan"} berhasil diunduh.`);
+    },
+  });
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => uploadSignedApprovalLetter({ file, reservationId }),
+    onError: (error) => {
+      const message = error instanceof ApiError ? error.message : "Dokumen belum dapat diunggah.";
+      setUploadError(message);
+    },
+    onSuccess: (signedLetter) => {
+      const current = reservationQuery.data;
+      if (current) {
+        queryClient.setQueryData<StudentReservationWorkflowProjection>(["student-reservation", reservationId], {
+          ...current,
+          document: {
+            ...current.document,
+            review_status: "waiting_review",
+            signed_approval_letter: signedLetter,
+          },
+          status: "pending_document_review",
+        });
+      }
+      navigate(`/student/reservations/${reservationId}/verification/waiting`);
+    },
+  });
+
+  function validateFile(file: File) {
+    if (!signedLetterTypes.has(file.type)) {
+      return "Unggah surat bertanda tangan harus berupa PDF, JPG, JPEG, atau PNG.";
+    }
+    if (file.size > maxSignedLetterBytes) {
+      return "Ukuran surat bertanda tangan maksimal 5 MB.";
+    }
+    return null;
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setSelectedFile(file);
+    setUploadError(null);
+    if (!file) {
+      setFileError(null);
+      return;
+    }
+    setFileError(validateFile(file));
+  }
+
+  function handleUpload() {
+    if (!selectedFile) {
+      setFileError("Pilih surat bertanda tangan terlebih dahulu.");
+      return;
+    }
+    const error = validateFile(selectedFile);
+    setFileError(error);
+    setUploadError(null);
+    if (error) return;
+    uploadMutation.mutate(selectedFile);
+  }
+
+  const approvalLetter = approvalLetterQuery.data;
+
   return (
-    <PageFrame>
+    <PageFrame backHref={reservationPath(reservationId)}>
       <div className="grid grid-cols-[1fr_360px] items-start gap-8 max-lg:grid-cols-1">
         <div className="grid gap-6">
           <section className="rounded-xl bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
@@ -333,29 +571,39 @@ export function StudentApprovalLetterPage() {
               action={
                 <button
                   className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#0f9d58] px-4 text-sm font-bold text-[#0f9d58]"
+                  disabled={downloadMutation.isPending || !approvalLetter}
+                  onClick={() => downloadMutation.mutate()}
                   type="button"
                 >
-                  Unduh Template
+                  {downloadMutation.isPending ? "Mengunduh..." : "Unduh Surat"}
                 </button>
               }
-              fileName={studentDocumentWorkflowFixture.template.fileName}
-              metadata={studentDocumentWorkflowFixture.template.metadata}
+              fileName={approvalLetter?.filename ?? "Memuat surat persetujuan..."}
+              metadata={approvalLetter
+                ? `${contentTypeLabel(approvalLetter.content_type)} · ${formatBytes(approvalLetter.size_bytes)}`
+                : "Metadata surat belum tersedia"}
             />
+            {downloadMessage ? (
+              <p className="m-0 mt-3 text-sm font-semibold text-[#0f9d58]">{downloadMessage}</p>
+            ) : null}
           </section>
 
           <section className="rounded-xl bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
             <h2 className="m-0 text-2xl font-bold">Unggah Dokumen</h2>
             <p className="m-0 mt-2 text-sm leading-6 text-[#6b7280]">
               Unggah surat permohonan yang sudah ditandatangani. Dokumen harus berformat PDF
-              dengan ukuran maksimal 5 MB.
+              , JPG, JPEG, atau PNG dengan ukuran maksimal 5 MB.
             </p>
-            <div
-              aria-label="Pilih file surat persetujuan"
-              className="mt-6 rounded-xl border-2 border-dashed border-[#bbf7d0] bg-[#f8fafc] p-7 text-center"
-            >
+            <label className="mt-6 block rounded-xl border-2 border-dashed border-[#bbf7d0] bg-[#f8fafc] p-7 text-center">
               <UploadCloud aria-hidden="true" className="mx-auto text-[#0f9d58]" size={34} />
               <p className="m-0 mt-3 text-base font-bold">Unggah Surat Persetujuan</p>
-              <p className="m-0 mt-1 text-sm text-[#6b7280]">PDF maksimal 5 MB</p>
+              <p className="m-0 mt-1 text-sm text-[#6b7280]">PDF/JPG/JPEG/PNG maksimal 5 MB</p>
+              <input
+                aria-label="Pilih file surat persetujuan"
+                className="mx-auto mt-5 block max-w-full text-sm"
+                onChange={handleFileChange}
+                type="file"
+              />
               <div className="mt-5 flex justify-center gap-3 max-md:flex-col">
                 <button
                   className="min-h-11 rounded-lg border border-[#d1d5db] bg-white px-5 text-sm font-bold text-[#374151]"
@@ -365,19 +613,34 @@ export function StudentApprovalLetterPage() {
                 </button>
                 <button
                   className="min-h-11 rounded-lg bg-[#0f9d58] px-5 text-sm font-bold text-white"
+                  disabled={uploadMutation.isPending}
+                  onClick={handleUpload}
                   type="button"
                 >
-                  Unggah Dokumen
+                  {uploadMutation.isPending ? "Mengunggah..." : "Unggah Dokumen"}
                 </button>
               </div>
-            </div>
-            <div className="mt-5">
+            </label>
+            {fileError || uploadError ? (
+              <p className="m-0 mt-3 text-sm font-semibold text-[#991b1b]">{fileError ?? uploadError}</p>
+            ) : null}
+            {selectedFile ? (
+              <div className="mt-5">
+                <FileRow
+                  badge={<StatusBadge tone="valid">Siap diunggah</StatusBadge>}
+                  fileName={selectedFile.name}
+                  metadata={`${contentTypeLabel(selectedFile.type)} · ${formatBytes(selectedFile.size)}`}
+                />
+              </div>
+            ) : (
+              <div className="mt-5">
               <FileRow
                 badge={<StatusBadge tone="valid">{studentDocumentWorkflowFixture.selectedFile.status}</StatusBadge>}
                 fileName={studentDocumentWorkflowFixture.selectedFile.fileName}
                 metadata={studentDocumentWorkflowFixture.selectedFile.metadata}
               />
-            </div>
+              </div>
+            )}
           </section>
         </div>
 
@@ -386,7 +649,7 @@ export function StudentApprovalLetterPage() {
             <>
               <a
                 className="flex min-h-[52px] items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-base font-semibold text-white no-underline"
-                href={studentDocumentWorkflowFixture.waitingHref}
+                href={`/student/reservations/${reservationId}/verification/waiting`}
               >
                 Kirim Reservasi
               </a>
@@ -395,6 +658,7 @@ export function StudentApprovalLetterPage() {
               </p>
             </>
           }
+          rows={rows}
         />
       </div>
     </PageFrame>
@@ -402,8 +666,87 @@ export function StudentApprovalLetterPage() {
 }
 
 function PaymentUploadPage() {
+  const { reservationId = studentDocumentWorkflowFixture.payment.code } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const reservationQuery = useQuery({
+    queryFn: () => fetchStudentReservation(reservationId),
+    queryKey: ["student-reservation", reservationId],
+  });
+  const paymentQuery = useQuery({
+    queryFn: () => fetchPayment(reservationId),
+    queryKey: ["student-payment", reservationId],
+  });
+  const rows = useMemo(
+    () => paymentRowsFromReservation(reservationQuery.data, paymentQuery.data?.amount_rupiah),
+    [paymentQuery.data?.amount_rupiah, reservationQuery.data],
+  );
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => uploadPaymentReceipt({ file, reservationId }),
+    onError: (error) => {
+      const message = error instanceof ApiError ? error.message : "Bukti pembayaran belum dapat diunggah.";
+      setUploadError(message);
+    },
+    onSuccess: (receipt) => {
+      const current = reservationQuery.data;
+      if (current) {
+        queryClient.setQueryData<StudentReservationWorkflowProjection>(["student-reservation", reservationId], {
+          ...current,
+          payment: {
+            ...current.payment,
+            receipt,
+            review_status: "waiting_review",
+          },
+          status: "pending_payment",
+        });
+      }
+      navigate(`/student/reservations/${reservationId}/payment/waiting`);
+    },
+  });
+  const paymentError = paymentQuery.error instanceof ApiError
+    ? paymentQuery.error.message
+    : paymentQuery.isError
+      ? "Instruksi pembayaran belum dapat dimuat."
+      : null;
+
+  function validateFile(file: File) {
+    if (!paymentReceiptTypes.has(file.type)) {
+      return "Bukti pembayaran harus berupa JPG, JPEG, atau PNG.";
+    }
+    if (file.size > maxPaymentReceiptBytes) {
+      return "Ukuran bukti pembayaran maksimal 5 MB.";
+    }
+    return null;
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setSelectedFile(file);
+    setUploadError(null);
+    if (!file) {
+      setFileError(null);
+      return;
+    }
+    setFileError(validateFile(file));
+  }
+
+  function handleUpload() {
+    if (!selectedFile) {
+      setFileError("Pilih bukti pembayaran terlebih dahulu.");
+      return;
+    }
+    const error = validateFile(selectedFile);
+    setFileError(error);
+    setUploadError(null);
+    if (error) return;
+    uploadMutation.mutate(selectedFile);
+  }
+
   return (
-    <PageFrame>
+    <PageFrame backHref={reservationPath(reservationId)}>
       <div className="grid grid-cols-[1fr_360px] items-start gap-8 max-lg:grid-cols-1">
         <section className="rounded-xl bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
           <div className="mb-6 flex items-start gap-4 max-md:gap-3">
@@ -411,18 +754,32 @@ function PaymentUploadPage() {
             <div>
               <h1 className="m-0 text-2xl font-bold leading-tight">Unggah Bukti Pembayaran</h1>
               <p className="m-0 mt-3 max-w-[620px] text-sm leading-6 text-[#6b7280]">
-                Unggah bukti pembayaran reservasi. Dokumen harus berformat PDF, JPG, atau PNG
+                Unggah bukti pembayaran reservasi. Dokumen harus berformat JPG, JPEG, atau PNG
                 dengan ukuran maksimal 5 MB.
               </p>
             </div>
           </div>
+          {paymentQuery.data ? (
+            <div className="mb-6 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-5 text-sm leading-6 text-[#166534]">
+              <strong className="block text-lg text-[#065f46]">{formatRupiah(paymentQuery.data.amount_rupiah)}</strong>
+              <p className="m-0 mt-2 whitespace-pre-line">{paymentQuery.data.payment_instructions}</p>
+            </div>
+          ) : null}
+          {paymentError ? (
+            <div className="mb-6 rounded-lg border border-[#fecaca] bg-[#fef2f2] p-4 text-sm font-semibold text-[#991b1b]">
+              {paymentError}
+            </div>
+          ) : null}
 
-          <div
-            aria-label="Pilih file bukti pembayaran"
-            className="rounded-xl border border-dashed border-[#86efac] bg-[#f7fffb] p-8 text-center max-md:p-6"
-          >
+          <label className="block rounded-xl border border-dashed border-[#86efac] bg-[#f7fffb] p-8 text-center max-md:p-6">
             <strong className="block text-base">Unggah Bukti Pembayaran</strong>
-            <p className="m-0 mt-2 text-sm text-[#6b7280]">PDF/JPG/PNG maksimal 5 MB</p>
+            <p className="m-0 mt-2 text-sm text-[#6b7280]">JPG/JPEG/PNG maksimal 5 MB</p>
+            <input
+              aria-label="Pilih file bukti pembayaran"
+              className="mx-auto mt-5 block max-w-full text-sm"
+              onChange={handleFileChange}
+              type="file"
+            />
             <div className="mt-6 flex justify-center gap-3 max-md:flex-col">
               <button
                 className="min-h-11 rounded-lg border border-[#d1d5db] bg-white px-8 text-sm font-bold text-[#111827]"
@@ -432,19 +789,32 @@ function PaymentUploadPage() {
               </button>
               <button
                 className="min-h-11 rounded-lg bg-[#0f9d58] px-8 text-sm font-bold text-white"
+                disabled={uploadMutation.isPending || !paymentQuery.data}
+                onClick={handleUpload}
                 type="button"
               >
-                Unggah Bukti
+                {uploadMutation.isPending ? "Mengunggah..." : "Unggah Bukti"}
               </button>
             </div>
-          </div>
+          </label>
+          {fileError || uploadError ? (
+            <p className="m-0 mt-3 text-sm font-semibold text-[#991b1b]">{fileError ?? uploadError}</p>
+          ) : null}
 
           <div className="mt-5">
-            <FileRow
-              badge={<StatusBadge tone="valid">Valid</StatusBadge>}
-              fileName={studentDocumentWorkflowFixture.payment.receiptFileName}
-              metadata={studentDocumentWorkflowFixture.payment.receiptMetadata}
-            />
+            {selectedFile ? (
+              <FileRow
+                badge={<StatusBadge tone="valid">Siap diunggah</StatusBadge>}
+                fileName={selectedFile.name}
+                metadata={`${contentTypeLabel(selectedFile.type)} · ${formatBytes(selectedFile.size)}`}
+              />
+            ) : (
+              <FileRow
+                badge={<StatusBadge tone="valid">Valid</StatusBadge>}
+                fileName={studentDocumentWorkflowFixture.payment.receiptFileName}
+                metadata={studentDocumentWorkflowFixture.payment.receiptMetadata}
+              />
+            )}
           </div>
         </section>
 
@@ -453,7 +823,7 @@ function PaymentUploadPage() {
             <>
               <a
                 className="flex min-h-[52px] items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-base font-semibold text-white no-underline"
-                href={studentDocumentWorkflowFixture.payment.waitingHref}
+                href={`/student/reservations/${reservationId}/payment/waiting`}
               >
                 Unggah Bukti
               </a>
@@ -462,7 +832,7 @@ function PaymentUploadPage() {
               </p>
             </>
           }
-          rows={paymentSummaryRows}
+          rows={rows}
         />
       </div>
     </PageFrame>
@@ -474,9 +844,37 @@ function PaymentStatusPage({
 }: {
   kind: "accepted" | "declined" | "waiting";
 }) {
+  const { reservationId = studentDocumentWorkflowFixture.payment.code } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const reservationQuery = useQuery({
+    queryFn: () => fetchStudentReservation(reservationId),
+    queryKey: ["student-reservation", reservationId],
+  });
+  const reservation = reservationQuery.data;
+  const reason = reservation?.payment.rejection_reason
+    ?? reservation?.rejection?.reason
+    ?? "Bukti pembayaran belum dapat diverifikasi.";
+  const rows = useMemo(() => {
+    if (kind === "accepted") {
+      return [
+        ...summaryRowsFromReservation(reservation),
+        { label: "Kode Reservasi", value: reservation?.reservation_code ?? studentDocumentWorkflowFixture.payment.code },
+      ];
+    }
+    return paymentRowsFromReservation(reservation);
+  }, [kind, reservation]);
+
+  useEffect(() => {
+    if (!reservation) return;
+    const canonicalHref = mapStudentReservationWorkflow(reservation).primaryHref;
+    if (canonicalHref !== location.pathname) {
+      navigate(canonicalHref, { replace: true });
+    }
+  }, [location.pathname, navigate, reservation]);
+
   const isWaiting = kind === "waiting";
   const isAccepted = kind === "accepted";
-  const rows = isAccepted ? acceptedSummaryRows : paymentSummaryRows;
   const statusLabel = isAccepted
     ? "Disetujui"
     : isWaiting
@@ -521,7 +919,7 @@ function PaymentStatusPage({
               ? "Fasilitas sudah terkonfirmasi untuk jadwal kegiatan Anda."
               : isWaiting
                 ? "Tim fasilitas sedang meninjau bukti pembayaran yang Anda unggah."
-                : "Bukti pembayaran belum dapat diverifikasi. Unggah ulang bukti pembayaran yang lebih jelas."}
+                : reason}
           </p>
           {isAccepted ? (
             <a
@@ -551,10 +949,32 @@ function DocumentStatusPage({
   kind: "declined" | "waiting";
 }) {
   const isWaiting = kind === "waiting";
+  const { reservationId = studentDocumentWorkflowFixture.payment.code } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const reservationQuery = useQuery({
+    queryFn: () => fetchStudentReservation(reservationId),
+    queryKey: ["student-reservation", reservationId],
+  });
+  const reservation = reservationQuery.data;
+  const rows = useMemo(() => summaryRowsFromReservation(reservation), [reservation]);
+  const reason = reservation?.document.rejection_reason
+    ?? reservation?.rejection?.reason
+    ?? studentDocumentWorkflowFixture.rejectionReason;
+
+  useEffect(() => {
+    if (!reservation) return;
+    const canonicalHref = mapStudentReservationWorkflow(reservation).primaryHref;
+    if (canonicalHref !== location.pathname) {
+      navigate(canonicalHref, { replace: true });
+    }
+  }, [location.pathname, navigate, reservation]);
+
   return (
     <PageFrame showBack={false}>
       <section className="mx-auto max-w-[560px] rounded-xl bg-white p-8 text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
         <StatusSummary
+          rows={rows}
           status={
             <StatusBadge tone={isWaiting ? "waiting" : "declined"}>
               {isWaiting ? "Menunggu Verifikasi Dokumen" : "Ditolak"}
@@ -580,7 +1000,7 @@ function DocumentStatusPage({
           {!isWaiting ? (
             <div className="mt-5 rounded-lg border border-[#fecaca] bg-[#fef2f2] p-4 text-left text-sm leading-6 text-[#991b1b]">
               <strong className="block text-xs uppercase">Alasan Penolakan</strong>
-              {studentDocumentWorkflowFixture.rejectionReason}
+              {reason}
             </div>
           ) : null}
           {!isWaiting ? (

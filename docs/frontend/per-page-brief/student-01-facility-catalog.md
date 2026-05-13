@@ -49,6 +49,7 @@
 - Deterministic fixture requirements: mixed categories, ratings, free/paid prices, capacities, and empty-filter state.
 - Real entities: Facility Catalog page and categories.
 - Fixture media: local deterministic facility imagery.
+- Contract normalization: filter labels and query parameters must use Facility Category language (`category`) instead of Organization/Faculty filtering.
 
 ## Backend Integration And Gaps
 
@@ -80,4 +81,3 @@
 ## Open Questions
 
 - Loading/empty/error state visuals are non-blocking missing designs.
-

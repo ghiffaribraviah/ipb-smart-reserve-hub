@@ -15,9 +15,8 @@ export type FacilityDetailFeature = {
 };
 
 export type PublicCalendarEntry = {
-  activityTitle: string;
-  organizationUnit: string;
-  status: "approved" | "maintenance" | "waiting";
+  label: string;
+  status: "reserved" | "blocked";
   timeRange: string;
 };
 
@@ -62,21 +61,18 @@ export const studentFacilityDetail = {
     selectedDate: "24 Oktober 2024",
     entries: [
       {
-        activityTitle: "Simposium Etika AI 2024",
-        organizationUnit: "Himpunan Mahasiswa Ilmu Komputer",
-        status: "approved",
+        label: "Waktu sudah dipesan",
+        status: "reserved",
         timeRange: "09:00 - 12:00",
       },
       {
-        activityTitle: "Kuliah Tamu: Perubahan Iklim",
-        organizationUnit: "Departemen Geofisika",
-        status: "approved",
+        label: "Waktu sudah dipesan",
+        status: "reserved",
         timeRange: "13:00 - 15:00",
       },
       {
-        activityTitle: "Pemeliharaan Tata Suara",
-        organizationUnit: "Direktorat Fasilitas Kampus",
-        status: "maintenance",
+        label: "Waktu tidak tersedia",
+        status: "blocked",
         timeRange: "16:00 - 18:00",
       },
     ] satisfies PublicCalendarEntry[],

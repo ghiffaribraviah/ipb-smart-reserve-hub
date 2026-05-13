@@ -587,9 +587,17 @@ async def test_assigned_staff_fetches_private_facility_schedule_without_changing
         }
     ]
     assert public_calendar.status_code == 200
+    assert public_calendar.json() == [
+        {
+            "starts_at": "2026-06-10T02:00:00Z",
+            "ends_at": "2026-06-10T04:00:00Z",
+            "status": "reserved",
+        }
+    ]
     assert "reservation_id" not in public_calendar.json()[0]
-    assert "status" not in public_calendar.json()[0]
     assert "workflow_type" not in public_calendar.json()[0]
+    assert "activity_title" not in public_calendar.json()[0]
+    assert "organization_unit" not in public_calendar.json()[0]
 
 
 @pytest.mark.anyio

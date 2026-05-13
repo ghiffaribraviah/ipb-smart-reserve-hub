@@ -4,7 +4,7 @@ This file is an index. Detailed backend integration requirements and backend gap
 
 ## Stable Contract Documentation
 
-- `README.md` contains the current backend API tables and reservation status notes.
+- `app/README.md` contains the current backend API overview and local backend run details.
 - `CONTEXT.md` contains domain language for frontend/backend integration concepts.
 - `docs/frontend/per-page-brief/` contains page-owned integration details and backend gap entries.
 - `docs/frontend/frontend-stack.md` contains frontend stack, session, and testing conventions.
@@ -31,6 +31,7 @@ Gap statuses:
 | [BG-STUDENT-00-01](per-page-brief/student-00-home.md#bg-student-00-01-home-categories-and-featured-facilities) | `student-00-home.md` | resolved | Home categories and featured facilities |
 | [BG-STUDENT-01-01](per-page-brief/student-01-facility-catalog.md#bg-student-01-01-paginated-filterable-facility-catalog) | `student-01-facility-catalog.md` | resolved | Paginated filterable facility catalog |
 | [BG-STUDENT-02-01](per-page-brief/student-02-facility-details.md#bg-student-02-01-public-facility-detail-and-calendar) | `student-02-facility-details.md` | resolved | Public facility detail and calendar |
+| [BG-STUDENT-02-02](per-page-brief/student-02-facility-details.md#bg-student-02-02-privacy-safe-public-calendar-blocks) | `student-02-facility-details.md` | resolved | Privacy-safe public calendar blocks |
 
 ## Reservation Workflow
 
@@ -84,8 +85,11 @@ Gap statuses:
 | Gap ID | Page Brief | Status | Label |
 | --- | --- | --- | --- |
 | [BG-SUPER-00-01](per-page-brief/super-00-dashboard.md#bg-super-00-01-super-admin-dashboard-read-model) | `super-00-dashboard.md` | resolved | Super Admin dashboard read model |
+| [BG-SUPER-00-02](per-page-brief/super-00-dashboard.md#bg-super-00-02-dashboard-export-action) | `super-00-dashboard.md` | deferred | Dashboard export action |
 | [BG-SUPER-01-01](per-page-brief/super-01-pengguna.md#bg-super-01-01-super-admin-user-management-read-model) | `super-01-pengguna.md` | resolved | Super Admin user management read model |
 | [BG-SUPER-02-01](per-page-brief/super-02-fasilitas.md#bg-super-02-01-super-admin-facility-governance-read-model) | `super-02-fasilitas.md` | resolved | Super Admin facility governance read model |
+| [BG-SUPER-02-02](per-page-brief/super-02-fasilitas.md#bg-super-02-02-facility-create-and-import-actions) | `super-02-fasilitas.md` | deferred | Facility create and import actions |
 | [BG-SUPER-03-01](per-page-brief/super-03-laporan.md#bg-super-03-01-super-admin-report-aggregates) | `super-03-laporan.md` | resolved | Super Admin report aggregates |
 | [BG-SUPER-03-02](per-page-brief/super-03-laporan.md#bg-super-03-02-super-admin-audit-and-review-moderation) | `super-03-laporan.md` | resolved | Super Admin audit and review moderation |
+| [BG-SUPER-03-03](per-page-brief/super-03-laporan.md#bg-super-03-03-report-export-action) | `super-03-laporan.md` | deferred | Report export action |
 | [BG-SUPER-04-01](per-page-brief/super-04-sistem.md#bg-super-04-01-super-admin-system-status-and-settings) | `super-04-sistem.md` | resolved | Super Admin system status and settings |

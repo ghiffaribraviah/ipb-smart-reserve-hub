@@ -1,5 +1,4 @@
 import {
-  Bell,
   Check,
   Clock,
   Download,
@@ -10,14 +9,21 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "../../api/http";
+import { NotificationSurface } from "../../components/NotificationSurface";
 import {
   staffReservationList,
-  staffVerificationQueue,
   type StaffBadgeTone,
   type StaffReservationListItem,
   type StaffVerificationItem,
 } from "../../fixtures/staffReservationOperations";
+import {
+  mapStaffReservationListItem,
+  mapStaffVerificationItem,
+  type StaffReservationOperationResponse,
+} from "../../reservations/staffReservationOperations";
 import { cn } from "../../utils/cn";
 
 const navItems = [
@@ -39,6 +45,40 @@ const avatarClasses = {
   light: "bg-[#a7f3d0] text-[#065f46]",
   neutral: "bg-[#e5e7eb] text-[#4b5563]",
 };
+
+type StaffReservationFilters = {
+  date: string;
+  facilityId: string;
+  status: string;
+};
+
+function staffReservationsPath(filters: StaffReservationFilters) {
+  const params = new URLSearchParams();
+
+  if (filters.status !== "all") {
+    params.set("status", filters.status);
+  }
+
+  if (filters.facilityId !== "all") {
+    params.set("facility_id", filters.facilityId);
+  }
+
+  if (filters.date) {
+    params.set("date_from", filters.date);
+    params.set("date_to", filters.date);
+  }
+
+  const query = params.toString();
+  return `/staff/reservations${query ? `?${query}` : ""}`;
+}
+
+function fetchStaffVerificationQueue() {
+  return apiRequest<StaffReservationOperationResponse[]>("/staff/reservations/verification-queue");
+}
+
+function fetchStaffReservations(filters: StaffReservationFilters) {
+  return apiRequest<StaffReservationOperationResponse[]>(staffReservationsPath(filters));
+}
 
 export function StaffShell({
   active,
@@ -99,9 +139,7 @@ export function StaffShell({
           </nav>
 
           <div className="flex items-center gap-[22px] max-md:gap-3.5">
-            <button aria-label="Notifikasi staff" className="inline-flex text-[#6b7280]" type="button">
-              <Bell aria-hidden="true" size={18} />
-            </button>
+            <NotificationSurface className="text-[#6b7280]" label="Notifikasi staff" role="staff" />
             <a
               aria-label="Profil Bagus Saputra"
               className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0f9d58] text-[13px] font-bold text-white no-underline"
@@ -176,35 +214,37 @@ function StaffStatusBadge({ label, tone }: { label: string; tone: StaffBadgeTone
 }
 
 function VerificationActionButtons({ item }: { item: StaffVerificationItem }) {
+  const detailHref = `/staff/reservations/${item.id}`;
+
   return (
     <div className="grid items-center gap-3 md:flex md:gap-4 max-md:grid-cols-3 max-md:border-t max-md:border-[#e5e7eb] max-md:pt-4">
-      <button
+      <a
         aria-label={`Unduh dokumen ${item.applicant}`}
         className="inline-flex min-h-10 flex-col items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f8fafc] text-[#6b7280] md:min-h-0 md:border-0 md:bg-transparent md:p-1"
+        href={detailHref}
         title="Unduh"
-        type="button"
       >
         <Download aria-hidden="true" size={18} />
         <span className="mt-1 text-[11px] font-bold md:sr-only">Unduh</span>
-      </button>
-      <button
+      </a>
+      <a
         aria-label={`Verifikasi ${item.applicant}`}
         className="inline-flex min-h-10 flex-col items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f8fafc] text-[#10b981] md:min-h-0 md:border-0 md:bg-transparent md:p-1"
+        href={detailHref}
         title="Verifikasi"
-        type="button"
       >
         <Check aria-hidden="true" size={18} />
         <span className="mt-1 text-[11px] font-bold md:sr-only">Verifikasi</span>
-      </button>
-      <button
+      </a>
+      <a
         aria-label={`Tolak ${item.applicant}`}
         className="inline-flex min-h-10 flex-col items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f8fafc] text-[#ef4444] md:min-h-0 md:border-0 md:bg-transparent md:p-1"
+        href={detailHref}
         title="Tolak"
-        type="button"
       >
         <X aria-hidden="true" size={18} />
         <span className="mt-1 text-[11px] font-bold md:sr-only">Tolak</span>
-      </button>
+      </a>
     </div>
   );
 }
@@ -274,6 +314,14 @@ function ReservationRow({ item }: { item: StaffReservationListItem }) {
 }
 
 export function StaffHomePage() {
+  const queueQuery = useQuery({
+    queryFn: fetchStaffVerificationQueue,
+    queryKey: ["staff-verification-queue"],
+  });
+  const verificationItems = queueQuery.data?.map(mapStaffVerificationItem) ?? [];
+  const pendingCount = queueQuery.data?.length ?? 0;
+  const visibleCount = verificationItems.length;
+
   return (
     <StaffShell active="reservations">
       <main className="mx-auto mt-28 w-[1200px] max-w-[95%] max-md:mt-[92px] max-md:w-full max-md:max-w-full max-md:px-[26px]">
@@ -293,7 +341,7 @@ export function StaffHomePage() {
               MENUNGGU VERIFIKASI
             </p>
             <p className="m-0 mt-2 text-4xl font-bold leading-none text-[#111827] max-md:text-[32px]">
-              24
+              {queueQuery.isLoading ? "..." : pendingCount}
             </p>
           </div>
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fef3c7] text-[#92400e]">
@@ -336,15 +384,49 @@ export function StaffHomePage() {
               </tr>
             </thead>
             <tbody className="max-md:block max-md:space-y-4">
-              {staffVerificationQueue.map((item) => (
-                <VerificationRow item={item} key={item.id} />
-              ))}
+              {queueQuery.isLoading ? (
+                <tr>
+                  <td className="px-8 py-8 text-sm font-semibold text-[#6b7280]" colSpan={5}>
+                    Memuat antrian verifikasi...
+                  </td>
+                </tr>
+              ) : null}
+              {queueQuery.isError ? (
+                <tr>
+                  <td className="px-8 py-8" colSpan={5}>
+                    <div className="rounded-xl border border-[#fee2e2] bg-[#fef2f2] p-5">
+                      <p className="m-0 text-sm font-bold text-[#991b1b]">
+                        Antrian verifikasi belum dapat dimuat.
+                      </p>
+                      <button
+                        className="mt-3 rounded-md border border-[#fecaca] bg-white px-4 py-2 text-[13px] font-bold text-[#991b1b]"
+                        onClick={() => queueQuery.refetch()}
+                        type="button"
+                      >
+                        Muat ulang antrian verifikasi
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : null}
+              {queueQuery.isSuccess && verificationItems.length === 0 ? (
+                <tr>
+                  <td className="px-8 py-8 text-sm font-semibold text-[#6b7280]" colSpan={5}>
+                    Tidak ada pengajuan yang menunggu verifikasi.
+                  </td>
+                </tr>
+              ) : null}
+              {queueQuery.isSuccess
+                ? verificationItems.map((item) => (
+                  <VerificationRow item={item} key={item.id} />
+                ))
+                : null}
             </tbody>
           </table>
 
           <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-white px-8 py-5 max-md:flex-col max-md:gap-4 max-md:border-0 max-md:bg-transparent max-md:px-0 max-md:py-6 max-md:text-center">
             <p className="m-0 text-[13px] text-[#6b7280]">
-              Menampilkan 6 dari 24 pengajuan yang menunggu verifikasi
+              Menampilkan {visibleCount} dari {pendingCount} pengajuan yang menunggu verifikasi
             </p>
             <div className="flex gap-2">
               <button
@@ -369,6 +451,37 @@ export function StaffHomePage() {
 }
 
 export function StaffReservationListPage() {
+  const [filters, setFilters] = useState<StaffReservationFilters>({
+    date: "",
+    facilityId: "all",
+    status: "all",
+  });
+  const reservationsQuery = useQuery({
+    queryFn: () => fetchStaffReservations(filters),
+    queryKey: ["staff-reservations", filters],
+  });
+  const reservations = useMemo(
+    () => reservationsQuery.data?.map(mapStaffReservationListItem) ?? [],
+    [reservationsQuery.data],
+  );
+  const facilityOptions = useMemo(() => {
+    const byId = new Map<string, string>();
+
+    for (const item of reservations) {
+      if (item.facilityId) {
+        byId.set(item.facilityId, item.facility);
+      }
+    }
+
+    for (const item of staffReservationList) {
+      if (item.facilityId) {
+        byId.set(item.facilityId, item.facility);
+      }
+    }
+
+    return Array.from(byId, ([id, name]) => ({ id, name }));
+  }, [reservations]);
+
   return (
     <StaffShell active="reservations">
       <main className="mx-auto mt-28 w-[1200px] max-w-[95%] max-md:mt-[88px] max-md:w-full max-md:max-w-full max-md:px-4">
@@ -389,11 +502,15 @@ export function StaffReservationListPage() {
               <select
                 aria-label="Filter fasilitas"
                 className="h-10 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] outline-none"
-                defaultValue="all"
+                onChange={(event) => setFilters((current) => ({ ...current, facilityId: event.target.value }))}
+                value={filters.facilityId}
               >
                 <option value="all">Semua Fasilitas</option>
-                <option value="bio-labs">Bio-Labs Complex A</option>
-                <option value="auditorium">Grand Auditorium</option>
+                {facilityOptions.map((facility) => (
+                  <option key={facility.id} value={facility.id}>
+                    {facility.name}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="min-w-0">
@@ -401,11 +518,14 @@ export function StaffReservationListPage() {
               <select
                 aria-label="Filter status"
                 className="h-10 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] outline-none"
-                defaultValue="all"
+                onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+                value={filters.status}
               >
                 <option value="all">Semua Status</option>
                 <option value="approved">Disetujui</option>
-                <option value="waiting">Menunggu Peninjauan</option>
+                <option value="pending_document_review">Menunggu Verifikasi Dokumen</option>
+                <option value="pending_payment">Menunggu Pembayaran</option>
+                <option value="cancellation_requested">Menunggu Pembatalan</option>
               </select>
             </label>
             <label className="min-w-0 max-md:col-span-2">
@@ -413,12 +533,14 @@ export function StaffReservationListPage() {
               <input
                 aria-label="Tanggal reservasi"
                 className="h-10 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] outline-none"
+                onChange={(event) => setFilters((current) => ({ ...current, date: event.target.value }))}
                 type="date"
+                value={filters.date}
               />
             </label>
           </div>
           <p className="m-0 whitespace-nowrap text-sm font-semibold text-[#6b7280] max-md:whitespace-normal">
-            Menampilkan 6 hasil
+            Menampilkan {reservations.length} hasil
           </p>
         </section>
 
@@ -444,15 +566,49 @@ export function StaffReservationListPage() {
               </tr>
             </thead>
             <tbody className="max-md:block max-md:space-y-4">
-              {staffReservationList.map((item) => (
-                <ReservationRow item={item} key={item.id} />
-              ))}
+              {reservationsQuery.isLoading ? (
+                <tr>
+                  <td className="px-8 py-8 text-sm font-semibold text-[#6b7280]" colSpan={5}>
+                    Memuat daftar reservasi...
+                  </td>
+                </tr>
+              ) : null}
+              {reservationsQuery.isError ? (
+                <tr>
+                  <td className="px-8 py-8" colSpan={5}>
+                    <div className="rounded-xl border border-[#fee2e2] bg-[#fef2f2] p-5">
+                      <p className="m-0 text-sm font-bold text-[#991b1b]">
+                        Daftar reservasi belum dapat dimuat.
+                      </p>
+                      <button
+                        className="mt-3 rounded-md border border-[#fecaca] bg-white px-4 py-2 text-[13px] font-bold text-[#991b1b]"
+                        onClick={() => reservationsQuery.refetch()}
+                        type="button"
+                      >
+                        Muat ulang daftar reservasi
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : null}
+              {reservationsQuery.isSuccess && reservations.length === 0 ? (
+                <tr>
+                  <td className="px-8 py-8 text-sm font-semibold text-[#6b7280]" colSpan={5}>
+                    Tidak ada reservasi untuk filter ini.
+                  </td>
+                </tr>
+              ) : null}
+              {reservationsQuery.isSuccess
+                ? reservations.map((item) => (
+                  <ReservationRow item={item} key={item.id} />
+                ))
+                : null}
             </tbody>
           </table>
 
           <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-white px-8 py-5 max-md:flex-col max-md:gap-4 max-md:border-0 max-md:bg-transparent max-md:px-0 max-md:py-6 max-md:text-center">
             <p className="m-0 text-[13px] text-[#6b7280]">
-              Menampilkan 6 dari 145 total reservasi
+              Menampilkan {reservations.length} dari {reservations.length} total reservasi
             </p>
             <div className="flex gap-2">
               <button

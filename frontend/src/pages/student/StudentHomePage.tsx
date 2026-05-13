@@ -1,24 +1,144 @@
 import {
-  Bell,
+  Activity,
+  Building2,
   ChevronDown,
+  House,
+  Megaphone,
   Menu,
+  Monitor,
   Search,
   Star,
+  Trees,
   Users,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { LucideIcon } from "lucide-react";
+import { apiRequest } from "../../api/http";
+import { NotificationSurface } from "../../components/NotificationSurface";
 import {
-  studentHomeCategories,
-  studentHomeFacilities,
   studentHomeSession,
-  type StudentHomeCategory,
-  type StudentHomeFacility,
 } from "../../fixtures/studentHome";
+
+type FacilityCategoryResponse = {
+  facility_count: number;
+  icon_hint: string | null;
+  id: string;
+  name: string;
+  slug: string;
+};
+
+type FacilityCatalogItemResponse = {
+  capacity: number;
+  category: string;
+  cover_image_url: string | null;
+  id: string;
+  location: string;
+  name: string;
+  open_hours_summary: string;
+  price_summary: string;
+  rating_average: number | null;
+  review_count: number;
+};
+
+type FacilityCatalogPageResponse = {
+  items: FacilityCatalogItemResponse[];
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+};
+
+type StudentHomeCategory = {
+  description: string;
+  href: string;
+  icon: LucideIcon;
+  name: string;
+  slug: string;
+};
+
+type StudentHomeFacility = {
+  capacity: string;
+  category: string;
+  coverImageUrl: string | null;
+  description: string;
+  href: string;
+  name: string;
+  rating: string;
+  reviewCount: string;
+  slug: string;
+};
 
 const navItems = [
   { href: "/student", label: "Beranda" },
   { href: "/student/facilities", label: "Fasilitas" },
   { href: "/student/reservations", label: "Reservasi" },
 ];
+
+const iconByHint: Record<string, LucideIcon> = {
+  classroom: Building2,
+  dumbbell: Activity,
+  equipment: Monitor,
+  landscape: Trees,
+  outdoor: Trees,
+  presentation: Megaphone,
+  school: Building2,
+  seminar: Megaphone,
+  sport: Activity,
+};
+
+function categoryIcon(iconHint: string | null) {
+  if (!iconHint) {
+    return House;
+  }
+
+  return iconByHint[iconHint] ?? House;
+}
+
+function formatCapacity(value: number) {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatRating(value: number | null) {
+  return value === null ? "Belum ada rating" : value.toFixed(1);
+}
+
+function formatReviewCount(value: number) {
+  return `${new Intl.NumberFormat("id-ID").format(value)} ulasan`;
+}
+
+function mapCategory(category: FacilityCategoryResponse): StudentHomeCategory {
+  return {
+    description: `${new Intl.NumberFormat("id-ID").format(category.facility_count)} fasilitas tersedia`,
+    href: `/student/facilities?category=${encodeURIComponent(category.slug)}`,
+    icon: categoryIcon(category.icon_hint),
+    name: category.name,
+    slug: category.slug,
+  };
+}
+
+function mapFeaturedFacility(facility: FacilityCatalogItemResponse): StudentHomeFacility {
+  return {
+    capacity: formatCapacity(facility.capacity),
+    category: facility.category,
+    coverImageUrl: facility.cover_image_url,
+    description: `${facility.location} · ${facility.open_hours_summary} · ${facility.price_summary}`,
+    href: `/student/facilities/${facility.id}`,
+    name: facility.name,
+    rating: formatRating(facility.rating_average),
+    reviewCount: formatReviewCount(facility.review_count),
+    slug: facility.id,
+  };
+}
+
+async function fetchHomeCategories() {
+  const categories = await apiRequest<FacilityCategoryResponse[]>("/facility-categories");
+  return categories.map(mapCategory);
+}
+
+async function fetchFeaturedFacilities() {
+  const page = await apiRequest<FacilityCatalogPageResponse>("/facilities?featured=true&limit=8");
+  return page.items.map(mapFeaturedFacility);
+}
 
 function StudentHeader() {
   return (
@@ -76,13 +196,7 @@ function StudentHeader() {
         </nav>
 
         <div className="flex items-center gap-[22px] max-md:gap-3.5">
-          <button
-            aria-label="Notifikasi"
-            className="inline-flex text-slate-500"
-            type="button"
-          >
-            <Bell aria-hidden="true" size={18} />
-          </button>
+          <NotificationSurface className="text-slate-500" role="student" />
           <a
             aria-label={`Profil ${studentHomeSession.name}`}
             className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0f9d58] text-[13px] font-bold text-white no-underline"
@@ -192,6 +306,16 @@ function CategoryShortcut({ category }: { category: StudentHomeCategory }) {
 }
 
 function FacilityMedia({ facility }: { facility: StudentHomeFacility }) {
+  if (facility.coverImageUrl) {
+    return (
+      <img
+        alt={`Foto ${facility.name}`}
+        className="h-[180px] w-full object-cover max-md:h-[132px]"
+        src={facility.coverImageUrl}
+      />
+    );
+  }
+
   return (
     <div
       aria-label={`Foto ${facility.name}`}
@@ -241,6 +365,145 @@ function FacilityCard({ facility }: { facility: StudentHomeFacility }) {
   );
 }
 
+function CategorySkeletonGrid() {
+  return (
+    <div
+      aria-label="Memuat tipe fasilitas"
+      className="grid min-h-[154px] grid-cols-5 gap-6 max-lg:grid-cols-3 max-lg:gap-8 max-md:grid-cols-2 max-md:gap-x-[18px] max-md:gap-y-6"
+    >
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div className="grid justify-items-center gap-3" key={index}>
+          <span className="h-16 w-16 rounded-full bg-[#f3f4f6] max-md:h-[52px] max-md:w-[52px]" />
+          <span className="h-4 w-24 rounded bg-[#f3f4f6]" />
+          <span className="h-3 w-32 rounded bg-[#f3f4f6] max-md:w-24" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FeaturedSkeletonGrid() {
+  return (
+    <div
+      aria-label="Memuat fasilitas unggulan"
+      className="grid min-h-[374px] grid-cols-4 gap-6 max-lg:grid-cols-2 max-md:grid-cols-2 max-md:gap-x-3.5 max-md:gap-y-[18px]"
+    >
+      {Array.from({ length: 8 }).map((_, index) => (
+        <article className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white" key={index}>
+          <div className="h-[180px] bg-[#f3f4f6] max-md:h-[132px]" />
+          <div className="grid gap-3 p-5 max-md:p-3.5">
+            <span className="h-3 w-24 rounded bg-[#f3f4f6]" />
+            <span className="h-4 w-36 rounded bg-[#f3f4f6]" />
+            <span className="h-12 rounded bg-[#f3f4f6]" />
+            <span className="h-4 rounded bg-[#f3f4f6]" />
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function SectionState({
+  actionLabel,
+  message,
+  onRetry,
+}: {
+  actionLabel?: string;
+  message: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div className="flex min-h-[154px] flex-col items-center justify-center rounded-xl border border-dashed border-[#d1d5db] bg-[#f9fafb] px-6 py-8 text-center">
+      <p className="m-0 text-sm font-semibold text-[#6b7280]">{message}</p>
+      {onRetry && actionLabel ? (
+        <button
+          className="mt-4 rounded-lg border border-[#10b981] bg-white px-4 py-2 text-sm font-bold text-[#0f9d58]"
+          onClick={onRetry}
+          type="button"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function CategorySection({
+  categories,
+  isError,
+  isLoading,
+  onRetry,
+}: {
+  categories: StudentHomeCategory[];
+  isError: boolean;
+  isLoading: boolean;
+  onRetry: () => void;
+}) {
+  if (isLoading) {
+    return <CategorySkeletonGrid />;
+  }
+
+  if (isError) {
+    return (
+      <SectionState
+        actionLabel="Muat ulang tipe fasilitas"
+        message="Tipe fasilitas belum dapat dimuat."
+        onRetry={onRetry}
+      />
+    );
+  }
+
+  if (categories.length === 0) {
+    return <SectionState message="Belum ada tipe fasilitas yang tersedia." />;
+  }
+
+  return (
+    <div className="grid min-h-[154px] grid-cols-5 gap-6 max-lg:grid-cols-3 max-lg:gap-8 max-md:grid-cols-2 max-md:gap-x-[18px] max-md:gap-y-6">
+      {categories.map((category) => (
+        <CategoryShortcut category={category} key={category.slug} />
+      ))}
+    </div>
+  );
+}
+
+function FeaturedSection({
+  facilities,
+  isError,
+  isLoading,
+  onRetry,
+}: {
+  facilities: StudentHomeFacility[];
+  isError: boolean;
+  isLoading: boolean;
+  onRetry: () => void;
+}) {
+  if (isLoading) {
+    return <FeaturedSkeletonGrid />;
+  }
+
+  if (isError) {
+    return (
+      <SectionState
+        actionLabel="Muat ulang fasilitas unggulan"
+        message="Fasilitas unggulan belum dapat dimuat."
+        onRetry={onRetry}
+      />
+    );
+  }
+
+  if (facilities.length === 0) {
+    return <SectionState message="Belum ada fasilitas unggulan yang tersedia." />;
+  }
+
+  return (
+    <div className="grid min-h-[374px] grid-cols-4 gap-6 max-lg:grid-cols-2 max-md:grid-cols-2 max-md:gap-x-3.5 max-md:gap-y-[18px]">
+      {facilities.map((facility) => (
+        <FacilityCard facility={facility} key={facility.slug} />
+      ))}
+    </div>
+  );
+}
+
 function StudentFooter() {
   return (
     <footer className="flex justify-center border-t border-[#e5e7eb] bg-white py-[22px]">
@@ -269,6 +532,17 @@ function StudentFooter() {
 }
 
 export function StudentHomePage() {
+  const categoriesQuery = useQuery({
+    queryFn: fetchHomeCategories,
+    queryKey: ["student-home", "categories"],
+  });
+  const featuredQuery = useQuery({
+    queryFn: fetchFeaturedFacilities,
+    queryKey: ["student-home", "featured-facilities"],
+  });
+  const categories = categoriesQuery.data ?? [];
+  const featuredFacilities = featuredQuery.data ?? [];
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-[#111827]">
       <StudentHeader />
@@ -279,11 +553,12 @@ export function StudentHomePage() {
           <h2 className="mb-10 text-xl font-bold text-[#111827] max-md:mb-7">
             Tipe Fasilitas
           </h2>
-          <div className="grid grid-cols-5 gap-6 max-lg:grid-cols-3 max-lg:gap-8 max-md:grid-cols-2 max-md:gap-x-[18px] max-md:gap-y-6">
-            {studentHomeCategories.map((category) => (
-              <CategoryShortcut category={category} key={category.slug} />
-            ))}
-          </div>
+          <CategorySection
+            categories={categories}
+            isError={categoriesQuery.isError}
+            isLoading={categoriesQuery.isLoading}
+            onRetry={() => void categoriesQuery.refetch()}
+          />
         </section>
 
         <section className="mx-auto mb-[100px] w-[1200px] max-w-[95%] max-md:mb-[72px] max-md:w-full max-md:max-w-full max-md:px-4">
@@ -305,11 +580,12 @@ export function StudentHomePage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-md:grid-cols-2 max-md:gap-x-3.5 max-md:gap-y-[18px]">
-            {studentHomeFacilities.map((facility) => (
-              <FacilityCard facility={facility} key={facility.slug} />
-            ))}
-          </div>
+          <FeaturedSection
+            facilities={featuredFacilities}
+            isError={featuredQuery.isError}
+            isLoading={featuredQuery.isLoading}
+            onRetry={() => void featuredQuery.refetch()}
+          />
         </section>
       </main>
       <StudentFooter />

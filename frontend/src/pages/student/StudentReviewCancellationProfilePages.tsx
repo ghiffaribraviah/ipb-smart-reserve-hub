@@ -1,13 +1,59 @@
-import { Bell, CalendarDays, Clock, LogOut, Menu, Search, Star } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CalendarDays, Clock, LogOut, Menu, Search, Star } from "lucide-react";
+import type { FormEvent, ReactNode } from "react";
+import { useMemo, useState } from "react";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { ApiError, apiRequest } from "../../api/http";
+import { useAuth } from "../../auth/session";
+import { NotificationSurface } from "../../components/NotificationSurface";
 import { studentHomeSession } from "../../fixtures/studentHome";
 import { studentReviewCancellationProfileFixture } from "../../fixtures/studentReviewCancellationProfile";
+import {
+  mapStudentReservationWorkflow,
+  type StudentReservationWorkflowProjection,
+} from "../../reservations/studentReservationWorkflow";
 
 const navItems = [
   { href: "/student", label: "Beranda" },
   { href: "/student/facilities", label: "Fasilitas" },
   { href: "/student/reservations", label: "Reservasi" },
 ];
+
+type ReviewResponse = {
+  id: string;
+};
+
+const dateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+  year: "numeric",
+});
+
+function formatTime(value: string) {
+  const date = new Date(value);
+  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
+}
+
+function reservationDetailHref(reservationId: string) {
+  return `/student/reservations/${reservationId}`;
+}
+
+function completedReviewEligible(reservation: StudentReservationWorkflowProjection) {
+  return reservation.status === "completed" && (reservation.review === null || reservation.review.is_deleted);
+}
+
+function cancellationEligible(reservation: StudentReservationWorkflowProjection) {
+  return reservation.status === "approved";
+}
+
+function queryReservation(reservationId: string) {
+  return apiRequest<StudentReservationWorkflowProjection>(`/student/reservations/${reservationId}`);
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof ApiError ? error.message : "Permintaan belum dapat diproses.";
+}
 
 function StudentHeader() {
   return (
@@ -65,9 +111,7 @@ function StudentHeader() {
         </nav>
 
         <div className="flex items-center gap-[22px] max-md:gap-3.5">
-          <button aria-label="Notifikasi" className="inline-flex text-slate-500" type="button">
-            <Bell aria-hidden="true" size={18} />
-          </button>
+          <NotificationSurface className="text-slate-500" role="student" />
           <a
             aria-label={`Profil ${studentHomeSession.name}`}
             className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0f9d58] text-[13px] font-bold text-white no-underline"
@@ -134,8 +178,15 @@ function SummaryMedia() {
   );
 }
 
-function ReservationSummaryCard({ includeStatus = false }: { includeStatus?: boolean }) {
-  const reservation = studentReviewCancellationProfileFixture.reservation;
+function ReservationSummaryCard({
+  includeStatus = false,
+  reservation,
+}: {
+  includeStatus?: boolean;
+  reservation: StudentReservationWorkflowProjection;
+}) {
+  const projection = mapStudentReservationWorkflow(reservation);
+
   return (
     <aside className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
       <SummaryMedia />
@@ -143,28 +194,28 @@ function ReservationSummaryCard({ includeStatus = false }: { includeStatus?: boo
         <p className="m-0 mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
           Ringkasan Reservasi
         </p>
-        <h2 className="m-0 text-xl font-bold">{reservation.facility}</h2>
+        <h2 className="m-0 text-xl font-bold">{reservation.facility.name}</h2>
         <div className="mt-6 grid gap-4 text-sm">
           <p className="m-0 flex items-center gap-3 text-[#6b7280]">
             <CalendarDays aria-hidden="true" className="text-[#0f9d58]" size={18} />
-            {reservation.date}
+            {dateFormatter.format(new Date(reservation.starts_at))}
           </p>
           <p className="m-0 flex items-center gap-3 text-[#6b7280]">
             <Clock aria-hidden="true" className="text-[#0f9d58]" size={18} />
-            {reservation.time}
+            {formatTime(reservation.starts_at)} - {formatTime(reservation.ends_at)}
           </p>
         </div>
         {includeStatus ? (
           <dl className="m-0 mt-6 space-y-4 border-t border-[#e5e7eb] pt-5 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-[#6b7280]">Organisasi</dt>
-              <dd className="m-0 font-bold">{reservation.organization}</dd>
+              <dd className="m-0 font-bold">{reservation.organization_unit.name}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-[#6b7280]">Status saat ini</dt>
               <dd className="m-0">
                 <span className="rounded-full bg-[#dcfce7] px-3 py-1.5 text-xs font-bold text-[#047857]">
-                  Disetujui
+                  {projection.statusLabel}
                 </span>
               </dd>
             </div>
@@ -176,10 +227,58 @@ function ReservationSummaryCard({ includeStatus = false }: { includeStatus?: boo
 }
 
 export function StudentReviewPage() {
-  const reservation = studentReviewCancellationProfileFixture.reservation;
+  const { reservationId = "" } = useParams();
+  const navigate = useNavigate();
+  const [rating, setRating] = useState<number | null>(null);
+  const [comment, setComment] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const reservationQuery = useQuery({
+    enabled: reservationId.length > 0,
+    queryFn: () => queryReservation(reservationId),
+    queryKey: ["student-review-reservation", reservationId],
+  });
+  const reviewMutation = useMutation({
+    mutationFn: () =>
+      apiRequest<ReviewResponse>(`/student/reservations/${reservationId}/review`, {
+        body: { comment: comment.trim() || null, rating },
+        method: "POST",
+      }),
+    onSuccess: () => navigate(reservationDetailHref(reservationId), { replace: true }),
+  });
+
+  if (reservationQuery.isLoading) {
+    return <PageShell><p className="rounded-xl border border-[#e5e7eb] bg-white p-8 text-sm font-semibold text-[#475569]">Memuat reservasi...</p></PageShell>;
+  }
+
+  if (reservationQuery.isError) {
+    return <PageShell><p className="rounded-xl border border-[#fecaca] bg-white p-8 text-sm font-semibold text-[#b91c1c]">{errorMessage(reservationQuery.error)}</p></PageShell>;
+  }
+
+  const reservation = reservationQuery.data;
+
+  if (!reservation) {
+    return null;
+  }
+
+  if (!completedReviewEligible(reservation)) {
+    return <Navigate replace to={mapStudentReservationWorkflow(reservation).primaryHref} />;
+  }
+
+  function submitReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setValidationError(null);
+
+    if (rating === null) {
+      setValidationError("Penilaian bintang wajib diisi.");
+      return;
+    }
+
+    reviewMutation.mutate();
+  }
+
   return (
     <PageShell>
-      <a className="text-sm font-bold text-[#0f9d58] no-underline" href={reservation.completedDetailHref}>
+      <a className="text-sm font-bold text-[#0f9d58] no-underline" href={reservationDetailHref(reservation.id)}>
         ← Kembali ke Detail Reservasi
       </a>
       <div className="mt-6 grid grid-cols-[1fr_360px] items-start gap-8 max-lg:grid-cols-1">
@@ -188,7 +287,7 @@ export function StudentReviewPage() {
           <p className="m-0 mt-3 max-w-[520px] text-sm leading-6 text-[#6b7280]">
             Bagikan pengalaman Anda menggunakan fasilitas ini untuk membantu mahasiswa lain.
           </p>
-          <form className="mt-8">
+          <form className="mt-8" onSubmit={submitReview}>
             <fieldset className="m-0 border-0 p-0">
               <legend className="mb-4 text-sm font-bold">
                 Penilaian Fasilitas <span className="text-[#dc2626]">*</span>
@@ -198,13 +297,22 @@ export function StudentReviewPage() {
                 className="flex gap-3"
                 role="radiogroup"
               >
-                {[1, 2, 3, 4, 5].map((rating) => (
+                {[1, 2, 3, 4, 5].map((star) => (
                   <label
-                    className="flex h-11 w-11 cursor-pointer items-center justify-center text-[#d1d5db]"
-                    key={rating}
+                    className={`flex h-11 w-11 cursor-pointer items-center justify-center ${
+                      rating !== null && rating >= star ? "text-[#0f9d58]" : "text-[#d1d5db]"
+                    }`}
+                    key={star}
                   >
-                    <input className="sr-only" name="rating" type="radio" value={rating} />
-                    <span className="sr-only">{rating} dari 5</span>
+                    <input
+                      checked={rating === star}
+                      className="sr-only"
+                      name="rating"
+                      onChange={() => setRating(star)}
+                      type="radio"
+                      value={star}
+                    />
+                    <span className="sr-only">{star} dari 5</span>
                     <Star aria-hidden="true" className="fill-current" size={30} />
                   </label>
                 ))}
@@ -215,40 +323,98 @@ export function StudentReviewPage() {
               <textarea
                 aria-label="Komentar"
                 className="min-h-[140px] w-full rounded-lg border border-[#d1d5db] bg-[#f8fafc] p-4 text-sm leading-6"
-                defaultValue=""
+                onChange={(event) => setComment(event.target.value)}
                 placeholder="Opsional: ceritakan pengalaman Anda terkait kebersihan, kelengkapan alat, pelayanan, atau hal lain yang membantu."
+                value={comment}
               />
             </label>
             <p className="m-0 mt-3 text-sm leading-6 text-[#6b7280]">
               Komentar bersifat opsional. Penilaian bintang wajib diisi.
             </p>
+            {validationError || reviewMutation.isError ? (
+              <p className="m-0 mt-3 text-sm font-semibold text-[#b91c1c]">
+                {validationError ?? errorMessage(reviewMutation.error)}
+              </p>
+            ) : null}
             <div className="mt-8 grid grid-cols-2 gap-4 max-md:grid-cols-1">
               <button
                 className="min-h-[52px] rounded-lg border border-[#e5e7eb] bg-white text-sm font-bold"
+                onClick={() => navigate(reservationDetailHref(reservation.id))}
                 type="button"
               >
                 Batal
               </button>
               <button
                 className="min-h-[52px] rounded-lg bg-[#0f9d58] text-sm font-bold text-white"
-                type="button"
+                disabled={reviewMutation.isPending}
+                type="submit"
               >
-                Kirim Ulasan
+                {reviewMutation.isPending ? "Mengirim..." : "Kirim Ulasan"}
               </button>
             </div>
           </form>
         </section>
-        <ReservationSummaryCard />
+        <ReservationSummaryCard reservation={reservation} />
       </div>
     </PageShell>
   );
 }
 
 export function StudentCancellationRequestPage() {
-  const reservation = studentReviewCancellationProfileFixture.reservation;
+  const { reservationId = "" } = useParams();
+  const navigate = useNavigate();
+  const [reasonGroup, setReasonGroup] = useState("Jadwal kegiatan berubah");
+  const [reasonDetail, setReasonDetail] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const reservationQuery = useQuery({
+    enabled: reservationId.length > 0,
+    queryFn: () => queryReservation(reservationId),
+    queryKey: ["student-cancellation-reservation", reservationId],
+  });
+  const cancellationMutation = useMutation({
+    mutationFn: () =>
+      apiRequest<StudentReservationWorkflowProjection>(`/student/reservations/${reservationId}/cancellation-request`, {
+        body: {
+          reason: [reasonGroup, reasonDetail.trim()].filter(Boolean).join(": "),
+        },
+        method: "POST",
+      }),
+    onSuccess: (reservation) => navigate(mapStudentReservationWorkflow(reservation).primaryHref, { replace: true }),
+  });
+
+  if (reservationQuery.isLoading) {
+    return <PageShell><p className="rounded-xl border border-[#e5e7eb] bg-white p-8 text-sm font-semibold text-[#475569]">Memuat reservasi...</p></PageShell>;
+  }
+
+  if (reservationQuery.isError) {
+    return <PageShell><p className="rounded-xl border border-[#fecaca] bg-white p-8 text-sm font-semibold text-[#b91c1c]">{errorMessage(reservationQuery.error)}</p></PageShell>;
+  }
+
+  const reservation = reservationQuery.data;
+
+  if (!reservation) {
+    return null;
+  }
+
+  if (!cancellationEligible(reservation)) {
+    return <Navigate replace to={mapStudentReservationWorkflow(reservation).primaryHref} />;
+  }
+
+  function submitCancellation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setValidationError(null);
+
+    if (reasonDetail.trim().length < 20) {
+      setValidationError("Detail alasan minimal 20 karakter.");
+      return;
+    }
+
+    cancellationMutation.mutate();
+  }
+
   return (
     <PageShell>
-      <a className="text-sm font-bold text-[#0f9d58] no-underline" href={reservation.detailHref}>
+      <a className="text-sm font-bold text-[#0f9d58] no-underline" href={reservationDetailHref(reservation.id)}>
         ← Kembali ke Detail Reservasi
       </a>
       <div className="mt-6 grid grid-cols-[1fr_360px] items-start gap-8 max-lg:grid-cols-1">
@@ -261,7 +427,7 @@ export function StudentCancellationRequestPage() {
             Sistem tidak memproses refund otomatis. Jika reservasi berbayar sudah disetujui,
             hubungi TU fasilitas untuk tindak lanjut pengembalian dana.
           </div>
-          <form className="mt-7">
+          <form className="mt-7" onSubmit={submitCancellation}>
             <label className="block">
               <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                 Alasan Pembatalan
@@ -269,7 +435,8 @@ export function StudentCancellationRequestPage() {
               <select
                 aria-label="Alasan Pembatalan"
                 className="h-[52px] w-full rounded-lg border border-[#d1d5db] bg-white px-4 text-sm"
-                defaultValue="Jadwal kegiatan berubah"
+                onChange={(event) => setReasonGroup(event.target.value)}
+                value={reasonGroup}
               >
                 <option>Pilih alasan utama</option>
                 <option>Jadwal kegiatan berubah</option>
@@ -284,30 +451,38 @@ export function StudentCancellationRequestPage() {
               <textarea
                 aria-label="Detail Alasan"
                 className="min-h-[150px] w-full rounded-lg border border-[#d1d5db] bg-white p-4 text-sm leading-6"
-                defaultValue="Saya perlu membatalkan reservasi karena jadwal kegiatan organisasi dipindahkan ke minggu berikutnya."
+                onChange={(event) => setReasonDetail(event.target.value)}
+                value={reasonDetail}
               />
             </label>
             <p className="m-0 mt-3 text-sm leading-6 text-[#6b7280]">
               Minimal 20 karakter. Alasan ini akan dibaca oleh staff fasilitas.
             </p>
+            {validationError || cancellationMutation.isError ? (
+              <p className="m-0 mt-3 text-sm font-semibold text-[#b91c1c]">
+                {validationError ?? errorMessage(cancellationMutation.error)}
+              </p>
+            ) : null}
             <div className="mt-7 grid grid-cols-2 gap-4 max-md:grid-cols-1">
               <button
                 className="min-h-[52px] rounded-lg border border-[#e5e7eb] bg-white text-sm font-bold"
+                onClick={() => navigate(reservationDetailHref(reservation.id))}
                 type="button"
               >
                 Batalkan
               </button>
               <button
                 className="min-h-[52px] rounded-lg border border-[#fbbf24] bg-[#fffbeb] text-sm font-bold text-[#92400e]"
-                type="button"
+                disabled={cancellationMutation.isPending}
+                type="submit"
               >
-                Kirim Pengajuan
+                {cancellationMutation.isPending ? "Mengirim..." : "Kirim Pengajuan"}
               </button>
             </div>
           </form>
         </section>
         <div className="grid gap-6">
-          <ReservationSummaryCard includeStatus />
+          <ReservationSummaryCard includeStatus reservation={reservation} />
           <section>
             <h2 className="m-0 text-xl font-bold">State Setelah Pengajuan</h2>
             <p className="m-0 mt-4 text-sm leading-6 text-[#6b7280]">
@@ -334,17 +509,50 @@ export function StudentCancellationRequestPage() {
   );
 }
 
-const profileRows = [
-  ["Nomor Induk Mahasiswa (NIM)", studentReviewCancellationProfileFixture.profile.nim],
-  ["Nomor Telepon", studentReviewCancellationProfileFixture.profile.phone],
-  ["Program Studi", studentReviewCancellationProfileFixture.profile.program],
-  ["Fakultas", studentReviewCancellationProfileFixture.profile.faculty],
-  ["Tahun Masuk", studentReviewCancellationProfileFixture.profile.entryYear],
-  ["Strata", studentReviewCancellationProfileFixture.profile.degree],
-] as const;
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "M";
+}
+
+function displayValue(value: string | number | null | undefined) {
+  return value === null || value === undefined || value === "" ? "Belum tersedia" : String(value);
+}
 
 export function StudentProfilePage() {
-  const profile = studentReviewCancellationProfileFixture.profile;
+  const auth = useAuth();
+  const profile = auth.user ?? null;
+  const fixtureProfile = studentReviewCancellationProfileFixture.profile;
+  const visibleProfile = profile
+    ? {
+        degree: displayValue(profile.academic_profile?.degree),
+        email: profile.email,
+        entryYear: displayValue(profile.academic_profile?.entry_year),
+        faculty: displayValue(profile.academic_profile?.faculty),
+        initials: initials(profile.full_name),
+        name: profile.full_name,
+        nim: displayValue(profile.nim),
+        phone: displayValue(profile.phone),
+        program: displayValue(profile.academic_profile?.program_studi),
+        status: profile.is_active ? "Mahasiswa Aktif" : "Tidak Aktif",
+      }
+    : fixtureProfile;
+  const profileRows = useMemo(
+    () =>
+      [
+        ["Nomor Induk Mahasiswa (NIM)", visibleProfile.nim],
+        ["Nomor Telepon", visibleProfile.phone],
+        ["Program Studi", visibleProfile.program],
+        ["Fakultas", visibleProfile.faculty],
+        ["Tahun Masuk", visibleProfile.entryYear],
+        ["Strata", visibleProfile.degree],
+      ] as const,
+    [visibleProfile.degree, visibleProfile.entryYear, visibleProfile.faculty, visibleProfile.nim, visibleProfile.phone, visibleProfile.program],
+  );
+
   return (
     <PageShell>
       <section className="max-w-[620px]">
@@ -356,16 +564,17 @@ export function StudentProfilePage() {
       <div className="mt-8 grid grid-cols-[320px_1fr] items-start gap-8 max-lg:grid-cols-1">
         <aside className="rounded-xl border border-[#e5e7eb] bg-white p-8 text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
           <div className="mx-auto flex h-[116px] w-[116px] items-center justify-center rounded-full border-4 border-white bg-[#e8f5e9] text-[38px] font-bold text-[#0f9d58] shadow">
-            {profile.initials}
+            {visibleProfile.initials}
           </div>
-          <h2 className="m-0 mt-6 text-xl font-bold">{profile.name}</h2>
-          <p className="m-0 mt-2 text-sm text-[#6b7280]">{profile.nim}</p>
+          <h2 className="m-0 mt-6 text-xl font-bold">{visibleProfile.name}</h2>
+          <p className="m-0 mt-2 text-sm text-[#6b7280]">{visibleProfile.nim}</p>
           <span className="mt-5 inline-flex rounded-full bg-[#dcfce7] px-4 py-2 text-sm font-bold text-[#047857]">
-            {profile.status}
+            {visibleProfile.status}
           </span>
           <button
             aria-label="Keluar"
             className="mt-7 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-[#fecaca] bg-[#fee2e2] text-sm font-bold text-[#b91c1c]"
+            onClick={() => auth.logout()}
             type="button"
           >
             <LogOut aria-hidden="true" size={18} />

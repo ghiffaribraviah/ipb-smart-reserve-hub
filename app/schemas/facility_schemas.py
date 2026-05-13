@@ -79,11 +79,9 @@ class FacilityDetailResponse(BaseModel):
 
 
 class FacilityCalendarEntryResponse(BaseModel):
-    facility_name: str
-    activity_title: str
-    organization_unit: str
     starts_at: datetime
     ends_at: datetime
+    status: str
 
 
 class FacilityAvailabilityResponse(BaseModel):

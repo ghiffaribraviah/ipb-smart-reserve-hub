@@ -20,6 +20,7 @@ export type StaffReservationListItem = {
   date: string;
   detailHref: string;
   facility: string;
+  facilityId?: string;
   id: string;
   role: string;
   status: string;

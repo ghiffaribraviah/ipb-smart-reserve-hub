@@ -1,6 +1,6 @@
 from collections import Counter
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 import pytest
 
 from app.core.database import Base, build_session_factory
@@ -121,6 +121,60 @@ def test_dev_seed_creates_frontend_reservation_tracer_data(tmp_path):
     assert {reservation.status for reservation in reservation_student_reservations} >= {
         ReservationStatus.approved,
         ReservationStatus.pending_document_upload,
+    }
+
+
+def test_dev_seed_updates_stale_local_sqlite_schema_before_upserting(tmp_path):
+    settings = SettingsModule(database_url=f"sqlite+pysqlite:///{tmp_path / 'seed.db'}", secret_key="test-secret")
+    session_factory = build_session_factory(settings.database_url)
+
+    with session_factory.kw["bind"].begin() as connection:
+        connection.execute(text("CREATE TABLE facility_categories (id VARCHAR(36) PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE, is_active BOOLEAN NOT NULL)"))
+        connection.execute(
+            text(
+                """
+                CREATE TABLE reservations (
+                    id VARCHAR(36) PRIMARY KEY,
+                    facility_id VARCHAR(36) NOT NULL,
+                    student_id VARCHAR(36) NOT NULL,
+                    organization_unit_id VARCHAR(36) NOT NULL,
+                    reservation_code VARCHAR(32) NOT NULL UNIQUE,
+                    activity_title VARCHAR(255) NOT NULL,
+                    event_description TEXT NOT NULL,
+                    participant_count INTEGER NOT NULL,
+                    contact_phone VARCHAR(32) NOT NULL,
+                    price_rupiah INTEGER NOT NULL,
+                    organization_unit_name VARCHAR(255) NOT NULL,
+                    starts_at DATETIME NOT NULL,
+                    ends_at DATETIME NOT NULL,
+                    document_upload_due_at DATETIME,
+                    document_verification_due_at DATETIME,
+                    payment_upload_due_at DATETIME,
+                    payment_verification_due_at DATETIME,
+                    status VARCHAR(32) NOT NULL,
+                    rejection_reason TEXT,
+                    cancellation_reason TEXT,
+                    cancellation_rejection_reason TEXT,
+                    created_at DATETIME NOT NULL
+                )
+                """
+            )
+        )
+
+    seed_development_data(settings=settings)
+
+    with session_factory() as session:
+        categories = session.scalars(select(FacilityCategory).order_by(FacilityCategory.name)).all()
+        reservations = session.scalars(select(Reservation).order_by(Reservation.reservation_code)).all()
+
+    assert [(category.name, category.slug, category.icon_hint) for category in categories] == [
+        ("Auditorium", "auditorium", "presentation"),
+        ("Olahraga", "olahraga", "dumbbell"),
+        ("Ruang Kelas", "ruang-kelas", "school"),
+    ]
+    assert {reservation.reservation_code for reservation in reservations} == {
+        "DEV-SEED-APPROVED",
+        "DEV-SEED-PENDING",
     }
 
 

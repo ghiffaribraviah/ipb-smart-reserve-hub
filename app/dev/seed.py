@@ -1,7 +1,7 @@
 import os
 from datetime import UTC, datetime, time, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import inspect, select, text
 
 from app.core.database import Base, build_session_factory
 from app.core.security import hash_password
@@ -100,7 +100,9 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
 
     app_settings = settings or SettingsModule.from_environment()
     session_factory = build_session_factory(app_settings.database_url)
-    Base.metadata.create_all(bind=session_factory.kw["bind"])
+    engine = session_factory.kw["bind"]
+    Base.metadata.create_all(bind=engine)
+    _ensure_seed_compatible_schema(engine)
 
     with session_factory() as session:
         users_by_email = {user.email: user for user in (_ensure_user(session, **user_data) for user_data in DEMO_USERS)}
@@ -238,6 +240,58 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
 
         _remove_demo_student_reservations(session, demo_student)
         session.commit()
+
+
+def _ensure_seed_compatible_schema(engine) -> None:
+    if engine.dialect.name != "sqlite":
+        return
+
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+
+    with engine.begin() as connection:
+        if "facility_categories" in tables:
+            columns = _column_names(inspector, "facility_categories")
+            if "slug" not in columns:
+                connection.execute(text("ALTER TABLE facility_categories ADD COLUMN slug VARCHAR(255)"))
+            if "icon_hint" not in columns:
+                connection.execute(text("ALTER TABLE facility_categories ADD COLUMN icon_hint VARCHAR(64)"))
+
+        if "reservations" in tables:
+            columns = _column_names(inspector, "reservations")
+            if "extra_requirement_av_support" not in columns:
+                connection.execute(
+                    text("ALTER TABLE reservations ADD COLUMN extra_requirement_av_support BOOLEAN NOT NULL DEFAULT 0")
+                )
+            if "extra_requirement_logistics_coordination" not in columns:
+                connection.execute(
+                    text(
+                        "ALTER TABLE reservations "
+                        "ADD COLUMN extra_requirement_logistics_coordination BOOLEAN NOT NULL DEFAULT 0"
+                    )
+                )
+            if "extra_requirement_extra_cleaning" not in columns:
+                connection.execute(
+                    text(
+                        "ALTER TABLE reservations "
+                        "ADD COLUMN extra_requirement_extra_cleaning BOOLEAN NOT NULL DEFAULT 0"
+                    )
+                )
+            if "extra_requirement_security_personnel" not in columns:
+                connection.execute(
+                    text(
+                        "ALTER TABLE reservations "
+                        "ADD COLUMN extra_requirement_security_personnel BOOLEAN NOT NULL DEFAULT 0"
+                    )
+                )
+            if "extra_requirement_notes" not in columns:
+                connection.execute(text("ALTER TABLE reservations ADD COLUMN extra_requirement_notes TEXT"))
+            if "rejection_source" not in columns:
+                connection.execute(text("ALTER TABLE reservations ADD COLUMN rejection_source VARCHAR(32)"))
+
+
+def _column_names(inspector, table_name: str) -> set[str]:
+    return {column["name"] for column in inspector.get_columns(table_name)}
 
 
 def _ensure_user(

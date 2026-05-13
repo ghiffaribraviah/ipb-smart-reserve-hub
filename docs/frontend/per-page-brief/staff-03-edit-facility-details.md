@@ -48,6 +48,7 @@
 - Deterministic fixture requirements: editable facility with images/hours/blackouts.
 - Real entities: FacilityManagementProfile, image/open-hour/blackout requests.
 - Fixture media: local facility image placeholders.
+- Contract normalization: amenities and last-change-by metadata are not supported as editable backend truth in this slice. If they return later, track them as separate backend gaps instead of fixture-only fields.
 
 ## Backend Integration And Gaps
 
@@ -79,4 +80,3 @@
 ## Open Questions
 
 - Exact success toast/banner design is not separately referenced.
-

@@ -17,8 +17,8 @@ export const studentDocumentWorkflowFixture = {
   },
   payment: {
     amount: "Rp1.500.000",
-    receiptFileName: "bukti-pembayaran.pdf",
-    receiptMetadata: "PDF · 840 KB · siap dikirim",
+    receiptFileName: "bukti-pembayaran.jpg",
+    receiptMetadata: "JPG · 840 KB · siap dikirim",
     waitingHref: "/student/reservations/RSV-FIXTURE-001/payment/waiting",
     paymentHref: "/student/reservations/RSV-FIXTURE-001/payment",
     detailHref: "/student/reservations/RSV-FIXTURE-001",

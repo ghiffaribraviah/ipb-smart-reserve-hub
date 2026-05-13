@@ -518,7 +518,7 @@ async def test_paid_facility_detail_shows_price_status_and_summary():
 
 
 @pytest.mark.anyio
-async def test_students_view_public_facility_calendar_without_private_reservation_data():
+async def test_students_view_public_facility_calendar_as_privacy_safe_blocked_ranges():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
     test_data = DataBuilder(app)
     facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
@@ -539,6 +539,14 @@ async def test_students_view_public_facility_calendar_without_private_reservatio
         ends_at="2026-06-02T05:00:00+00:00",
         status=ReservationStatus.approved,
     )
+    test_data.create_reservation(
+        facility_id=facility_id,
+        organization_unit_id=organization_unit_id,
+        activity_title="Rapat Pembatalan",
+        starts_at="2026-06-02T06:00:00+00:00",
+        ends_at="2026-06-02T07:00:00+00:00",
+        status=ReservationStatus.cancellation_requested,
+    )
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -553,20 +561,29 @@ async def test_students_view_public_facility_calendar_without_private_reservatio
     assert response.status_code == 200
     assert response.json() == [
         {
-            "facility_name": "Auditorium Andi Hakim Nasoetion",
-            "activity_title": "Seminar Karier",
-            "organization_unit": "BEM KM IPB",
             "starts_at": "2026-06-01T02:00:00Z",
             "ends_at": "2026-06-01T04:00:00Z",
+            "status": "reserved",
         },
         {
-            "facility_name": "Auditorium Andi Hakim Nasoetion",
-            "activity_title": "Workshop Kewirausahaan",
-            "organization_unit": "BEM KM IPB",
             "starts_at": "2026-06-02T03:00:00Z",
             "ends_at": "2026-06-02T05:00:00Z",
+            "status": "reserved",
+        },
+        {
+            "starts_at": "2026-06-02T06:00:00Z",
+            "ends_at": "2026-06-02T07:00:00Z",
+            "status": "reserved",
         },
     ]
+    for entry in response.json():
+        assert "activity_title" not in entry
+        assert "organization_unit" not in entry
+        assert "reservation_id" not in entry
+        assert "student" not in entry
+        assert "workflow_type" not in entry
+        assert "document" not in entry
+        assert "payment" not in entry
 
 
 @pytest.mark.anyio

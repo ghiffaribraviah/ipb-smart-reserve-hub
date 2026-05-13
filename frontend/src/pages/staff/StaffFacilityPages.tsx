@@ -2,30 +2,74 @@ import {
   AlertTriangle,
   ArrowLeft,
   CalendarDays,
-  Check,
   ChevronLeft,
   ChevronRight,
-  CreditCard,
-  Megaphone,
   Plus,
   Save,
   Star,
   Upload,
   Users,
-  Wifi,
-  Wind,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { ApiError, apiRequest } from "../../api/http";
 import {
   calendarDays,
-  staffFacilityEditFixture,
-  staffFacilities,
-  staffScheduleEntries,
   type StaffFacility,
-  type StaffFacilityMedia,
   type StaffScheduleEntry,
 } from "../../fixtures/staffFacilities";
+import { mapStaffReservationStatus } from "../../reservations/staffReservationOperations";
 import { cn } from "../../utils/cn";
+
+type FacilityManagementProfileResponse = {
+  capacity: number;
+  category: string;
+  contact_email: string | null;
+  contact_name: string;
+  contact_phone: string;
+  description: string;
+  id: string;
+  is_active: boolean;
+  location: string;
+  name: string;
+  open_hours_summary: string;
+  payment_instructions: string | null;
+  price_rupiah: number;
+  price_summary: string;
+};
+
+type StaffFacilityScheduleEntryResponse = {
+  activity_title: string;
+  detail_url: string;
+  ends_at: string;
+  organization_unit: {
+    id: string;
+    name: string;
+  };
+  reservation_code: string;
+  reservation_id: string;
+  review_status: string;
+  starts_at: string;
+  status: string;
+  workflow_type: string;
+};
+
+type FacilityEditForm = {
+  capacity: string;
+  contact_email: string;
+  contact_name: string;
+  contact_phone: string;
+  description: string;
+  is_active: boolean;
+  location: string;
+  name: string;
+  open_hours_summary: string;
+  payment_instructions: string;
+  price_rupiah: string;
+};
+
+type ApiJsonObject = { [key: string]: string | number | boolean | null };
 import { StaffShell } from "./StaffReservationOperationsPages";
 
 const imageToneClasses = {
@@ -35,17 +79,208 @@ const imageToneClasses = {
   red: "from-[#802020] via-[#b91c1c] to-[#fecaca]",
 };
 
-const mediaToneClasses = {
-  amber: "from-[#4a2511] via-[#7c4a24] to-[#f59e0b]",
-  blue: "from-[#1e3a5f] via-[#2563eb] to-[#93c5fd]",
-  green: "from-[#1f4f3a] via-[#2f6f4f] to-[#a7f3d0]",
-};
-
 const scheduleAvatarClasses = {
   amber: "bg-[#b45309] text-white",
   dark: "bg-[#064e3b] text-white",
   slate: "bg-[#475569] text-white",
 };
+
+function fetchStaffFacilities() {
+  return apiRequest<FacilityManagementProfileResponse[]>("/staff/facilities");
+}
+
+function updateStaffFacility(facilityId: string, body: ApiJsonObject) {
+  return apiRequest<FacilityManagementProfileResponse>(`/staff/facilities/${facilityId}`, {
+    body,
+    method: "PATCH",
+  });
+}
+
+function deactivateStaffFacility(facilityId: string) {
+  return apiRequest<FacilityManagementProfileResponse>(`/staff/facilities/${facilityId}/deactivate`, {
+    method: "POST",
+  });
+}
+
+function createStaffFacilityImage(facilityId: string, body: ApiJsonObject) {
+  return apiRequest<unknown>(`/staff/facilities/${facilityId}/images`, { body, method: "POST" });
+}
+
+function createStaffFacilityOpenHour(facilityId: string, body: ApiJsonObject) {
+  return apiRequest<unknown>(`/staff/facilities/${facilityId}/open-hours`, { body, method: "POST" });
+}
+
+function createStaffFacilityBlackout(facilityId: string, body: ApiJsonObject) {
+  return apiRequest<unknown>(`/staff/facilities/${facilityId}/blackouts`, { body, method: "POST" });
+}
+
+function scheduleRange(date: string) {
+  const [year, month] = date.split("-").map(Number);
+  const lastDay = new Date(year, month, 0).getDate();
+  const start = `${year}-${String(month).padStart(2, "0")}-01T00:00:00+07:00`;
+  const end = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}T23:59:59+07:00`;
+  return { start, end };
+}
+
+function staffFacilitySchedulePath(facilityId: string, date: string) {
+  const range = scheduleRange(date);
+  const params = new URLSearchParams(range);
+  return `/staff/facilities/${facilityId}/schedule?${params.toString()}`;
+}
+
+function fetchStaffFacilitySchedule(facilityId: string, date: string) {
+  return apiRequest<StaffFacilityScheduleEntryResponse[]>(staffFacilitySchedulePath(facilityId, date));
+}
+
+function titleFromId(value: string) {
+  return value
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function imageTone(seed: string): StaffFacility["imageTone"] {
+  const tones: StaffFacility["imageTone"][] = ["amber", "blue", "green", "red"];
+  const total = Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return tones[total % tones.length];
+}
+
+function avatarTone(seed: string): StaffScheduleEntry["avatarTone"] {
+  const tones: StaffScheduleEntry["avatarTone"][] = ["amber", "dark", "slate"];
+  const total = Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return tones[total % tones.length];
+}
+
+function initials(name: string) {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "ST"
+  );
+}
+
+function formatStaffTime(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Jakarta",
+  })
+    .format(new Date(value))
+    .replace(".", ":");
+}
+
+function formatScheduleDate(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00+07:00`));
+}
+
+function formatScheduleMonth(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    month: "long",
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+  }).format(new Date(`${value.slice(0, 7)}-01T00:00:00+07:00`));
+}
+
+function mapStaffFacility(facility: FacilityManagementProfileResponse): StaffFacility {
+  return {
+    capacity: facility.capacity,
+    categoryLabel: facility.category,
+    description: `${facility.description} ${facility.location}.`.trim(),
+    editHref: `/staff/facilities/${facility.id}/edit`,
+    id: facility.id,
+    imageLabel: facility.category.split("/")[0]?.trim() || facility.name,
+    imageTone: imageTone(facility.id),
+    name: facility.name,
+    openHoursSummary: facility.open_hours_summary,
+    priceSummary: facility.price_summary,
+    scheduleHref: `/staff/facilities/${facility.id}/schedule`,
+    status: facility.is_active ? "active" : "inactive",
+    statusLabel: facility.is_active ? "Aktif" : "Nonaktif",
+  };
+}
+
+function facilityToEditForm(facility: FacilityManagementProfileResponse): FacilityEditForm {
+  return {
+    capacity: String(facility.capacity),
+    contact_email: facility.contact_email ?? "",
+    contact_name: facility.contact_name,
+    contact_phone: facility.contact_phone,
+    description: facility.description,
+    is_active: facility.is_active,
+    location: facility.location,
+    name: facility.name,
+    open_hours_summary: facility.open_hours_summary,
+    payment_instructions: facility.payment_instructions ?? "",
+    price_rupiah: String(facility.price_rupiah),
+  };
+}
+
+function apiErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
+
+function mapScheduleEntry(entry: StaffFacilityScheduleEntryResponse): StaffScheduleEntry {
+  const status = mapStaffReservationStatus(entry.status);
+  const timeStart = formatStaffTime(entry.starts_at);
+  const timeEnd = formatStaffTime(entry.ends_at);
+
+  return {
+    action: status.tone === "warning" ? "Tinjau Pengajuan" : "Lihat Detail",
+    applicant: entry.organization_unit.name,
+    applicantInitials: initials(entry.organization_unit.name),
+    applicantRole: "Unit organisasi",
+    avatarTone: avatarTone(entry.reservation_id),
+    detailHref: entry.detail_url,
+    event: entry.activity_title,
+    id: entry.reservation_id,
+    meta: `${entry.reservation_code} - ${entry.organization_unit.name}`,
+    status: status.tone === "warning" ? "waiting" : "approved",
+    statusLabel: status.label,
+    time: `${timeStart} - ${timeEnd}`,
+    timeEndLabel: `sampai ${timeEnd}`,
+    timeStart,
+  };
+}
+
+function QueryStateMessage({
+  actionLabel,
+  children,
+  onRetry,
+}: {
+  actionLabel?: string;
+  children: ReactNode;
+  onRetry?: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-[#e5e7eb] bg-white px-5 py-6 text-sm font-semibold text-[#6b7280]">
+      <p className="m-0">{children}</p>
+      {onRetry ? (
+        <button
+          className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-[#0f9d58] px-4 text-sm font-bold text-white"
+          onClick={onRetry}
+          type="button"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
 function FacilityStatus({ facility }: { facility: StaffFacility }) {
   return (
@@ -75,7 +310,7 @@ function FacilityCard({ facility }: { facility: StaffFacility }) {
       </div>
       <div className="flex flex-1 flex-col p-5">
         <p className="m-0 text-xs font-bold uppercase tracking-[0.05em] text-[#0f9d58]">
-          {facility.department}
+          {facility.categoryLabel}
         </p>
         <h2 className="m-0 mt-2 break-words text-lg font-bold text-[#111827]">{facility.name}</h2>
         <p className="m-0 mt-3 flex-1 text-[13px] leading-5 text-[#6b7280]">
@@ -88,8 +323,10 @@ function FacilityCard({ facility }: { facility: StaffFacility }) {
           </span>
           <span className="inline-flex items-center gap-2">
             <Star aria-hidden="true" className="text-[#111827]" size={15} />
-            Rating: {facility.rating}
+            Status: {facility.statusLabel}
           </span>
+          {facility.priceSummary ? <span className="break-words">{facility.priceSummary}</span> : null}
+          {facility.openHoursSummary ? <span className="break-words">{facility.openHoursSummary}</span> : null}
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <a
@@ -113,6 +350,12 @@ function FacilityCard({ facility }: { facility: StaffFacility }) {
 }
 
 export function StaffFacilityListPage() {
+  const facilitiesQuery = useQuery({
+    queryFn: fetchStaffFacilities,
+    queryKey: ["staff", "facilities"],
+  });
+  const facilities = facilitiesQuery.data?.map(mapStaffFacility) ?? [];
+
   return (
     <StaffShell active="facilities">
       <main className="mx-auto mt-28 w-[1200px] max-w-[95%] max-md:mt-[88px] max-md:w-full max-md:max-w-full max-md:px-4">
@@ -131,7 +374,7 @@ export function StaffFacilityListPage() {
             type="button"
           >
             <Plus aria-hidden="true" size={18} />
-            Tambah Fasilitas
+            Aksi tambah ditunda
           </button>
         </section>
 
@@ -154,16 +397,27 @@ export function StaffFacilityListPage() {
             >
               <option value="">Semua Status</option>
               <option value="active">Aktif</option>
-              <option value="maintenance">Perawatan</option>
+              <option value="inactive">Nonaktif</option>
             </select>
           </div>
           <p className="m-0 text-sm text-[#6b7280]">
-            Menampilkan <strong>4</strong> fasilitas
+            Menampilkan <strong>{facilitiesQuery.isLoading ? "-" : facilities.length}</strong> fasilitas
           </p>
         </section>
 
         <section className="mt-6 grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-md:grid-cols-1 max-md:gap-5">
-          {staffFacilities.map((facility) => (
+          {facilitiesQuery.isLoading ? (
+            <QueryStateMessage>Memuat fasilitas yang ditugaskan...</QueryStateMessage>
+          ) : null}
+          {facilitiesQuery.isError ? (
+            <QueryStateMessage actionLabel="Muat ulang fasilitas" onRetry={() => void facilitiesQuery.refetch()}>
+              Fasilitas belum dapat dimuat.
+            </QueryStateMessage>
+          ) : null}
+          {facilitiesQuery.isSuccess && facilities.length === 0 ? (
+            <QueryStateMessage>Belum ada fasilitas yang ditugaskan kepada Anda.</QueryStateMessage>
+          ) : null}
+          {facilities.map((facility) => (
             <FacilityCard facility={facility} key={facility.id} />
           ))}
         </section>
@@ -324,6 +578,18 @@ function ScheduleRow({ entry }: { entry: StaffScheduleEntry }) {
 }
 
 export function StaffFacilitySchedulePage() {
+  const { facilityId = "" } = useParams();
+  const [selectedDate, setSelectedDate] = useState("2024-10-24");
+  const facilityName = titleFromId(facilityId);
+  const scheduleQuery = useQuery({
+    enabled: facilityId.length > 0,
+    queryFn: () => fetchStaffFacilitySchedule(facilityId, selectedDate),
+    queryKey: ["staff", "facilities", facilityId, "schedule", scheduleRange(selectedDate)],
+  });
+  const scheduleEntries = scheduleQuery.data?.map(mapScheduleEntry) ?? [];
+  const scheduleAccessDenied =
+    scheduleQuery.error instanceof ApiError && [403, 404].includes(scheduleQuery.error.status);
+
   return (
     <StaffShell active="facilities">
       <main className="mx-auto mt-28 w-[1200px] max-w-[95%] max-md:mt-[88px] max-md:w-full max-md:max-w-full max-md:px-4">
@@ -338,7 +604,7 @@ export function StaffFacilitySchedulePage() {
         <section className="flex items-end justify-between gap-5 max-md:flex-col max-md:items-stretch">
           <div className="max-w-[620px]">
             <h1 className="m-0 text-[32px] font-bold leading-tight max-md:text-[28px]">
-              Jadwal Grand Auditorium
+              Jadwal {facilityName}
             </h1>
             <p className="m-0 mt-3 text-sm leading-6 text-[#6b7280]">
               Kelola agenda harian, reservasi disetujui, dan pengajuan yang masih menunggu untuk
@@ -355,8 +621,9 @@ export function StaffFacilitySchedulePage() {
             <input
               aria-label="Tanggal jadwal terpilih"
               className="min-h-11 rounded-lg border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] outline-none max-md:min-w-0 max-md:flex-[2]"
-              defaultValue="2024-10-24"
+              onChange={(event) => setSelectedDate(event.target.value)}
               type="date"
+              value={selectedDate}
             />
           </div>
         </section>
@@ -368,7 +635,9 @@ export function StaffFacilitySchedulePage() {
                 <p className="m-0 text-xs font-bold uppercase tracking-[0.05em] text-[#6b7280]">
                   Kalender Fasilitas
                 </p>
-                <h2 className="m-0 mt-1 text-xl font-bold text-[#111827]">Oktober 2024</h2>
+                <h2 className="m-0 mt-1 text-xl font-bold text-[#111827]">
+                  {formatScheduleMonth(selectedDate)}
+                </h2>
               </div>
               <div className="flex gap-2">
                 <button
@@ -393,10 +662,22 @@ export function StaffFacilitySchedulePage() {
           <article className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-4">
             <div className="mb-5 border-b border-[#e5e7eb] pb-4">
               <h2 className="m-0 text-lg font-bold text-[#111827]">Agenda</h2>
-              <p className="m-0 mt-1 text-[13px] text-[#6b7280]">24 Oktober 2024</p>
+              <p className="m-0 mt-1 text-[13px] text-[#6b7280]">{formatScheduleDate(selectedDate)}</p>
             </div>
             <div className="grid gap-4">
-              {staffScheduleEntries.map((entry) => (
+              {scheduleQuery.isLoading ? <QueryStateMessage>Memuat agenda fasilitas...</QueryStateMessage> : null}
+              {scheduleQuery.isError && !scheduleAccessDenied ? (
+                <QueryStateMessage actionLabel="Muat ulang jadwal" onRetry={() => void scheduleQuery.refetch()}>
+                  Jadwal belum dapat dimuat.
+                </QueryStateMessage>
+              ) : null}
+              {scheduleAccessDenied ? (
+                <QueryStateMessage>Jadwal fasilitas tidak ditemukan atau tidak dapat diakses.</QueryStateMessage>
+              ) : null}
+              {scheduleQuery.isSuccess && scheduleEntries.length === 0 ? (
+                <QueryStateMessage>Tidak ada reservasi pada rentang jadwal ini.</QueryStateMessage>
+              ) : null}
+              {scheduleEntries.map((entry) => (
                 <AgendaItem entry={entry} key={entry.id} />
               ))}
             </div>
@@ -437,7 +718,7 @@ export function StaffFacilitySchedulePage() {
               </tr>
             </thead>
             <tbody className="max-md:block max-md:space-y-4">
-              {staffScheduleEntries.map((entry) => (
+              {scheduleEntries.map((entry) => (
                 <ScheduleRow entry={entry} key={entry.id} />
               ))}
             </tbody>
@@ -467,74 +748,170 @@ function Field({
   );
 }
 
-function TextInput({
-  id,
-  label,
-  type = "text",
-  value,
-  withIcon,
-}: {
-  id: string;
-  label: string;
-  type?: "number" | "text";
-  value: string;
-  withIcon?: "credit" | "users";
-}) {
-  const Icon = withIcon === "credit" ? CreditCard : withIcon === "users" ? Users : null;
-  return (
-    <Field id={id} label={label}>
-      <span className="relative block">
-        {Icon ? (
-          <Icon
-            aria-hidden="true"
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6b7280]"
-            size={18}
-          />
-        ) : null}
-        <input
-          className={cn(
-            "h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]",
-            Icon && "pl-10",
-          )}
-          defaultValue={value}
-          id={id}
-          type={type}
-        />
-      </span>
-    </Field>
-  );
-}
-
-function AmenityIcon({ amenityKey }: { amenityKey: string }) {
-  if (amenityKey === "network") return <Wifi aria-hidden="true" size={18} />;
-  if (amenityKey === "audio") return <Megaphone aria-hidden="true" size={18} />;
-  if (amenityKey === "projector") return <CalendarDays aria-hidden="true" size={18} />;
-  return <Wind aria-hidden="true" size={18} />;
-}
-
-function MediaPreview({ media }: { media: StaffFacilityMedia }) {
-  return (
-    <div className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-white">
-      <div
-        className={cn(
-          "flex h-[120px] items-center justify-center bg-gradient-to-br text-sm font-bold text-white",
-          mediaToneClasses[media.tone],
-        )}
-      >
-        {media.label}
-      </div>
-      <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs text-[#6b7280]">
-        <span className="min-w-0 break-words font-semibold">{media.filename}</span>
-        <button className="shrink-0 text-[#dc2626]" type="button">
-          Hapus
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function StaffFacilityEditPage() {
-  const fixture = staffFacilityEditFixture;
+  const { facilityId = "" } = useParams();
+  const queryClient = useQueryClient();
+  const facilitiesQuery = useQuery({
+    queryFn: fetchStaffFacilities,
+    queryKey: ["staff", "facilities"],
+  });
+  const facility = facilitiesQuery.data?.find((item) => item.id === facilityId) ?? null;
+  const accessDenied =
+    facilitiesQuery.error instanceof ApiError && [403, 404].includes(facilitiesQuery.error.status);
+  const emptyForm: FacilityEditForm = {
+    capacity: "",
+    contact_email: "",
+    contact_name: "",
+    contact_phone: "",
+    description: "",
+    is_active: true,
+    location: "",
+    name: "",
+    open_hours_summary: "",
+    payment_instructions: "",
+    price_rupiah: "",
+  };
+  const [formEdits, setFormEdits] = useState<Partial<FacilityEditForm>>({});
+  const form: FacilityEditForm = { ...(facility ? facilityToEditForm(facility) : emptyForm), ...formEdits };
+  const [formError, setFormError] = useState("");
+  const [message, setMessage] = useState("");
+  const [imageForm, setImageForm] = useState({ alt_text: "", url: "" });
+  const [openHourForm, setOpenHourForm] = useState({
+    closes_at: "16:00",
+    day_of_week: "0",
+    opens_at: "08:00",
+  });
+  const [blackoutForm, setBlackoutForm] = useState({
+    ends_at: "2026-06-01T04:00",
+    reason: "",
+    starts_at: "2026-06-01T03:00",
+  });
+
+  const invalidateFacilities = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["staff", "facilities"] });
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const capacity = Number(form.capacity);
+      const price = Number(form.price_rupiah);
+
+      if (!form.name.trim()) {
+        throw new Error("Nama fasilitas wajib diisi.");
+      }
+
+      if (!Number.isFinite(capacity) || capacity < 1) {
+        throw new Error("Kapasitas harus lebih dari 0.");
+      }
+
+      if (!Number.isFinite(price) || price < 0) {
+        throw new Error("Harga sewa tidak boleh negatif.");
+      }
+
+      return updateStaffFacility(facilityId, {
+        capacity,
+        contact_email: form.contact_email.trim() || null,
+        contact_name: form.contact_name.trim(),
+        contact_phone: form.contact_phone.trim(),
+        description: form.description.trim(),
+        is_active: form.is_active,
+        location: form.location.trim(),
+        name: form.name.trim(),
+        open_hours_summary: form.open_hours_summary.trim(),
+        payment_instructions: form.payment_instructions.trim() || null,
+        price_rupiah: price,
+      });
+    },
+    onError: (error) => {
+      setMessage("");
+      setFormError(apiErrorMessage(error, "Perubahan fasilitas belum dapat disimpan."));
+    },
+    onSuccess: async (updated) => {
+      setFormEdits(facilityToEditForm(updated));
+      setFormError("");
+      setMessage("Perubahan fasilitas tersimpan.");
+      await invalidateFacilities();
+    },
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: () => deactivateStaffFacility(facilityId),
+    onError: (error) => {
+      setMessage("");
+      setFormError(apiErrorMessage(error, "Fasilitas belum dapat dinonaktifkan."));
+    },
+    onSuccess: async (updated) => {
+      setFormEdits(facilityToEditForm(updated));
+      setFormError("");
+      setMessage("Fasilitas dinonaktifkan.");
+      await invalidateFacilities();
+    },
+  });
+
+  const imageMutation = useMutation({
+    mutationFn: () =>
+      createStaffFacilityImage(facilityId, {
+        alt_text: imageForm.alt_text.trim(),
+        display_order: 0,
+        is_cover: false,
+        url: imageForm.url.trim(),
+      }),
+    onError: (error) => {
+      setMessage("");
+      setFormError(apiErrorMessage(error, "Gambar fasilitas belum dapat ditambahkan."));
+    },
+    onSuccess: () => {
+      setFormError("");
+      setImageForm({ alt_text: "", url: "" });
+      setMessage("Gambar fasilitas ditambahkan.");
+    },
+  });
+
+  const openHourMutation = useMutation({
+    mutationFn: () =>
+      createStaffFacilityOpenHour(facilityId, {
+        closes_at: openHourForm.closes_at,
+        day_of_week: Number(openHourForm.day_of_week),
+        opens_at: openHourForm.opens_at,
+      }),
+    onError: (error) => {
+      setMessage("");
+      setFormError(apiErrorMessage(error, "Jam buka belum dapat ditambahkan."));
+    },
+    onSuccess: () => {
+      setFormError("");
+      setMessage("Jam buka fasilitas ditambahkan.");
+    },
+  });
+
+  const blackoutMutation = useMutation({
+    mutationFn: () =>
+      createStaffFacilityBlackout(facilityId, {
+        ends_at: `${blackoutForm.ends_at}:00+07:00`,
+        reason: blackoutForm.reason.trim(),
+        starts_at: `${blackoutForm.starts_at}:00+07:00`,
+      }),
+    onError: (error) => {
+      setMessage("");
+      setFormError(apiErrorMessage(error, "Blackout fasilitas belum dapat ditambahkan."));
+    },
+    onSuccess: () => {
+      setBlackoutForm((current) => ({ ...current, reason: "" }));
+      setFormError("");
+      setMessage("Blackout fasilitas ditambahkan.");
+    },
+  });
+
+  const busy =
+    saveMutation.isPending ||
+    deactivateMutation.isPending ||
+    imageMutation.isPending ||
+    openHourMutation.isPending ||
+    blackoutMutation.isPending;
+
+  const updateField = (field: keyof FacilityEditForm, value: string | boolean) => {
+    setFormEdits((current) => ({ ...current, [field]: value }));
+  };
 
   return (
     <StaffShell active="facilities">
@@ -556,104 +933,169 @@ export function StaffFacilityEditPage() {
           </p>
         </section>
 
-        <div className="flex items-start gap-8 max-lg:flex-col">
+        {facilitiesQuery.isLoading ? <QueryStateMessage>Memuat detail fasilitas...</QueryStateMessage> : null}
+        {facilitiesQuery.isError && !accessDenied ? (
+          <QueryStateMessage actionLabel="Muat ulang fasilitas" onRetry={() => void facilitiesQuery.refetch()}>
+            Detail fasilitas belum dapat dimuat.
+          </QueryStateMessage>
+        ) : null}
+        {accessDenied || (facilitiesQuery.isSuccess && !facility) ? (
+          <QueryStateMessage>Fasilitas tidak ditemukan atau tidak dapat diakses.</QueryStateMessage>
+        ) : null}
+
+        {facility ? (
+        <form
+          className="flex items-start gap-8 max-lg:flex-col"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            saveMutation.mutate();
+          }}
+        >
           <div className="grid min-w-0 flex-1 gap-6">
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
-              <h2 className="m-0 mb-6 text-sm font-bold text-[#111827]">Informasi Umum</h2>
+              <div className="mb-6 flex items-center justify-between gap-4">
+                <h2 className="m-0 text-sm font-bold text-[#111827]">Informasi Umum</h2>
+                <span className="inline-flex rounded-full bg-[#e8f5e9] px-3 py-1 text-xs font-bold text-[#0b7340]">
+                  {form.is_active ? "Aktif" : "Nonaktif"}
+                </span>
+              </div>
               <div className="grid grid-cols-2 gap-6 max-md:grid-cols-1">
-                <TextInput id="facility-name" label="Nama" value={fixture.name} />
-                <TextInput id="facility-location" label="Lokasi" value={fixture.location} />
+                <Field id="facility-name" label="Nama">
+                  <input
+                    className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                    disabled={busy}
+                    id="facility-name"
+                    onChange={(event) => updateField("name", event.target.value)}
+                    value={form.name}
+                  />
+                </Field>
+                <Field id="facility-location" label="Lokasi">
+                  <input
+                    className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                    disabled={busy}
+                    id="facility-location"
+                    onChange={(event) => updateField("location", event.target.value)}
+                    value={form.location}
+                  />
+                </Field>
                 <div className="col-span-2 grid gap-2 max-md:col-span-1">
                   <label className="text-[13px] font-semibold text-[#111827]" htmlFor="facility-about">
                     Tentang Fasilitas
                   </label>
                   <textarea
                     className="min-h-[112px] w-full resize-y rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 text-sm leading-6 text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:min-h-[132px]"
-                    defaultValue={fixture.description}
+                    disabled={busy}
                     id="facility-about"
+                    onChange={(event) => updateField("description", event.target.value)}
+                    value={form.description}
                   />
                 </div>
-                <TextInput
-                  id="facility-capacity"
-                  label="Kapasitas (Orang)"
-                  type="number"
-                  value={fixture.capacity}
-                  withIcon="users"
-                />
-                <div>
-                  <TextInput
-                    id="facility-price"
-                    label="Harga sewa (Rupiah)"
+                <Field id="facility-capacity" label="Kapasitas (Orang)">
+                  <input
+                    className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                    disabled={busy}
+                    id="facility-capacity"
+                    min={1}
+                    onChange={(event) => updateField("capacity", event.target.value)}
                     type="number"
-                    value={fixture.price}
-                    withIcon="credit"
+                    value={form.capacity}
                   />
-                  <p className="m-0 mt-1 text-[10px] text-[#6b7280]">*Keterangan</p>
-                </div>
+                </Field>
+                <Field id="facility-price" label="Harga sewa (Rupiah)">
+                  <input
+                    className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                    disabled={busy}
+                    id="facility-price"
+                    min={0}
+                    onChange={(event) => updateField("price_rupiah", event.target.value)}
+                    type="number"
+                    value={form.price_rupiah}
+                  />
+                </Field>
+                <Field id="facility-contact-name" label="Nama Kontak">
+                  <input
+                    className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                    disabled={busy}
+                    id="facility-contact-name"
+                    onChange={(event) => updateField("contact_name", event.target.value)}
+                    value={form.contact_name}
+                  />
+                </Field>
+                <Field id="facility-contact-phone" label="Nomor Kontak">
+                  <input
+                    className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                    disabled={busy}
+                    id="facility-contact-phone"
+                    onChange={(event) => updateField("contact_phone", event.target.value)}
+                    value={form.contact_phone}
+                  />
+                </Field>
+                <Field id="facility-contact-email" label="Email Kontak">
+                  <input
+                    className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                    disabled={busy}
+                    id="facility-contact-email"
+                    onChange={(event) => updateField("contact_email", event.target.value)}
+                    type="email"
+                    value={form.contact_email}
+                  />
+                </Field>
               </div>
             </section>
 
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
-              <h2 className="m-0 mb-6 text-sm font-bold text-[#111827]">Fasilitas Pendukung</h2>
-              <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-                {fixture.amenities.map((amenity) => (
-                  <label
-                    className="flex min-h-14 min-w-0 items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 has-[:checked]:border-[#0f9d58] has-[:checked]:bg-[#f0fdf4]"
-                    key={amenity.key}
-                  >
-                    <input
-                      aria-label={amenity.label}
-                      className="peer sr-only"
-                      defaultChecked={amenity.checked}
-                      type="checkbox"
-                    />
-                    <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 border-[#cbd5e1] text-white peer-checked:border-[#0f9d58] peer-checked:bg-[#0f9d58]">
-                      <Check aria-hidden="true" size={12} />
-                    </span>
-                    <span className="text-[#6b7280] peer-checked:text-[#0f9d58]">
-                      <AmenityIcon amenityKey={amenity.key} />
-                    </span>
-                    <span className="min-w-0 break-words text-[13px] font-semibold text-[#111827]">
-                      {amenity.label}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-xl border border-[#e5e7eb] bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
-              <h2 className="m-0 mb-6 text-sm font-bold text-[#111827]">Status</h2>
-              <div className="rounded-lg border border-[#dcfce7] bg-[#f0fdf4] p-6">
-                <p className="m-0 text-[10px] font-bold uppercase tracking-[0.05em] text-[#0b7340]">
-                  Terakhir Diubah
-                </p>
-                <p className="m-0 mt-1 text-[13px] font-bold text-[#0b7340]">
-                  {fixture.lastChangedAt}
-                </p>
-                <p className="m-0 mt-1 text-xs text-[#0b7340]/80">oleh {fixture.lastChangedBy}</p>
+              <h2 className="m-0 mb-6 text-sm font-bold text-[#111827]">Jadwal Operasional</h2>
+              <Field id="facility-open-hours-summary" label="Ringkasan Jam Buka">
+                <input
+                  className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                  disabled={busy}
+                  id="facility-open-hours-summary"
+                  onChange={(event) => updateField("open_hours_summary", event.target.value)}
+                  value={form.open_hours_summary}
+                />
+              </Field>
+              <div className="mt-5 grid gap-2">
+                <label className="text-[13px] font-semibold text-[#111827]" htmlFor="facility-payment-instructions">
+                  Instruksi Pembayaran
+                </label>
+                <textarea
+                  className="min-h-[92px] w-full resize-y rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 text-sm leading-6 text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white"
+                  disabled={busy}
+                  id="facility-payment-instructions"
+                  onChange={(event) => updateField("payment_instructions", event.target.value)}
+                  value={form.payment_instructions}
+                />
               </div>
             </section>
 
             <section className="grid gap-3">
-              <div className="rounded-lg border border-[#dcfce7] bg-[#f0fdf4] px-4 py-3 text-sm font-semibold text-[#0b7340]">
-                {fixture.successMessage}
-              </div>
-              <div className="rounded-lg border border-[#fecaca] bg-[#fee2e2] px-4 py-3 text-sm font-semibold text-[#dc2626]">
-                {fixture.errorMessage}
-              </div>
+              {message ? (
+                <div className="rounded-lg border border-[#dcfce7] bg-[#f0fdf4] px-4 py-3 text-sm font-semibold text-[#0b7340]">
+                  {message}
+                </div>
+              ) : null}
+              {formError ? (
+                <div className="rounded-lg border border-[#fecaca] bg-[#fee2e2] px-4 py-3 text-sm font-semibold text-[#dc2626]">
+                  {formError}
+                </div>
+              ) : null}
               <div className="flex items-center gap-4 pt-1 max-md:grid max-md:grid-cols-2 max-md:gap-3">
                 <button
+                  disabled={busy}
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#0f9d58] px-6 text-sm font-bold text-white"
-                  type="button"
+                  type="submit"
                 >
                   <Save aria-hidden="true" size={18} />
                   Simpan Perubahan
                 </button>
                 <button
+                  disabled={busy || !form.is_active}
                   className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#fee2e2] px-6 text-sm font-bold text-[#dc2626]"
+                  onClick={() => deactivateMutation.mutate()}
                   type="button"
                 >
-                  Batalkan
+                  Nonaktifkan
                 </button>
                 <p className="m-0 flex items-start gap-2 text-xs leading-5 text-[#6b7280] max-md:col-span-2 max-md:rounded-lg max-md:border max-md:border-[#fed7aa] max-md:bg-[#fff7ed] max-md:p-3">
                   <AlertTriangle aria-hidden="true" className="mt-0.5 shrink-0 text-[#dc2626]" size={16} />
@@ -666,41 +1108,118 @@ export function StaffFacilityEditPage() {
           <aside className="sticky top-24 w-[380px] shrink-0 rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-lg:static max-lg:w-full">
             <div className="mb-4 flex items-center justify-between gap-4">
               <h2 className="m-0 text-sm font-bold text-[#111827]">Galeri Media</h2>
-              <button className="inline-flex items-center gap-1 text-xs font-bold text-[#0f9d58]" type="button">
-                <Plus aria-hidden="true" size={14} />
-                Add
+            </div>
+            <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3 text-xs leading-5 text-[#6b7280]">
+              Media yang ada dikelola oleh backend. Tambahkan gambar baru dengan URL dan teks alternatif.
+            </div>
+            <div className="mt-4 grid gap-3">
+              <Field id="facility-image-url" label="URL Gambar">
+                <input
+                  className="h-[42px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-3 text-sm"
+                  id="facility-image-url"
+                  onChange={(event) => setImageForm((current) => ({ ...current, url: event.target.value }))}
+                  value={imageForm.url}
+                />
+              </Field>
+              <Field id="facility-image-alt" label="Teks Alternatif">
+                <input
+                  className="h-[42px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-3 text-sm"
+                  id="facility-image-alt"
+                  onChange={(event) => setImageForm((current) => ({ ...current, alt_text: event.target.value }))}
+                  value={imageForm.alt_text}
+                />
+              </Field>
+              <button
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#d1fae5] bg-[#e8f5e9] px-4 text-sm font-bold text-[#0f9d58]"
+                disabled={busy || !imageForm.url.trim() || !imageForm.alt_text.trim()}
+                onClick={() => imageMutation.mutate()}
+                type="button"
+              >
+                <Upload aria-hidden="true" size={16} />
+                Tambah Gambar
               </button>
             </div>
-            <div className="grid gap-3">
-              {fixture.media.map((media) => (
-                <MediaPreview key={media.filename} media={media} />
-              ))}
-            </div>
-            <button
-              className="mt-4 flex h-[120px] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[#cbd5e1] bg-[#f8fafc] text-[#111827]"
-              type="button"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e8f5e9] text-[#0f9d58]">
-                <Upload aria-hidden="true" size={18} />
-              </span>
-              <span className="text-xs font-bold">Unggah Lagi</span>
-            </button>
 
             <div className="mt-5 grid gap-3 border-t border-[#e5e7eb] pt-5 text-sm">
               <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
-                <p className="m-0 font-bold text-[#111827]">
-                  Open hours: {fixture.openHours.days} {fixture.openHours.start}-
-                  {fixture.openHours.end}
-                </p>
-                <p className="m-0 mt-1 text-xs text-[#6b7280]">Fixture-only operational hours row.</p>
+                <p className="m-0 mb-3 font-bold text-[#111827]">Tambah Jam Buka</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <select
+                    aria-label="Hari buka"
+                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
+                    onChange={(event) => setOpenHourForm((current) => ({ ...current, day_of_week: event.target.value }))}
+                    value={openHourForm.day_of_week}
+                  >
+                    <option value="0">Sen</option>
+                    <option value="1">Sel</option>
+                    <option value="2">Rab</option>
+                    <option value="3">Kam</option>
+                    <option value="4">Jum</option>
+                    <option value="5">Sab</option>
+                    <option value="6">Min</option>
+                  </select>
+                  <input
+                    aria-label="Jam buka mulai"
+                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
+                    onChange={(event) => setOpenHourForm((current) => ({ ...current, opens_at: event.target.value }))}
+                    type="time"
+                    value={openHourForm.opens_at}
+                  />
+                  <input
+                    aria-label="Jam buka selesai"
+                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
+                    onChange={(event) => setOpenHourForm((current) => ({ ...current, closes_at: event.target.value }))}
+                    type="time"
+                    value={openHourForm.closes_at}
+                  />
+                </div>
+                <button
+                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#0f9d58] px-4 text-sm font-bold text-white"
+                  disabled={busy}
+                  onClick={() => openHourMutation.mutate()}
+                  type="button"
+                >
+                  Tambah Jam Buka
+                </button>
               </div>
               <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
-                <p className="m-0 font-bold text-[#111827]">Blackout: {fixture.blackout.date}</p>
-                <p className="m-0 mt-1 text-xs text-[#6b7280]">{fixture.blackout.reason}</p>
+                <p className="m-0 mb-3 font-bold text-[#111827]">Tambah Blackout</p>
+                <div className="grid gap-2">
+                  <input
+                    aria-label="Blackout mulai"
+                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
+                    onChange={(event) => setBlackoutForm((current) => ({ ...current, starts_at: event.target.value }))}
+                    type="datetime-local"
+                    value={blackoutForm.starts_at}
+                  />
+                  <input
+                    aria-label="Blackout selesai"
+                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
+                    onChange={(event) => setBlackoutForm((current) => ({ ...current, ends_at: event.target.value }))}
+                    type="datetime-local"
+                    value={blackoutForm.ends_at}
+                  />
+                  <input
+                    aria-label="Alasan blackout"
+                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
+                    onChange={(event) => setBlackoutForm((current) => ({ ...current, reason: event.target.value }))}
+                    placeholder="Maintenance"
+                    value={blackoutForm.reason}
+                  />
+                </div>
+                <button
+                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#0f9d58] px-4 text-sm font-bold text-white"
+                  disabled={busy || !blackoutForm.reason.trim()}
+                  onClick={() => blackoutMutation.mutate()}
+                  type="button"
+                >
+                  Tambah Blackout
+                </button>
               </div>
             </div>
           </aside>
-        </div>
+        </form>
+        ) : null}
       </main>
     </StaffShell>
   );

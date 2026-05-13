@@ -41,18 +41,19 @@
 
 - Payment instructions should be real text.
 - File input has visible label and error association.
+- Payment receipt validation copy accepts only JPG, JPEG, or PNG images; PDF remains valid for approval letters but not payment receipts.
 - Amount text must not rely on color or icon.
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: paid reservation, payment instructions, receipt file states.
+- Deterministic fixture requirements: paid reservation, payment instructions, receipt image file states.
 - Real entities: Student payment response and reservation payment projection.
 - Fixture media: none.
 
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /student/reservations/:reservationId/payment`, `POST /student/reservations/:reservationId/payment-receipt`, `GET /student/reservations/:reservationId`.
-- Page-needed fields: `amount_rupiah`, `payment_instructions`, `payment.required`, `payment.review_status`, `payment.receipt`.
+- Page-needed fields: `amount_rupiah`, `payment_instructions`, `payment.required`, `payment.review_status`, `payment.receipt`; receipt upload accepts JPG/JPEG/PNG images only.
 - Auth/session assumptions: student-owned reservation only.
 - Source files: `app/api/routes/payment_routes.py`, `app/schemas/reservation_schemas.py`.
 

@@ -100,11 +100,9 @@ class FacilityPublicDetail:
 
 @dataclass(frozen=True)
 class FacilityCalendarEntry:
-    facility_name: str
-    activity_title: str
-    organization_unit: str
     starts_at: datetime
     ends_at: datetime
+    status: str
 
 
 def summarize_price(price_rupiah: int) -> str:
@@ -227,11 +225,9 @@ class FacilityCatalogModule:
 
         return [
             FacilityCalendarEntry(
-                facility_name=reservation.facility_name,
-                activity_title=reservation.activity_title,
-                organization_unit=reservation.organization_unit,
                 starts_at=_as_utc(reservation.starts_at),
                 ends_at=_as_utc(reservation.ends_at),
+                status="reserved",
             )
             for reservation in self._facility_catalog_reader.list_public_calendar_reservations(
                 facility_id,
@@ -261,4 +257,3 @@ def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
         return value.replace(tzinfo=UTC)
     return value.astimezone(UTC)
-

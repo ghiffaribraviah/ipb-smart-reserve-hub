@@ -1,6 +1,60 @@
-import { Bell, CalendarDays, MapPin, Menu, Search, Star } from "lucide-react";
-import { studentFacilityDetail, type PublicCalendarEntry } from "../../fixtures/studentFacilityDetail";
+import { Building2, CalendarDays, Clock, Mail, MapPin, Menu, Phone, Search, Star, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { LucideIcon } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { apiRequest } from "../../api/http";
+import { NotificationSurface } from "../../components/NotificationSurface";
 import { studentHomeSession } from "../../fixtures/studentHome";
+
+type FacilityImageResponse = {
+  alt_text: string;
+  is_cover: boolean;
+  url: string;
+};
+
+type FacilityDetailResponse = {
+  capacity: number;
+  category: string;
+  contact: {
+    email: string | null;
+    name: string;
+    phone: string;
+  };
+  description: string;
+  id: string;
+  images: FacilityImageResponse[];
+  location: string;
+  name: string;
+  open_hours_summary: string;
+  price: {
+    amount_rupiah: number;
+    is_free: boolean;
+    summary: string;
+  };
+  review_summary: {
+    rating_average: number | null;
+    review_count: number;
+  };
+  reviews: {
+    author_name: string;
+    comment: string | null;
+    created_at: string;
+    id: string;
+    rating: number;
+  }[];
+};
+
+type PublicCalendarEntryResponse = {
+  ends_at: string;
+  starts_at: string;
+  status: "reserved";
+};
+
+type DetailFeature = {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+};
 
 const navItems = [
   { href: "/student", label: "Beranda" },
@@ -15,55 +69,101 @@ const calendarDays = [
   { day: 1 },
   { day: 2 },
   { day: 3 },
-  { day: 4, dots: ["approved"] },
+  { day: 4, dots: ["reserved"] },
   { day: 5 },
   { day: 6 },
   { day: 7 },
   { day: 8 },
   { day: 9 },
-  { day: 10, dots: ["maintenance"] },
-  { day: 11, dots: ["waiting"] },
+  { day: 10, dots: ["blocked"] },
+  { day: 11, dots: ["reserved"] },
   { day: 12 },
   { day: 13 },
   { day: 14 },
   { day: 15 },
-  { day: 16, dots: ["approved", "approved"] },
+  { day: 16, dots: ["reserved", "reserved"] },
   { day: 17 },
   { day: 18 },
   { day: 19 },
   { day: 20 },
   { day: 21 },
   { day: 22 },
-  { day: 23, dots: ["waiting"] },
-  { day: 24, selected: true, dots: ["approved", "approved", "maintenance"] },
+  { day: 23, dots: ["reserved"] },
+  { day: 24, selected: true, dots: ["reserved", "reserved", "blocked"] },
   { day: 25 },
-  { day: 26, dots: ["maintenance"] },
+  { day: 26, dots: ["blocked"] },
   { day: 27 },
   { day: 28 },
   { day: 29 },
   { day: 30 },
-  { day: 31, dots: ["approved"] },
+  { day: 31, dots: ["reserved"] },
   { day: 1, muted: true },
   { day: 2, muted: true },
 ] as const;
 
 const dotClass = {
-  approved: "bg-[#10b981]",
-  maintenance: "bg-[#ef4444]",
-  waiting: "bg-[#f59e0b]",
+  blocked: "bg-[#ef4444]",
+  reserved: "bg-[#10b981]",
 };
 
-const statusLabel: Record<PublicCalendarEntry["status"], string> = {
-  approved: "Disetujui",
-  maintenance: "Perawatan",
-  waiting: "Menunggu",
+const statusLabel: Record<PublicCalendarEntryResponse["status"], string> = {
+  reserved: "Dipesan",
 };
 
-const statusClass: Record<PublicCalendarEntry["status"], string> = {
-  approved: "bg-[#d1fae5] text-[#065f46]",
-  maintenance: "bg-[#fee2e2] text-[#991b1b]",
-  waiting: "bg-[#fef3c7] text-[#92400e]",
+const statusClass: Record<PublicCalendarEntryResponse["status"], string> = {
+  reserved: "bg-[#d1fae5] text-[#065f46]",
 };
+
+const calendarStart = "2026-06-01T00:00:00.000Z";
+const calendarEnd = "2026-07-01T00:00:00.000Z";
+
+function calendarPath(facilityId: string) {
+  const params = new URLSearchParams({ end: calendarEnd, start: calendarStart });
+  return `/facilities/${facilityId}/calendar?${params.toString()}`;
+}
+
+async function fetchFacilityDetail(facilityId: string) {
+  return apiRequest<FacilityDetailResponse>(`/facilities/${facilityId}`);
+}
+
+async function fetchPublicCalendar(facilityId: string) {
+  return apiRequest<PublicCalendarEntryResponse[]>(calendarPath(facilityId));
+}
+
+function formatCapacity(value: number) {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatRating(value: number | null) {
+  return value === null ? "Belum ada rating" : value.toFixed(1);
+}
+
+function formatTimeRange(entry: PublicCalendarEntryResponse) {
+  return `${formatUtcTime(entry.starts_at)} - ${formatUtcTime(entry.ends_at)}`;
+}
+
+function formatUtcTime(value: string) {
+  const date = new Date(value);
+  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
+}
+
+function reviewInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function detailFeatures(detail: FacilityDetailResponse): DetailFeature[] {
+  return [
+    { icon: Users, label: "Kapasitas", value: formatCapacity(detail.capacity) },
+    { icon: Building2, label: "Kategori", value: detail.category },
+    { icon: Clock, label: "Jam Buka", value: detail.open_hours_summary },
+    { icon: Phone, label: "Kontak", value: detail.contact.phone },
+  ];
+}
 
 function StudentHeader() {
   return (
@@ -121,9 +221,7 @@ function StudentHeader() {
         </nav>
 
         <div className="flex items-center gap-[22px] max-md:gap-3.5">
-          <button aria-label="Notifikasi" className="inline-flex text-slate-500" type="button">
-            <Bell aria-hidden="true" size={18} />
-          </button>
+          <NotificationSurface className="text-slate-500" role="student" />
           <a
             aria-label={`Profil ${studentHomeSession.name}`}
             className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0f9d58] text-[13px] font-bold text-white no-underline"
@@ -173,29 +271,32 @@ function MediaBox({
   );
 }
 
-function Gallery() {
+function Gallery({ detail }: { detail: FacilityDetailResponse }) {
+  const images = detail.images.length > 0 ? detail.images : [{ alt_text: `Media fallback ${detail.name}`, is_cover: true, url: "" }];
+  const labels = [0, 1, 2, 3].map((index) => images[index % images.length]?.alt_text ?? `Media fallback ${detail.name}`);
+
   return (
     <section
-      aria-label="Galeri Grand Auditorium"
+      aria-label={`Galeri ${detail.name}`}
       className="mb-12 grid grid-cols-[2fr_1fr_1fr] grid-rows-[200px_200px] gap-4 overflow-hidden rounded-2xl max-md:mb-6 max-md:grid-cols-3 max-md:grid-rows-[226px_76px] max-md:gap-2.5 max-md:overflow-visible"
     >
       <MediaBox
         className="col-start-1 row-span-2 row-start-1 max-md:col-span-3 max-md:row-span-1"
-        label="Foto utama Grand Auditorium"
+        label={labels[0]}
         large
       />
-      <MediaBox className="col-start-2 row-start-1 max-md:col-start-1 max-md:row-start-2" label="Foto panggung Grand Auditorium" />
-      <MediaBox className="col-start-3 row-start-1 max-md:col-start-2 max-md:row-start-2" label="Foto kursi Grand Auditorium" />
+      <MediaBox className="col-start-2 row-start-1 max-md:col-start-1 max-md:row-start-2" label={labels[1]} />
+      <MediaBox className="col-start-3 row-start-1 max-md:col-start-2 max-md:row-start-2" label={labels[2]} />
       <MediaBox
         className="col-span-2 col-start-2 row-start-2 max-md:col-span-1 max-md:col-start-3 max-md:row-start-2"
-        label="Foto tirai Grand Auditorium"
+        label={labels[3]}
         large
       />
     </section>
   );
 }
 
-function ReserveWidget() {
+function ReserveWidget({ detail }: { detail: FacilityDetailResponse }) {
   return (
     <aside className="w-[380px] shrink-0 max-lg:order-first max-lg:w-full">
       <div className="sticky top-[112px] rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.05),0_8px_10px_-6px_rgba(0,0,0,0.01)] max-lg:static max-md:rounded-[14px] max-md:p-6">
@@ -203,27 +304,28 @@ function ReserveWidget() {
           <div>
             <p className="m-0 mb-2 text-xs text-[#6b7280]">Biaya peminjaman</p>
             <p className="m-0 text-2xl font-bold leading-tight text-[#111827] max-md:text-[22px]">
-              {studentFacilityDetail.price}{" "}
-              <span className="text-sm font-normal text-[#6b7280]">
-                {studentFacilityDetail.priceUnit}
-              </span>
+              {detail.price.summary}
             </p>
           </div>
           <span className="rounded-full bg-[#e8f5e9] px-3 py-1.5 text-xs font-semibold text-[#0b7340]">
-            {studentFacilityDetail.availability}
+            Tersedia
           </span>
         </div>
         <div className="mb-8 flex flex-col gap-3 max-md:mb-6">
-          {studentFacilityDetail.notes.map(({ icon: Icon, text }) => (
-            <div className="flex items-center gap-3 text-xs text-[#6b7280]" key={text}>
-              <Icon aria-hidden="true" className="text-[#0f9d58]" size={17} />
-              <span>{text}</span>
+          <div className="flex items-center gap-3 text-xs text-[#6b7280]">
+            <Phone aria-hidden="true" className="text-[#0f9d58]" size={17} />
+            <span>{detail.contact.phone}</span>
+          </div>
+          {detail.contact.email ? (
+            <div className="flex items-center gap-3 text-xs text-[#6b7280]">
+              <Mail aria-hidden="true" className="text-[#0f9d58]" size={17} />
+              <span>{detail.contact.email}</span>
             </div>
-          ))}
+          ) : null}
         </div>
         <a
           className="flex w-full items-center justify-center rounded-lg bg-[#0f9d58] px-4 py-4 text-[15px] font-semibold text-white no-underline hover:bg-[#0b7340]"
-          href={studentFacilityDetail.reserveHref}
+          href={`/student/facilities/${detail.id}/reserve/time`}
         >
           Reservasi Sekarang
         </a>
@@ -232,39 +334,44 @@ function ReserveWidget() {
   );
 }
 
-function Reviews() {
+function Reviews({ detail }: { detail: FacilityDetailResponse }) {
   return (
     <section className="mt-10 border-t border-[#e5e7eb] pt-10 max-md:mt-9 max-md:pt-9">
       <div className="mb-6 flex items-center justify-between gap-4 max-md:items-start">
         <h2 className="m-0 text-xl font-semibold">Ulasan Peminjam</h2>
         <div className="flex items-center gap-1 font-semibold">
           <Star aria-hidden="true" className="fill-[#0f9d58] text-[#0f9d58]" size={16} />
-          {studentFacilityDetail.ratingAverage}
+          {formatRating(detail.review_summary.rating_average)}
           <span className="font-normal text-[#6b7280]">
-            / {studentFacilityDetail.reviewCount} ulasan
+            / {detail.review_summary.review_count} ulasan
           </span>
         </div>
       </div>
-      {studentFacilityDetail.reviews.map((review) => (
+      {detail.reviews.length === 0 ? (
+        <div className="rounded-xl border border-[#e5e7eb] bg-white p-6 text-sm text-[#6b7280]">
+          Belum ada ulasan
+        </div>
+      ) : null}
+      {detail.reviews.map((review) => (
         <article
           className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-6 max-md:rounded-[14px] max-md:p-5"
-          key={`${review.name}-${review.text}`}
+          key={review.id}
         >
           <div className="mb-4 flex items-center gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8f5e9] text-sm font-bold text-[#0b7340]">
-              {review.initials}
+              {reviewInitials(review.author_name)}
             </div>
             <div>
-              <h3 className="m-0 mb-1 text-sm font-semibold">{review.name}</h3>
-              <p className="m-0 text-xs text-[#6b7280]">{review.context}</p>
+              <h3 className="m-0 mb-1 text-sm font-semibold">{review.author_name}</h3>
+              <p className="m-0 text-xs text-[#6b7280]">{review.rating} / 5</p>
             </div>
           </div>
-          <p className="m-0 text-sm leading-[1.6] text-[#6b7280]">{review.text}</p>
+          <p className="m-0 text-sm leading-[1.6] text-[#6b7280]">{review.comment ?? "Tanpa komentar"}</p>
         </article>
       ))}
       <a
         className="mt-4 inline-block text-sm font-semibold text-[#0f9d58] underline"
-        href="/student/facilities/grand-auditorium/reviews"
+        href={`/student/facilities/${detail.id}/reviews`}
       >
         Tampilkan semua ulasan
       </a>
@@ -272,7 +379,15 @@ function Reviews() {
   );
 }
 
-function PublicCalendar() {
+function PublicCalendar({
+  entries,
+  isError,
+  isLoading,
+}: {
+  entries: PublicCalendarEntryResponse[];
+  isError: boolean;
+  isLoading: boolean;
+}) {
   return (
     <section className="mt-10 rounded-2xl border border-[#e5e7eb] bg-white p-6 max-md:rounded-[14px] max-md:p-4">
       <div className="mb-5 flex items-start justify-between gap-4">
@@ -284,11 +399,11 @@ function PublicCalendar() {
         </div>
         <div className="flex items-center gap-2 text-sm font-semibold text-[#6b7280]">
           <CalendarDays aria-hidden="true" size={17} />
-          {studentFacilityDetail.publicCalendar.period}
+          Juni 2026
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 max-md:gap-1.5" aria-label="Kalender publik Oktober 2024">
+      <div className="grid grid-cols-7 gap-2 max-md:gap-1.5" aria-label="Kalender publik Juni 2026">
         {dayNames.map((day) => (
           <div className="pb-1 text-center text-[11px] font-bold uppercase text-[#6b7280] max-md:text-[10px]" key={day}>
             {day}
@@ -334,23 +449,40 @@ function PublicCalendar() {
 
       <div className="mt-4 border-t border-[#e5e7eb] pt-4">
         <p className="m-0 mb-3 text-sm font-bold">
-          Jadwal pada {studentFacilityDetail.publicCalendar.selectedDate}
+          Jadwal terblokir
         </p>
-        {studentFacilityDetail.publicCalendar.entries.map((entry) => (
+        {isLoading ? (
+          <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#6b7280]">
+            Memuat kalender publik...
+          </div>
+        ) : null}
+        {isError ? (
+          <div className="rounded-lg border border-[#fee2e2] bg-[#fef2f2] p-4 text-sm text-[#991b1b]">
+            Kalender belum dapat dimuat.
+          </div>
+        ) : null}
+        {!isLoading && !isError && entries.length === 0 ? (
+          <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#6b7280]">
+            Belum ada jadwal terblokir pada periode ini.
+          </div>
+        ) : null}
+        {!isLoading && !isError ? entries.map((entry) => (
           <div
             className="grid grid-cols-[96px_1fr_auto] items-start gap-3 border-t border-dashed border-[#e5e7eb] py-3 first:border-t-0 first:pt-0 max-md:grid-cols-1"
-            key={entry.activityTitle}
+            key={`${entry.starts_at}-${entry.ends_at}`}
           >
-            <span className="text-xs font-bold">{entry.timeRange}</span>
+            <span className="text-xs font-bold">{formatTimeRange(entry)}</span>
             <div>
-              <p className="m-0 text-sm font-bold">{entry.activityTitle}</p>
-              <p className="m-0 text-sm leading-6 text-[#6b7280]">{entry.organizationUnit}</p>
+              <p className="m-0 text-sm font-bold">Waktu sudah dipesan</p>
+              <p className="m-0 text-sm leading-6 text-[#6b7280]">
+                Detail kegiatan tidak ditampilkan pada kalender publik.
+              </p>
             </div>
             <span className={`inline-flex w-fit rounded-full px-2.5 py-1.5 text-xs font-bold ${statusClass[entry.status]}`}>
               {statusLabel[entry.status]}
             </span>
           </div>
-        ))}
+        )) : null}
       </div>
     </section>
   );
@@ -384,6 +516,57 @@ function StudentFooter() {
 }
 
 export function StudentFacilityDetailPage() {
+  const { facilityId = "" } = useParams();
+  const detailQuery = useQuery({
+    enabled: facilityId.length > 0,
+    queryFn: () => fetchFacilityDetail(facilityId),
+    queryKey: ["facility-detail", facilityId],
+  });
+  const calendarQuery = useQuery({
+    enabled: facilityId.length > 0 && detailQuery.isSuccess,
+    queryFn: () => fetchPublicCalendar(facilityId),
+    queryKey: ["facility-calendar", facilityId],
+  });
+
+  if (detailQuery.isLoading) {
+    return (
+      <div className="min-h-screen overflow-x-hidden bg-white text-[#111827]">
+        <StudentHeader />
+        <main className="mx-auto mb-20 mt-[112px] w-[1200px] max-w-[95%] max-md:mb-10 max-md:mt-[88px] max-md:w-full max-md:max-w-full max-md:px-6">
+          <div className="h-8 w-40 rounded-lg bg-[#f3f4f6]" />
+          <div className="mt-8 h-[420px] rounded-2xl border border-[#e5e7eb] bg-[#f8fafc]" />
+        </main>
+        <StudentFooter />
+      </div>
+    );
+  }
+
+  if (detailQuery.isError || !detailQuery.data) {
+    return (
+      <div className="min-h-screen overflow-x-hidden bg-white text-[#111827]">
+        <StudentHeader />
+        <main className="mx-auto mb-20 mt-[112px] w-[1200px] max-w-[95%] max-md:mb-10 max-md:mt-[88px] max-md:w-full max-md:max-w-full max-md:px-6">
+          <section className="rounded-2xl border border-[#e5e7eb] bg-white p-8 text-center shadow-[0_10px_25px_-5px_rgba(0,0,0,0.05)]">
+            <h1 className="m-0 text-2xl font-bold">Fasilitas tidak dapat dimuat</h1>
+            <p className="mx-auto mb-0 mt-3 max-w-[520px] text-sm leading-6 text-[#6b7280]">
+              Fasilitas tidak ditemukan atau belum tersedia untuk reservasi.
+            </p>
+            <a
+              className="mt-6 inline-flex rounded-lg bg-[#0f9d58] px-4 py-3 text-sm font-semibold text-white no-underline"
+              href="/student/facilities"
+            >
+              Kembali ke katalog
+            </a>
+          </section>
+        </main>
+        <StudentFooter />
+      </div>
+    );
+  }
+
+  const detail = detailQuery.data;
+  const calendarEntries = calendarQuery.data ?? [];
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-[#111827]">
       <StudentHeader />
@@ -395,33 +578,33 @@ export function StudentFacilityDetailPage() {
           ← Kembali
         </a>
         <h1 className="m-0 mb-3 text-[32px] font-bold leading-tight max-md:mb-4">
-          {studentFacilityDetail.name}
+          {detail.name}
         </h1>
         <div className="mb-8 flex items-center gap-4 text-sm text-[#6b7280] max-md:mb-6 max-md:items-start max-md:gap-3">
           <div className="flex items-center gap-1 font-semibold text-[#111827] max-md:flex-1">
             <Star aria-hidden="true" className="fill-[#0f9d58] text-[#0f9d58]" size={16} />
-            {studentFacilityDetail.ratingAverage}{" "}
+            {formatRating(detail.review_summary.rating_average)}{" "}
             <span className="font-normal text-[#6b7280]">
-              ({studentFacilityDetail.reviewCount} ulasan)
+              ({detail.review_summary.review_count} ulasan)
             </span>
           </div>
           <div className="flex items-center gap-1.5 max-md:flex-1 max-md:items-start">
             <MapPin aria-hidden="true" className="shrink-0 text-[#6b7280]" size={18} />
-            {studentFacilityDetail.location}
+            {detail.location}
           </div>
         </div>
 
-        <Gallery />
+        <Gallery detail={detail} />
 
         <div className="flex items-start gap-[60px] max-lg:flex-col max-lg:gap-7">
           <div className="min-w-0 flex-1">
             <section>
               <h2 className="m-0 mb-4 text-xl font-semibold">Tentang Fasilitas</h2>
               <p className="mb-8 max-w-[600px] text-sm leading-[1.6] text-[#6b7280] max-md:mb-6">
-                {studentFacilityDetail.description}
+                {detail.description}
               </p>
               <div className="mb-12 grid grid-cols-4 gap-4 max-md:mb-9 max-md:grid-cols-2 max-md:gap-3">
-                {studentFacilityDetail.features.map(({ icon: Icon, label, value }) => (
+                {detailFeatures(detail).map(({ icon: Icon, label, value }) => (
                   <div
                     className="flex min-h-[108px] flex-col items-center justify-center rounded-xl border border-[#e5e7eb] bg-white px-3 py-5 text-center"
                     key={label}
@@ -434,11 +617,15 @@ export function StudentFacilityDetailPage() {
               </div>
             </section>
 
-            <Reviews />
-            <PublicCalendar />
+            <Reviews detail={detail} />
+            <PublicCalendar
+              entries={calendarEntries}
+              isError={calendarQuery.isError}
+              isLoading={calendarQuery.isLoading}
+            />
           </div>
 
-          <ReserveWidget />
+          <ReserveWidget detail={detail} />
         </div>
       </main>
       <StudentFooter />

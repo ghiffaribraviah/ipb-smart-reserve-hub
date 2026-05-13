@@ -48,6 +48,7 @@
 - Deterministic fixture requirements: several assigned facilities with active/inactive states.
 - Real entities: FacilityManagementProfile.
 - Fixture media: none unless reference shows thumbnails.
+- Contract normalization: do not present maintenance status, amenities, ratings, or last-change metadata as staff-managed backend fields on this page. Use active/inactive state, category, capacity, and schedule/edit actions.
 
 ## Backend Integration And Gaps
 
@@ -79,4 +80,3 @@
 ## Open Questions
 
 - None.
-

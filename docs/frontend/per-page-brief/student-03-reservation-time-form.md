@@ -41,12 +41,13 @@
 
 - Calendar and time controls must be keyboard usable.
 - Selected/unavailable states need text or aria state, not color alone.
+- Unavailable calendar slots must use privacy-safe labels and must not reveal another user's event details.
 - Validation errors must be announced.
 - Mobile action target should be about 52px high.
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: facility summary, open slots, blocked slots, invalid time case.
+- Deterministic fixture requirements: facility summary, open slots, privacy-safe blocked/reserved slots, invalid time case.
 - Real entities: Facility detail, reservation time selection result.
 - Fixture media: facility cover image from deterministic fixture.
 
@@ -54,6 +55,7 @@
 
 - Endpoints consumed: `POST /facilities/:facilityId/reservation-time-selection`, optionally `GET /facilities/:facilityId/calendar`.
 - Page-needed fields: selected `starts_at`, `ends_at`, availability result `available`, `reasons`.
+- Public calendar dependency: if the optional calendar endpoint is consumed, it must use the privacy-safe blocked-slot contract tracked by `BG-STUDENT-02-02`: entries contain only `starts_at`, `ends_at`, and generic `status: reserved`.
 - Auth/session assumptions: protected route; endpoint is public but submission flow requires student session.
 - Source files: `app/api/routes/facility_routes.py`, `app/schemas/reservation_time_selection_schemas.py`.
 

@@ -45,7 +45,7 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: API/database/storage/worker statuses and booking-setting values.
+- Deterministic fixture requirements: API/database/storage/worker status labels and booking-setting values. Avoid unsupported percentage uptime claims unless backed by the system-status contract.
 - Real entities: system status and booking settings.
 - Fixture media: none.
 

@@ -12,8 +12,8 @@
 
 ## Reference Evidence
 
-- HTML references: Student 05, Student 07, Admin 03.
-- Screenshots: matching desktop/mobile screenshots.
+- HTML references: Student 05, Student 07, Admin 03, `Shared - 03 - Upload And Calendar States.html`, `Shared - 07 - Reservation Workflow Components.html`.
+- Screenshots: matching desktop/mobile screenshots, `shared-03-upload-and-calendar-states-*`, `shared-07-reservation-workflow-components-*`.
 
 ## Purpose
 
@@ -21,11 +21,11 @@ Collect and display uploaded files for documents, receipts, and facility media.
 
 ## Anatomy
 
-- Instruction text.
+- Instruction text and clear file constraints.
 - File picker/drop area.
 - Selected file metadata.
 - Validation/error text.
-- Submit/replace action.
+- Button row with `Pilih File` plus upload/replace action where applicable.
 
 ## Variants
 
@@ -51,12 +51,12 @@ Collect and display uploaded files for documents, receipts, and facility media.
 
 ## Design Rules
 
-- Mobile: full-width, stable height, long filenames wrap.
-- Color: neutral card with green primary submit.
+- Mobile: full-width, stable height, long filenames wrap, and upload buttons stack with visible gap.
+- Color: neutral/dashed upload surface with green primary submit and quiet secondary file picker.
 
 ## Implementation Notes
 
-- Upload progress and detailed file errors are missing-design states.
+- Upload progress and detailed file errors are referenced in `Shared - 03 - Upload And Calendar States.html`.
 
 ## Acceptance Checks
 
@@ -65,4 +65,3 @@ Collect and display uploaded files for documents, receipts, and facility media.
 ## Open Questions
 
 - None.
-

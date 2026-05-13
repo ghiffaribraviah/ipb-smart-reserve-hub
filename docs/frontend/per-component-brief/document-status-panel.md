@@ -11,8 +11,8 @@
 
 ## Reference Evidence
 
-- HTML references: Student 05, Student 06 variants, Student 11 variants, Admin 11.
-- Screenshots: matching screenshots.
+- HTML references: Student 05, Student 06 variants, Student 11 variants, Admin 11, `Shared - 07 - Reservation Workflow Components.html`.
+- Screenshots: matching screenshots, `shared-07-reservation-workflow-components-*`.
 
 ## Purpose
 
@@ -21,7 +21,7 @@ Display approval letter, signed letter, receipt, verification status, and availa
 ## Anatomy
 
 - Status badge/heading.
-- Document rows.
+- Shared `doc-list` / `doc-row` rows with file/type marker, metadata, separated status/action side area.
 - Metadata.
 - Download/view actions.
 - Rejection reason when relevant.
@@ -51,9 +51,9 @@ Display approval letter, signed letter, receipt, verification status, and availa
 
 ## Design Rules
 
-- Document rows use neutral card/row surfaces.
-- Long filenames wrap.
-- Status color never stands alone.
+- Document rows use neutral card/row surfaces with a visually separated right-side status/action area on desktop.
+- Long filenames wrap; on mobile, status/action stacks below metadata with a top divider and no collision.
+- Status color never stands alone; badges keep Indonesian labels such as `Terverifikasi`, `Menunggu`, and `Ditolak`.
 
 ## Implementation Notes
 
@@ -66,4 +66,3 @@ Display approval letter, signed letter, receipt, verification status, and availa
 ## Open Questions
 
 - None.
-

@@ -399,6 +399,34 @@
             }
         }
 
+    .lucide-icon{display:inline-block;vertical-align:-.18em;flex:0 0 auto}
+
+        /* Shared layout shell header/footer alignment */
+        :root{--shared-shell-nav:72px;--navbar-height:72px;--nav:72px}
+        .navbar{position:fixed;inset:0 0 auto;width:100%;height:var(--navbar-height,var(--nav,var(--shared-shell-nav)));background:#fff;border-bottom:1px solid var(--border-color,var(--border,#e5e7eb));display:flex;justify-content:center;z-index:1000}
+        .navbar-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between;gap:22px}
+        .nav-left,.nav-center,.nav-right{display:flex;align-items:center;gap:22px}
+        .nav-center{gap:40px}
+        .logo-nav{font-family:'Playfair Display',serif;color:#1d7667;font-size:24px;font-weight:700;line-height:1.05;text-decoration:none;white-space:nowrap}
+        .mobile-menu-btn{display:none;border:0;background:transparent;color:var(--secondary-text,var(--muted,#6b7280));font-size:24px;padding:0;line-height:1;cursor:pointer}
+        .nav-link{font-size:14px;font-weight:700;color:var(--secondary-text,var(--muted,#6b7280));text-decoration:none}
+        .nav-link.active{color:var(--brand-green,var(--green,#0f9d58));border-bottom:2px solid currentColor;padding-bottom:4px}
+        .nav-search{position:relative;display:flex;align-items:center;min-width:232px;height:40px;color:var(--secondary-text,var(--muted,#6b7280))}
+        .nav-search input{width:250px;height:40px;border:1px solid #dbe2ea;border-radius:999px;background:linear-gradient(180deg,#fff,#f8fafc);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 2px rgba(15,23,42,.04);padding:0 16px 0 42px;color:var(--secondary-text,var(--muted,#6b7280));font:500 13px var(--sans-serif,Inter,system-ui,sans-serif);outline:none}
+        .nav-search input:focus{border-color:var(--brand-green,var(--green,#0f9d58));background:#fff}
+        .nav-search .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#94a3b8;display:inline-flex;align-items:center;justify-content:center;pointer-events:none}
+        .nav-notifications{border:0;background:transparent;color:#6b7280;font-size:19px;padding:0;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+        .profile-pic{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--brand-green,var(--green,#0f9d58));border:0;overflow:hidden;font-size:13px;font-weight:700;text-decoration:none;flex:0 0 34px}
+        .profile-pic img{width:100%;height:100%;object-fit:cover}
+        .footer{border-top:1px solid var(--border-color,var(--border,#e5e7eb));padding:22px 0;background:#fff;display:flex;justify-content:center}
+        .footer-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between;gap:24px}
+        .footer-left,.footer-brand,.footer-content>div:first-child{display:flex;align-items:center;gap:16px;min-width:0}
+        .logo-footer,.footer-logo{font-family:'Playfair Display',serif;font-size:30px;color:#4da38b;margin:0;line-height:1;white-space:nowrap;letter-spacing:0}
+        .copyright,.footer-copy,.footer .muted{font-size:13px;color:var(--secondary-text,var(--muted,#6b7280));margin:0;line-height:1.5}
+        .footer-right,.footer-links{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:10px 18px;color:var(--secondary-text,var(--muted,#6b7280));font-size:14px;font-weight:600}
+        .footer-right a,.footer-links a{white-space:nowrap;text-decoration:none;color:inherit}
+        @media(max-width:768px){:root{--shared-shell-nav:64px;--navbar-height:64px;--nav:64px}.navbar-content{max-width:100%;padding:0 14px}.mobile-menu-btn{display:block}.logo-nav br{display:none}.logo-nav span{margin-left:6px}.nav-center,.nav-search{display:none}.nav-left,.nav-right{gap:14px}.footer{padding:22px 0}.footer-content{flex-direction:column;align-items:center;text-align:center;gap:14px}.footer-left,.footer-brand,.footer-content>div:first-child{flex-direction:column;gap:8px}.footer-right,.footer-links{justify-content:center;align-items:center}}
+
     </style>
 </head>
 <body>
@@ -409,7 +437,7 @@
                 <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
                 <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
                 <div class="nav-search">
-                    <span class="search-icon">&#128269;</span>
+                    <span class="search-icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
                     <input type="search" placeholder="Cari fasilitas..." aria-label="Cari fasilitas">
                 </div>
             </div>
@@ -419,8 +447,8 @@
                 <a href="#" class="nav-link">Reservasi</a>
             </div>
             <div class="nav-right">
-                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
-                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #e5e7eb; border: none; display: flex; align-items: center; justify-content: center; color: transparent;"></a>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #6b7280; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21a2 2 0 0 0 4 0"/><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #0f9d58; border: none; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 700;">NP</a>
             </div>
         </div>
     </header>
@@ -436,7 +464,7 @@
             <div class="filter-group">
                 <label>Pencarian</label>
                 <div class="filter-input">
-                    <span class="icon">&#128269;</span>
+                    <span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
                     <input type="text" placeholder="Nama ruangan atau gedung...">
                 </div>
             </div>
@@ -444,7 +472,7 @@
             <div class="filter-group">
                 <label>Organisasi / Fakultas</label>
                 <div class="filter-input">
-                    <span class="icon">&#127976;</span>
+                    <span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg></span>
                     <select>
                         <option value="">Semua Organisasi</option>
                         <option value="faperta">Fakultas Pertanian</option>
@@ -457,7 +485,7 @@
             <div class="filter-group">
                 <label>Tipe Fasilitas</label>
                 <div class="filter-input">
-                    <span class="icon">&#127979;</span>
+                    <span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 6 8-4 8 4"/><path d="m18 10 4 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8l4-2"/><path d="M6 22V8"/><path d="M18 22V8"/><path d="M10 22v-6h4v6"/></svg></span>
                     <select>
                         <option value="">Semua Tipe</option>
                         <option value="auditorium">Auditorium / Seminar</option>
@@ -471,7 +499,7 @@
             <div class="filter-group">
                 <label>Min. Kapasitas</label>
                 <div class="filter-input">
-                    <span class="icon">&#128101;</span>
+                    <span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <input type="number" placeholder="Contoh: 50">
                 </div>
             </div>
@@ -506,7 +534,7 @@
                     </div>
                     <p>Fasilitas premium untuk acara seminar nasional dan internasional dengan kapasitas besar dan sistem audio visual mutakhir.</p>
                     <div class="card-footer">
-                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 1,200</div>
+                        <div class="data-point"><span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Kapasitas: 1,200</div>
                         <div class="data-point">Rp 100k / sesi</div>
                     </div>
                 </div>
@@ -524,7 +552,7 @@
                     </div>
                     <p>Ruang kelas modern yang dilengkapi dengan smart board interaktif dan tata letak meja yang modular untuk diskusi kelompok.</p>
                     <div class="card-footer">
-                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 45</div>
+                        <div class="data-point"><span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Kapasitas: 45</div>
                         <div class="data-point">Gratis</div>
                     </div>
                 </div>
@@ -542,7 +570,7 @@
                     </div>
                     <p>Fasilitas olahraga indoor serbaguna yang dapat digunakan untuk basket, voli, dan bulu tangkis dengan tribun penonton.</p>
                     <div class="card-footer">
-                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 500</div>
+                        <div class="data-point"><span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Kapasitas: 500</div>
                         <div class="data-point">Rp 50k / sesi</div>
                     </div>
                 </div>
@@ -560,7 +588,7 @@
                     </div>
                     <p>Ruang kuliah teater standar dengan proyektor ganda dan sistem pengeras suara. Cocok untuk perkuliahan umum.</p>
                     <div class="card-footer">
-                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 150</div>
+                        <div class="data-point"><span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Kapasitas: 150</div>
                         <div class="data-point">Gratis</div>
                     </div>
                 </div>
@@ -578,7 +606,7 @@
                     </div>
                     <p>Area terbuka hijau di pusat kampus, sangat ideal untuk kegiatan pameran mahasiswa, festival, atau acara outdoor lainnya.</p>
                     <div class="card-footer">
-                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 2,000</div>
+                        <div class="data-point"><span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Kapasitas: 2,000</div>
                         <div class="data-point">Rp 200k / hari</div>
                     </div>
                 </div>
@@ -596,7 +624,7 @@
                     </div>
                     <p>Ruang pertemuan eksklusif dengan meja bundar besar, mikrofon delegasi, dan fasilitas video conference.</p>
                     <div class="card-footer">
-                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 60</div>
+                        <div class="data-point"><span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Kapasitas: 60</div>
                         <div class="data-point">Rp 150k / sesi</div>
                     </div>
                 </div>
@@ -614,7 +642,7 @@
                     </div>
                     <p>Studio rekaman kedap suara dilengkapi dengan kamera profesional, lighting rig, dan green screen untuk produksi konten.</p>
                     <div class="card-footer">
-                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 15</div>
+                        <div class="data-point"><span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Kapasitas: 15</div>
                         <div class="data-point">Rp 75k / sesi</div>
                     </div>
                 </div>
@@ -632,7 +660,7 @@
                     </div>
                     <p>Lapangan tenis standar turnamen dengan permukaan hard court. Dilengkapi lampu penerangan untuk permainan malam hari.</p>
                     <div class="card-footer">
-                        <div class="data-point"><span class="icon">&#128101;</span> Kapasitas: 4</div>
+                        <div class="data-point"><span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Kapasitas: 4</div>
                         <div class="data-point">Rp 30k / jam</div>
                     </div>
                 </div>
@@ -656,7 +684,7 @@
         <div class="footer-content">
             <div class="footer-left">
                 <h2 class="logo-footer">IPB SRH</h2>
-                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Semua hak dilindungi.</p>
+                <p class="copyright">&copy; 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.</p>
             </div>
             <div class="footer-right">
                 <a href="#">Beranda</a>

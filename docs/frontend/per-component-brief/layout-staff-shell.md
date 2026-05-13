@@ -12,11 +12,12 @@
 - `staff-03-edit-facility-details.md`
 - `staff-10-reservation-lists.md`
 - `staff-11-reservation-details.md`
+- `staff-12-review-decision-dialogs.md`
 
 ## Reference Evidence
 
-- HTML references: `Admin - ...` files.
-- Screenshots: admin desktop/mobile screenshots.
+- HTML references: `Admin - ...` files, `Shared - 05 - Layout Shells.html`, `Shared - 04 - Mobile Navigation Drawer.html`.
+- Screenshots: admin desktop/mobile screenshots, `shared-05-layout-shells-*`, `shared-04-mobile-navigation-drawer-*`.
 
 ## Purpose
 
@@ -24,7 +25,7 @@ Provide the staff operational shell while preserving Admin visual copy from refe
 
 ## Anatomy
 
-- Fixed header with brand, search, `Reservasi` and `Fasilitas` nav, notification, profile.
+- Fixed header with brand, rounded search, `Beranda`, `Reservasi`, and `Fasilitas` nav, notification, profile.
 - Main operational container.
 
 ## Variants
@@ -49,14 +50,14 @@ Provide the staff operational shell while preserving Admin visual copy from refe
 
 ## Design Rules
 
-- Desktop: `80px` fixed header, dense operational content.
+- Desktop: `72px` fixed shared shell header, dense operational content.
 - Mobile: `64px` header, hidden desktop nav/search, cards instead of horizontal tables.
 - Color: green operational accent.
 - Overflow: mobile tables must convert to cards.
 
 ## Implementation Notes
 
-- Do not rename user-facing `Admin` copy unless the reference changes.
+- Use internal `staff` route/code language while preserving user-facing Admin/staff reference copy. Footer mirrors the shared shell with compact brand/copyright and horizontal links on desktop.
 
 ## Acceptance Checks
 
@@ -64,5 +65,4 @@ Provide the staff operational shell while preserving Admin visual copy from refe
 
 ## Open Questions
 
-- Mobile menu expansion is not referenced.
-
+- None.

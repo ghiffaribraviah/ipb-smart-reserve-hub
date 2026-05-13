@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengguna Super Admin - IPB Smart Reserve Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#f8fafc; --surface:#fff; --text:#111827; --muted:#6b7280; --border:#e5e7eb; --indigo:#6366f1; --indigo-dark:#4f46e5; --green-bg:#d1fae5; --green:#065f46; --red-bg:#fee2e2; --red:#991b1b; --amber-bg:#fef3c7; --amber:#92400e; --shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03); --nav:80px; }
+        * { box-sizing:border-box; } body { margin:0; font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; } a { color:inherit; text-decoration:none; }
+        .navbar { position:fixed; inset:0 0 auto; height:var(--nav); background:var(--surface); border-bottom:1px solid var(--border); display:flex; justify-content:center; z-index:10; }
+        .navbar-content { width:1200px; max-width:95%; display:flex; align-items:center; justify-content:space-between; }
+        .nav-left,.nav-center,.nav-right { display:flex; align-items:center; gap:28px; } .nav-center { gap:32px; }
+        .logo-nav { font-family:'Playfair Display',serif; color:#1d7667; font-size:24px; font-weight:700; line-height:1.1; }
+        .mobile-menu-btn { display:none; border:0; background:transparent; color:var(--muted); font-size:24px; padding:0; }
+        .nav-link { color:var(--muted); font-size:15px; font-weight:600; } .nav-link.active { color:var(--indigo); border-bottom:2px solid var(--indigo); padding-bottom:4px; }
+        .nav-notifications { border:0; background:transparent; color:#6b7280; font-size:20px; padding:0; } .profile-pic { width:36px; height:36px; border-radius:50%; background:var(--indigo); color:white; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; }
+        .page { width:1200px; max-width:95%; margin:calc(var(--nav) + 40px) auto 80px; }
+        .page-header { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:28px; } h1 { margin:0 0 8px; font-size:32px; } p { margin:0; } .muted { color:var(--muted); font-size:14px; }
+        .actions { display:flex; gap:12px; flex-wrap:wrap; } .btn { border:1px solid var(--border); border-radius:8px; background:white; color:var(--text); padding:10px 16px; font-size:14px; font-weight:700; min-height:42px; } .btn-primary { background:var(--indigo); border-color:var(--indigo); color:white; } .btn-primary:hover { background:var(--indigo-dark); }
+        .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:28px; } .kpi { background:white; border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:20px; display:flex; gap:14px; align-items:center; } .kpi-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#ede9fe; color:var(--indigo); font-size:20px; } .kpi-label { color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; } .kpi-value { font-size:26px; font-weight:700; line-height:1; margin-top:4px; }
+        .toolbar { background:white; border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:16px; display:grid; grid-template-columns:1fr 180px 180px; gap:12px; margin-bottom:20px; } input,select { border:1px solid var(--border); border-radius:8px; min-height:44px; padding:10px 12px; font:inherit; background:white; }
+        .section { background:white; border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); overflow:hidden; } .section-head { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; } .section-title { font-size:16px; font-weight:700; }
+        table { width:100%; border-collapse:collapse; text-align:left; } th { padding:12px 20px; background:#f9fafb; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px; } td { padding:16px 20px; border-top:1px solid var(--border); vertical-align:top; } .main { font-size:14px; font-weight:700; } .sub { color:var(--muted); font-size:12px; margin-top:2px; }
+        .badge { display:inline-flex; border-radius:999px; padding:5px 9px; font-size:12px; font-weight:700; } .active { background:var(--green-bg); color:var(--green); } .inactive { background:var(--red-bg); color:var(--red); } .pending { background:var(--amber-bg); color:var(--amber); } .link { color:var(--indigo); font-size:13px; font-weight:700; }
+        .footer { background:white; border-top:1px solid var(--border); padding:56px 0; display:flex; justify-content:center; } .footer-content { width:1200px; max-width:90%; display:flex; justify-content:space-between; } .logo-footer { font-family:'Playfair Display',serif; color:#4da38b; font-size:64px; margin:0; line-height:1; } .footer-right { display:flex; flex-direction:column; gap:16px; color:var(--muted); align-items:flex-end; }
+        @media (max-width:768px) { :root{--nav:64px;} .navbar-content{max-width:100%;padding:0 14px;} .mobile-menu-btn{display:block;} .logo-nav br,.nav-center{display:none;} .logo-nav span{margin-left:6px;} .nav-left,.nav-right{gap:14px;} .page{width:100%;max-width:100%;padding:0 16px;margin-top:calc(var(--nav) + 24px);} .page-header{flex-direction:column;align-items:stretch;} h1{font-size:28px;} .actions{display:grid;grid-template-columns:1fr;} .btn{width:100%;} .kpis,.toolbar{grid-template-columns:1fr;} .section{background:transparent;border:0;box-shadow:none;} .section-head{padding:0 0 14px;border:0;} table,tbody,tr,td{display:block;width:100%;} thead{display:none;} tr{background:white;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px;} td{border:0;padding:0 0 12px;} td:last-child{padding-bottom:0;} td::before{content:attr(data-label);display:block;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;} .footer-content{flex-direction:column;align-items:center;text-align:center;gap:32px;} .footer-right{align-items:center;} }
+    .lucide-icon{display:inline-block;vertical-align:-.18em;flex:0 0 auto}
+
+        /* Shared layout shell header/footer alignment */
+        :root{--shared-shell-nav:72px;--navbar-height:72px;--nav:72px}
+        .navbar{position:fixed;inset:0 0 auto;width:100%;height:var(--navbar-height,var(--nav,var(--shared-shell-nav)));background:#fff;border-bottom:1px solid var(--border-color,var(--border,#e5e7eb));display:flex;justify-content:center;z-index:1000}
+        .navbar-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between;gap:22px}
+        .nav-left,.nav-center,.nav-right{display:flex;align-items:center;gap:22px}
+        .nav-center{gap:40px}
+        .logo-nav{font-family:'Playfair Display',serif;color:#1d7667;font-size:24px;font-weight:700;line-height:1.05;text-decoration:none;white-space:nowrap}
+        .mobile-menu-btn{display:none;border:0;background:transparent;color:var(--secondary-text,var(--muted,#6b7280));font-size:24px;padding:0;line-height:1;cursor:pointer}
+        .nav-link{font-size:14px;font-weight:700;color:var(--secondary-text,var(--muted,#6b7280));text-decoration:none}
+        .nav-link.active{color:var(--brand-green,var(--green,#0f9d58));border-bottom:2px solid currentColor;padding-bottom:4px}
+        .nav-search{position:relative;display:flex;align-items:center;min-width:232px;height:40px;color:var(--secondary-text,var(--muted,#6b7280))}
+        .nav-search input{width:250px;height:40px;border:1px solid #dbe2ea;border-radius:999px;background:linear-gradient(180deg,#fff,#f8fafc);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 2px rgba(15,23,42,.04);padding:0 16px 0 42px;color:var(--secondary-text,var(--muted,#6b7280));font:500 13px var(--sans-serif,Inter,system-ui,sans-serif);outline:none}
+        .nav-search input:focus{border-color:var(--brand-green,var(--green,#0f9d58));background:#fff}
+        .nav-search .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#94a3b8;display:inline-flex;align-items:center;justify-content:center;pointer-events:none}
+        .nav-notifications{border:0;background:transparent;color:#6b7280;font-size:19px;padding:0;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+        .profile-pic{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--brand-green,var(--green,#0f9d58));border:0;overflow:hidden;font-size:13px;font-weight:700;text-decoration:none;flex:0 0 34px}
+        .profile-pic img{width:100%;height:100%;object-fit:cover}
+        .footer{border-top:1px solid var(--border-color,var(--border,#e5e7eb));padding:22px 0;background:#fff;display:flex;justify-content:center}
+        .footer-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between;gap:24px}
+        .footer-left,.footer-brand,.footer-content>div:first-child{display:flex;align-items:center;gap:16px;min-width:0}
+        .logo-footer,.footer-logo{font-family:'Playfair Display',serif;font-size:30px;color:#4da38b;margin:0;line-height:1;white-space:nowrap;letter-spacing:0}
+        .copyright,.footer-copy,.footer .muted{font-size:13px;color:var(--secondary-text,var(--muted,#6b7280));margin:0;line-height:1.5}
+        .footer-right,.footer-links{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:10px 18px;color:var(--secondary-text,var(--muted,#6b7280));font-size:14px;font-weight:600}
+        .footer-right a,.footer-links a{white-space:nowrap;text-decoration:none;color:inherit}
+        @media(max-width:768px){:root{--shared-shell-nav:64px;--navbar-height:64px;--nav:64px}.navbar-content{max-width:100%;padding:0 14px}.mobile-menu-btn{display:block}.logo-nav br{display:none}.logo-nav span{margin-left:6px}.nav-center,.nav-search{display:none}.nav-left,.nav-right{gap:14px}.footer{padding:22px 0}.footer-content{flex-direction:column;align-items:center;text-align:center;gap:14px}.footer-left,.footer-brand,.footer-content>div:first-child{flex-direction:column;gap:8px}.footer-right,.footer-links{justify-content:center;align-items:center}}
+        /* Super admin shell accent */
+        .nav-link.active{color:var(--indigo,#6366f1)}
+        .profile-pic{background:var(--indigo,#6366f1)}
+
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-content">
+            <div class="nav-left"><button class="mobile-menu-btn" aria-label="Buka navigasi">&#9776;</button><a class="logo-nav">IPB<br><span>SRH</span></a></div>
+            <nav class="nav-center"><a class="nav-link">Dashboard</a><a class="nav-link active">Pengguna</a><a class="nav-link">Fasilitas</a><a class="nav-link">Laporan</a><a class="nav-link">Sistem</a></nav>
+            <div class="nav-right"><button class="nav-notifications" aria-label="Notifikasi"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21a2 2 0 0 0 4 0"/><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button><div class="profile-pic">SA</div></div>
+        </div>
+    </header>
+    <main class="page">
+        <div class="page-header">
+            <div><h1>Pengguna</h1><p class="muted">Kelola akun mahasiswa, staff fasilitas, dan Super Admin dengan status akses yang jelas.</p></div>
+            <div class="actions"><button class="btn">Ekspor CSV</button><button class="btn btn-primary">+ Tambah Pengguna</button></div>
+        </div>
+        <section class="kpis">
+            <div class="kpi"><div class="kpi-icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="kpi-label">Total Akun</div><div class="kpi-value">12.450</div></div></div>
+            <div class="kpi"><div class="kpi-icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/><path d="M22 10v6"/></svg></div><div><div class="kpi-label">Mahasiswa</div><div class="kpi-value">11.892</div></div></div>
+            <div class="kpi"><div class="kpi-icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 12h20"/></svg></div><div><div class="kpi-label">Staff</div><div class="kpi-value">524</div></div></div>
+            <div class="kpi"><div class="kpi-icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.7 18-8.6-15a1.3 1.3 0 0 0-2.2 0L2.3 18a1.3 1.3 0 0 0 1.1 2h17.2a1.3 1.3 0 0 0 1.1-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><div><div class="kpi-label">Butuh Tinjauan</div><div class="kpi-value">34</div></div></div>
+        </section>
+        <div class="toolbar"><input aria-label="Cari pengguna" value="Cari nama, email, atau NIM"><select><option>Semua role</option></select><select><option>Semua status</option></select></div>
+        <section class="section">
+            <div class="section-head"><h2 class="section-title">Daftar Pengguna</h2><a class="link">Filter Lanjutan</a></div>
+            <table>
+                <thead><tr><th>Pengguna</th><th>Role</th><th>Unit</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody>
+                    <tr><td data-label="Pengguna"><div class="main">Nadia Paramita</div><div class="sub">nadia@apps.ipb.ac.id · G64190011</div></td><td data-label="Role">Mahasiswa</td><td data-label="Unit">Ilmu Komputer</td><td data-label="Status"><span class="badge active">Aktif</span></td><td data-label="Aksi"><a class="link">Detail</a></td></tr>
+                    <tr><td data-label="Pengguna"><div class="main">Budi Santoso</div><div class="sub">budi.s@admin.ipb.ac.id</div></td><td data-label="Role">Staff</td><td data-label="Unit">Biosciences</td><td data-label="Status"><span class="badge active">Aktif</span></td><td data-label="Aksi"><a class="link">Kelola Akses</a></td></tr>
+                    <tr><td data-label="Pengguna"><div class="main">Rahmat Hidayat</div><div class="sub">rahmat.h@admin.ipb.ac.id</div></td><td data-label="Role">Staff</td><td data-label="Unit">Kehutanan</td><td data-label="Status"><span class="badge inactive">Nonaktif</span></td><td data-label="Aksi"><a class="link">Aktifkan</a></td></tr>
+                    <tr><td data-label="Pengguna"><div class="main">Dewi Lestari</div><div class="sub">dewi@apps.ipb.ac.id · G64200024</div></td><td data-label="Role">Mahasiswa</td><td data-label="Unit">Teknologi Industri Pertanian</td><td data-label="Status"><span class="badge pending">Perlu Data</span></td><td data-label="Aksi"><a class="link">Tinjau</a></td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <footer class="footer"><div class="footer-content"><div><h2 class="logo-footer">IPB SRH</h2><p class="muted">&copy; 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.</p></div><div class="footer-right"><a>Dashboard</a><a>Pengguna</a><a>Fasilitas</a><a>Laporan</a><a>Sistem</a></div></div></footer>
+</body>
+</html>

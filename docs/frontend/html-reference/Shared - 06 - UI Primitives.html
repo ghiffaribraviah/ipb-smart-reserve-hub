@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Primitives - IPB Smart Reserve Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#f8fafc;--surface:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--green:#0f9d58;--indigo:#6366f1;--amber:#92400e;--red:#991b1b;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03)}*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}.page{width:1200px;max-width:95%;margin:48px auto 80px}.brand{font-family:'Playfair Display',serif;color:#1d7667;font-size:34px;margin:0 0 32px}h1{font-size:32px;margin:0 0 8px}.muted{color:var(--muted);font-size:14px;margin:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}.card{background:white;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:24px}.title{font-size:18px;font-weight:700;margin:0 0 16px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.btn{border:1px solid var(--border);border-radius:8px;background:white;color:var(--text);padding:10px 16px;min-height:44px;font-weight:700}.btn.green{background:var(--green);border-color:var(--green);color:white}.btn.indigo{background:var(--indigo);border-color:var(--indigo);color:white}.btn.amber{background:#fffbeb;border-color:#fde68a;color:var(--amber)}.btn.red{background:#fee2e2;border-color:#fecaca;color:#dc2626}.btn.disabled{opacity:.48}.field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}.field label{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}.control{border:1px solid var(--border);border-radius:8px;background:white;min-height:48px;padding:12px 14px;color:var(--text)}.textarea{min-height:104px}.error{border-color:#fecaca;background:#fef2f2;color:var(--red)}.checkbox{display:flex;gap:12px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:14px}.box{width:18px;height:18px;border:2px solid var(--green);border-radius:4px;background:#e8f5e9}.badge{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}.green-b{background:#d1fae5;color:#065f46}.amber-b{background:#fef3c7;color:#92400e}.red-b{background:#fee2e2;color:#991b1b}.gray-b{background:#f3f4f6;color:#4b5563}.stars{display:flex;gap:8px;font-size:30px;color:#f59e0b}.stars .empty{color:#d1d5db}@media(max-width:768px){.page{width:100%;max-width:100%;padding:0 16px;margin:28px auto 60px}h1{font-size:28px}.grid{grid-template-columns:1fr}.row{display:grid;grid-template-columns:1fr}.btn{width:100%}}
+    .lucide-icon{display:inline-block;vertical-align:-.18em;flex:0 0 auto}</style>
+</head>
+<body>
+    <main class="page">
+        <h2 class="brand">IPB SRH</h2>
+        <h1>UI Primitives</h1>
+        <p class="muted">Standalone reference for buttons, form controls, status badges, checkbox rows, and rating input.</p>
+        <div class="grid">
+            <section class="card"><h2 class="title">Buttons</h2><div class="row"><button class="btn green">Lanjutkan</button><button class="btn indigo">Tambah Admin</button><button class="btn">Kembali</button><button class="btn amber">Ajukan Pembatalan</button><button class="btn red">Keluar</button><button class="btn disabled">Memproses</button></div></section>
+            <section class="card"><h2 class="title">Status Badges</h2><div class="row"><span class="badge green-b">Disetujui</span><span class="badge amber-b">Menunggu Verifikasi Dokumen</span><span class="badge red-b">Ditolak</span><span class="badge gray-b">Expired</span></div></section>
+            <section class="card"><h2 class="title">Form Controls</h2><div class="field"><label>Nama Kegiatan</label><div class="control">Seminar Nasional Himalkom</div></div><div class="field"><label>Fasilitas</label><div class="control">Grand Auditorium</div></div><div class="field"><label>Catatan</label><div class="control textarea">Kegiatan membutuhkan proyektor dan meja registrasi.</div></div><div class="field"><label>Error Validasi</label><div class="control error">Tanggal mulai wajib dipilih.</div></div></section>
+            <section class="card"><h2 class="title">Checkbox dan Rating</h2><div class="checkbox"><span class="box"></span><div><strong>Saya menyetujui kebijakan fasilitas</strong><p class="muted">Termasuk aturan pembatalan dan penggunaan ruang.</p></div></div><div style="height:18px"></div><div class="stars" aria-label="Rating 4 dari 5"><span>★</span><span>★</span><span>★</span><span>★</span><span class="empty">★</span></div></section>
+        </div>
+    </main>
+</body>
+</html>

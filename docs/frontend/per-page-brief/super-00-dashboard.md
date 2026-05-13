@@ -18,7 +18,7 @@
 
 - User job: monitor system-level KPIs, administrator governance, and recent activity.
 - Entry points: super-admin login landing.
-- Exit points: user, facility, report, system pages when implemented.
+- Exit points: `Pengguna`, `Fasilitas`, `Laporan`, and `Sistem` Super Admin pages.
 
 ## Design Contract
 
@@ -35,7 +35,7 @@
 - Loading state: KPI/table/activity skeletons.
 - Empty state: no admins or no activity.
 - Error state: retry individual panels.
-- Disabled state: future nav destinations may be disabled until designed/implemented.
+- Disabled state: unavailable backend-backed actions remain disabled with visible state.
 
 ## Accessibility
 
@@ -52,18 +52,18 @@
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: existing partial endpoints include `GET /admin/system-status`, `GET /admin/audit-logs`, `POST /admin/users`; proposed dashboard aggregate/admin list endpoints are not present.
+- Endpoints consumed: `GET /admin/dashboard`; underlying standalone endpoints include `GET /admin/system-status`, `GET /admin/audit-logs`, `GET /admin/users`, and `GET /admin/facilities/governance`.
 - Page-needed fields: total users, active facilities, reservation total, system health, administrator list/status, activity log entries.
 - Auth/session assumptions: super-admin bearer token.
 - Source files: `app/api/routes/system_status_routes.py`, `app/api/routes/audit_log_routes.py`, `app/api/routes/account_routes.py`.
 
 ### BG-SUPER-00-01: Super Admin Dashboard Read Model
 
-- Status: `open`
+- Status: `resolved`
 - Domain area: Super Admin
 - Affected UI: KPI cards, administrator governance table, activity log.
-- Contract needed: dashboard aggregate read model and administrator list; current backend only exposes partial system status/audit/create-user contracts.
-- Evidence: `GET /admin/system-status` and `GET /admin/audit-logs` exist; no user list or dashboard KPI aggregate endpoint was found.
+- Contract implemented: dashboard aggregate read model with KPI values, system status, administrator rows, Facility governance rows, and recent audit activity.
+- Evidence: `app/api/routes/super_admin_dashboard_routes.py` registers `GET /admin/dashboard`; `tests/test_super_admin_dashboard.py` verifies KPI values, administrator governance rows, Facility governance composition, recent activity, and non-admin denial.
 - Source issue/PRD: `docs/issues/ISSUE-0015-super-admin-review-moderation-and-audit-logs.md`, `docs/issues/ISSUE-0017-optional-system-status.md`.
 
 ## Shared Components
@@ -80,4 +80,4 @@
 
 ## Open Questions
 
-- Future Super Admin pages are tracked in `docs/frontend/missing-design.md`.
+- None.

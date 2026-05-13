@@ -26,7 +26,7 @@
 - Desktop behavior: asymmetric gallery and information cards.
 - Mobile behavior: stacked gallery, wrapped document rows, full-width actions.
 - Required copy/status labels: preserve `Ajukan Pembatalan`, `Dokumen Reservasi`, `Terverifikasi`.
-- Source-of-truth notes: document rows must not overflow on mobile.
+- Source-of-truth notes: document rows use shared `doc-row` anatomy and must not overflow on mobile.
 
 ## UX Behavior
 
@@ -71,6 +71,7 @@
 - `docs/frontend/per-component-brief/layout-student-shell.md`
 - `docs/frontend/per-component-brief/document-status-panel.md`
 - `docs/frontend/per-component-brief/facility-gallery.md`
+- `docs/frontend/per-component-brief/reservation-summary-card.md`
 
 ## Acceptance Checks
 
@@ -79,5 +80,4 @@
 
 ## Open Questions
 
-- Cancellation confirmation design is tracked in `missing-design.md`.
-
+- Cancellation request visual reference is now `docs/frontend/html-reference/Student - 13 - Cancellation Request.html`.

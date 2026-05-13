@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML references: Student 06, Student 07 variants, Student 08.
-- Screenshots: matching desktop/mobile screenshots.
+- HTML references: Student 06, Student 07 variants, Student 08, `Shared - 07 - Reservation Workflow Components.html`.
+- Screenshots: matching desktop/mobile screenshots, `shared-07-reservation-workflow-components-*`.
 
 ## Purpose
 
@@ -49,8 +49,8 @@ Show the current workflow status and next navigation action.
 
 ## Design Rules
 
-- Desktop: compact centered panel.
-- Mobile: full-width panel with full-width primary CTA.
+- Desktop: compact centered panel with summary rows above status copy when used in workflow pages.
+- Mobile: full-width panel with stacked actions and enough button gap to avoid collision.
 - Color: green success, amber waiting, red declined.
 
 ## Implementation Notes
@@ -64,4 +64,3 @@ Show the current workflow status and next navigation action.
 ## Open Questions
 
 - None.
-

@@ -55,6 +55,14 @@ class UserAccount:
     academic_profile: AcademicProfile | None = None
 
 
+@dataclass(frozen=True)
+class UserAccountPage:
+    items: list[UserAccount]
+    total: int
+    page: int
+    page_size: int
+
+
 class StudentEmailPolicy(Protocol):
     def allows(self, email: str) -> bool:
         raise NotImplementedError
@@ -123,6 +131,10 @@ class AccountTokenInvalid(UserAccountError):
     pass
 
 
+class ManagedUserNotFound(UserAccountError):
+    pass
+
+
 class UserAccountModule:
     def __init__(
         self,
@@ -167,6 +179,37 @@ class UserAccountModule:
             is_active=creation.is_active,
         )
         return self._to_user_account(self._add_user(user))
+
+    def list_user_accounts(
+        self,
+        *,
+        role: UserRole | None = None,
+        is_active: bool | None = None,
+        search: str | None = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> UserAccountPage:
+        safe_page = max(page, 1)
+        safe_page_size = min(max(page_size, 1), 100)
+        users, total = self._user_repository.list_users(
+            role=role,
+            is_active=is_active,
+            search=search,
+            offset=(safe_page - 1) * safe_page_size,
+            limit=safe_page_size,
+        )
+        return UserAccountPage(
+            items=[self._to_user_account(user) for user in users],
+            total=total,
+            page=safe_page,
+            page_size=safe_page_size,
+        )
+
+    def set_user_active_status(self, user_id: str, *, is_active: bool) -> UserAccount:
+        user = self._user_repository.set_active_status(user_id, is_active=is_active)
+        if user is None:
+            raise ManagedUserNotFound
+        return self._to_user_account(user)
 
     def login(self, credentials: LoginCredentials) -> AccountSession:
         user = self._user_repository.find_by_email(self._normalize_email(credentials.email))

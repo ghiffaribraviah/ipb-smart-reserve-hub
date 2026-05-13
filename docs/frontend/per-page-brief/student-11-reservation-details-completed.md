@@ -26,7 +26,7 @@
 - Desktop behavior: same detail structure as accepted variant.
 - Mobile behavior: stacked detail/cards and full-width review action.
 - Required copy/status labels: preserve `Selesai` and `Tulis Ulasan`.
-- Source-of-truth notes: completed state should not show cancellation action.
+- Source-of-truth notes: completed state should not show cancellation action; document rows use shared `doc-row` anatomy.
 
 ## UX Behavior
 

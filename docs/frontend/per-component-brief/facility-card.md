@@ -11,8 +11,8 @@
 
 ## Reference Evidence
 
-- HTML references: Student 00, Student 01.
-- Screenshots: student home/catalog desktop/mobile.
+- HTML references: Student 00, Student 01, `Shared - 08 - Data Display Components.html`.
+- Screenshots: student home/catalog desktop/mobile, `shared-08-data-display-components-*`.
 
 ## Purpose
 
@@ -63,4 +63,3 @@ Display a facility preview for comparison and navigation.
 ## Open Questions
 
 - None.
-

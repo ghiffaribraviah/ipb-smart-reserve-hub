@@ -179,9 +179,14 @@ Role yang dipakai:
 | `POST` | `/auth/refresh` | Authenticated | Refresh token aktif. |
 | `GET` | `/auth/me` | Authenticated | Mengambil identitas user aktif. Untuk mahasiswa, response menyertakan `nim`, `phone`, dan `academic_profile` best-effort dari NIM. |
 | `POST` | `/admin/users` | Super Admin | Membuat akun staff atau Super Admin. |
+| `GET` | `/admin/users` | Super Admin | Melihat daftar pengguna dengan pagination dan filter `role`, `is_active`, serta `search`. |
+| `POST` | `/admin/users/{user_id}/deactivate` | Super Admin | Menonaktifkan akun pengguna tanpa mengubah role. |
+| `POST` | `/admin/users/{user_id}/activate` | Super Admin | Mengaktifkan kembali akun pengguna tanpa mengubah role. |
 | `GET` | `/student/shell` | Student | Verifikasi akses shell student. |
 | `GET` | `/staff/shell` | Staff | Verifikasi akses shell staff. |
 | `GET` | `/admin/shell` | Super Admin | Verifikasi akses shell admin. |
+| `GET` | `/admin/dashboard` | Super Admin | Melihat agregat dashboard: KPI, status sistem, admin, governance fasilitas, dan aktivitas terbaru. |
+| `GET` | `/admin/reports/aggregate` | Super Admin | Melihat agregat laporan dengan filter tanggal, status counts, trend, dan total reservasi berbayar. |
 
 `academic_profile` untuk mahasiswa berisi `program_studi`, `faculty`, `entry_year`, dan `degree`. Derivasi profil akademik bersifat best-effort: NIM yang tidak dikenal atau tidak bisa diparse tetap menghasilkan response auth yang sukses dengan field akademik bernilai `null`. Registrasi, login, refresh token, dan `/auth/me` tidak menjadikan keberhasilan derivasi akademik sebagai syarat akses.
 
@@ -248,12 +253,21 @@ Nilai `ReservationStatus` tetap status lifecycle utama. Substate UI seperti uplo
 | `POST` | `/staff/reservations/{reservation_id}/cancellation-review/approve` | Staff assigned | Menyetujui pengajuan pembatalan dan mengubah status menjadi `cancelled`. |
 | `POST` | `/staff/reservations/{reservation_id}/cancellation-review/reject` | Staff assigned | Menolak pengajuan pembatalan dengan alasan dan mengembalikan status ke `approved`. |
 
+### Operasional Reservasi Staff
+
+| Method | Endpoint | Role | Kegunaan |
+| --- | --- | --- | --- |
+| `GET` | `/staff/reservations/verification-queue` | Staff assigned | Melihat antrian review dokumen, pembayaran, dan pembatalan untuk fasilitas yang ditugaskan. |
+| `GET` | `/staff/reservations` | Staff assigned | Melihat daftar reservasi fasilitas yang ditugaskan dengan filter `status`, `facility_id`, `date_from`, dan `date_to`. |
+| `GET` | `/staff/reservations/{reservation_id}` | Staff assigned | Melihat detail operasional reservasi, metadata dokumen/pembayaran, dan URL aksi review. |
+| `GET` | `/staff/facilities/{facility_id}/schedule` | Staff assigned | Melihat jadwal privat fasilitas yang ditugaskan dengan status, workflow, dan tautan detail reservasi. |
+
 ### Notifikasi
 
 | Method | Endpoint | Role | Kegunaan |
 | --- | --- | --- | --- |
-| `GET` | `/notifications` | Student/Staff/Super Admin | Melihat inbox notifikasi terbaru. |
-| `POST` | `/notifications/{notification_id}/read` | Student/Staff/Super Admin | Menandai notifikasi milik user sebagai dibaca. |
+| `GET` | `/notifications` | Student/Staff/Super Admin | Melihat inbox notifikasi terbaru dengan `category`, `target`, dan `read_at`. |
+| `POST` | `/notifications/{notification_id}/read` | Student/Staff/Super Admin | Menandai notifikasi milik user sebagai dibaca dan mengembalikan contract yang sama. |
 
 ### Review dan Rating
 
@@ -273,6 +287,7 @@ Nilai `ReservationStatus` tetap status lifecycle utama. Substate UI seperti uplo
 | --- | --- | --- | --- |
 | `PUT` | `/admin/facilities/{facility_id}/staff-assignments/{staff_id}` | Super Admin | Menugaskan staff ke fasilitas. |
 | `DELETE` | `/admin/facilities/{facility_id}/staff-assignments/{staff_id}` | Super Admin | Menghapus assignment staff dari fasilitas. |
+| `GET` | `/admin/facilities/governance` | Super Admin | Melihat governance fasilitas, cakupan assignment staff, dan issue flags. |
 | `GET` | `/staff/facilities` | Staff | Melihat fasilitas yang ditugaskan. |
 | `PATCH` | `/staff/facilities/{facility_id}` | Staff assigned | Mengubah profil fasilitas yang ditugaskan. |
 | `POST` | `/staff/facilities/{facility_id}/deactivate` | Staff assigned | Menonaktifkan fasilitas yang ditugaskan. |

@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML reference: Admin 11.
-- Screenshots: admin reservation detail desktop/mobile.
+- HTML references: Admin 11, Admin 12 `Review Decision Dialogs`.
+- Screenshots: admin reservation detail and review decision dialog desktop/mobile.
 
 ## Purpose
 
@@ -49,13 +49,13 @@ Let assigned staff approve or reject document, payment, or cancellation reviews.
 
 ## Design Rules
 
-- Desktop: compact action cluster.
-- Mobile: stacked full-width decision actions.
+- Desktop: compact action cluster or modal dialog with summary, required reason textarea for rejection, and clear footer actions.
+- Mobile: stacked full-width decision actions/dialog footer buttons.
 - Destructive/reject action is visibly distinct but not oversized.
 
 ## Implementation Notes
 
-- Confirmation dialog design is missing/non-blocking.
+- Reject/confirmation modal reference is `Admin - 12 - Review Decision Dialogs.html`.
 
 ## Acceptance Checks
 
@@ -63,5 +63,4 @@ Let assigned staff approve or reject document, payment, or cancellation reviews.
 
 ## Open Questions
 
-- Whether reject uses inline expansion or modal needs design confirmation.
-
+- None.

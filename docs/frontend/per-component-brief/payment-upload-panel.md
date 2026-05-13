@@ -12,8 +12,8 @@
 
 ## Reference Evidence
 
-- HTML references: Student 07 payment variants.
-- Screenshots: payment desktop/mobile variants.
+- HTML references: Student 07 payment variants, `Shared - 07 - Reservation Workflow Components.html`.
+- Screenshots: payment desktop/mobile variants, `shared-07-reservation-workflow-components-*`.
 
 ## Purpose
 
@@ -66,4 +66,3 @@ Display payment instructions, receipt upload, and payment review state.
 ## Open Questions
 
 - None.
-

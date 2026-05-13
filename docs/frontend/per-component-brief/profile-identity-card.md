@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML reference: Student 20.
-- Screenshots: profile desktop/mobile.
+- HTML references: Student 20, `Shared - 08 - Data Display Components.html`.
+- Screenshots: profile desktop/mobile, `shared-08-data-display-components-*`.
 
 ## Purpose
 

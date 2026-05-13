@@ -7,11 +7,15 @@
 ## Used By
 
 - `super-00-dashboard.md`
+- `super-01-pengguna.md`
+- `super-02-fasilitas.md`
+- `super-03-laporan.md`
+- `super-04-sistem.md`
 
 ## Reference Evidence
 
-- HTML reference: `Super - 00 - Dashboard.html`.
-- Screenshots: super dashboard desktop/mobile.
+- HTML references: `Super - 00 - Dashboard.html`, Super 01-04 pages, `Shared - 05 - Layout Shells.html`, `Shared - 04 - Mobile Navigation Drawer.html`.
+- Screenshots: super dashboard/page screenshots, `shared-05-layout-shells-*`, `shared-04-mobile-navigation-drawer-*`.
 
 ## Purpose
 
@@ -33,7 +37,7 @@ Provide Super Admin navigation and role-specific accenting.
 
 ## Behavior
 
-- Future nav links should not be fully implemented without page references.
+- Super Admin nav links use Super 01-04 page references when implemented.
 
 ## Accessibility
 
@@ -47,20 +51,19 @@ Provide Super Admin navigation and role-specific accenting.
 
 ## Design Rules
 
-- Desktop: `80px` fixed header, `1200px` content.
-- Mobile: `64px` header with hamburger and `SA` profile.
+- Desktop: `72px` fixed shared shell header, `1200px` content.
+- Mobile: `64px` header with hamburger, inline brand, notification, and `SA` profile.
 - Color: indigo Super Admin accent for primary actions/profile affordance.
 - Overflow: stacked mobile sections.
 
 ## Implementation Notes
 
-- Do not force student green into Super Admin-only surfaces.
+- Do not force student green into Super Admin-only surfaces. Footer links mirror `Dashboard`, `Pengguna`, `Fasilitas`, `Laporan`, and `Sistem`.
 
 ## Acceptance Checks
 
-- Dashboard screenshots match reference.
+- Super Admin page and shared shell screenshots match references.
 
 ## Open Questions
 
-- Future Super Admin page references are missing.
-
+- None.

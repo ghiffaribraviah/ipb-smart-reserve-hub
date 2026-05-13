@@ -54,6 +54,20 @@ class FacilityManagementProfile:
 
 
 @dataclass(frozen=True)
+class FacilityGovernance:
+    id: str
+    name: str
+    category: str
+    location: str
+    capacity: int
+    is_active: bool
+    assigned_staff_count: int
+    active_assigned_staff_count: int
+    assignment_coverage: str
+    issue_flags: list[str]
+
+
+@dataclass(frozen=True)
 class FacilityProfileUpdate:
     name: str | None = None
     location: str | None = None
@@ -160,6 +174,12 @@ class FacilityManagementModule:
         return [
             _to_facility_profile(facility)
             for facility in self._facility_management_repository.list_assigned_facilities(staff.id)
+        ]
+
+    def list_facility_governance(self) -> list[FacilityGovernance]:
+        return [
+            _to_facility_governance(facility)
+            for facility in self._facility_management_repository.list_all_facilities_for_governance()
         ]
 
     def update_assigned_facility(
@@ -275,6 +295,26 @@ def _to_facility_profile(facility: Facility) -> FacilityManagementProfile:
         payment_instructions=facility.payment_instructions,
         open_hours_summary=facility.open_hours_summary,
         is_active=facility.is_active,
+    )
+
+
+def _to_facility_governance(facility: Facility) -> FacilityGovernance:
+    assigned_staff_count = len(facility.staff_assignments)
+    active_assigned_staff_count = sum(1 for assignment in facility.staff_assignments if assignment.staff.is_active)
+    issue_flags = []
+    if active_assigned_staff_count == 0:
+        issue_flags.append("needs_staff")
+    return FacilityGovernance(
+        id=facility.id,
+        name=facility.name,
+        category=facility.category.name,
+        location=facility.location,
+        capacity=facility.capacity,
+        is_active=facility.is_active,
+        assigned_staff_count=assigned_staff_count,
+        active_assigned_staff_count=active_assigned_staff_count,
+        assignment_coverage="covered" if active_assigned_staff_count > 0 else "needs_staff",
+        issue_flags=issue_flags,
     )
 
 

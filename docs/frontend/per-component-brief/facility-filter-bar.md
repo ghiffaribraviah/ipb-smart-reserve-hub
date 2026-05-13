@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML reference: Student 01.
-- Screenshots: student catalog desktop/mobile.
+- HTML references: Student 01, `Shared - 08 - Data Display Components.html`.
+- Screenshots: student catalog desktop/mobile, `shared-08-data-display-components-*`.
 
 ## Purpose
 
@@ -61,4 +61,3 @@ Control catalog search, category, capacity, sorting, and pagination state.
 ## Open Questions
 
 - None.
-

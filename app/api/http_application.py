@@ -28,7 +28,12 @@ from app.api.routes.organization_unit_routes import register_organization_unit_r
 from app.api.routes.payment_routes import register_payment_routes
 from app.api.routes.reservation_routes import register_reservation_routes
 from app.api.routes.review_routes import register_review_routes
+from app.api.routes.staff_reservation_operation_routes import register_staff_reservation_operation_routes
+from app.api.routes.super_admin_dashboard_routes import register_super_admin_dashboard_routes
+from app.api.routes.super_admin_report_routes import register_super_admin_report_routes
 from app.api.routes.system_status_routes import register_system_status_routes
+from app.services.super_admin_dashboard import SuperAdminDashboardModule
+from app.services.super_admin_reports import SuperAdminReportModule
 from app.core.module_factories import (
     BookingSettingsModuleFactory,
     FacilityModuleFactory,
@@ -98,6 +103,12 @@ class FacilityManagementRouteDependencies:
 
 
 @dataclass(frozen=True)
+class StaffReservationOperationRouteDependencies:
+    get_staff_reservation_operations: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
 class OrganizationUnitRouteDependencies:
     get_organization_unit_management: Callable
     require_access: Callable[[AccessPolicyAction], Callable]
@@ -112,6 +123,18 @@ class BookingSettingRouteDependencies:
 @dataclass(frozen=True)
 class SystemStatusRouteDependencies:
     get_system_status: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class SuperAdminDashboardRouteDependencies:
+    get_super_admin_dashboard: Callable
+    require_access: Callable[[AccessPolicyAction], Callable]
+
+
+@dataclass(frozen=True)
+class SuperAdminReportRouteDependencies:
+    get_super_admin_reports: Callable
     require_access: Callable[[AccessPolicyAction], Callable]
 
 
@@ -148,6 +171,9 @@ class HttpRuntimeDependencyRegistry(Protocol):
     def facility_management_routes(self) -> FacilityManagementRouteDependencies:
         raise NotImplementedError
 
+    def staff_reservation_operation_routes(self) -> StaffReservationOperationRouteDependencies:
+        raise NotImplementedError
+
     def organization_unit_routes(self) -> OrganizationUnitRouteDependencies:
         raise NotImplementedError
 
@@ -155,6 +181,12 @@ class HttpRuntimeDependencyRegistry(Protocol):
         raise NotImplementedError
 
     def system_status_routes(self) -> SystemStatusRouteDependencies:
+        raise NotImplementedError
+
+    def super_admin_dashboard_routes(self) -> SuperAdminDashboardRouteDependencies:
+        raise NotImplementedError
+
+    def super_admin_report_routes(self) -> SuperAdminReportRouteDependencies:
         raise NotImplementedError
 
 
@@ -199,9 +231,12 @@ class HttpRuntimeModule:
         self.get_approval_letters = self._build_get_approval_letters()
         self.get_payments = self._build_get_payments()
         self.get_facility_management = self._build_get_facility_management()
+        self.get_staff_reservation_operations = self._build_get_staff_reservation_operations()
         self.get_organization_unit_management = self._build_get_organization_unit_management()
         self.get_booking_settings = self._build_get_booking_settings()
         self.get_system_status = self._build_get_system_status()
+        self.get_super_admin_dashboard = self._build_get_super_admin_dashboard()
+        self.get_super_admin_reports = self._build_get_super_admin_reports()
         self.get_current_user = self._build_get_current_user()
 
     @property
@@ -268,6 +303,12 @@ class HttpRuntimeModule:
             require_access=self.require_access,
         )
 
+    def staff_reservation_operation_routes(self) -> StaffReservationOperationRouteDependencies:
+        return StaffReservationOperationRouteDependencies(
+            get_staff_reservation_operations=self.get_staff_reservation_operations,
+            require_access=self.require_access,
+        )
+
     def organization_unit_routes(self) -> OrganizationUnitRouteDependencies:
         return OrganizationUnitRouteDependencies(
             get_organization_unit_management=self.get_organization_unit_management,
@@ -283,6 +324,18 @@ class HttpRuntimeModule:
     def system_status_routes(self) -> SystemStatusRouteDependencies:
         return SystemStatusRouteDependencies(
             get_system_status=self.get_system_status,
+            require_access=self.require_access,
+        )
+
+    def super_admin_dashboard_routes(self) -> SuperAdminDashboardRouteDependencies:
+        return SuperAdminDashboardRouteDependencies(
+            get_super_admin_dashboard=self.get_super_admin_dashboard,
+            require_access=self.require_access,
+        )
+
+    def super_admin_report_routes(self) -> SuperAdminReportRouteDependencies:
+        return SuperAdminReportRouteDependencies(
+            get_super_admin_reports=self.get_super_admin_reports,
             require_access=self.require_access,
         )
 
@@ -366,6 +419,12 @@ class HttpRuntimeModule:
 
         return dependency
 
+    def _build_get_staff_reservation_operations(self):
+        async def dependency(session: Session = Depends(self.get_session)):
+            return self._facility_factory.build_staff_reservation_operations(session)
+
+        return dependency
+
     def _build_get_organization_unit_management(self):
         async def dependency(session: Session = Depends(self.get_session)):
             return self._organization_unit_factory.build_management(session)
@@ -381,6 +440,24 @@ class HttpRuntimeModule:
     def _build_get_system_status(self):
         async def dependency(session: Session = Depends(self.get_session)):
             return self._system_status_factory.build(session)
+
+        return dependency
+
+    def _build_get_super_admin_dashboard(self):
+        async def dependency(session: Session = Depends(self.get_session)):
+            return SuperAdminDashboardModule(
+                session=session,
+                user_accounts=self._user_account_factory.build(session),
+                facility_management=self._facility_factory.build_management(session),
+                audit_logs=self._facility_factory.build_audit_logs(session),
+                system_status=self._system_status_factory.build(session).get_system_status(),
+            )
+
+        return dependency
+
+    def _build_get_super_admin_reports(self):
+        async def dependency(session: Session = Depends(self.get_session)):
+            return SuperAdminReportModule(session=session)
 
         return dependency
 
@@ -495,6 +572,12 @@ class HttpApplicationModule:
             get_facility_management=facility_management_dependencies.get_facility_management,
             require_access=facility_management_dependencies.require_access,
         )
+        staff_reservation_operation_dependencies = runtime.staff_reservation_operation_routes()
+        register_staff_reservation_operation_routes(
+            app,
+            get_staff_reservation_operations=staff_reservation_operation_dependencies.get_staff_reservation_operations,
+            require_access=staff_reservation_operation_dependencies.require_access,
+        )
         organization_unit_dependencies = runtime.organization_unit_routes()
         register_organization_unit_routes(
             app,
@@ -512,6 +595,18 @@ class HttpApplicationModule:
             app,
             get_system_status=system_status_dependencies.get_system_status,
             require_access=system_status_dependencies.require_access,
+        )
+        super_admin_dashboard_dependencies = runtime.super_admin_dashboard_routes()
+        register_super_admin_dashboard_routes(
+            app,
+            get_super_admin_dashboard=super_admin_dashboard_dependencies.get_super_admin_dashboard,
+            require_access=super_admin_dashboard_dependencies.require_access,
+        )
+        super_admin_report_dependencies = runtime.super_admin_report_routes()
+        register_super_admin_report_routes(
+            app,
+            get_super_admin_reports=super_admin_report_dependencies.get_super_admin_reports,
+            require_access=super_admin_report_dependencies.require_access,
         )
 
         app.state.session_factory = runtime.session_factory

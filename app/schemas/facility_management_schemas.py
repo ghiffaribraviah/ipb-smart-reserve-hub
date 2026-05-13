@@ -25,6 +25,19 @@ class FacilityManagementProfileResponse(BaseModel):
     is_active: bool
 
 
+class FacilityGovernanceResponse(BaseModel):
+    id: str
+    name: str
+    category: str
+    location: str
+    capacity: int
+    is_active: bool
+    assigned_staff_count: int
+    active_assigned_staff_count: int
+    assignment_coverage: str
+    issue_flags: list[str]
+
+
 class FacilityProfileUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1)
     location: str | None = Field(default=None, min_length=1)

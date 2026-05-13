@@ -12,8 +12,8 @@
 
 ## Reference Evidence
 
-- HTML references: Student 02, Student 03, Admin 02.
-- Screenshots: matching desktop/mobile screenshots.
+- HTML references: Student 02, Student 03, Admin 02, `Shared - 03 - Upload And Calendar States.html`.
+- Screenshots: matching desktop/mobile screenshots, `shared-03-upload-and-calendar-states-*`.
 
 ## Purpose
 
@@ -23,7 +23,7 @@ Show blocked/reserved time and support time selection where the page requires it
 
 - Period header.
 - Previous/next controls.
-- Day/time grid or schedule list.
+- Shared month grid using `day-head`, `month-day`, `day-dots`, and legend/agenda where applicable.
 - Event/blocked slot items.
 
 ## Variants
@@ -51,13 +51,13 @@ Show blocked/reserved time and support time selection where the page requires it
 
 ## Design Rules
 
-- Desktop grid/list follows reference spacing.
-- Mobile uses compact list/card where needed.
+- Desktop grid/list follows the shared month-day reference spacing.
+- Mobile keeps the month grid inside the card without horizontal overflow and stacks agenda/list content below.
 - Color is not the only state signal.
 
 ## Implementation Notes
 
-- Complex interaction states are tracked in `missing-design.md`.
+- Selected, unavailable, review, and conflict state references live in `Shared - 03 - Upload And Calendar States.html`; page calendars should not use divergent `calendar-day`/`day-number` markup.
 
 ## Acceptance Checks
 
@@ -66,4 +66,3 @@ Show blocked/reserved time and support time selection where the page requires it
 ## Open Questions
 
 - Staff private schedule data requirements need backend confirmation.
-

@@ -22,11 +22,11 @@
 
 ## Design Contract
 
-- Layout: reservation workflow shell with three-step stepper, calendar/time selection card, right summary.
+- Layout: reservation workflow shell with shared three-step stepper, shared public calendar, time selection card, and summary.
 - Desktop behavior: two-column layout.
 - Mobile behavior: stack stepper, selection, summary, and full-width primary action.
 - Required copy/status labels: preserve step labels and `Lanjutkan`.
-- Source-of-truth notes: mobile stepper labels must not collide at 390px.
+- Source-of-truth notes: use shared `step`/`circle`/`step-title` stepper and `month-day` calendar anatomy; mobile labels must not collide at 390px.
 
 ## UX Behavior
 
@@ -79,5 +79,4 @@
 
 ## Open Questions
 
-- Rich calendar interaction states are tracked in `missing-design.md`.
-
+- Rich calendar interaction states are referenced in `docs/frontend/html-reference/Shared - 03 - Upload And Calendar States.html`.

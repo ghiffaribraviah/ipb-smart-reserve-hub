@@ -54,3 +54,11 @@ Generated from `docs/issues/*.md` frontmatter. Edit issue files, then regenerate
 - ISSUE-0028 - Student-Owned Private File Downloads
 - ISSUE-0029 - Student Academic Profile Identity
 - ISSUE-0030 - Backend Gap Documentation Closure
+- ISSUE-0031 - Complete notification surface routing contract
+- ISSUE-0032 - Add staff assigned-reservation queue and list read models
+- ISSUE-0033 - Add staff assigned-reservation detail read model
+- ISSUE-0034 - Add staff private Facility schedule read model
+- ISSUE-0035 - Add Super Admin user list and activation controls
+- ISSUE-0036 - Add Super Admin Facility governance read model
+- ISSUE-0037 - Add Super Admin dashboard aggregate read model
+- ISSUE-0038 - Add Super Admin report aggregate read model

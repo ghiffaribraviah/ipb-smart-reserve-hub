@@ -14,10 +14,11 @@ IPB Smart Reserve Hub is a practical campus reservation product. The UI should f
 
 Use the revised pages as the standard:
 
-- Admin pages: dense operational screens with compact tables/cards and clear action states.
+- Staff/Admin pages: dense operational screens with compact tables/cards and clear review action states.
 - Student pages: green-led reservation flows, card-based facility browsing, lightweight booking summaries, and read-only profile/detail surfaces.
 - Super Admin pages: indigo-accent operational dashboards with dense KPI, governance table, and activity-log patterns.
 - Login/Register: consistent split/auth layouts with the same Inter typography, control sizing, and green primary actions.
+- Shared references: state boards, upload/calendar boards, mobile drawer, shell variants, primitives, workflow components, and data display components are implementation contracts, not decorative examples.
 
 Avoid marketing-page flourishes, one-off palettes, oversized decorative cards, and mixed visual systems inside the same flow.
 
@@ -45,8 +46,8 @@ Avoid marketing-page flourishes, one-off palettes, oversized decorative cards, a
 
 Use these shared tokens unless a reference page has a documented exception:
 
-- Brand green: `#10b981`.
-- Brand green dark/hover: `#059669` or page-local `#0f9d58` where already used in revised references.
+- Brand green: `#0f9d58` for the revised shell/component references; `#10b981` remains an accepted legacy alias where older page references already use it.
+- Brand green dark/hover: `#0b7340`, `#059669`, or page-local hover values already present in revised references.
 - Deep logo green: `#1d7667`.
 - Footer logo green: `#4da38b`.
 - Primary text: `#111827`.
@@ -58,31 +59,50 @@ Use these shared tokens unless a reference page has a documented exception:
 - Success surfaces: pale green fills such as `#e8f5e9`, `#ecfdf5`, or `#dcfce7`.
 - Error/declined surfaces: pale red fills from the reservation references.
 - Super Admin uses the reference indigo accent `#6366f1` for primary actions, profile affordance, and operational links; do not force student green into Super Admin-only surfaces.
+- Icons are line-based and inherit their parent text/action color; icon containers may use pale semantic fills, but the icon itself should stay simple and one-color.
 - Warning/cancellation-request actions may use amber text/borders, such as `#92400e` on `#fffbeb` with `#fde68a`.
 - Neutral waiting/review states may use gray pills; payment-waiting states may use amber pills; approved/completed states use green pills; rejected/declined states use red pills.
 
 Avoid introducing new dominant palettes. A page should not read as a separate product unless it is intentionally a separate role surface.
 
+## Iconography
+
+- Use `lucide-react` for frontend implementation. HTML references embed equivalent Lucide-style inline SVGs so screenshot capture remains deterministic.
+- Icons should be simple outline icons with `fill="none"`, `stroke="currentColor"`, round caps/joins, and roughly `18-20px` default size inside buttons, nav actions, cards, and table actions.
+- Do not use colorful emoji, multicolor pictograms, or icon-only text replacements. If an icon needs a label, keep the label as real text beside or below the icon.
+- Semantic color comes from the surrounding control or container: green for positive/primary, amber for caution/cancellation requests, red for destructive/rejection/logout, indigo for Super Admin operational accents, and gray for neutral utilities.
+- File type chips may use short text such as `PDF` or `JPG`; problem or action states should use Lucide-style icons such as alert, check, clock, upload, download, search, bell, users, building, monitor, calendar, settings, and x.
+
 ## Shared Chrome
 
-All student pages must use the Student 00 header/footer pattern:
+Student and staff pages use the green-accent shell; Super Admin uses the indigo-accent shell. Treat `Shared - 05 - Layout Shells.html` as the compact shared shell reference and role pages as the page-specific expanded examples.
 
-- Fixed white top nav, `80px` desktop height and `64px` mobile height.
+All student pages must use the shared compact shell pattern:
+
+- Fixed white top nav, `72px` desktop height and `64px` mobile height.
 - Desktop logo is two-line `IPB` / `SRH`; mobile logo displays inline as `IPB SRH`.
 - Desktop header includes search, centered nav links, notification action, and profile circle.
 - Mobile header shows hamburger, inline logo, notification, and profile circle; desktop nav/search are hidden.
-- Student desktop nav uses `Beranda`, `Fasilitas`, `Reservasi`, and `Profil` when the profile route is in scope. Reservation workflow pages may keep only the relevant primary nav set when matching their reference.
-- Footer uses the large Playfair `IPB SRH` mark, Indonesian copyright text, and simple links. Mobile footer is centered.
+- Student desktop nav uses only `Beranda`, `Fasilitas`, and `Reservasi`. Profile access is represented by the profile circle, not a fourth nav link.
+- Student search is a rounded search control with a Lucide-style search icon, neutral border, pale background, and placeholder such as `Cari fasilitas...`.
+- Footer uses the Playfair `IPB SRH` mark, Indonesian copyright text, and the same simple section links as the shell. The compact shared shell footer keeps brand/copyright grouped on the left and links on the right; mobile footer is centered.
 
-Admin pages should use the Admin 00 header conventions consistently across admin references.
+Staff/Admin pages should use the shared compact staff shell consistently across admin references:
 
-Super Admin pages use their own top navigation:
+- Staff desktop nav uses `Beranda`, `Reservasi`, and `Fasilitas`; reservation review pages may visually emphasize `Reservasi`.
+- Staff search is rounded with a Lucide-style search icon and reservation-oriented placeholder such as `Cari reservasi...`.
+- Review table actions use icon buttons with tooltips/titles for download, verify, and reject actions. Do not replace these action icons with text-only controls.
+- Staff footer mirrors the green shell footer with `Beranda`, `Reservasi`, and `Fasilitas`.
 
-- Fixed white top nav with the same `IPB SRH` brand mark.
+Super Admin pages use their own shared compact top navigation:
+
+- Fixed white top nav with the same `IPB SRH` brand mark, `72px` desktop height, and `64px` mobile height.
 - Desktop nav labels are `Dashboard`, `Pengguna`, `Fasilitas`, `Laporan`, and `Sistem`.
 - No stray desktop hamburger or search input should appear unless a revised Super Admin reference explicitly adds one.
 - Mobile shows hamburger, inline brand, notification, and `SA` profile circle; desktop nav links are hidden.
 - Footer links mirror Super Admin sections and use Indonesian copyright text.
+
+Across all shells, the footer should feel quiet and balanced: no cramped link stacks, no oversized copy blocks next to tiny links, and no English copyright text.
 
 ## Layout
 
@@ -102,11 +122,13 @@ Super Admin pages use their own top navigation:
 - Card borders: neutral `#e5e7eb` or a very light `rgba(226, 232, 240, 0.9)`.
 - Card shadows: subtle neutral shadow, not heavy colored shadow.
 - Inputs: 50-52px mobile height, 8-10px radius, neutral border, green focus/action state.
+- Search and filter controls should not look like plain text boxes: include an icon where useful, keep a rounded/pill shape for top-nav search, use pale neutral fills such as `#f1f5f9` or `#f8fafc`, and show clear focus borders.
 - Textareas: at least 100-118px on mobile when used for descriptions.
 - Filter/search controls on mobile should stack label-over-control and use full available width.
 - Checkbox option rows should be compact touch targets around 56-60px high on mobile, with normal-case option text.
 - Read-only information grids use small uppercase labels with normal-value text. On mobile, long labels and values must wrap inside the card.
-- Document rows use neutral row cards, clear file metadata, status text, and action links. Long filenames must wrap within the document card.
+- Document rows use neutral row cards, clear file metadata, status text, and action links. Desktop rows use icon/file type, flexible metadata, then a separated right-side status/action area with enough width and gap. On mobile, the right-side status/action area moves below the metadata with a top divider.
+- Long filenames must wrap within the document card. Status badges and action buttons must not collide with each other or with file metadata at desktop or mobile sizes.
 - Rating inputs use accessible radio semantics with large star targets; selected/hovered stars use amber.
 
 ## Buttons And Actions
@@ -118,21 +140,26 @@ Super Admin pages use their own top navigation:
 - User-facing button text uses Indonesian normal casing, for example `Lanjutkan`, `Reservasi Sekarang`, or `Lanjut ke Konfirmasi`.
 - Secondary/back actions are text buttons or quiet outline controls. They should not visually compete with the primary action.
 - Destructive or session-ending actions, such as `Keluar`, use a red-tinted quiet button rather than a heavy primary button.
+- Rejection actions such as `Tolak Dokumen` use red-tinted styling. Disabled/loading actions such as `Memproses` use neutral gray styling with reduced affordance.
 - Cancellation-request actions are not destructive-confirm red by default; use quiet amber styling for `Ajukan Pembatalan`.
+- Button rows inside upload, payment, document, and reservation status panels need visible breathing room: use `12-14px` gaps, wrap where needed, and stack to full width on mobile.
 - Super Admin primary actions use indigo filled buttons; secondary dashboard actions use quiet outline buttons.
 
 ## Reservation Workflow
 
 Student reservation steps must share one visual language:
 
-- Desktop stepper: centered, three steps, green active/completed state, gray inactive connectors.
-- Mobile stepper: compact three-step layout that fits 390px, wraps labels under each circle, and avoids label collision.
+- Desktop stepper: centered three-step grid with a gray connector line and green progress line. Completed steps use a pale green filled circle/check, the active step uses a white circle with green border and pale focus ring, and inactive steps use quiet gray.
+- Mobile stepper: compact three-step layout that fits 390px, wraps labels under each circle, and avoids label collision. Step labels stay short, for example `Pilih Waktu`, `Detail Reservasi`, and `Surat`.
 - Step 1 time selection: calendar and time card use the same white-card, subtle-border style.
 - Step 2 detail form: form controls, summary card, policy box, and primary action must match Step 1 spacing, radii, and casing.
 - Step 3/confirmation pages should continue the same card rhythm and Indonesian copy.
 - Reservation status pages use compact centered status cards with the same summary rows, green primary CTA, and Indonesian status copy.
 - Payment upload pages use the same summary card spacing as verification pages; mobile summaries must breathe and avoid cramped rows.
 - Reservation accepted pages use the same completed workflow rhythm and route onward with `Lihat Detail Reservasi`.
+- Document status panels show each document as a row with a file/type marker, filename, metadata, semantic badge, and action button. The status/action column must be visually separated on desktop and stacked below on mobile.
+- Upload panels use dashed or subtle bordered surfaces, a clear title, file constraints, and a button row with enough gap between `Pilih File` and `Unggah Dokumen`.
+- Reservation status panels may pair a green confirmation icon with primary and caution actions, for example `Lihat Detail Reservasi` and `Ajukan Pembatalan`, with buttons spaced enough to avoid a crowded footer.
 
 ## Reservation Lists And Details
 

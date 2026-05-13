@@ -22,7 +22,7 @@
 
 ## Design Contract
 
-- Layout: centered waiting status card with payment summary.
+- Layout: reservation workflow stepper plus centered waiting status card with payment summary.
 - Desktop behavior: compact centered card.
 - Mobile behavior: stacked summary rows, full-width CTA.
 - Required copy/status labels: preserve `Menunggu Verifikasi Pembayaran`.
@@ -67,6 +67,7 @@
 
 ## Shared Components
 
+- `docs/frontend/per-component-brief/reservation-stepper.md`
 - `docs/frontend/per-component-brief/reservation-status-panel.md`
 - `docs/frontend/per-component-brief/payment-upload-panel.md`
 

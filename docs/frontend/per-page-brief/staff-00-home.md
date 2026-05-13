@@ -51,18 +51,18 @@
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: proposed staff queue endpoint; currently no direct staff reservation list/read-model endpoint was found.
+- Endpoints consumed: `GET /staff/reservations/verification-queue`.
 - Page-needed fields: reservation ID/code, facility, student/organization, date/time, workflow type, status, due time, assigned facility scope.
 - Auth/session assumptions: staff sees only assigned-facility reservations.
 - Source files: `app/api/routes/approval_letter_routes.py`, `app/api/routes/payment_routes.py`, `app/api/routes/reservation_routes.py`.
 
 ### BG-STAFF-00-01: Staff Verification Queue
 
-- Status: `open`
+- Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: staff home verification queue.
-- Contract needed: assigned-staff read model for pending document, payment, and cancellation reviews.
-- Evidence: staff approve/reject/download endpoints exist, but no `GET /staff/reservations` or queue endpoint was found in current routes.
+- Contract implemented: assigned-staff read model for pending document, payment, and cancellation reviews.
+- Evidence: `app/api/routes/staff_reservation_operation_routes.py` registers `GET /staff/reservations/verification-queue`; `tests/test_staff_reservation_operations.py` verifies assigned-facility scoping and document/payment/cancellation queue item projections.
 - Source issue/PRD: `docs/issues/ISSUE-0009-signed-letter-upload-and-staff-document-review.md`, `docs/issues/ISSUE-0010-paid-facility-receipt-upload-and-payment-review.md`, `docs/issues/ISSUE-0013-cancellation-workflow.md`.
 
 ## Shared Components
@@ -78,5 +78,4 @@
 
 ## Open Questions
 
-- Backend queue endpoint shape must be designed before real integration.
-
+- None.

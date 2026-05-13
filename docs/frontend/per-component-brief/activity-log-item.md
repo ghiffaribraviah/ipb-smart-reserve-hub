@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML reference: Super 00.
-- Screenshots: super dashboard desktop/mobile.
+- HTML references: Super 00, Super 03, `Shared - 08 - Data Display Components.html`.
+- Screenshots: super dashboard/report desktop/mobile, `shared-08-data-display-components-*`.
 
 ## Purpose
 

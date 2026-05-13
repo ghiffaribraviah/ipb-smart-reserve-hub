@@ -22,7 +22,7 @@
 
 ## Design Contract
 
-- Layout: centered declined status card with reason and summary.
+- Layout: reservation workflow stepper plus centered declined status card with reason and summary.
 - Desktop behavior: compact status panel.
 - Mobile behavior: reason text wraps inside card; CTA full width.
 - Required copy/status labels: preserve declined Indonesian copy and `Ditolak`.
@@ -67,6 +67,7 @@
 
 ## Shared Components
 
+- `docs/frontend/per-component-brief/reservation-stepper.md`
 - `docs/frontend/per-component-brief/reservation-status-panel.md`
 - `docs/frontend/per-component-brief/reservation-summary-card.md`
 

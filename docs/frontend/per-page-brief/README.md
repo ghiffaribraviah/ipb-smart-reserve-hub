@@ -10,3 +10,9 @@ Rules:
 - Filenames preserve reference ordering and use backend role language (`staff` for `Admin - ...` references).
 - Technical descriptions are English; user-facing labels and status copy preserve Indonesian reference text.
 
+## Coverage Notes
+
+- `Admin - ...` HTML references map to `staff-*` page briefs.
+- `Student - ...` HTML references map to `student-*` page briefs.
+- `Super - ...` HTML references map to `super-*` page briefs.
+- Shared reference boards are component contracts and are covered in `docs/frontend/per-component-brief/`.

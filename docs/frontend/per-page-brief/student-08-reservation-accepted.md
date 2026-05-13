@@ -22,7 +22,7 @@
 
 ## Design Contract
 
-- Layout: centered success status card and reservation summary.
+- Layout: reservation workflow stepper plus centered success status card and reservation summary.
 - Desktop behavior: compact success panel.
 - Mobile behavior: full-width CTA and wrapped summary rows.
 - Required copy/status labels: preserve `Disetujui`/accepted copy.
@@ -67,6 +67,7 @@
 
 ## Shared Components
 
+- `docs/frontend/per-component-brief/reservation-stepper.md`
 - `docs/frontend/per-component-brief/reservation-status-panel.md`
 - `docs/frontend/per-component-brief/reservation-summary-card.md`
 

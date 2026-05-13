@@ -22,7 +22,7 @@
 
 ## Design Contract
 
-- Layout: declined status panel with reason and payment/reservation summary.
+- Layout: reservation workflow stepper plus declined status panel with reason and payment/reservation summary.
 - Desktop behavior: compact centered status card.
 - Mobile behavior: long reason wraps; CTA full width.
 - Required copy/status labels: preserve payment declined Indonesian copy.
@@ -67,6 +67,7 @@
 
 ## Shared Components
 
+- `docs/frontend/per-component-brief/reservation-stepper.md`
 - `docs/frontend/per-component-brief/reservation-status-panel.md`
 - `docs/frontend/per-component-brief/reservation-summary-card.md`
 

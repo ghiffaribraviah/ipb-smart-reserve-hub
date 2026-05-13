@@ -79,5 +79,4 @@
 
 ## Open Questions
 
-- Cancellation pending/rejected and overdue/expired state references are tracked in `missing-design.md`.
-
+- Cancellation pending/rejected states are referenced in `docs/frontend/html-reference/Student - 13 - Cancellation Request.html`; overdue/expired state references are in `docs/frontend/html-reference/Shared - 02 - Data And Auth States.html`.

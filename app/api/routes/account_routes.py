@@ -12,6 +12,7 @@ from app.services.accounts import (
     EmailDomainNotAllowed,
     InvalidCredentials,
     LoginCredentials,
+    ManagedUserNotFound,
     StudentMustSelfRegister,
     StudentRegistration,
     UserAccount,
@@ -22,8 +23,10 @@ from app.schemas.account_schemas import (
     LoginRequest,
     StudentRegistrationRequest,
     TokenResponse,
+    UserListResponse,
     UserResponse,
 )
+from app.models import UserRole
 
 
 def register_account_routes(
@@ -114,6 +117,46 @@ def register_account_routes(
             )
         except EmailAlreadyRegistered:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email sudah terdaftar.")
+
+    @app.get("/admin/users", response_model=UserListResponse)
+    async def list_admin_managed_users(
+        role: UserRole | None = None,
+        is_active: bool | None = None,
+        search: str | None = None,
+        page: int = 1,
+        page_size: int = 50,
+        user_accounts: UserAccountModule = Depends(get_user_accounts),
+        _: UserAccount = Depends(require_access(AccessPolicyAction.manage_user_accounts)),
+    ):
+        return user_accounts.list_user_accounts(
+            role=role,
+            is_active=is_active,
+            search=search,
+            page=page,
+            page_size=page_size,
+        )
+
+    @app.post("/admin/users/{user_id}/deactivate", response_model=UserResponse)
+    async def deactivate_admin_managed_user(
+        user_id: str,
+        user_accounts: UserAccountModule = Depends(get_user_accounts),
+        _: UserAccount = Depends(require_access(AccessPolicyAction.manage_user_accounts)),
+    ) -> UserAccount:
+        try:
+            return user_accounts.set_user_active_status(user_id, is_active=False)
+        except ManagedUserNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pengguna tidak ditemukan.")
+
+    @app.post("/admin/users/{user_id}/activate", response_model=UserResponse)
+    async def activate_admin_managed_user(
+        user_id: str,
+        user_accounts: UserAccountModule = Depends(get_user_accounts),
+        _: UserAccount = Depends(require_access(AccessPolicyAction.manage_user_accounts)),
+    ) -> UserAccount:
+        try:
+            return user_accounts.set_user_active_status(user_id, is_active=True)
+        except ManagedUserNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pengguna tidak ditemukan.")
 
     @app.get("/student/shell")
     async def student_shell(

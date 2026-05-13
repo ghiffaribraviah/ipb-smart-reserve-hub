@@ -34,6 +34,9 @@ class FacilityManagementRepository(Protocol):
     def list_assigned_facilities(self, staff_id: str) -> list[Facility]:
         raise NotImplementedError
 
+    def list_all_facilities_for_governance(self) -> list[Facility]:
+        raise NotImplementedError
+
     def add_image(self, image: FacilityImage) -> FacilityImage:
         raise NotImplementedError
 
@@ -105,6 +108,18 @@ class SqlAlchemyFacilityManagementRepository:
                 .join(FacilityStaffAssignment)
                 .options(joinedload(Facility.category), joinedload(Facility.images))
                 .where(FacilityStaffAssignment.staff_id == staff_id)
+                .order_by(Facility.name)
+            ).unique()
+        )
+
+    def list_all_facilities_for_governance(self) -> list[Facility]:
+        return list(
+            self._session.scalars(
+                select(Facility)
+                .options(
+                    joinedload(Facility.category),
+                    joinedload(Facility.staff_assignments).joinedload(FacilityStaffAssignment.staff),
+                )
                 .order_by(Facility.name)
             ).unique()
         )

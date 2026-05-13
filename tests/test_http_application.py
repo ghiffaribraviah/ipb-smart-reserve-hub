@@ -16,6 +16,9 @@ from app.api.http_application import OrganizationUnitRouteDependencies
 from app.api.http_application import PaymentRouteDependencies
 from app.api.http_application import ReservationRouteDependencies
 from app.api.http_application import ReviewRouteDependencies
+from app.api.http_application import StaffReservationOperationRouteDependencies
+from app.api.http_application import SuperAdminDashboardRouteDependencies
+from app.api.http_application import SuperAdminReportRouteDependencies
 from app.api.http_application import SystemStatusRouteDependencies
 from app.core.database import Base, build_session_factory
 from app.core.module_factories import FacilityReservationWorkflowAssembly
@@ -102,6 +105,12 @@ class StubHttpRuntimeDependencyRegistry:
             require_access=placeholder_require_access,
         )
 
+    def staff_reservation_operation_routes(self):
+        return StaffReservationOperationRouteDependencies(
+            get_staff_reservation_operations=placeholder_dependency,
+            require_access=placeholder_require_access,
+        )
+
     def organization_unit_routes(self):
         return OrganizationUnitRouteDependencies(
             get_organization_unit_management=placeholder_dependency,
@@ -117,6 +126,18 @@ class StubHttpRuntimeDependencyRegistry:
     def system_status_routes(self):
         return SystemStatusRouteDependencies(
             get_system_status=placeholder_dependency,
+            require_access=placeholder_require_access,
+        )
+
+    def super_admin_dashboard_routes(self):
+        return SuperAdminDashboardRouteDependencies(
+            get_super_admin_dashboard=placeholder_dependency,
+            require_access=placeholder_require_access,
+        )
+
+    def super_admin_report_routes(self):
+        return SuperAdminReportRouteDependencies(
+            get_super_admin_reports=placeholder_dependency,
             require_access=placeholder_require_access,
         )
 
@@ -154,6 +175,12 @@ def test_http_application_module_uses_runtime_dependency_registry_for_route_wiri
     assert "/notifications" in route_paths
     assert "/admin/audit-logs" in route_paths
     assert "/admin/system-status" in route_paths
+    assert "/admin/dashboard" in route_paths
+    assert "/admin/reports/aggregate" in route_paths
+    assert "/staff/reservations" in route_paths
+    assert "/staff/reservations/verification-queue" in route_paths
+    assert "/staff/reservations/{reservation_id}" in route_paths
+    assert "/staff/facilities/{facility_id}/schedule" in route_paths
 
 
 def test_http_application_enables_cors_middleware():
@@ -191,18 +218,30 @@ def test_http_application_module_builds_app_with_foundation_routes():
     assert "/student/reservations" in route_paths
     assert "/student/reservations/{reservation_id}" in route_paths
     assert "/admin/facilities/{facility_id}/staff-assignments/{staff_id}" in route_paths
+    assert "/admin/facilities/governance" in route_paths
+    assert "/admin/facilities/import" not in route_paths
     assert "/staff/facilities" in route_paths
     assert "/staff/facilities/{facility_id}" in route_paths
     assert "/staff/facilities/{facility_id}/images" in route_paths
     assert "/staff/facilities/{facility_id}/open-hours" in route_paths
     assert "/staff/facilities/{facility_id}/blackouts" in route_paths
+    assert "/staff/reservations" in route_paths
+    assert "/staff/reservations/verification-queue" in route_paths
+    assert "/staff/reservations/{reservation_id}" in route_paths
+    assert "/staff/facilities/{facility_id}/schedule" in route_paths
     assert "/organization-units" in route_paths
     assert "/admin/users" in route_paths
+    assert "/admin/users/{user_id}/activate" in route_paths
+    assert "/admin/users/{user_id}/deactivate" in route_paths
+    assert "/admin/users/{user_id}/role" not in route_paths
     assert "/admin/organization-units" in route_paths
     assert "/admin/organization-units/{organization_unit_id}" in route_paths
     assert "/admin/organization-units/{organization_unit_id}/activate" in route_paths
     assert "/admin/organization-units/{organization_unit_id}/deactivate" in route_paths
     assert "/admin/system-status" in route_paths
+    assert "/admin/dashboard" in route_paths
+    assert "/admin/reports/aggregate" in route_paths
+    assert "/admin/reports/export" not in route_paths
     assert "/student/shell" in route_paths
     assert "/staff/shell" in route_paths
     assert "/admin/shell" in route_paths

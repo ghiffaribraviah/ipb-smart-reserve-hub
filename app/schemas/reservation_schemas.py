@@ -149,3 +149,130 @@ class StaffDocumentReviewResponse(BaseModel):
 
 class StaffDocumentRejectionRequest(BaseModel):
     reason: str
+
+
+class StaffReservationFacilityResponse(BaseModel):
+    id: str
+    name: str
+
+
+class StaffReservationStudentResponse(BaseModel):
+    id: str
+    full_name: str
+    email: str
+
+
+class StaffReservationOrganizationUnitResponse(BaseModel):
+    id: str
+    name: str
+
+
+class StaffReservationDocumentProjectionResponse(BaseModel):
+    review_status: str
+    due_at: datetime | None = None
+
+
+class StaffReservationPaymentProjectionResponse(BaseModel):
+    required: bool
+    review_status: str
+    due_at: datetime | None = None
+
+
+class StaffReservationCancellationProjectionResponse(BaseModel):
+    requested: bool
+    review_status: str
+
+
+class StaffReservationOperationItemResponse(BaseModel):
+    id: str
+    reservation_code: str
+    facility: StaffReservationFacilityResponse
+    student: StaffReservationStudentResponse
+    organization_unit: StaffReservationOrganizationUnitResponse
+    activity_title: str
+    starts_at: datetime
+    ends_at: datetime
+    status: str
+    workflow_type: str
+    review_status: str
+    due_at: datetime | None = None
+    document: StaffReservationDocumentProjectionResponse
+    payment: StaffReservationPaymentProjectionResponse
+    cancellation: StaffReservationCancellationProjectionResponse
+
+
+class StaffReservationFileMetadataResponse(BaseModel):
+    filename: str
+    content_type: str
+    size_bytes: int
+    generated_at: datetime | None = None
+    uploaded_at: datetime | None = None
+
+
+class StaffReservationDetailDocumentResponse(BaseModel):
+    approval_letter: StaffReservationFileMetadataResponse | None
+    signed_approval_letter: StaffReservationFileMetadataResponse | None
+    review_status: str
+    rejection_reason: str | None = None
+    due_at: datetime | None = None
+
+
+class StaffReservationDetailPaymentResponse(BaseModel):
+    required: bool
+    receipt: StaffReservationFileMetadataResponse | None
+    review_status: str
+    rejection_reason: str | None = None
+    due_at: datetime | None = None
+
+
+class StaffReservationDetailCancellationResponse(BaseModel):
+    requested: bool
+    review_status: str
+    reason: str | None = None
+    rejection_reason: str | None = None
+
+
+class StaffReservationReviewActionUrlsResponse(BaseModel):
+    approve_url: str
+    reject_url: str
+    download_url: str | None = None
+
+
+class StaffReservationReviewActionsResponse(BaseModel):
+    document: StaffReservationReviewActionUrlsResponse
+    payment: StaffReservationReviewActionUrlsResponse
+    cancellation: StaffReservationReviewActionUrlsResponse
+
+
+class StaffReservationDetailResponse(BaseModel):
+    id: str
+    reservation_code: str
+    facility: StaffReservationFacilityResponse
+    student: StaffReservationStudentResponse
+    organization_unit: StaffReservationOrganizationUnitResponse
+    activity_title: str
+    event_description: str
+    participant_count: int
+    contact_phone: str
+    starts_at: datetime
+    ends_at: datetime
+    status: str
+    price_rupiah: int
+    extra_requirements: ReservationExtraRequirementsResponse
+    document: StaffReservationDetailDocumentResponse
+    payment: StaffReservationDetailPaymentResponse
+    cancellation: StaffReservationDetailCancellationResponse
+    review_actions: StaffReservationReviewActionsResponse
+
+
+class StaffFacilityScheduleEntryResponse(BaseModel):
+    reservation_id: str
+    reservation_code: str
+    activity_title: str
+    organization_unit: StaffReservationOrganizationUnitResponse
+    starts_at: datetime
+    ends_at: datetime
+    status: str
+    workflow_type: str
+    review_status: str
+    detail_url: str

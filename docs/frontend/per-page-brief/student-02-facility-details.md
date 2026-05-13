@@ -79,5 +79,4 @@
 
 ## Open Questions
 
-- Detailed calendar interaction states are tracked in `missing-design.md`.
-
+- Detailed calendar interaction states are referenced in `docs/frontend/html-reference/Shared - 03 - Upload And Calendar States.html`.

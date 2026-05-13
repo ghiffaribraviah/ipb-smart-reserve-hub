@@ -6,12 +6,12 @@
 
 ## Used By
 
-- Student page briefs `student-00` through `student-20`.
+- All student page briefs, including reservation workflow, cancellation, review, and profile pages.
 
 ## Reference Evidence
 
-- HTML references: all `Student - ...` files.
-- Screenshots: all student desktop/mobile screenshots.
+- HTML references: all `Student - ...` files, `Shared - 05 - Layout Shells.html`, `Shared - 04 - Mobile Navigation Drawer.html`.
+- Screenshots: all student desktop/mobile screenshots, `shared-05-layout-shells-*`, `shared-04-mobile-navigation-drawer-*`.
 
 ## Purpose
 
@@ -29,12 +29,12 @@ Provide consistent student header, navigation, content container, and footer.
 ## Variants
 
 - Active nav item.
-- Workflow pages with reduced primary nav where reference uses it.
+- Active nav item for `Beranda`, `Fasilitas`, or `Reservasi`.
 
 ## Behavior
 
 - Header links route internally.
-- Mobile menu design is not fully specified; use reference hamburger affordance until a menu reference exists.
+- Mobile menu follows `Shared - 04 - Mobile Navigation Drawer.html`; page shells follow `Shared - 05 - Layout Shells.html`.
 
 ## Accessibility
 
@@ -49,15 +49,15 @@ Provide consistent student header, navigation, content container, and footer.
 
 ## Design Rules
 
-- Desktop: fixed white `80px` header and `1200px` content max width.
-- Mobile: `64px` header, hidden desktop nav/search.
+- Desktop: fixed white `72px` shared shell header and `1200px` content max width.
+- Mobile: `64px` header, inline `IPB SRH` mark, hamburger, hidden desktop nav/search.
 - Typography: Playfair brand, Inter UI.
 - Color: green student accent.
 - Overflow: no horizontal scroll at 390px.
 
 ## Implementation Notes
 
-- Keep footer centered on mobile.
+- Footer uses compact shared shell rhythm: brand/copyright grouped with horizontal links on desktop, centered stack on mobile.
 
 ## Acceptance Checks
 
@@ -65,5 +65,4 @@ Provide consistent student header, navigation, content container, and footer.
 
 ## Open Questions
 
-- Notification and mobile drawer references are missing.
-
+- None.

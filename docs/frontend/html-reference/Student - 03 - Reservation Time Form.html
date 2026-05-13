@@ -807,6 +807,90 @@
                 margin-top: 4px;
             }
         }
+        /* Shared workflow component alignment */
+        .stepper-wrapper{display:flex;justify-content:center;margin-bottom:48px}
+        .stepper{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:start;width:600px;max-width:100%}
+        .step-item{display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;z-index:2;text-align:center}
+        .step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border:2px solid #f3f4f6;color:#6b7280;font-weight:700;font-size:14px}
+        .step-item.done .step-circle{background:#d1fae5;border-color:#d1fae5;color:#065f46}
+        .step-item.active .step-circle{background:#fff;border-color:var(--brand-green,#0f9d58);box-shadow:0 0 0 4px #ecfdf5;color:var(--brand-green,#0f9d58)}
+        .step-label{position:static;top:auto;white-space:normal;text-transform:none;letter-spacing:0;font-size:14px;font-weight:700;color:#111827;line-height:1.25}
+        .step-line{height:2px;background:#e5e7eb;margin:17px 16px 0;position:relative;top:0;min-width:64px}
+        .step-line.filled{background:var(--brand-green,#0f9d58)}
+        .status-card,.summary-card,.doc-card{border:1px solid var(--border-color,#e5e7eb);box-shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03)}
+        .dropzone{border:1px dashed #a7f3d0;background:#f8fffb}
+        .btn-submit,.btn-details,.btn-return{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border-radius:8px;font-weight:700}
+        @media(max-width:768px){.stepper{grid-template-columns:1fr auto 1fr auto 1fr;width:100%}.step-line{min-width:22px;margin-left:6px;margin-right:6px}.step-label{font-size:12px}.btn-submit,.btn-details,.btn-return{width:100%;min-height:52px}}
+        .summary-row{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-top:1px solid var(--border-color,#e5e7eb);font-size:14px}.summary-row:first-child{border-top:0}.label{color:var(--secondary-text,#6b7280);font-size:12px}.value{font-weight:700;text-align:right}.badge{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700;width:max-content}.green{background:#d1fae5;color:#065f46}.amber{background:#fef3c7;color:#92400e}.red{background:#fee2e2;color:#991b1b}.gray{background:#f3f4f6;color:#4b5563}
+        .upload{border:1px dashed #a7f3d0;background:#f8fffb;border-radius:12px;padding:20px;text-align:center}.upload strong{display:block;margin-bottom:4px}.button-row{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:20px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;padding:12px 18px;font-size:14px;font-weight:700;min-height:46px}.btn-primary{background:var(--brand-green,#0f9d58);border-color:var(--brand-green,#0f9d58);color:white}.btn-secondary{background:white;border-color:var(--border-color,#e5e7eb);color:var(--primary-text,#111827)}.btn-warning{background:#fffbeb;border-color:#fde68a;color:#92400e}.btn-danger{background:#fee2e2;border-color:#fecaca;color:#dc2626}
+        .file-row{border:1px solid var(--border-color,#e5e7eb);border-radius:10px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin-top:14px;background:#f9fafb}.file-row strong{display:block;overflow-wrap:anywhere}.status-panel{text-align:center;max-width:420px;margin:28px auto 0;padding-top:24px;border-top:1px solid var(--border-color,#e5e7eb)}.status-icon{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ecfdf5;color:var(--brand-green,#0f9d58);font-size:28px;margin:0 auto 14px}.status-icon.red-icon{background:#fef2f2;color:#dc2626}.status-icon.amber-icon{background:#fffbeb;color:#92400e}.status-panel h3{margin:0 0 8px;font-size:18px;line-height:1.3}.status-panel p{margin:0;color:var(--secondary-text,#6b7280);font-size:14px}
+        .doc-list{display:grid;gap:12px}.doc-row{display:grid;grid-template-columns:auto minmax(0,1fr) 142px;align-items:center;gap:18px;border:1px solid var(--border-color,#e5e7eb);border-radius:12px;padding:16px;background:#f9fafb}.doc-icon{width:42px;height:42px;border-radius:10px;background:#ecfdf5;color:var(--brand-green,#0f9d58);display:flex;align-items:center;justify-content:center;font-weight:800}.doc-icon.amber-icon{background:#fffbeb;color:#92400e}.doc-icon.red-icon{background:#fef2f2;color:#991b1b}.doc-name{font-size:14px;font-weight:700;margin:0;overflow-wrap:anywhere}.doc-meta{font-size:12px;color:var(--secondary-text,#6b7280);margin:3px 0 0}.doc-side{display:grid;justify-items:end;align-content:center;gap:10px;min-width:0;padding-left:14px;border-left:1px solid var(--border-color,#e5e7eb)}.doc-link{border:1px solid #bbf7d0;background:#f0fdf4;border-radius:999px;color:var(--brand-green,#0f9d58);font-size:12px;font-weight:700;padding:6px 10px;white-space:nowrap}
+        @media(max-width:768px){.button-row{display:grid;grid-template-columns:1fr}.btn{width:100%}.file-row{grid-template-columns:1fr}.doc-row{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:14px}.doc-side{grid-column:1/-1;justify-items:stretch;grid-template-columns:1fr;gap:8px;padding-left:0;padding-top:12px;border-left:0;border-top:1px solid var(--border-color,#e5e7eb)}.doc-side .badge{justify-self:start}.doc-link{width:100%;text-align:center}.summary-row{gap:12px}.value{text-align:right}}
+
+        /* Shared public calendar alignment */
+        .calendar-card{border:1px solid var(--border-color,#e5e7eb);box-shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);padding:24px}
+        .calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .calendar-kicker{color:var(--secondary-text,#6b7280);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:0 0 3px}
+        .calendar-title{font-size:18px;font-weight:700;margin:0;color:var(--primary-text,#111827)}
+        .calendar-nav{display:flex;gap:8px}
+        .calendar-nav button{width:32px;height:32px;border:1px solid var(--border-color,#e5e7eb);border-radius:6px;background:white;color:var(--secondary-text,#6b7280);font-size:16px;font-weight:700}
+        .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;text-align:left}
+        .day-head{font-size:11px;font-weight:700;color:var(--secondary-text,#6b7280);text-align:center;text-transform:uppercase;padding-bottom:4px}
+        .month-day{aspect-ratio:1;border:1px solid var(--border-color,#e5e7eb);border-radius:8px;background:white;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+        .month-day:hover{border-color:var(--brand-green,#0f9d58)}
+        .month-day .date{font-size:13px;font-weight:700;line-height:1;color:var(--primary-text,#111827)}
+        .month-day.muted{background:#f9fafb;border-color:#f3f4f6}.month-day.muted .date{color:#cbd5e1}
+        .month-day.selected{border-color:var(--brand-green,#0f9d58);box-shadow:0 0 0 2px rgba(15,157,88,.14)}
+        .month-day.selected .date{width:24px;height:24px;border-radius:7px;background:var(--brand-green,#0f9d58);color:white;display:flex;align-items:center;justify-content:center}
+        .day-dots{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto}
+        .dot{width:7px;height:7px;border-radius:50%;background:#10b981}.dot.pending{background:#f59e0b}.dot.maintenance{background:#ef4444}
+        .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+        .badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700;white-space:nowrap}
+        .green{background:#d1fae5;color:#065f46}.amber{background:#fef3c7;color:#92400e}.red{background:#fee2e2;color:#991b1b}.blue{background:#eff6ff;color:#1e40af}
+        .agenda{border-top:1px solid var(--border-color,#e5e7eb);margin-top:16px;padding-top:14px}.agenda-title{font-size:13px;font-weight:700;margin:0 0 10px}.agenda-item{display:grid;grid-template-columns:82px 1fr auto;gap:10px;align-items:start;padding:10px 0;border-top:1px dashed var(--border-color,#e5e7eb)}.agenda-item:first-of-type{border-top:0;padding-top:0}.agenda-time{font-size:12px;font-weight:700;color:var(--primary-text,#111827)}.agenda-name{font-size:13px;font-weight:700;margin:0}
+        @media(max-width:768px){.calendar-card{padding:24px 22px}.calendar-header{align-items:flex-start;gap:12px}.calendar-grid{gap:5px}.day-head{font-size:10px}.month-day{padding:5px;border-radius:6px}.month-day .date{font-size:12px}.dot{width:5px;height:5px}.legend{gap:8px}.agenda-item{grid-template-columns:1fr}.agenda-item .badge{width:fit-content}}
+
+    .lucide-icon{display:inline-block;vertical-align:-.18em;flex:0 0 auto}
+        /* Shared reservation workflow stepper */
+        .stepper{display:grid;grid-template-columns:repeat(3,1fr);align-items:start;text-align:center;position:relative;margin-top:8px;gap:0}
+        .stepper::before{content:"";position:absolute;top:17px;left:16.5%;right:16.5%;height:2px;background:#e5e7eb}
+        .stepper::after{content:"";position:absolute;top:17px;left:16.5%;height:2px;background:var(--brand-green,#0f9d58)}
+        .stepper[data-progress="1"]::after{width:0}
+        .stepper[data-progress="2"]::after{width:33.5%}
+        .stepper[data-progress="3"]::after{width:67%}
+        .step{position:relative;z-index:1;display:grid;gap:5px;justify-items:center;text-align:center}
+        .circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#d1fae5;color:#065f46;border:2px solid #d1fae5;font-weight:700}
+        .step.active .circle{background:white;border-color:var(--brand-green,#0f9d58);box-shadow:0 0 0 4px #ecfdf5;color:var(--brand-green,#0f9d58)}
+        .step.inactive .circle{background:#f3f4f6;border-color:#f3f4f6;color:#6b7280}
+        .step-title{font-size:14px;font-weight:700;color:#111827;line-height:1.25}
+        .step-state{font-size:12px;color:var(--secondary-text,#6b7280);margin:0}
+        @media(max-width:768px){.stepper{width:100%}.stepper::before{left:17%;right:17%}.stepper::after{left:17%}.stepper[data-progress="2"]::after{width:33%}.stepper[data-progress="3"]::after{width:66%}.step-title{font-size:12px}.step-state{font-size:11px}}
+
+        /* Shared layout shell header/footer alignment */
+        :root{--shared-shell-nav:72px;--navbar-height:72px;--nav:72px}
+        .navbar{position:fixed;inset:0 0 auto;width:100%;height:var(--navbar-height,var(--nav,var(--shared-shell-nav)));background:#fff;border-bottom:1px solid var(--border-color,var(--border,#e5e7eb));display:flex;justify-content:center;z-index:1000}
+        .navbar-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between;gap:22px}
+        .nav-left,.nav-center,.nav-right{display:flex;align-items:center;gap:22px}
+        .nav-center{gap:40px}
+        .logo-nav{font-family:'Playfair Display',serif;color:#1d7667;font-size:24px;font-weight:700;line-height:1.05;text-decoration:none;white-space:nowrap}
+        .mobile-menu-btn{display:none;border:0;background:transparent;color:var(--secondary-text,var(--muted,#6b7280));font-size:24px;padding:0;line-height:1;cursor:pointer}
+        .nav-link{font-size:14px;font-weight:700;color:var(--secondary-text,var(--muted,#6b7280));text-decoration:none}
+        .nav-link.active{color:var(--brand-green,var(--green,#0f9d58));border-bottom:2px solid currentColor;padding-bottom:4px}
+        .nav-search{position:relative;display:flex;align-items:center;min-width:232px;height:40px;color:var(--secondary-text,var(--muted,#6b7280))}
+        .nav-search input{width:250px;height:40px;border:1px solid #dbe2ea;border-radius:999px;background:linear-gradient(180deg,#fff,#f8fafc);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 2px rgba(15,23,42,.04);padding:0 16px 0 42px;color:var(--secondary-text,var(--muted,#6b7280));font:500 13px var(--sans-serif,Inter,system-ui,sans-serif);outline:none}
+        .nav-search input:focus{border-color:var(--brand-green,var(--green,#0f9d58));background:#fff}
+        .nav-search .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#94a3b8;display:inline-flex;align-items:center;justify-content:center;pointer-events:none}
+        .nav-notifications{border:0;background:transparent;color:#6b7280;font-size:19px;padding:0;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+        .profile-pic{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--brand-green,var(--green,#0f9d58));border:0;overflow:hidden;font-size:13px;font-weight:700;text-decoration:none;flex:0 0 34px}
+        .profile-pic img{width:100%;height:100%;object-fit:cover}
+        .footer{border-top:1px solid var(--border-color,var(--border,#e5e7eb));padding:22px 0;background:#fff;display:flex;justify-content:center}
+        .footer-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between;gap:24px}
+        .footer-left,.footer-brand,.footer-content>div:first-child{display:flex;align-items:center;gap:16px;min-width:0}
+        .logo-footer,.footer-logo{font-family:'Playfair Display',serif;font-size:30px;color:#4da38b;margin:0;line-height:1;white-space:nowrap;letter-spacing:0}
+        .copyright,.footer-copy,.footer .muted{font-size:13px;color:var(--secondary-text,var(--muted,#6b7280));margin:0;line-height:1.5}
+        .footer-right,.footer-links{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:10px 18px;color:var(--secondary-text,var(--muted,#6b7280));font-size:14px;font-weight:600}
+        .footer-right a,.footer-links a{white-space:nowrap;text-decoration:none;color:inherit}
+        @media(max-width:768px){:root{--shared-shell-nav:64px;--navbar-height:64px;--nav:64px}.navbar-content{max-width:100%;padding:0 14px}.mobile-menu-btn{display:block}.logo-nav br{display:none}.logo-nav span{margin-left:6px}.nav-center,.nav-search{display:none}.nav-left,.nav-right{gap:14px}.footer{padding:22px 0}.footer-content{flex-direction:column;align-items:center;text-align:center;gap:14px}.footer-left,.footer-brand,.footer-content>div:first-child{flex-direction:column;gap:8px}.footer-right,.footer-links{justify-content:center;align-items:center}}
 
     </style>
 </head>
@@ -818,7 +902,7 @@
                 <button class="mobile-menu-btn" type="button" aria-label="Buka navigasi">&#9776;</button>
                 <a href="#" class="logo-nav" style="color: #1d7667;" aria-label="IPB Smart Reserve Hub">IPB<br><span class="logo-nav-mobile-text">SRH</span></a>
                 <div class="nav-search">
-                    <span class="search-icon">&#128269;</span>
+                    <span class="search-icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
                     <input type="search" placeholder="Cari fasilitas..." aria-label="Cari fasilitas">
                 </div>
             </div>
@@ -828,8 +912,8 @@
                 <a href="#" class="nav-link active">Reservasi</a>
             </div>
             <div class="nav-right">
-                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #eab308; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;">&#128276;</button>
-                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #e5e7eb; border: none; display: flex; align-items: center; justify-content: center; color: transparent;"></a>
+                <button class="nav-notifications" type="button" aria-label="Notifikasi" style="color: #6b7280; cursor: pointer; font-size: 20px; border: 0; background: transparent; padding: 0;"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21a2 2 0 0 0 4 0"/><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+                <a href="#" class="profile-pic" aria-label="Profil mahasiswa" style="background-color: #0f9d58; border: none; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 700;">NP</a>
             </div>
         </div>
     </header>
@@ -839,72 +923,42 @@
         <a href="#" class="back-link">&larr; Kembali</a>
 
         <div class="stepper-wrapper">
-            <div class="stepper">
-                <div class="step-item active">
-                    <div class="step-circle">1</div>
-                    <span class="step-label">Pilih Waktu</span>
-                </div>
-                <div class="step-line"></div>
-                <div class="step-item">
-                    <div class="step-circle">2</div>
-                    <span class="step-label">Detail Kegiatan</span>
-                </div>
-                <div class="step-line"></div>
-                <div class="step-item">
-                    <div class="step-circle">3</div>
-                    <span class="step-label">Konfirmasi</span>
-                </div>
+            <div class="stepper" data-progress="1" aria-label="Tahapan reservasi">
+                <div class="step active"><div class="circle">1</div><span class="step-title">Pilih Waktu</span><p class="step-state">Aktif</p></div>
+                <div class="step inactive"><div class="circle">2</div><span class="step-title">Detail Reservasi</span><p class="step-state">Berikutnya</p></div>
+                <div class="step inactive"><div class="circle">3</div><span class="step-title">Surat</span><p class="step-state">Berikutnya</p></div>
             </div>
         </div>
-
         <div class="reservation-layout">
             
             <div class="calendar-card">
                 <div class="calendar-header">
-                    <h2>Juni 2026</h2>
+                    <div>
+                        <p class="calendar-kicker">Kalender Interaktif</p>
+                        <h2 class="calendar-title">Oktober 2024</h2>
+                    </div>
                     <div class="calendar-nav">
-                        <span>&lt;</span>
-                        <span>&gt;</span>
+                        <button type="button" aria-label="Bulan sebelumnya">&lt;</button>
+                        <button type="button" aria-label="Bulan berikutnya">&gt;</button>
                     </div>
                 </div>
 
-                <div class="calendar-grid">
-                    <div class="day-name">MIN</div>
-                    <div class="day-name">SEN</div>
-                    <div class="day-name">SEL</div>
-                    <div class="day-name">RAB</div>
-                    <div class="day-name">KAM</div>
-                    <div class="day-name">JUM</div>
-                    <div class="day-name">SAB</div>
-
-                    <div class="day-number faded">29</div>
-                    <div class="day-number faded">30</div>
-                    <div class="day-number">1</div>
-                    <div class="day-number">2</div>
-                    <div class="day-number">3</div>
-                    <div class="day-number">4</div>
-                    <div class="day-number">5</div>
-
-                    <div class="day-number">6</div>
-                    <div class="day-number faded">7</div> <div class="day-number">8</div>
-                    <div class="day-number">9</div>
-                    <div class="day-number">10</div>
-                    <div class="day-number selected">11</div>
-                    <div class="day-number">12</div>
-
-                    <div class="day-number">13</div>
-                    <div class="day-number">14</div>
-                    <div class="day-number">15</div>
-                    <div class="day-number">16</div>
-                    <div class="day-number faded">7</div> <div class="day-number">18</div>
-                    <div class="day-number">19</div>
+                <div class="calendar-grid" aria-label="Kalender Oktober 2024">
+                    <div class="day-head">Min</div><div class="day-head">Sen</div><div class="day-head">Sel</div><div class="day-head">Rab</div><div class="day-head">Kam</div><div class="day-head">Jum</div><div class="day-head">Sab</div>
+                    <div class="month-day muted"><span class="date">29</span></div><div class="month-day muted"><span class="date">30</span></div><div class="month-day"><span class="date">1</span></div><div class="month-day"><span class="date">2</span></div><div class="month-day"><span class="date">3</span></div><div class="month-day"><span class="date">4</span><div class="day-dots"><span class="dot"></span></div></div><div class="month-day"><span class="date">5</span></div>
+                    <div class="month-day"><span class="date">6</span></div><div class="month-day"><span class="date">7</span></div><div class="month-day"><span class="date">8</span></div><div class="month-day"><span class="date">9</span></div><div class="month-day"><span class="date">10</span><div class="day-dots"><span class="dot maintenance"></span></div></div><div class="month-day"><span class="date">11</span><div class="day-dots"><span class="dot pending"></span></div></div><div class="month-day"><span class="date">12</span></div>
+                    <div class="month-day"><span class="date">13</span></div><div class="month-day"><span class="date">14</span></div><div class="month-day"><span class="date">15</span></div><div class="month-day"><span class="date">16</span><div class="day-dots"><span class="dot"></span><span class="dot"></span></div></div><div class="month-day"><span class="date">17</span></div><div class="month-day"><span class="date">18</span></div><div class="month-day"><span class="date">19</span></div>
+                    <div class="month-day"><span class="date">20</span></div><div class="month-day"><span class="date">21</span></div><div class="month-day"><span class="date">22</span></div><div class="month-day"><span class="date">23</span><div class="day-dots"><span class="dot pending"></span></div></div><div class="month-day selected"><span class="date">24</span><div class="day-dots"><span class="dot"></span><span class="dot"></span><span class="dot pending"></span></div></div><div class="month-day"><span class="date">25</span></div><div class="month-day"><span class="date">26</span><div class="day-dots"><span class="dot maintenance"></span></div></div>
+                    <div class="month-day"><span class="date">27</span></div><div class="month-day"><span class="date">28</span></div><div class="month-day"><span class="date">29</span></div><div class="month-day"><span class="date">30</span></div><div class="month-day"><span class="date">31</span><div class="day-dots"><span class="dot"></span></div></div><div class="month-day muted"><span class="date">1</span></div><div class="month-day muted"><span class="date">2</span></div>
                 </div>
+                <div class="legend"><span class="badge green">Reservasi disetujui</span><span class="badge amber">Menunggu review</span><span class="badge red">Blokir/perawatan</span><span class="badge blue">Tanggal dipilih</span></div>
+                <div class="agenda"><p class="agenda-title">Jadwal pada 24 Oktober 2024</p><div class="agenda-item"><span class="agenda-time">09:00 - 12:00</span><div><p class="agenda-name">Simposium Etika AI 2024</p><p class="muted">Himpunan Mahasiswa Ilmu Komputer</p></div><span class="badge green">Disetujui</span></div><div class="agenda-item"><span class="agenda-time">13:00 - 15:00</span><div><p class="agenda-name">Kuliah Tamu: Perubahan Iklim</p><p class="muted">Departemen Geofisika</p></div><span class="badge green">Disetujui</span></div><div class="agenda-item"><span class="agenda-time">16:00 - 18:00</span><div><p class="agenda-name">Kejuaraan Tahunan Klub Debat</p><p class="muted">UKM Debat IPB</p></div><span class="badge amber">Menunggu</span></div></div>
             </div>
 
             <div class="time-sidebar">
                 <div class="time-card">
                     <div class="time-header">
-                        <span class="icon">&#128338;</span> <h3>Atur Waktu</h3>
+                        <span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span> <h3>Atur Waktu</h3>
                     </div>
                     <p class="time-desc">Pilih jadwal mulai dan selesai untuk reservasi. Ketersediaan jadwal dapat dilihat pada kalender</p>
 
@@ -923,7 +977,7 @@
                     </div>
 
                     <div class="duration-info">
-                        <span class="icon">&#8505;</span> <div class="duration-text">
+                        <span class="icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span> <div class="duration-text">
                             <h4>Total Durasi: 4 Jam</h4>
                             <p>Waktu minimum reservasi adalah 30 menit. Zona waktu mengikuti zona waktu lokal kampus.</p>
                         </div>

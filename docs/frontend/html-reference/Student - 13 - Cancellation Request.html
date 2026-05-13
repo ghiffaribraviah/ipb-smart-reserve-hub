@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajukan Pembatalan - IPB Smart Reserve Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#f8fafc;--surface:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--green:#0f9d58;--green-dark:#0b7340;--green-bg:#e8f5e9;--amber-bg:#fffbeb;--amber:#92400e;--amber-border:#fde68a;--red-bg:#fee2e2;--red:#991b1b;--shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);--nav:80px}*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}a{text-decoration:none;color:inherit}.navbar{position:fixed;inset:0 0 auto;height:var(--nav);background:white;border-bottom:1px solid var(--border);display:flex;justify-content:center;z-index:10}.navbar-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between}.nav-left,.nav-center,.nav-right{display:flex;align-items:center;gap:28px}.nav-center{gap:40px}.logo-nav{font-family:'Playfair Display',serif;color:#1d7667;font-size:24px;font-weight:700;line-height:1.1}.mobile-menu-btn{display:none;border:0;background:transparent;color:var(--muted);font-size:24px;padding:0}.nav-link{color:var(--muted);font-size:15px;font-weight:600}.nav-link.active{color:var(--green);border-bottom:2px solid var(--green);padding-bottom:4px}.nav-search{position:relative}.nav-search input{border:1px solid var(--border);border-radius:20px;background:#f1f5f9;padding:10px 16px 10px 40px;width:240px}.nav-search .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}.nav-notifications{border:0;background:transparent;color:#6b7280;font-size:20px;padding:0}.profile-pic{width:36px;height:36px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}.page{width:1200px;max-width:95%;margin:calc(var(--nav) + 32px) auto 80px}.back{display:inline-flex;color:var(--green);font-size:14px;font-weight:700;margin-bottom:24px}.layout{display:grid;grid-template-columns:1.5fr .9fr;gap:28px;align-items:start}.card{background:white;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:28px}h1{font-size:32px;margin:0 0 8px}.muted{color:var(--muted);font-size:14px;margin:0}.section-title{font-size:18px;font-weight:700;margin:0 0 18px}.field{display:flex;flex-direction:column;gap:8px;margin-top:20px}.field label{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}textarea,select{border:1px solid var(--border);border-radius:8px;padding:12px 14px;font:inherit;background:white}textarea{min-height:150px;resize:vertical}.note{border:1px solid var(--amber-border);background:var(--amber-bg);color:var(--amber);border-radius:12px;padding:16px;display:flex;gap:12px;font-size:13px;margin-top:20px}.actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}.btn{border:1px solid var(--border);border-radius:8px;background:white;color:var(--text);padding:12px 18px;font-size:14px;font-weight:700;min-height:46px}.btn-warning{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}.summary-img{height:180px;border-radius:10px;background:linear-gradient(135deg,#d1fae5,#fef3c7);display:flex;align-items:center;justify-content:center;color:#1d7667;font-weight:700;margin-bottom:18px}.summary-row{display:flex;justify-content:space-between;gap:18px;padding:13px 0;border-top:1px solid var(--border);font-size:14px}.summary-row:first-of-type{border-top:0}.label{color:var(--muted);font-size:12px}.value{font-weight:700;text-align:right}.badge{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700}.badge-green{background:#d1fae5;color:#065f46}.state-section{margin-top:28px}.state-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}.state-card{border:1px solid var(--border);border-radius:12px;padding:18px}.state-card h3{font-size:15px;margin:0 0 8px}.state-card p{font-size:13px;margin:0;color:inherit}.state-card.pending{border-color:var(--amber-border);background:var(--amber-bg);color:var(--amber)}.state-card.rejected{border-color:#fecaca;background:#fef2f2;color:var(--red)}.footer{background:white;border-top:1px solid var(--border);padding:56px 0;display:flex;justify-content:center}.footer-content{width:1200px;max-width:90%;display:flex;justify-content:space-between}.logo-footer{font-family:'Playfair Display',serif;color:#4da38b;font-size:64px;margin:0;line-height:1}.footer-right{display:flex;flex-direction:column;gap:16px;color:var(--muted);align-items:flex-end}
+        @media(max-width:768px){:root{--nav:64px}.navbar-content{max-width:100%;padding:0 14px}.mobile-menu-btn{display:block}.logo-nav br,.nav-center,.nav-search{display:none}.logo-nav span{margin-left:6px}.nav-left,.nav-right{gap:14px}.page{width:100%;max-width:100%;padding:0 16px;margin-top:calc(var(--nav) + 24px)}.layout,.state-grid{grid-template-columns:1fr}.card{padding:22px}h1{font-size:28px}.actions{display:grid;grid-template-columns:1fr}.btn{width:100%}.summary-img{height:150px}.footer-content{flex-direction:column;align-items:center;text-align:center;gap:32px}.footer-right{align-items:center}}
+    .lucide-icon{display:inline-block;vertical-align:-.18em;flex:0 0 auto}
+
+        /* Shared layout shell header/footer alignment */
+        :root{--shared-shell-nav:72px;--navbar-height:72px;--nav:72px}
+        .navbar{position:fixed;inset:0 0 auto;width:100%;height:var(--navbar-height,var(--nav,var(--shared-shell-nav)));background:#fff;border-bottom:1px solid var(--border-color,var(--border,#e5e7eb));display:flex;justify-content:center;z-index:1000}
+        .navbar-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between;gap:22px}
+        .nav-left,.nav-center,.nav-right{display:flex;align-items:center;gap:22px}
+        .nav-center{gap:40px}
+        .logo-nav{font-family:'Playfair Display',serif;color:#1d7667;font-size:24px;font-weight:700;line-height:1.05;text-decoration:none;white-space:nowrap}
+        .mobile-menu-btn{display:none;border:0;background:transparent;color:var(--secondary-text,var(--muted,#6b7280));font-size:24px;padding:0;line-height:1;cursor:pointer}
+        .nav-link{font-size:14px;font-weight:700;color:var(--secondary-text,var(--muted,#6b7280));text-decoration:none}
+        .nav-link.active{color:var(--brand-green,var(--green,#0f9d58));border-bottom:2px solid currentColor;padding-bottom:4px}
+        .nav-search{position:relative;display:flex;align-items:center;min-width:232px;height:40px;color:var(--secondary-text,var(--muted,#6b7280))}
+        .nav-search input{width:250px;height:40px;border:1px solid #dbe2ea;border-radius:999px;background:linear-gradient(180deg,#fff,#f8fafc);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 2px rgba(15,23,42,.04);padding:0 16px 0 42px;color:var(--secondary-text,var(--muted,#6b7280));font:500 13px var(--sans-serif,Inter,system-ui,sans-serif);outline:none}
+        .nav-search input:focus{border-color:var(--brand-green,var(--green,#0f9d58));background:#fff}
+        .nav-search .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#94a3b8;display:inline-flex;align-items:center;justify-content:center;pointer-events:none}
+        .nav-notifications{border:0;background:transparent;color:#6b7280;font-size:19px;padding:0;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+        .profile-pic{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--brand-green,var(--green,#0f9d58));border:0;overflow:hidden;font-size:13px;font-weight:700;text-decoration:none;flex:0 0 34px}
+        .profile-pic img{width:100%;height:100%;object-fit:cover}
+        .footer{border-top:1px solid var(--border-color,var(--border,#e5e7eb));padding:22px 0;background:#fff;display:flex;justify-content:center}
+        .footer-content{width:1200px;max-width:95%;display:flex;align-items:center;justify-content:space-between;gap:24px}
+        .footer-left,.footer-brand,.footer-content>div:first-child{display:flex;align-items:center;gap:16px;min-width:0}
+        .logo-footer,.footer-logo{font-family:'Playfair Display',serif;font-size:30px;color:#4da38b;margin:0;line-height:1;white-space:nowrap;letter-spacing:0}
+        .copyright,.footer-copy,.footer .muted{font-size:13px;color:var(--secondary-text,var(--muted,#6b7280));margin:0;line-height:1.5}
+        .footer-right,.footer-links{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:10px 18px;color:var(--secondary-text,var(--muted,#6b7280));font-size:14px;font-weight:600}
+        .footer-right a,.footer-links a{white-space:nowrap;text-decoration:none;color:inherit}
+        @media(max-width:768px){:root{--shared-shell-nav:64px;--navbar-height:64px;--nav:64px}.navbar-content{max-width:100%;padding:0 14px}.mobile-menu-btn{display:block}.logo-nav br{display:none}.logo-nav span{margin-left:6px}.nav-center,.nav-search{display:none}.nav-left,.nav-right{gap:14px}.footer{padding:22px 0}.footer-content{flex-direction:column;align-items:center;text-align:center;gap:14px}.footer-left,.footer-brand,.footer-content>div:first-child{flex-direction:column;gap:8px}.footer-right,.footer-links{justify-content:center;align-items:center}}
+
+    </style>
+</head>
+<body>
+    <header class="navbar"><div class="navbar-content"><div class="nav-left"><button class="mobile-menu-btn" aria-label="Buka navigasi">&#9776;</button><a class="logo-nav">IPB<br><span>SRH</span></a></div><div class="nav-search"><span class="search-icon"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input type="search" value="Cari fasilitas" aria-label="Cari fasilitas"></div><nav class="nav-center"><a class="nav-link">Beranda</a><a class="nav-link">Fasilitas</a><a class="nav-link active">Reservasi</a></nav><div class="nav-right"><button class="nav-notifications" aria-label="Notifikasi"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21a2 2 0 0 0 4 0"/><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button><div class="profile-pic">NP</div></div></div></header>
+    <main class="page">
+        <a class="back">&larr; Kembali ke Detail Reservasi</a>
+        <div class="layout">
+            <section class="card">
+                <h1>Ajukan Pembatalan</h1>
+                <p class="muted">Permintaan pembatalan akan ditinjau oleh staff fasilitas sebelum status reservasi berubah.</p>
+                <div class="note"><strong>!</strong><span>Sistem tidak memproses refund otomatis. Jika reservasi berbayar sudah disetujui, hubungi TU fasilitas untuk tindak lanjut pengembalian dana.</span></div>
+                <div class="field"><label>Alasan pembatalan</label><select><option>Pilih alasan utama</option><option>Jadwal kegiatan berubah</option><option>Fasilitas tidak lagi dibutuhkan</option><option>Kesalahan data reservasi</option></select></div>
+                <div class="field"><label>Detail alasan</label><textarea>Saya perlu membatalkan reservasi karena jadwal kegiatan organisasi dipindahkan ke minggu berikutnya.</textarea><p class="muted">Minimal 20 karakter. Alasan ini akan dibaca oleh staff fasilitas.</p></div>
+                <div class="actions"><button class="btn">Batalkan</button><button class="btn btn-warning">Kirim Pengajuan</button></div>
+            </section>
+            <aside class="card">
+                <div class="summary-img">IPB SRH</div>
+                <h2 class="section-title">Grand Auditorium</h2>
+                <div class="summary-row"><span class="label">Tanggal</span><span class="value">24 Oktober 2024</span></div>
+                <div class="summary-row"><span class="label">Waktu</span><span class="value">09:00 - 13:00</span></div>
+                <div class="summary-row"><span class="label">Organisasi</span><span class="value">Himalkom</span></div>
+                <div class="summary-row"><span class="label">Status saat ini</span><span class="badge badge-green">Disetujui</span></div>
+            </aside>
+        </div>
+        <section class="state-section">
+            <h2 class="section-title">State Setelah Pengajuan</h2>
+            <p class="muted">Referensi tampilan ketika mahasiswa kembali ke detail reservasi setelah pengajuan pembatalan diproses.</p>
+            <div class="state-grid">
+                <article class="state-card pending">
+                    <h3>Pembatalan Menunggu Review</h3>
+                    <p>Pengajuan pembatalan sudah terkirim dan menunggu tinjauan staff fasilitas.</p>
+                </article>
+                <article class="state-card rejected">
+                    <h3>Pembatalan Ditolak</h3>
+                    <p>Pengajuan pembatalan ditolak karena kegiatan sudah melewati batas pembatalan.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+    <footer class="footer"><div class="footer-content"><div><h2 class="logo-footer">IPB SRH</h2><p class="muted">&copy; 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.</p></div><div class="footer-right"><a>Beranda</a><a>Fasilitas</a><a>Reservasi</a></div></div></footer>
+</body>
+</html>

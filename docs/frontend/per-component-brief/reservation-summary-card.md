@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML references: Student 03-08, Student 11-12.
-- Screenshots: matching screenshots.
+- HTML references: Student 03-08, Student 11-13, `Shared - 07 - Reservation Workflow Components.html`.
+- Screenshots: matching screenshots, `shared-07-reservation-workflow-components-*`.
 
 ## Purpose
 
@@ -45,8 +45,8 @@ Summarize facility, organization, schedule, price, and reservation metadata.
 
 ## Design Rules
 
-- Desktop: compact card/sidebar.
-- Mobile: full-width stacked rows.
+- Desktop: compact card/sidebar using shared `summary-row`, `label`, `value`, and badge anatomy.
+- Mobile: full-width stacked rows; values wrap and remain right-aligned where space allows.
 - Overflow: filenames and long titles wrap.
 
 ## Implementation Notes

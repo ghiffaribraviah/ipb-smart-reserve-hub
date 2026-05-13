@@ -22,11 +22,11 @@
 
 ## Design Contract
 
-- Layout: payment instruction card, upload panel, and reservation summary.
+- Layout: reservation workflow stepper with payment/upload card and reservation summary.
 - Desktop behavior: two-column workflow rhythm.
 - Mobile behavior: stack instructions, upload, summary; full-width submit action.
 - Required copy/status labels: preserve `Menunggu Pembayaran` and upload labels.
-- Source-of-truth notes: payment amount and instructions must be scannable.
+- Source-of-truth notes: upload uses shared `upload`/`button-row`; payment amount and instructions must be scannable.
 
 ## UX Behavior
 
@@ -67,6 +67,7 @@
 
 ## Shared Components
 
+- `docs/frontend/per-component-brief/reservation-stepper.md`
 - `docs/frontend/per-component-brief/payment-upload-panel.md`
 - `docs/frontend/per-component-brief/reservation-summary-card.md`
 
@@ -77,5 +78,4 @@
 
 ## Open Questions
 
-- Upload progress visual state is tracked in `missing-design.md`.
-
+- Upload progress visual state is referenced in `docs/frontend/html-reference/Shared - 03 - Upload And Calendar States.html`.

@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML references: Admin 01/10, Super 00.
-- Screenshots: matching mobile screenshots.
+- HTML references: Admin 01/10, Super 00-04, `Shared - 08 - Data Display Components.html`.
+- Screenshots: matching mobile screenshots, `shared-08-data-display-components-*`.
 
 ## Purpose
 

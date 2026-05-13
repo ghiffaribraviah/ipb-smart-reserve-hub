@@ -22,7 +22,7 @@
 
 ## Design Contract
 
-- Layout: centered status card with reservation summary and waiting state.
+- Layout: reservation workflow stepper plus centered shared status card with reservation summary and waiting state.
 - Desktop behavior: compact centered card with generous white space.
 - Mobile behavior: stacked summary rows and full-width CTA.
 - Required copy/status labels: preserve `Menunggu Verifikasi Dokumen` style copy.
@@ -67,6 +67,7 @@
 
 ## Shared Components
 
+- `docs/frontend/per-component-brief/reservation-stepper.md`
 - `docs/frontend/per-component-brief/reservation-status-panel.md`
 - `docs/frontend/per-component-brief/reservation-summary-card.md`
 

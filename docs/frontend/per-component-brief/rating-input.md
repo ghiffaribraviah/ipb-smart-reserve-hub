@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML reference: Student 12.
-- Screenshots: review form desktop/mobile.
+- HTML references: Student 12, `Shared - 06 - UI Primitives.html`.
+- Screenshots: review form desktop/mobile, `shared-06-ui-primitives-*`.
 
 ## Purpose
 
@@ -61,4 +61,3 @@ Collect a required 1-5 star rating.
 ## Open Questions
 
 - None.
-

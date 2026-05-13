@@ -25,7 +25,7 @@
 - Layout: Student shell with fixed white header, hero/intro content, category shortcuts, featured facility cards, and footer.
 - Desktop behavior: `1200px` centered content, search in header, horizontal nav.
 - Mobile behavior: compact `64px` header, hamburger, hidden desktop nav/search, stacked sections.
-- Required copy/status labels: preserve `Beranda`, `Fasilitas`, `Reservasi`, `Profil`, `IPB SRH`.
+- Required copy/status labels: preserve `Beranda`, `Fasilitas`, `Reservasi`, and `IPB SRH`; profile access is the avatar, not a fourth nav item.
 - Source-of-truth notes: match green-led student visual tone and deterministic facility image treatment.
 
 ## UX Behavior
@@ -81,5 +81,4 @@
 
 ## Open Questions
 
-- Notification popover design is tracked in `docs/frontend/missing-design.md`.
-
+- Notification popover/inbox reference is `docs/frontend/html-reference/Shared - 01 - Notifications.html`.

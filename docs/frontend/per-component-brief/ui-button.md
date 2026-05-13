@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML references: auth pages, student workflow pages, staff pages, super dashboard.
-- Screenshots: all desktop/mobile screenshots with actions.
+- HTML references: auth pages, student workflow pages, staff pages, Super Admin pages, `Shared - 06 - UI Primitives.html`.
+- Screenshots: all desktop/mobile screenshots with actions, `shared-06-ui-primitives-*`.
 
 ## Purpose
 
@@ -68,4 +68,3 @@ Provide consistent primary, secondary, quiet, destructive, and role-accented act
 ## Open Questions
 
 - None.
-

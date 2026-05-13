@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML references: Student 10/11/20, Admin 10/11, Super 00.
-- Screenshots: matching desktop/mobile screenshots.
+- HTML references: Student 10/11/13/20, Admin 10/11, Super 00-04, `Shared - 06 - UI Primitives.html`, `Shared - 02 - Data And Auth States.html`.
+- Screenshots: matching desktop/mobile screenshots, `shared-06-ui-primitives-*`, `shared-02-data-and-auth-states-*`.
 
 ## Purpose
 
@@ -58,5 +58,4 @@ Display explicit lifecycle and account statuses without relying on color alone.
 
 ## Open Questions
 
-- Overdue/expired final visual tone lacks explicit reference.
-
+- None.

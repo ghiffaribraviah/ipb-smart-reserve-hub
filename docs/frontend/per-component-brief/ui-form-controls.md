@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML references: Login, Register, Student 04, Student 07, Student 12, Admin 03.
-- Screenshots: matching desktop/mobile screenshots.
+- HTML references: Login, Register, Student 04, Student 07, Student 12, Student 13, Admin 03, Super 04, `Shared - 06 - UI Primitives.html`.
+- Screenshots: matching desktop/mobile screenshots, `shared-06-ui-primitives-*`.
 
 ## Purpose
 
@@ -67,4 +67,3 @@ Provide text inputs, selects, textareas, checkbox rows, and validation presentat
 ## Open Questions
 
 - None.
-

@@ -7,11 +7,15 @@
 ## Used By
 
 - `super-00-dashboard.md`
+- `super-01-pengguna.md`
+- `super-02-fasilitas.md`
+- `super-03-laporan.md`
+- `super-04-sistem.md`
 
 ## Reference Evidence
 
-- HTML reference: Super 00.
-- Screenshots: super dashboard desktop/mobile.
+- HTML references: Super 00-04, `Shared - 08 - Data Display Components.html`.
+- Screenshots: super page desktop/mobile screenshots, `shared-08-data-display-components-*`.
 
 ## Purpose
 
@@ -61,4 +65,3 @@ Display high-level operational metrics.
 ## Open Questions
 
 - None.
-

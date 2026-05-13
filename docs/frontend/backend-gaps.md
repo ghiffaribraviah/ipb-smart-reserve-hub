@@ -45,6 +45,7 @@ Gap statuses:
 | [BG-STUDENT-10-01](per-page-brief/student-10-reservation-list.md#bg-student-10-01-student-reservation-list-projections) | `student-10-reservation-list.md` | resolved | Student reservation list projections |
 | [BG-STUDENT-11-ACCEPTED-01](per-page-brief/student-11-reservation-details-accepted.md#bg-student-11-accepted-01-approved-detail-and-private-file-actions) | `student-11-reservation-details-accepted.md` | resolved | Approved detail and private file actions |
 | [BG-STUDENT-11-COMPLETED-01](per-page-brief/student-11-reservation-details-completed.md#bg-student-11-completed-01-completed-detail-and-review-eligibility) | `student-11-reservation-details-completed.md` | resolved | Completed detail and review eligibility |
+| [BG-STUDENT-13-01](per-page-brief/student-13-cancellation-request.md#bg-student-13-01-student-cancellation-request) | `student-13-cancellation-request.md` | resolved | Student cancellation request |
 
 ## Payment
 
@@ -60,19 +61,31 @@ Gap statuses:
 | --- | --- | --- | --- |
 | [BG-STUDENT-12-01](per-page-brief/student-12-reservation-review-form.md#bg-student-12-01-student-review-submission) | `student-12-reservation-review-form.md` | resolved | Student review submission |
 
+## Shared Shell
+
+| Gap ID | Brief | Status | Label |
+| --- | --- | --- | --- |
+| [BG-SHARED-NOTIFICATIONS-01](per-component-brief/notification-surface.md#bg-shared-notifications-01-notification-category-and-target-contract) | `notification-surface.md` | resolved | Notification category and target contract |
+
 ## Staff Operations
 
 | Gap ID | Page Brief | Status | Label |
 | --- | --- | --- | --- |
-| [BG-STAFF-00-01](per-page-brief/staff-00-home.md#bg-staff-00-01-staff-verification-queue) | `staff-00-home.md` | open | Staff verification queue |
+| [BG-STAFF-00-01](per-page-brief/staff-00-home.md#bg-staff-00-01-staff-verification-queue) | `staff-00-home.md` | resolved | Staff verification queue |
 | [BG-STAFF-01-01](per-page-brief/staff-01-facility-list.md#bg-staff-01-01-staff-assigned-facility-list) | `staff-01-facility-list.md` | resolved | Staff assigned facility list |
-| [BG-STAFF-02-01](per-page-brief/staff-02-facility-schedule.md#bg-staff-02-01-staff-facility-schedule) | `staff-02-facility-schedule.md` | needs-verification | Staff facility schedule |
+| [BG-STAFF-02-01](per-page-brief/staff-02-facility-schedule.md#bg-staff-02-01-staff-facility-schedule) | `staff-02-facility-schedule.md` | resolved | Staff facility schedule |
 | [BG-STAFF-03-01](per-page-brief/staff-03-edit-facility-details.md#bg-staff-03-01-staff-facility-profile-editing) | `staff-03-edit-facility-details.md` | resolved | Staff facility profile editing |
-| [BG-STAFF-10-01](per-page-brief/staff-10-reservation-lists.md#bg-staff-10-01-staff-reservation-list-read-model) | `staff-10-reservation-lists.md` | open | Staff reservation list read model |
-| [BG-STAFF-11-01](per-page-brief/staff-11-reservation-details.md#bg-staff-11-01-staff-reservation-detail-read-model) | `staff-11-reservation-details.md` | open | Staff reservation detail read model |
+| [BG-STAFF-10-01](per-page-brief/staff-10-reservation-lists.md#bg-staff-10-01-staff-reservation-list-read-model) | `staff-10-reservation-lists.md` | resolved | Staff reservation list read model |
+| [BG-STAFF-11-01](per-page-brief/staff-11-reservation-details.md#bg-staff-11-01-staff-reservation-detail-read-model) | `staff-11-reservation-details.md` | resolved | Staff reservation detail read model |
+| [BG-STAFF-12-01](per-page-brief/staff-12-review-decision-dialogs.md#bg-staff-12-01-staff-review-decision-actions) | `staff-12-review-decision-dialogs.md` | resolved | Staff review decision actions |
 
 ## Super Admin
 
 | Gap ID | Page Brief | Status | Label |
 | --- | --- | --- | --- |
-| [BG-SUPER-00-01](per-page-brief/super-00-dashboard.md#bg-super-00-01-super-admin-dashboard-read-model) | `super-00-dashboard.md` | open | Super Admin dashboard read model |
+| [BG-SUPER-00-01](per-page-brief/super-00-dashboard.md#bg-super-00-01-super-admin-dashboard-read-model) | `super-00-dashboard.md` | resolved | Super Admin dashboard read model |
+| [BG-SUPER-01-01](per-page-brief/super-01-pengguna.md#bg-super-01-01-super-admin-user-management-read-model) | `super-01-pengguna.md` | resolved | Super Admin user management read model |
+| [BG-SUPER-02-01](per-page-brief/super-02-fasilitas.md#bg-super-02-01-super-admin-facility-governance-read-model) | `super-02-fasilitas.md` | resolved | Super Admin facility governance read model |
+| [BG-SUPER-03-01](per-page-brief/super-03-laporan.md#bg-super-03-01-super-admin-report-aggregates) | `super-03-laporan.md` | resolved | Super Admin report aggregates |
+| [BG-SUPER-03-02](per-page-brief/super-03-laporan.md#bg-super-03-02-super-admin-audit-and-review-moderation) | `super-03-laporan.md` | resolved | Super Admin audit and review moderation |
+| [BG-SUPER-04-01](per-page-brief/super-04-sistem.md#bg-super-04-01-super-admin-system-status-and-settings) | `super-04-sistem.md` | resolved | Super Admin system status and settings |

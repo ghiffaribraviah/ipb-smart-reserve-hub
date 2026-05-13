@@ -10,8 +10,8 @@
 
 ## Reference Evidence
 
-- HTML reference: Super 00.
-- Screenshots: super dashboard desktop/mobile.
+- HTML references: Super 00, Super 01, `Shared - 08 - Data Display Components.html`.
+- Screenshots: super dashboard/user desktop/mobile, `shared-08-data-display-components-*`.
 
 ## Purpose
 
@@ -32,7 +32,7 @@ Show administrator governance rows for Super Admin oversight.
 
 ## Behavior
 
-- Read-only until management pages are designed.
+- Read-only on dashboard; user-management page references define expanded management rows/actions.
 
 ## Accessibility
 
@@ -59,5 +59,4 @@ Show administrator governance rows for Super Admin oversight.
 
 ## Open Questions
 
-- Future user-management page references are missing.
-
+- None.

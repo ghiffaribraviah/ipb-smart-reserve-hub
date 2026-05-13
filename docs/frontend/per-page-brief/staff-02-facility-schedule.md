@@ -22,11 +22,11 @@
 
 ## Design Contract
 
-- Layout: staff shell with calendar header/navigation and schedule grid/list.
-- Desktop behavior: calendar grid plus dense event chips.
+- Layout: staff shell with shared month calendar, agenda panel, and reservation list/cards.
+- Desktop behavior: shared `month-day` calendar grid beside agenda, followed by dense reservation table.
 - Mobile behavior: compact schedule cards/list; no horizontal scroll.
 - Required copy/status labels: preserve schedule and verification copy.
-- Source-of-truth notes: use reference calendar spacing and action icon treatment.
+- Source-of-truth notes: calendar uses the shared `day-head` / `month-day` / `day-dots` anatomy, not legacy `calendar-day` markup.
 
 ## UX Behavior
 
@@ -51,18 +51,18 @@
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: likely `GET /facilities/:facilityId/calendar`; staff-scoped richer schedule endpoint may be needed.
+- Endpoints consumed: `GET /staff/facilities/:facilityId/schedule`; public `GET /facilities/:facilityId/calendar` remains available for non-private calendar data.
 - Page-needed fields: activity title, organization, starts/ends, status/review type if reference needs operational detail.
 - Auth/session assumptions: staff must be assigned to facility for operational details.
 - Source files: `app/api/routes/facility_routes.py`, `app/schemas/facility_schemas.py`.
 
 ### BG-STAFF-02-01: Staff Facility Schedule
 
-- Status: `needs-verification`
+- Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: assigned facility schedule.
-- Contract needed: schedule data sufficient for staff view. Public calendar exists but may omit private workflow/status fields needed by staff.
-- Evidence: `GET /facilities/{facility_id}/calendar` exists, but it is public and intentionally hides private data.
+- Contract implemented: assigned-staff private schedule endpoint with Reservation identity, status, workflow/review state, Organization Unit, schedule times, and staff detail routing data.
+- Evidence: `app/api/routes/staff_reservation_operation_routes.py` registers `GET /staff/facilities/{facility_id}/schedule`; `tests/test_staff_reservation_operations.py` verifies assigned schedule data, unassigned denial, and non-staff denial; `tests/test_facility_browsing.py::test_students_view_public_facility_calendar_without_private_reservation_data` verifies the public calendar shape remains private-data-free.
 - Source issue/PRD: `docs/issues/ISSUE-0003-facility-availability-calendar.md`, `docs/issues/ISSUE-0016-staff-facility-management-and-assignment-scope.md`.
 
 ## Shared Components
@@ -77,5 +77,4 @@
 
 ## Open Questions
 
-- Does staff schedule need private reservation status/student details, or only public blocked slots?
-
+- None.

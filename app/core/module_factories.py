@@ -21,6 +21,7 @@ from app.services.facility_management import FacilityManagementModule
 from app.repositories.organization_unit_repository import SqlAlchemyOrganizationUnitRepository
 from app.repositories.reservation_repository import SqlAlchemyReservationRepository
 from app.repositories.review_repository import SqlAlchemyReviewRepository
+from app.repositories.staff_reservation_operations_repository import SqlAlchemyStaffReservationOperationsRepository
 from app.services.organization_units import OrganizationUnitManagementModule
 from app.services.notifications import NotificationModule
 from app.services.payments import PaymentModule
@@ -30,6 +31,7 @@ from app.services.reservations import ReservationModule, ReservationSubmissionCo
 from app.services.reservation_time_selection import ReservationTimeSelectionModule
 from app.services.reviews import ReviewModule
 from app.services.staff_reservation_review_access import StaffReservationReviewAccessModule
+from app.services.staff_reservation_operations import StaffReservationOperationsModule
 from app.services.system_status import SystemStatusModule
 from app.storage import PrivateStorage
 from app.core.settings import SettingsModule
@@ -117,6 +119,11 @@ class FacilityModuleFactory:
                 facility_repository=facility_management_repository
             ),
             audit_logs=self.build_audit_logs(session),
+        )
+
+    def build_staff_reservation_operations(self, session: Session) -> StaffReservationOperationsModule:
+        return StaffReservationOperationsModule(
+            repository=SqlAlchemyStaffReservationOperationsRepository(session),
         )
 
     def _build_reservation_workflow(self, session: Session) -> "FacilityReservationWorkflowAssembly":

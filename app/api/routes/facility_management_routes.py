@@ -6,6 +6,7 @@ from app.core.access_policy import AccessPolicyAction
 from app.schemas.facility_management_schemas import (
     FacilityBlackoutCreateRequest,
     FacilityBlackoutResponse,
+    FacilityGovernanceResponse,
     FacilityImageCreateRequest,
     FacilityImageManagementResponse,
     FacilityManagementProfileResponse,
@@ -33,6 +34,13 @@ def register_facility_management_routes(
     get_facility_management: Callable,
     require_access: Callable[[AccessPolicyAction], Callable],
 ) -> None:
+    @app.get("/admin/facilities/governance", response_model=list[FacilityGovernanceResponse])
+    async def list_facility_governance(
+        facility_management: FacilityManagementModule = Depends(get_facility_management),
+        _: UserAccount = Depends(require_access(AccessPolicyAction.manage_facility_staff_assignments)),
+    ):
+        return facility_management.list_facility_governance()
+
     @app.put(
         "/admin/facilities/{facility_id}/staff-assignments/{staff_id}",
         response_model=StaffAssignmentResponse,

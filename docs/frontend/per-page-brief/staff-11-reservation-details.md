@@ -22,11 +22,11 @@
 
 ## Design Contract
 
-- Layout: staff shell detail page with reservation info, document/payment rows, decision panel.
+- Layout: staff shell detail page with reservation info, shared document rows, summary sidebar, and decision panel.
 - Desktop behavior: dense operational sections with clear action hierarchy.
-- Mobile behavior: stacked cards; file/action rows wrap.
+- Mobile behavior: stacked cards; shared document rows move status/actions below metadata.
 - Required copy/status labels: preserve verification action labels and rejection reason patterns.
-- Source-of-truth notes: decision actions must be visually distinct without heavy destructive styling except true rejection.
+- Source-of-truth notes: document rows use shared `doc-row` anatomy; decision actions must be visually distinct without heavy destructive styling except true rejection.
 
 ## UX Behavior
 
@@ -52,18 +52,18 @@
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: proposed `GET /staff/reservations/:reservationId`; existing approve/reject/download endpoints for document/payment/cancellation.
+- Endpoints consumed: `GET /staff/reservations/:reservationId`; existing approve/reject/download endpoints for document/payment/cancellation.
 - Page-needed fields: reservation detail, student/org/facility, submitted files, payment receipt, cancellation request, workflow status and reasons.
 - Auth/session assumptions: staff assigned facility access only.
 - Source files: `app/api/routes/approval_letter_routes.py`, `app/api/routes/payment_routes.py`, `app/api/routes/reservation_routes.py`.
 
 ### BG-STAFF-11-01: Staff Reservation Detail Read Model
 
-- Status: `open`
+- Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: staff reservation detail and decision panel.
-- Contract needed: assigned-staff reservation detail endpoint that pairs with existing review mutation endpoints.
-- Evidence: approve/reject/download endpoints exist, but no staff detail GET endpoint was found.
+- Contract implemented: assigned-staff reservation detail endpoint that pairs with existing review mutation endpoints.
+- Evidence: `app/api/routes/staff_reservation_operation_routes.py` registers `GET /staff/reservations/{reservation_id}`; `tests/test_staff_reservation_operations.py` verifies assigned detail access, null missing file metadata, payment receipt metadata, unassigned denial, and non-staff denial.
 - Source issue/PRD: `docs/issues/ISSUE-0009-signed-letter-upload-and-staff-document-review.md`, `docs/issues/ISSUE-0010-paid-facility-receipt-upload-and-payment-review.md`, `docs/issues/ISSUE-0013-cancellation-workflow.md`.
 
 ## Shared Components
@@ -71,6 +71,7 @@
 - `docs/frontend/per-component-brief/layout-staff-shell.md`
 - `docs/frontend/per-component-brief/document-status-panel.md`
 - `docs/frontend/per-component-brief/review-decision-panel.md`
+- `docs/frontend/per-component-brief/review-decision-dialog.md`
 
 ## Acceptance Checks
 
@@ -79,4 +80,4 @@
 
 ## Open Questions
 
-- Backend detail endpoint shape must be defined.
+- None.

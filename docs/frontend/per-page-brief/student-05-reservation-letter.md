@@ -22,11 +22,11 @@
 
 ## Design Contract
 
-- Layout: reservation workflow card rhythm with document instructions, generated-letter action, upload panel, and summary.
+- Layout: reservation workflow card rhythm with template download, shared upload panel, file row, and summary.
 - Desktop behavior: main document panel plus side summary.
 - Mobile behavior: stacked panels and full-width upload/continue action.
 - Required copy/status labels: preserve Indonesian document and upload labels.
-- Source-of-truth notes: file rows must wrap long filenames.
+- Source-of-truth notes: upload uses shared `upload`/`button-row` anatomy; file rows must wrap long filenames.
 
 ## UX Behavior
 
@@ -68,8 +68,8 @@
 
 ## Shared Components
 
+- `docs/frontend/per-component-brief/reservation-stepper.md`
 - `docs/frontend/per-component-brief/file-upload-panel.md`
-- `docs/frontend/per-component-brief/document-status-panel.md`
 - `docs/frontend/per-component-brief/reservation-summary-card.md`
 
 ## Acceptance Checks
@@ -79,5 +79,4 @@
 
 ## Open Questions
 
-- Upload progress state is tracked in `missing-design.md`.
-
+- Upload progress state is referenced in `docs/frontend/html-reference/Shared - 03 - Upload And Calendar States.html`.

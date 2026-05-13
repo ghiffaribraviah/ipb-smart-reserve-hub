@@ -2,7 +2,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from app.models import Notification, Reservation
+from app.models import Notification, Reservation, UserRole
 from app.repositories.notification_repository import NotificationRepository
 from app.services.accounts import UserAccount
 
@@ -12,11 +12,20 @@ class NotificationNotFound(Exception):
 
 
 @dataclass(frozen=True)
+class NotificationTarget:
+    type: str
+    reservation_id: str | None
+    route: str
+
+
+@dataclass(frozen=True)
 class UserNotification:
     id: str
     reservation_id: str | None
     title: str
     message: str
+    category: str
+    target: NotificationTarget | None
     created_at: datetime
     read_at: datetime | None
 
@@ -32,7 +41,10 @@ class NotificationModule:
         self._clock = clock
 
     def list_notifications(self, user: UserAccount) -> list[UserNotification]:
-        return [_to_user_notification(notification) for notification in self._notification_repository.list_for_user(user.id)]
+        return [
+            _to_user_notification(notification, user)
+            for notification in self._notification_repository.list_for_user(user.id)
+        ]
 
     def mark_read(self, user: UserAccount, notification_id: str) -> UserNotification:
         notification = self._notification_repository.get_for_user(notification_id, user.id)
@@ -40,7 +52,7 @@ class NotificationModule:
             raise NotificationNotFound
         if notification.read_at is None:
             notification.read_at = _as_utc(self._clock())
-        return _to_user_notification(notification)
+        return _to_user_notification(notification, user)
 
     def reservation_submitted(self, reservation: Reservation) -> None:
         self._create_student_notification(
@@ -100,14 +112,43 @@ class NotificationModule:
         )
 
 
-def _to_user_notification(notification: Notification) -> UserNotification:
+def _to_user_notification(notification: Notification, user: UserAccount) -> UserNotification:
     return UserNotification(
         id=notification.id,
         reservation_id=notification.reservation_id,
         title=notification.title,
         message=notification.message,
+        category=_notification_category(notification),
+        target=_notification_target(notification, user),
         created_at=_as_utc(notification.created_at),
         read_at=_optional_utc(notification.read_at),
+    )
+
+
+def _notification_category(notification: Notification) -> str:
+    if notification.reservation_id is not None:
+        return "reservation"
+    return "system"
+
+
+def _notification_target(notification: Notification, user: UserAccount) -> NotificationTarget | None:
+    if notification.reservation_id is None:
+        return None
+
+    if user.role == UserRole.student:
+        target_type = "student_reservation"
+        route = "/student/reservations/{reservation_id}"
+    elif user.role == UserRole.staff:
+        target_type = "staff_reservation"
+        route = "/staff/reservations/{reservation_id}"
+    else:
+        target_type = "super_admin_reservation"
+        route = "/super-admin/reservations/{reservation_id}"
+
+    return NotificationTarget(
+        type=target_type,
+        reservation_id=notification.reservation_id,
+        route=route,
     )
 
 

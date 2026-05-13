@@ -9,3 +9,5 @@ ipb_smart_reserve_hub.db
 # Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/playwright-report/
+frontend/test-results/

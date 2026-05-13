@@ -39,38 +39,53 @@ Catatan legacy: seed lama memakai `demo.blocking@apps.ipb.ac.id`. Jika database 
 
 ## Fasilitas
 
-Total fasilitas seed: 3.
+Total fasilitas seed: 13.
 
-| Fasilitas | Kategori | Lokasi | Kapasitas | Harga | Jam buka ringkas | Staff assigned |
-| --- | --- | --- | ---: | ---: | --- | --- |
-| Auditorium Andi Hakim Nasoetion | Auditorium | Kampus IPB Dramaga | 450 | 0 | Senin-Jumat 08.00-16.00 | `demo.staff.operations@ipb.ac.id` |
-| Ruang Sidang Rektorat | Ruang Kelas | Kampus IPB Dramaga | 80 | 150000 | Senin-Jumat 09.00-15.00 | `demo.staff.facilities@ipb.ac.id` |
-| Lapangan Basket Indoor | Olahraga | Gymnasium IPB | 120 | 250000 | Senin-Sabtu 08.00-18.00 | `demo.staff.finance@ipb.ac.id` |
+| Fasilitas | Kategori | Lokasi | Kapasitas | Harga | Jam buka ringkas |
+| --- | --- | --- | ---: | ---: | --- |
+| Auditorium Andi Hakim Nasoetion | Auditorium | Kampus IPB Dramaga | 450 | 0 | Senin-Jumat 08.00-16.00 |
+| Ruang Sidang Rektorat | Ruang Kelas | Kampus IPB Dramaga | 80 | 150000 | Senin-Jumat 09.00-15.00 |
+| Lapangan Basket Indoor | Olahraga | Gymnasium IPB | 120 | 250000 | Senin-Sabtu 08.00-18.00 |
+| Auditorium Fakultas Ekonomi dan Manajemen | Auditorium | FEM Kampus IPB Dramaga | 260 | 100000 | Senin-Jumat 08.00-16.00 |
+| Gedung Kuliah Bersama Auditorium | Auditorium | Kampus IPB Dramaga | 320 | 0 | Senin-Jumat 07.30-16.30 |
+| Ruang Kelas CCR 2.03 | Ruang Kelas | Common Class Room | 60 | 0 | Senin-Jumat 07.00-17.00 |
+| Ruang Diskusi Perpustakaan LSI | Ruang Kelas | Perpustakaan LSI IPB | 24 | 0 | Senin-Sabtu 08.00-19.00 |
+| Lapangan Futsal Outdoor | Olahraga | Student Center IPB | 80 | 125000 | Senin-Minggu 07.00-21.00 |
+| Laboratorium Komputer Departemen Ilmu Komputer | Laboratorium | FMIPA IPB Dramaga | 40 | 0 | Senin-Jumat 08.00-17.00 |
+| Laboratorium Bahasa | Laboratorium | Gedung Kuliah Bersama | 36 | 75000 | Senin-Jumat 08.00-16.00 |
+| Plaza Rektorat | Area Terbuka | Kampus IPB Dramaga | 600 | 0 | Senin-Minggu 06.00-22.00 |
+| Taman Koleksi Kampus | Area Terbuka | Kampus IPB Baranangsiang | 150 | 50000 | Senin-Sabtu 07.00-18.00 |
+| Lapangan Tenis IPB | Olahraga | Gymnasium IPB | 40 | 100000 | Senin-Sabtu 07.00-20.00 |
 
 Setiap fasilitas punya:
 
 - 2 gambar aktif: cover dan detail.
 - 5 row jam buka, Senin sampai Jumat pukul 08.00-16.00.
-- 1 staff assignment.
+- 1 staff assignment, dibagi bergantian ke tiga akun staff demo.
 
 ## Kategori
 
-Total kategori seed: 3.
+Total kategori seed: 5.
 
 | Nama | Slug | Icon hint |
 | --- | --- | --- |
+| Area Terbuka | `area-terbuka` | `trees` |
 | Auditorium | `auditorium` | `presentation` |
-| Ruang Kelas | `ruang-kelas` | `school` |
+| Laboratorium | `laboratorium` | `flask-conical` |
 | Olahraga | `olahraga` | `dumbbell` |
+| Ruang Kelas | `ruang-kelas` | `school` |
 
 ## Organisasi
 
-Total organization unit seed: 2.
+Total organization unit seed: 5.
 
 | Nama | Tipe | Kode |
 | --- | --- | --- |
 | BEM KM IPB | `student_organization` | `BEM` |
 | Himpunan Mahasiswa Ilmu Komputer | `student_organization` | `HIMALKOM` |
+| Paduan Suara Mahasiswa Agria Swara | `student_activity_unit` | `AGRIASWARA` |
+| UKM Pramuka IPB | `student_activity_unit` | `PRAMUKA` |
+| Himpunan Mahasiswa Agronomi | `student_organization` | `HIMAGRON` |
 
 ## Reservasi Demo
 

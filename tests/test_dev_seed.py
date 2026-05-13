@@ -118,7 +118,9 @@ def test_dev_seed_creates_frontend_reservation_tracer_data(tmp_path):
         assert session.scalar(select(FacilityStaffAssignment))
         categories = session.scalars(select(FacilityCategory).order_by(FacilityCategory.name)).all()
         assert [(category.name, category.slug, category.icon_hint) for category in categories] == [
+            ("Area Terbuka", "area-terbuka", "trees"),
             ("Auditorium", "auditorium", "presentation"),
+            ("Laboratorium", "laboratorium", "flask-conical"),
             ("Olahraga", "olahraga", "dumbbell"),
             ("Ruang Kelas", "ruang-kelas", "school"),
         ]
@@ -135,6 +137,53 @@ def test_dev_seed_creates_frontend_reservation_tracer_data(tmp_path):
         ReservationStatus.approved,
         ReservationStatus.pending_document_upload,
     }
+
+
+def test_dev_seed_creates_richer_facility_catalog_demo_data(tmp_path):
+    settings = SettingsModule(database_url=f"sqlite+pysqlite:///{tmp_path / 'seed.db'}", secret_key="test-secret")
+
+    seed_development_data(settings=settings)
+
+    session_factory = build_session_factory(settings.database_url)
+    with session_factory() as session:
+        facilities = session.scalars(select(Facility).where(Facility.is_active.is_(True))).all()
+        categories = session.scalars(select(FacilityCategory).where(FacilityCategory.is_active.is_(True))).all()
+        organizations = session.scalars(select(OrganizationUnit).where(OrganizationUnit.is_active.is_(True))).all()
+
+        facility_ids = {facility.id for facility in facilities}
+        assigned_facility_ids = {
+            assignment.facility_id for assignment in session.scalars(select(FacilityStaffAssignment)).all()
+        }
+
+        assert len(facilities) >= 12
+        assert len(categories) >= 5
+        assert len(organizations) >= 5
+        assert assigned_facility_ids >= facility_ids
+
+        category_counts = Counter(facility.category.slug for facility in facilities)
+        assert min(category_counts.values()) >= 2
+
+        for facility in facilities:
+            assert facility.location
+            assert facility.capacity > 0
+            assert facility.description
+            assert facility.open_hours_summary
+            assert (
+                session.scalar(
+                    select(func.count())
+                    .select_from(FacilityImage)
+                    .where(FacilityImage.facility_id == facility.id, FacilityImage.is_active.is_(True))
+                )
+                >= 2
+            )
+            assert (
+                session.scalar(
+                    select(func.count())
+                    .select_from(FacilityOpenHour)
+                    .where(FacilityOpenHour.facility_id == facility.id)
+                )
+                >= 5
+            )
 
 
 @pytest.mark.anyio
@@ -263,7 +312,9 @@ def test_dev_seed_updates_stale_local_sqlite_schema_before_upserting(tmp_path):
         reservations = session.scalars(select(Reservation).order_by(Reservation.reservation_code)).all()
 
     assert [(category.name, category.slug, category.icon_hint) for category in categories] == [
+        ("Area Terbuka", "area-terbuka", "trees"),
         ("Auditorium", "auditorium", "presentation"),
+        ("Laboratorium", "laboratorium", "flask-conical"),
         ("Olahraga", "olahraga", "dumbbell"),
         ("Ruang Kelas", "ruang-kelas", "school"),
     ]
@@ -282,11 +333,11 @@ def test_dev_seed_is_idempotent_for_seeded_database_rows(tmp_path):
     session_factory = build_session_factory(settings.database_url)
     with session_factory() as session:
         assert session.scalar(select(func.count()).select_from(User)) == 10
-        assert session.scalar(select(func.count()).select_from(Facility)) == 3
-        assert session.scalar(select(func.count()).select_from(OrganizationUnit)) == 2
-        assert session.scalar(select(func.count()).select_from(FacilityStaffAssignment)) == 3
-        assert session.scalar(select(func.count()).select_from(FacilityImage)) == 6
-        assert session.scalar(select(func.count()).select_from(FacilityOpenHour)) == 15
+        assert session.scalar(select(func.count()).select_from(Facility)) == 13
+        assert session.scalar(select(func.count()).select_from(OrganizationUnit)) == 5
+        assert session.scalar(select(func.count()).select_from(FacilityStaffAssignment)) == 13
+        assert session.scalar(select(func.count()).select_from(FacilityImage)) == 26
+        assert session.scalar(select(func.count()).select_from(FacilityOpenHour)) == 65
         assert session.scalar(select(func.count()).select_from(Reservation)) == 9
         assert session.scalar(select(func.count()).select_from(ReservationSignedApprovalLetter)) == 5
         assert session.scalar(select(func.count()).select_from(ReservationPaymentReceipt)) == 3

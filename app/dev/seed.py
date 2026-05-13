@@ -137,6 +137,18 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
             slug="olahraga",
             icon_hint="dumbbell",
         )
+        laboratorium = _ensure_category(
+            session,
+            name="Laboratorium",
+            slug="laboratorium",
+            icon_hint="flask-conical",
+        )
+        area_terbuka = _ensure_category(
+            session,
+            name="Area Terbuka",
+            slug="area-terbuka",
+            icon_hint="trees",
+        )
 
         facilities = [
             _ensure_facility(
@@ -178,6 +190,136 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
                 price_rupiah=250000,
                 open_hours_summary="Senin-Sabtu 08.00-18.00",
             ),
+            _ensure_facility(
+                session,
+                category=auditorium,
+                name="Auditorium Fakultas Ekonomi dan Manajemen",
+                location="FEM Kampus IPB Dramaga",
+                capacity=260,
+                description="Auditorium fakultas untuk seminar, sidang terbuka, dan kuliah tamu.",
+                contact_name="TU FEM",
+                contact_phone="0251-8626545",
+                contact_email="fem-auditorium@ipb.ac.id",
+                price_rupiah=100000,
+                open_hours_summary="Senin-Jumat 08.00-16.00",
+            ),
+            _ensure_facility(
+                session,
+                category=auditorium,
+                name="Gedung Kuliah Bersama Auditorium",
+                location="Kampus IPB Dramaga",
+                capacity=320,
+                description="Ruang auditorium GKB untuk kegiatan lintas departemen dan orientasi mahasiswa.",
+                contact_name="Pengelola GKB",
+                contact_phone="0251-8627111",
+                contact_email="gkb@ipb.ac.id",
+                price_rupiah=0,
+                open_hours_summary="Senin-Jumat 07.30-16.30",
+            ),
+            _ensure_facility(
+                session,
+                category=ruang_kelas,
+                name="Ruang Kelas CCR 2.03",
+                location="Common Class Room",
+                capacity=60,
+                description="Ruang kelas sedang dengan proyektor untuk workshop dan kelas tambahan.",
+                contact_name="Admin CCR",
+                contact_phone="0251-8627203",
+                contact_email="ccr@ipb.ac.id",
+                price_rupiah=0,
+                open_hours_summary="Senin-Jumat 07.00-17.00",
+            ),
+            _ensure_facility(
+                session,
+                category=ruang_kelas,
+                name="Ruang Diskusi Perpustakaan LSI",
+                location="Perpustakaan LSI IPB",
+                capacity=24,
+                description="Ruang diskusi kecil untuk kelompok riset, tutorial, dan rapat organisasi.",
+                contact_name="Layanan Perpustakaan",
+                contact_phone="0251-8623712",
+                contact_email="library@ipb.ac.id",
+                price_rupiah=0,
+                open_hours_summary="Senin-Sabtu 08.00-19.00",
+            ),
+            _ensure_facility(
+                session,
+                category=olahraga,
+                name="Lapangan Futsal Outdoor",
+                location="Student Center IPB",
+                capacity=80,
+                description="Lapangan futsal terbuka untuk latihan rutin dan turnamen mahasiswa.",
+                contact_name="Pengelola Student Center",
+                contact_phone="0251-8623555",
+                contact_email="studentcenter@ipb.ac.id",
+                price_rupiah=125000,
+                open_hours_summary="Senin-Minggu 07.00-21.00",
+            ),
+            _ensure_facility(
+                session,
+                category=laboratorium,
+                name="Laboratorium Komputer Departemen Ilmu Komputer",
+                location="FMIPA IPB Dramaga",
+                capacity=40,
+                description="Laboratorium komputer untuk praktikum, pelatihan pemrograman, dan ujian berbasis komputer.",
+                contact_name="Admin Lab Ilkom",
+                contact_phone="0251-8625584",
+                contact_email="lab-ilkom@ipb.ac.id",
+                price_rupiah=0,
+                open_hours_summary="Senin-Jumat 08.00-17.00",
+            ),
+            _ensure_facility(
+                session,
+                category=laboratorium,
+                name="Laboratorium Bahasa",
+                location="Gedung Kuliah Bersama",
+                capacity=36,
+                description="Laboratorium bahasa dengan perangkat audio untuk pelatihan komunikasi dan tes bahasa.",
+                contact_name="Admin Lab Bahasa",
+                contact_phone="0251-8627336",
+                contact_email="lab-bahasa@ipb.ac.id",
+                price_rupiah=75000,
+                open_hours_summary="Senin-Jumat 08.00-16.00",
+            ),
+            _ensure_facility(
+                session,
+                category=area_terbuka,
+                name="Plaza Rektorat",
+                location="Kampus IPB Dramaga",
+                capacity=600,
+                description="Area terbuka untuk pameran, festival kampus, dan kegiatan seremoni.",
+                contact_name="Biro Umum",
+                contact_phone="0251-8621001",
+                contact_email="biro-umum@ipb.ac.id",
+                price_rupiah=0,
+                open_hours_summary="Senin-Minggu 06.00-22.00",
+            ),
+            _ensure_facility(
+                session,
+                category=area_terbuka,
+                name="Taman Koleksi Kampus",
+                location="Kampus IPB Baranangsiang",
+                capacity=150,
+                description="Ruang hijau untuk kegiatan komunitas, pameran kecil, dan diskusi luar ruang.",
+                contact_name="Pengelola Baranangsiang",
+                contact_phone="0251-8329101",
+                contact_email="baranangsiang@ipb.ac.id",
+                price_rupiah=50000,
+                open_hours_summary="Senin-Sabtu 07.00-18.00",
+            ),
+            _ensure_facility(
+                session,
+                category=olahraga,
+                name="Lapangan Tenis IPB",
+                location="Gymnasium IPB",
+                capacity=40,
+                description="Lapangan tenis untuk latihan unit kegiatan mahasiswa dan kegiatan sivitas akademika.",
+                contact_name="Pengelola Gymnasium",
+                contact_phone="0251-8623000",
+                contact_email="gymnasium@ipb.ac.id",
+                price_rupiah=100000,
+                open_hours_summary="Senin-Sabtu 07.00-20.00",
+            ),
         ]
 
         session.flush()
@@ -214,10 +356,28 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
             unit_type="student_organization",
             code="HIMALKOM",
         )
+        _ensure_organization_unit(
+            session,
+            name="Paduan Suara Mahasiswa Agria Swara",
+            unit_type="student_activity_unit",
+            code="AGRIASWARA",
+        )
+        _ensure_organization_unit(
+            session,
+            name="UKM Pramuka IPB",
+            unit_type="student_activity_unit",
+            code="PRAMUKA",
+        )
+        _ensure_organization_unit(
+            session,
+            name="Himpunan Mahasiswa Agronomi",
+            unit_type="student_organization",
+            code="HIMAGRON",
+        )
         session.flush()
-        _ensure_staff_assignment(session, facility=facilities[0], staff=operations_staff)
-        _ensure_staff_assignment(session, facility=facilities[1], staff=facilities_staff)
-        _ensure_staff_assignment(session, facility=facilities[2], staff=finance_staff)
+        staff_rotation = [operations_staff, facilities_staff, finance_staff]
+        for index, facility in enumerate(facilities):
+            _ensure_staff_assignment(session, facility=facility, staff=staff_rotation[index % len(staff_rotation)])
 
         now = datetime.now(UTC)
         first_start = (now + timedelta(days=7)).replace(hour=2, minute=0, second=0, microsecond=0)

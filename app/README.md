@@ -55,10 +55,13 @@ Demo credentials:
 | Role | Email | Password |
 | --- | --- | --- |
 | Student | `demo.student@apps.ipb.ac.id` | `demo12345` |
-| Staff | `demo.staff@ipb.ac.id` | `demo12345` |
+| Student with seeded reservations | `demo.student.06@apps.ipb.ac.id` | `demo12345` |
+| Staff operations | `demo.staff.operations@ipb.ac.id` | `demo12345` |
+| Staff facilities | `demo.staff.facilities@ipb.ac.id` | `demo12345` |
+| Staff finance | `demo.staff.finance@ipb.ac.id` | `demo12345` |
 | Super Admin | `demo.admin@ipb.ac.id` | `demo12345` |
 
-The seed also creates `demo.blocking@apps.ipb.ac.id` as a synthetic student that owns public-calendar blocking reservations.
+The seed creates 13 active facilities across 5 categories, 5 organization units, and 9 workflow reservations owned by `demo.student.06@apps.ipb.ac.id`.
 
 ## Environment Variables
 

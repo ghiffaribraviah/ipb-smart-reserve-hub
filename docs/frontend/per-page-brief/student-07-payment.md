@@ -22,15 +22,15 @@
 
 ## Design Contract
 
-- Layout: reservation workflow stepper with payment/upload card and reservation summary.
+- Layout: reservation workflow stepper with payment instructions, upload card, and reservation summary.
 - Desktop behavior: two-column workflow rhythm.
 - Mobile behavior: stack instructions, upload, summary; full-width submit action.
-- Required copy/status labels: preserve `Menunggu Pembayaran` and upload labels.
-- Source-of-truth notes: upload uses shared `upload`/`button-row`; payment amount and instructions must be scannable.
+- Required copy/status labels: preserve `Menunggu Pembayaran`; use `Pilih File`, upload button `Unggah`, submit/continue action `Kirim`, and Indonesian selected-file/empty-file text for receipt upload.
+- Source-of-truth notes: upload uses shared `upload`/`button-row`; transfer destination/instructions appear before amount/summary context and selected receipt rows should not show redundant `valid` badges.
 
 ## UX Behavior
 
-- Primary actions: upload receipt.
+- Primary actions: upload receipt, then submit/continue to waiting review.
 - Secondary actions: view reservation detail/back.
 - Loading state: upload pending keeps file visible.
 - Empty state: not applicable for paid pending-payment route.

@@ -25,7 +25,7 @@ async function fillValidForm(user = userEvent.setup()) {
   await user.type(screen.getByLabelText("Email Kampus"), "nadia@apps.ipb.ac.id");
   await user.type(screen.getByLabelText("Nomor Telepon"), "081234567890");
   await user.type(screen.getByLabelText("Kata Sandi"), "password123");
-  await user.type(screen.getByLabelText("Surat Sandi"), "password123");
+  await user.type(screen.getByLabelText("Konfirmasi Kata Sandi"), "password123");
   return user;
 }
 
@@ -64,6 +64,16 @@ describe("RegisterPage", () => {
     );
   });
 
+  it("groups registration fields into identity and password sections with corrected copy", () => {
+    renderRegister();
+
+    expect(screen.getByRole("group", { name: "Data Identitas" })).toBeVisible();
+    expect(screen.getByRole("group", { name: "Buat Kata Sandi" })).toBeVisible();
+    expect(screen.getByLabelText("Konfirmasi Kata Sandi")).toBeVisible();
+    expect(screen.queryByLabelText("Surat Sandi")).not.toBeInTheDocument();
+    expect(screen.getByText("Sudah punya akun?")).toBeVisible();
+  });
+
   it("catches invalid campus email domains before submit", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch");
 
@@ -97,8 +107,8 @@ describe("RegisterPage", () => {
 
     renderRegister();
     const user = await fillValidForm();
-    await user.clear(screen.getByLabelText("Surat Sandi"));
-    await user.type(screen.getByLabelText("Surat Sandi"), "different123");
+    await user.clear(screen.getByLabelText("Konfirmasi Kata Sandi"));
+    await user.type(screen.getByLabelText("Konfirmasi Kata Sandi"), "different123");
     await user.click(screen.getByRole("button", { name: /Buat Akun/ }));
 
     expect(await screen.findByText("Konfirmasi kata sandi tidak sama.")).toBeVisible();

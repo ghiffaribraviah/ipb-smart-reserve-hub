@@ -25,7 +25,8 @@ Collect and display uploaded files for documents, receipts, and facility media.
 - File picker/drop area.
 - Selected file metadata.
 - Validation/error text.
-- Button row with `Pilih File` plus upload/replace action where applicable.
+- Button row with `Pilih File` plus Indonesian upload/submit action such as `Unggah`, `Kirim`, or replace action where applicable.
+- Selected filename/metadata row without redundant `valid` badge copy.
 
 ## Variants
 
@@ -36,7 +37,7 @@ Collect and display uploaded files for documents, receipts, and facility media.
 ## Behavior
 
 - Validate accepted type and size before submit when known.
-- Preserve selected file display during upload.
+- Preserve selected file display during upload and show Indonesian empty-file copy such as `Belum ada file dipilih`; do not expose native `Choose File` / `No File Chosen` browser text.
 
 ## Accessibility
 
@@ -46,7 +47,7 @@ Collect and display uploaded files for documents, receipts, and facility media.
 
 ## Data Contract
 
-- Props/data fields: accepted types, max size, selected file metadata, status.
+- Props/data fields: accepted types, max size, selected file metadata, status when semantically needed.
 - Events: select, remove, submit.
 
 ## Design Rules

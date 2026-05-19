@@ -129,7 +129,7 @@ export function DataDisplayComponentsPage() {
               ["Detail fasilitas diperbarui.", "Kemarin, 16:20"],
             ].map(([text, time]) => (
               <div className="flex gap-3 border-t border-[#e5e7eb] py-3.5 first:border-t-0 first:pt-0" key={text}>
-                <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#ede9fe] text-[#6366f1]">
+                <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#e8f5e9] text-[#0f9d58]">
                   <UserRound aria-hidden="true" size={18} />
                 </div>
                 <div>

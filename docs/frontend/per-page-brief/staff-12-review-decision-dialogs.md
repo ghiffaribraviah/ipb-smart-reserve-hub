@@ -16,7 +16,7 @@
 
 ## Purpose
 
-- User job: approve or reject reservation documents/payment/cancellation decisions with the correct action hierarchy.
+- User job: approve or reject reservation document/payment decisions with the correct action hierarchy.
 - Entry points: staff reservation detail action panel, staff review queues.
 - Exit points: reservation detail, staff reservation list.
 
@@ -47,13 +47,13 @@
 ## Data And Fixture Contract
 
 - Deterministic fixture requirements: selected reservation summary, selected file/stage, current review status, rejection reason example.
-- Real entities: reservation review decision, uploaded document/payment evidence, cancellation request.
+- Real entities: reservation review decision and uploaded document/payment evidence.
 - Fixture media: none.
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: `GET /staff/reservations/:reservationId` for the detail/read model and its `review_actions`; `POST /staff/reservations/:reservationId/document-review/approve`; `POST /staff/reservations/:reservationId/document-review/reject`; `POST /staff/reservations/:reservationId/payment-review/approve`; `POST /staff/reservations/:reservationId/payment-review/reject`; `POST /staff/reservations/:reservationId/cancellation-review/approve`; `POST /staff/reservations/:reservationId/cancellation-review/reject`.
-- Page-needed fields: reservation id, current workflow/review status, selected decision type, optional rejection reason, and `review_actions.{document,payment,cancellation}.{approve_url,reject_url,download_url}` from the staff detail response.
+- Endpoints consumed: `GET /staff/reservations/:reservationId` for the detail/read model and its `review_actions`; `POST /staff/reservations/:reservationId/document-review/approve`; `POST /staff/reservations/:reservationId/document-review/reject`; `POST /staff/reservations/:reservationId/payment-review/approve`; `POST /staff/reservations/:reservationId/payment-review/reject`.
+- Page-needed fields: reservation id, current workflow/review status, selected decision type, optional rejection reason, and `review_actions.{document,payment}.{approve_url,reject_url,download_url}` from the staff detail response.
 - Auth/session assumptions: staff must be assigned to the facility connected to the reservation.
 - Source files: `app/api/routes/approval_letter_routes.py`, `app/api/routes/payment_routes.py`, `app/api/routes/reservation_routes.py`, `app/api/routes/staff_reservation_operation_routes.py`, `app/services/staff_reservation_operations.py`.
 
@@ -62,9 +62,9 @@
 - Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: review decision dialog approve/reject actions.
-- Contract implemented: staff-scoped approve/reject endpoints for document, payment, and cancellation decisions, including required rejection reason validation and assigned-facility access checks. Frontend should refetch `GET /staff/reservations/:reservationId` after a successful decision to refresh the full detail projection.
-- Evidence: route coverage exists in `app/api/routes/approval_letter_routes.py`, `app/api/routes/payment_routes.py`, and `app/api/routes/reservation_routes.py`; staff detail exposes action URLs in `app/services/staff_reservation_operations.py`; `tests/test_payment_workflow.py`, `tests/test_cancellation_workflow.py`, and `tests/test_staff_reservation_operations.py` verify payment/cancellation decisions, required rejection reasons, assigned staff scoping, and review action URL projection.
-- Source issue/PRD: `docs/issues/ISSUE-0009-signed-letter-upload-and-staff-document-review.md`, `docs/issues/ISSUE-0010-paid-facility-receipt-upload-and-payment-review.md`, `docs/issues/ISSUE-0013-cancellation-workflow.md`.
+- Contract implemented: staff-scoped approve/reject endpoints for document and payment decisions, including required rejection reason validation and assigned-facility access checks. Automatic student cancellation means cancellation review actions are legacy backend behavior and are not surfaced in the integrated staff decision UI. Frontend should refetch `GET /staff/reservations/:reservationId` after a successful decision to refresh the full detail projection.
+- Evidence: route coverage exists in `app/api/routes/approval_letter_routes.py` and `app/api/routes/payment_routes.py`; staff detail exposes action URLs in `app/services/staff_reservation_operations.py`; `tests/test_payment_workflow.py` and `tests/test_staff_reservation_operations.py` verify payment decisions, required rejection reasons, assigned staff scoping, and review action URL projection. `docs/issues/ISSUE-0089-automatic-student-cancellation-lifecycle.md` documents removal of cancellation review from integrated staff UI.
+- Source issue/PRD: `docs/issues/ISSUE-0009-signed-letter-upload-and-staff-document-review.md`, `docs/issues/ISSUE-0010-paid-facility-receipt-upload-and-payment-review.md`, `docs/issues/ISSUE-0089-automatic-student-cancellation-lifecycle.md`.
 
 ## Shared Components
 

@@ -19,8 +19,10 @@ from app.services.accounts import UserAccount
 from app.services.facility_management import (
     FacilityBlackoutCreation,
     FacilityImageCreation,
+    FacilityCategoryNotFound,
     FacilityManagementModule,
     FacilityNotFound,
+    FacilityOpenHourInvalid,
     FacilityOpenHourCreation,
     FacilityProfileUpdate,
     StaffFacilityAccessDenied,
@@ -96,6 +98,10 @@ def register_facility_management_routes(
             )
         except FacilityNotFound:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Fasilitas tidak ditemukan.")
+        except FacilityCategoryNotFound:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Kategori fasilitas tidak ditemukan.")
+        except FacilityOpenHourInvalid:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jam tutup harus setelah jam buka.")
         except StaffFacilityAccessDenied:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Staff tidak ditugaskan ke fasilitas ini.")
 
@@ -111,6 +117,8 @@ def register_facility_management_routes(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Fasilitas tidak ditemukan.")
         except StaffFacilityAccessDenied:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Staff tidak ditugaskan ke fasilitas ini.")
+        except FacilityOpenHourInvalid:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jam tutup harus setelah jam buka.")
 
     @app.post(
         "/staff/facilities/{facility_id}/images",

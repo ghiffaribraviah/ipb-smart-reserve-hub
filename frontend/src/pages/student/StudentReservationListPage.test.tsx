@@ -138,9 +138,9 @@ describe("StudentReservationListPage", () => {
       "href",
       "/student/reservations/approved/cancellation",
     );
-    expect(screen.getByRole("link", { name: "Beri Ulasan" })).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: "Lihat Detail" }).at(-1)).toHaveAttribute(
       "href",
-      "/student/reservations/completed/review",
+      "/student/reservations/completed",
     );
   });
 
@@ -158,7 +158,7 @@ describe("StudentReservationListPage", () => {
 
     expect(await screen.findByText("Dibatalkan")).toBeVisible();
     expect(screen.getByText("Kedaluwarsa")).toBeVisible();
-    expect(screen.getAllByRole("link", { name: "Detail Reservasi" })[0]).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: "Lihat Detail" })[0]).toHaveAttribute(
       "href",
       "/student/reservations/cancelled",
     );

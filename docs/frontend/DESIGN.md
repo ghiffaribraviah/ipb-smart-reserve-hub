@@ -16,7 +16,7 @@ Use the revised pages as the standard:
 
 - Staff/Admin pages: dense operational screens with compact tables/cards and clear review action states.
 - Student pages: green-led reservation flows, card-based facility browsing, lightweight booking summaries, and read-only profile/detail surfaces.
-- Super Admin pages: indigo-accent operational dashboards with dense KPI, governance table, and activity-log patterns.
+- Super Admin pages: logo-green-accent operational dashboards with dense KPI, governance table, and activity-log patterns.
 - Login/Register: consistent split/auth layouts with the same Inter typography, control sizing, and green primary actions.
 - Shared references: state boards, upload/calendar boards, mobile drawer, shell variants, primitives, workflow components, and data display components are implementation contracts, not decorative examples.
 
@@ -58,7 +58,7 @@ Use these shared tokens unless a reference page has a documented exception:
 - Input background: `#ffffff` or `#f8fafc`.
 - Success surfaces: pale green fills such as `#e8f5e9`, `#ecfdf5`, or `#dcfce7`.
 - Error/declined surfaces: pale red fills from the reservation references.
-- Super Admin uses the reference indigo accent `#6366f1` for primary actions, profile affordance, and operational links; do not force student green into Super Admin-only surfaces.
+- Super Admin uses logo-derived green `#0f9d58` for primary actions, active navigation, profile affordance, and operational links.
 - Icons are line-based and inherit their parent text/action color; icon containers may use pale semantic fills, but the icon itself should stay simple and one-color.
 - Warning/cancellation-request actions may use amber text/borders, such as `#92400e` on `#fffbeb` with `#fde68a`.
 - Neutral waiting/review states may use gray pills; payment-waiting states may use amber pills; approved/completed states use green pills; rejected/declined states use red pills.
@@ -70,12 +70,12 @@ Avoid introducing new dominant palettes. A page should not read as a separate pr
 - Use `lucide-react` for frontend implementation. HTML references embed equivalent Lucide-style inline SVGs so screenshot capture remains deterministic.
 - Icons should be simple outline icons with `fill="none"`, `stroke="currentColor"`, round caps/joins, and roughly `18-20px` default size inside buttons, nav actions, cards, and table actions.
 - Do not use colorful emoji, multicolor pictograms, or icon-only text replacements. If an icon needs a label, keep the label as real text beside or below the icon.
-- Semantic color comes from the surrounding control or container: green for positive/primary, amber for caution/cancellation requests, red for destructive/rejection/logout, indigo for Super Admin operational accents, and gray for neutral utilities.
+- Semantic color comes from the surrounding control or container: green for positive/primary, amber for caution/cancellation requests, red for destructive/rejection/logout, green for Super Admin operational accents, and gray for neutral utilities.
 - File type chips may use short text such as `PDF` or `JPG`; problem or action states should use Lucide-style icons such as alert, check, clock, upload, download, search, bell, users, building, monitor, calendar, settings, and x.
 
 ## Shared Chrome
 
-Student and staff pages use the green-accent shell; Super Admin uses the indigo-accent shell. Treat `Shared - 05 - Layout Shells.html` as the compact shared shell reference and role pages as the page-specific expanded examples.
+Student and staff pages use the green-accent shell; Super Admin uses the logo-green-accent shell. Treat `Shared - 05 - Layout Shells.html` as the compact shared shell reference and role pages as the page-specific expanded examples.
 
 All student pages must use the shared compact shell pattern:
 
@@ -129,7 +129,7 @@ Across all shells, the footer should feel quiet and balanced: no cramped link st
 - Read-only information grids use small uppercase labels with normal-value text. On mobile, long labels and values must wrap inside the card.
 - Document rows use neutral row cards, clear file metadata, status text, and action links. Desktop rows use icon/file type, flexible metadata, then a separated right-side status/action area with enough width and gap. On mobile, the right-side status/action area moves below the metadata with a top divider.
 - Long filenames must wrap within the document card. Status badges and action buttons must not collide with each other or with file metadata at desktop or mobile sizes.
-- Rating inputs use accessible radio semantics with large star targets; selected/hovered stars use amber.
+- Rating inputs use accessible radio semantics with large star targets; selected/hovered stars use logo green.
 
 ## Buttons And Actions
 
@@ -143,7 +143,7 @@ Across all shells, the footer should feel quiet and balanced: no cramped link st
 - Rejection actions such as `Tolak Dokumen` use red-tinted styling. Disabled/loading actions such as `Memproses` use neutral gray styling with reduced affordance.
 - Cancellation-request actions are not destructive-confirm red by default; use quiet amber styling for `Ajukan Pembatalan`.
 - Button rows inside upload, payment, document, and reservation status panels need visible breathing room: use `12-14px` gaps, wrap where needed, and stack to full width on mobile.
-- Super Admin primary actions use indigo filled buttons; secondary dashboard actions use quiet outline buttons.
+- Super Admin primary actions use logo-green filled buttons; secondary dashboard actions use quiet outline buttons.
 
 ## Reservation Workflow
 
@@ -156,16 +156,16 @@ Student reservation steps must share one visual language:
 - Step 3/confirmation pages should continue the same card rhythm and Indonesian copy.
 - Reservation status pages use compact centered status cards with the same summary rows, green primary CTA, and Indonesian status copy.
 - Payment upload pages use the same summary card spacing as verification pages; mobile summaries must breathe and avoid cramped rows.
-- Reservation accepted pages use the same completed workflow rhythm and route onward with `Lihat Detail Reservasi`.
+- Reservation accepted pages use the same completed workflow rhythm and route onward with `Lihat Detail`.
 - Document status panels show each document as a row with a file/type marker, filename, metadata, semantic badge, and action button. The status/action column must be visually separated on desktop and stacked below on mobile.
-- Upload panels use dashed or subtle bordered surfaces, a clear title, file constraints, and a button row with enough gap between `Pilih File` and `Unggah Dokumen`.
-- Reservation status panels may pair a green confirmation icon with primary and caution actions, for example `Lihat Detail Reservasi` and `Ajukan Pembatalan`, with buttons spaced enough to avoid a crowded footer.
+- Upload panels use dashed or subtle bordered surfaces, a clear title, file constraints, selected-file text such as `Belum ada file dipilih`, and a button row with enough gap between `Pilih File` and `Unggah`/`Kirim`.
+- Reservation status panels may pair a green confirmation icon with primary and caution actions, for example `Lihat Detail` and `Ajukan Pembatalan`, with buttons spaced enough to avoid a crowded footer.
 
 ## Reservation Lists And Details
 
 - Student reservation lists use horizontal image/content/action cards on desktop and stacked cards on mobile.
 - Reservation list cards use realistic mixed statuses instead of repeated placeholders. Terminal history cards do not show cancellation actions.
-- Ongoing approved reservations use `Ajukan Pembatalan`; pre-approval or pending states may use `Batalkan`; completed/rejected/cancelled history cards show only `Detail Reservasi`.
+- Ongoing approved reservations use `Ajukan Pembatalan`; pre-approval or pending states may use `Batalkan`; completed/rejected/cancelled history cards show only `Lihat Detail`.
 - Status badges must be readable on mobile; long labels such as `Menunggu Verifikasi Dokumen` may wrap within a constrained pill.
 - Reservation detail pages use a large facility heading, compact metadata, asymmetric gallery on desktop, simplified stacked gallery on mobile, information cards, and a `Dokumen Reservasi` section.
 - Approved detail pages show `Ajukan Pembatalan`; completed detail pages show `Tulis Ulasan`.
@@ -183,7 +183,7 @@ Student reservation steps must share one visual language:
 
 ## Super Admin Dashboard
 
-- Preserve the Super Admin indigo accent and operational dashboard tone.
+- Preserve the Super Admin logo green accent and operational dashboard tone.
 - Desktop layout uses four KPI cards followed by a two-column content area: administrator governance table and system activity log.
 - Mobile layout stacks KPI cards, converts the administrator table into cards, and keeps the activity log as a compact list.
 - Super Admin dashboard labels and activity copy are Indonesian, while product/role terms such as `Super Admin` may remain as role names.

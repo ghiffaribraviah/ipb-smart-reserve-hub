@@ -87,7 +87,7 @@ describe("StudentReservationDetailPage", () => {
 
     renderDetailPage();
     await fillValidForm(user);
-    await user.click(screen.getByRole("button", { name: "Lanjut ke Surat" }));
+    await user.click(screen.getByRole("button", { name: "Lanjutkan" }));
 
     expect(await screen.findByRole("heading", { name: "Approval Letter" })).toBeVisible();
     await waitFor(() => {
@@ -122,7 +122,7 @@ describe("StudentReservationDetailPage", () => {
     renderDetailPage();
 
     expect(await screen.findByText("Belum ada unit organisasi aktif.")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Lanjut ke Surat" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Lanjutkan" })).toBeDisabled();
   });
 
   it("validates required fields, participant count, contact phone, and extra notes", async () => {
@@ -130,7 +130,7 @@ describe("StudentReservationDetailPage", () => {
     mockReservationSubmitFetch();
 
     renderDetailPage();
-    await user.click(await screen.findByRole("button", { name: "Lanjut ke Surat" }));
+    await user.click(await screen.findByRole("button", { name: "Lanjutkan" }));
 
     expect(screen.getByText("Nama kegiatan wajib diisi.")).toBeVisible();
     expect(screen.getByText("Jumlah peserta harus lebih dari 0.")).toBeVisible();
@@ -138,7 +138,7 @@ describe("StudentReservationDetailPage", () => {
     expect(screen.getByText("Deskripsi kegiatan wajib diisi.")).toBeVisible();
 
     await user.type(screen.getByLabelText("Catatan Tambahan"), "x".repeat(181));
-    await user.click(screen.getByRole("button", { name: "Lanjut ke Surat" }));
+    await user.click(screen.getByRole("button", { name: "Lanjutkan" }));
     expect(screen.getByText("Catatan tambahan maksimal 180 karakter.")).toBeVisible();
   });
 
@@ -151,10 +151,10 @@ describe("StudentReservationDetailPage", () => {
 
     renderDetailPage();
     await fillValidForm(user);
-    await user.click(screen.getByRole("button", { name: "Lanjut ke Surat" }));
+    await user.click(screen.getByRole("button", { name: "Lanjutkan" }));
 
     expect(await screen.findByText("Waktu reservasi tidak tersedia.")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Lanjut ke Surat" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Lanjutkan" })).toBeEnabled();
   });
 
   it("disables submit while reservation creation is loading", async () => {
@@ -179,7 +179,7 @@ describe("StudentReservationDetailPage", () => {
 
     renderDetailPage();
     await fillValidForm(user);
-    await user.click(screen.getByRole("button", { name: "Lanjut ke Surat" }));
+    await user.click(screen.getByRole("button", { name: "Lanjutkan" }));
 
     expect(screen.getByRole("button", { name: "Menyimpan..." })).toBeDisabled();
     resolveSubmit(

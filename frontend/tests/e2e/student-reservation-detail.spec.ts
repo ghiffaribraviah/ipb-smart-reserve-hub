@@ -98,6 +98,7 @@ test.describe("student reservation detail pages", () => {
     await expect(page.getByText("bukti-pembayaran.jpg")).toBeVisible();
     await expect(page.getByText("Terverifikasi")).toHaveCount(2);
     await expect(page.getByText("Reservasi ini sudah disetujui.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ajukan Pembatalan" })).toBeVisible();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);
@@ -120,10 +121,9 @@ test.describe("student reservation detail pages", () => {
     await page.goto("/student/reservations/RSV-FIXTURE-010");
 
     await expect(page.getByRole("heading", { name: "Grand Auditorium" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Tulis Ulasan" })).toHaveAttribute(
-      "href",
-      "/student/reservations/RSV-FIXTURE-010/review",
-    );
+    await expect(page.getByRole("heading", { name: "Tulis Ulasan" })).toBeVisible();
+    await expect(page.getByRole("radiogroup", { name: "Penilaian Fasilitas" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Kirim Ulasan" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Ajukan Pembatalan" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Dokumen Reservasi" })).toBeVisible();
     await expect(page.getByText("Terverifikasi")).toHaveCount(2);

@@ -100,7 +100,7 @@ test.describe("student reservation creation pages", () => {
     await expect(page.getByLabel("Dukungan AV & mikrofon")).toBeVisible();
     await expect(page.getByLabel("Catatan Tambahan")).toBeVisible();
     await expect(page.getByText("Total Biaya")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Lanjut ke Surat" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Lanjutkan" })).toBeVisible();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);

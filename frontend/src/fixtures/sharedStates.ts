@@ -10,7 +10,7 @@ export const dataStateFixture = {
       badge: "Kedaluwarsa",
       message: "Hold waktu dibatalkan otomatis karena dokumen belum diunggah.",
       title: "Reservasi Kedaluwarsa",
-      tone: "neutral",
+      tone: "warning",
     },
     {
       badge: "Ditutup",

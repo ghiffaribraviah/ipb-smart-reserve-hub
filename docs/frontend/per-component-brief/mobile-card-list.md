@@ -26,7 +26,7 @@ Represent tabular operational data on mobile without horizontal scrolling.
 
 ## Variants
 
-- Facility card.
+- Facility governance card.
 - Reservation card.
 - Governance/admin card.
 
@@ -46,6 +46,7 @@ Represent tabular operational data on mobile without horizontal scrolling.
 ## Design Rules
 
 - Mobile: full-width cards with stable spacing.
+- Super Admin governance cards keep the same label/value rhythm across users and facilities.
 - Overflow: long names, emails, and filenames wrap.
 
 ## Implementation Notes

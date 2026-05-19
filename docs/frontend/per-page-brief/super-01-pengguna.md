@@ -22,15 +22,15 @@
 
 ## Design Contract
 
-- Layout: Super Admin shell, KPI cards, filter toolbar, dense user table/cards.
-- Desktop behavior: KPI row, inline filters, table.
-- Mobile behavior: stacked actions, KPI cards, filters, and user cards.
-- Required copy/status labels: preserve `Pengguna`, `Tambah Pengguna`, `Aktif`, `Nonaktif`.
-- Source-of-truth notes: use Super Admin indigo accent.
+- Layout: Super Admin shell, KPI cards, inline create-user controls, filter toolbar, dense user table/cards.
+- Desktop behavior: KPI row, create-user controls before filters, then table.
+- Mobile behavior: stacked actions, KPI cards, create-user controls, filters, and user cards.
+- Required copy/status labels: preserve `Pengguna`, `Buat Pengguna`, `Ubah status`, `Aktif`, `Nonaktif`.
+- Source-of-truth notes: use Super Admin logo green accent.
 
 ## UX Behavior
 
-- Primary actions: add user.
+- Primary actions: add user through the inline create-user form.
 - Secondary actions: export, filter, detail/manage access.
 - Loading state: KPI/table skeletons.
 - Empty state: no matching users.
@@ -76,6 +76,8 @@
 
 - Desktop and mobile screenshots match references.
 - Integration checks: filters and actions preserve user role language internally while visible copy stays Indonesian.
+- Inline creation appears above search/filter controls; no redundant top-right `Tambah Pengguna` action is shown.
+- Row status actions use `Ubah status` wording while preserving activate/deactivate backend calls.
 
 ## Open Questions
 

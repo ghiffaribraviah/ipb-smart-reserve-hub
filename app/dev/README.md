@@ -98,7 +98,7 @@ Total reservasi seed: 9. Semuanya dimiliki oleh `demo.student.06@apps.ipb.ac.id`
 | `DEV-SEED-DOCUMENT-REVIEW` | `pending_document_review` | Auditorium Andi Hakim Nasoetion | BEM KM IPB | Review Surat UKM | Queue review dokumen staff dan download surat bertanda tangan. |
 | `DEV-SEED-PAYMENT-PENDING` | `pending_payment` | Ruang Sidang Rektorat | Himpunan Mahasiswa Ilmu Komputer | Forum Berbayar Menunggu Upload | Instruksi pembayaran dan upload bukti bayar dari sisi student. |
 | `DEV-SEED-PAYMENT-REVIEW` | `pending_payment` | Lapangan Basket Indoor | BEM KM IPB | Turnamen Basket Menunggu Review | Queue review pembayaran staff dan download bukti bayar. |
-| `DEV-SEED-CANCELLATION` | `cancellation_requested` | Auditorium Andi Hakim Nasoetion | BEM KM IPB | Kegiatan Menunggu Pembatalan | Queue review pembatalan staff. |
+| `DEV-SEED-CANCELLATION` | `cancelled` | Auditorium Andi Hakim Nasoetion | BEM KM IPB | Kegiatan Dibatalkan Mahasiswa | Detail reservasi cancelled dengan alasan pembatalan mahasiswa. |
 | `DEV-SEED-COMPLETED` | `completed` | Lapangan Basket Indoor | Himpunan Mahasiswa Ilmu Komputer | Kegiatan Selesai Dengan Ulasan | Detail completed dan review/rating. |
 | `DEV-SEED-DOCUMENT-REJECTED` | `rejected` | Auditorium Andi Hakim Nasoetion | BEM KM IPB | Surat Ditolak | Tampilan penolakan dokumen. |
 | `DEV-SEED-PAYMENT-REJECTED` | `rejected` | Lapangan Basket Indoor | Himpunan Mahasiswa Ilmu Komputer | Pembayaran Ditolak | Tampilan penolakan pembayaran. |
@@ -109,7 +109,7 @@ Reservasi yang memiliki metadata surat atau bukti bayar memakai key `dev-seed/..
 
 - Student flow baru: pakai `demo.student@apps.ipb.ac.id`, karena akun ini sengaja dibersihkan dari reservasi seed setiap seed dijalankan.
 - Student flow dengan data semua state reservasi: pakai `demo.student.06@apps.ipb.ac.id`.
-- Staff auditorium / review dokumen / review pembatalan: pakai `demo.staff.operations@ipb.ac.id`.
+- Staff auditorium / review dokumen: pakai `demo.staff.operations@ipb.ac.id`.
 - Staff ruang kelas / flow pembayaran menunggu upload: pakai `demo.staff.facilities@ipb.ac.id`.
 - Staff fasilitas berbayar / review pembayaran: pakai `demo.staff.finance@ipb.ac.id`.
 - Super Admin: pakai `demo.admin@ipb.ac.id`.

@@ -135,6 +135,9 @@ describe("StudentFacilityDetailPage", () => {
     expect(screen.getByText("Rp100.000")).toBeVisible();
     expect(screen.getByText("Ruangannya luas dan tata suara jelas.")).toBeVisible();
     expect(await screen.findByText("Belum ada jadwal terblokir pada tanggal ini.")).toBeVisible();
+    const calendarHeading = screen.getByRole("heading", { name: "Kalender Publik" });
+    const reviewsHeading = screen.getByRole("heading", { name: "Ulasan Peminjam" });
+    expect(calendarHeading.compareDocumentPosition(reviewsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByLabelText("Kalender publik Juni 2026")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Pilih 1 Juni 2026" }));
     expect(await screen.findByText("02:00 - 04:00")).toBeVisible();

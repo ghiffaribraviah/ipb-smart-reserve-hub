@@ -73,12 +73,14 @@ test.describe("student payment status pages", () => {
 
     await expect(page.getByRole("link", { name: "← Kembali" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Unggah Bukti Pembayaran" })).toBeVisible();
+    await expect(page.getByText("Tujuan Transfer")).toBeVisible();
+    await expect(page.getByText("Transfer ke BNI 123456789 a.n. IPB")).toBeVisible();
     await expect(page.getByText("JPG/JPEG/PNG maksimal 5 MB")).toBeVisible();
-    await expect(page.getByText("bukti-pembayaran.jpg")).toBeVisible();
-    await expect(page.getByText("JPG · 840 KB · siap dikirim")).toBeVisible();
-    await expect(page.getByText("Total Pembayaran")).toBeVisible();
+    await expect(page.getByText("Belum ada file dipilih")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Unggah" })).toBeVisible();
+    await expect(page.getByText("Total Pembayaran", { exact: true })).toBeVisible();
     await expect(page.getByText("Rp1.500.000").first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Unggah Bukti" })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "Kirim" })).toHaveAttribute(
       "href",
       "/student/reservations/RSV-FIXTURE-001/payment/waiting",
     );
@@ -146,7 +148,7 @@ test.describe("student payment status pages", () => {
     await expect(page.getByRole("heading", { name: "Bukti Pembayaran Ditolak" })).toBeVisible();
     await expect(page.getByText("Pembayaran Ditolak", { exact: true })).toBeVisible();
     await expect(page.getByText("Bukti pembayaran belum dapat diverifikasi.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Unggah Ulang Bukti Pembayaran" })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "Unggah Ulang" })).toHaveAttribute(
       "href",
       "/student/reservations/RSV-FIXTURE-001/payment",
     );
@@ -178,7 +180,7 @@ test.describe("student payment status pages", () => {
     await expect(page.getByText("Kode Reservasi")).toBeVisible();
     await expect(page.getByText("RSV-2026-00024")).toBeVisible();
     await expect(page.getByText("Disetujui", { exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Lihat Detail Reservasi" })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "Lihat Detail" })).toHaveAttribute(
       "href",
       "/student/reservations/RSV-FIXTURE-001",
     );

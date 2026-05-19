@@ -51,7 +51,7 @@ Show the current workflow status and next navigation action.
 
 - Desktop: compact centered panel with summary rows above status copy when used in workflow pages.
 - Mobile: full-width panel with stacked actions and enough button gap to avoid collision.
-- Color: green success, amber waiting, red declined.
+- Color: green success, yellow warning/waiting, red declined.
 
 ## Implementation Notes
 

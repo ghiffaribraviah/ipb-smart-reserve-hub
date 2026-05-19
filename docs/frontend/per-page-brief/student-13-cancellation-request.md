@@ -9,14 +9,14 @@
 
 ## Route Contract
 
-- Proposed route: `/student/reservations/:reservationId/cancellation-request`
+- Proposed route: `/student/reservations/:reservationId/cancellation`
 - Auth/role: `student`
 - Unauthorized behavior: redirect to login.
-- Redirect behavior: successful submit returns to reservation detail/list with cancellation-requested state.
+- Redirect behavior: successful submit returns to reservation detail with cancelled state and visible cancellation reason.
 
 ## Purpose
 
-- User job: request cancellation for an already approved reservation and understand refund limitations.
+- User job: cancel an already approved reservation and understand fines, sanctions, and refund limitations.
 - Entry points: `Ajukan Pembatalan` from accepted reservation detail.
 - Exit points: submit request, cancel/back to accepted detail.
 
@@ -25,12 +25,12 @@
 - Layout: two-column desktop form and reservation summary; mobile stacks form, summary, then state variants.
 - Desktop behavior: form card leads, summary card anchors context, post-submit state references sit below.
 - Mobile behavior: full-width controls/actions with readable refund warning and stacked summary rows.
-- Required copy/status labels: preserve `Ajukan Pembatalan`, `Kirim Pengajuan`, `Pembatalan Menunggu Review`, `Pembatalan Ditolak`.
-- Source-of-truth notes: pending/rejected examples are state references, not part of the active form state; cancellation action uses quiet amber styling, not destructive red.
+- Required copy/status labels: preserve `Ajukan Pembatalan`, `Kirim Pengajuan`, and use immediate cancelled-state copy instead of pending/rejected staff-review language.
+- Source-of-truth notes: cancellation action uses quiet amber styling and must clearly warn that submission immediately cancels the reservation and may involve fines, sanctions, or no refund.
 
 ## UX Behavior
 
-- Primary actions: submit cancellation request.
+- Primary actions: submit cancellation.
 - Secondary actions: cancel/back to reservation detail.
 - Loading state: submit action retains layout while pending.
 - Empty state: missing optional summary values are omitted or shown as quiet missing values.
@@ -42,11 +42,11 @@
 - Reason select and textarea need explicit labels.
 - Refund warning is text-visible.
 - Submit/cancel actions are keyboard reachable.
-- State variant cards communicate status with text, not color alone.
+- Consequence and final-state cards communicate status with text, not color alone.
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: approved reservation summary, cancellation reason options, pending/rejected state examples.
+- Deterministic fixture requirements: approved reservation summary, cancellation reason options, immediate cancelled-state example.
 - Real entities: StudentReservation detail and cancellation request.
 - Fixture media: deterministic facility thumbnail.
 
@@ -61,10 +61,10 @@
 
 - Status: `resolved`
 - Domain area: Reservation Workflow
-- Affected UI: cancellation request form and post-submit pending/rejected states.
-- Contract needed: owned reservation detail plus cancellation request endpoint and cancellation projection fields.
-- Evidence: `POST /student/reservations/{reservation_id}/cancellation-request` exists; `StudentReservationResponse` exposes cancellation fields used by list/detail projections.
-- Source issue/PRD: `docs/issues/ISSUE-0013-cancellation-workflow.md`.
+- Affected UI: cancellation request form and post-submit cancelled detail state.
+- Contract needed: owned reservation detail plus cancellation request endpoint that immediately returns `cancelled` with cancellation projection fields.
+- Evidence: `POST /student/reservations/{reservation_id}/cancellation-request` exists; `tests/test_cancellation_workflow.py` verifies approved cancellation immediately transitions to `cancelled`, preserves required reason handling, records audit, and exposes cancellation reason fields used by list/detail projections.
+- Source issue/PRD: `docs/issues/ISSUE-0013-cancellation-workflow.md`, `docs/issues/ISSUE-0089-automatic-student-cancellation-lifecycle.md`.
 
 ## Shared Components
 

@@ -63,6 +63,7 @@ type StudentHomeFacility = {
   description: string;
   href: string;
   name: string;
+  price: string;
   rating: string;
   reviewCount: string;
   slug: string;
@@ -121,9 +122,10 @@ function mapFeaturedFacility(facility: FacilityCatalogItemResponse): StudentHome
     capacity: formatCapacity(facility.capacity),
     category: facility.category,
     coverImageUrl: facility.cover_image_url,
-    description: `${facility.location} · ${facility.open_hours_summary} · ${facility.price_summary}`,
+    description: `${facility.location} · ${facility.open_hours_summary}`,
     href: `/student/facilities/${facility.id}`,
     name: facility.name,
+    price: facility.price_summary,
     rating: formatRating(facility.rating_average),
     reviewCount: formatReviewCount(facility.review_count),
     slug: facility.id,
@@ -306,58 +308,66 @@ function CategoryShortcut({ category }: { category: StudentHomeCategory }) {
 }
 
 function FacilityMedia({ facility }: { facility: StudentHomeFacility }) {
-  if (facility.coverImageUrl) {
-    return (
-      <img
-        alt={`Foto ${facility.name}`}
-        className="h-[180px] w-full object-cover max-md:h-[132px]"
-        src={facility.coverImageUrl}
-      />
-    );
-  }
-
   return (
     <div
       aria-label={`Foto ${facility.name}`}
-      className="flex h-[180px] items-center justify-center bg-gradient-to-br from-[#d1fae5] via-[#fef3c7] to-[#dbeafe] text-center max-md:h-[132px]"
+      className="relative flex h-[180px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#d1fae5] via-[#efffd6] to-[#fef3c7] text-center max-md:h-[150px]"
       role="img"
     >
-      <div>
-        <p className="m-0 font-serif text-[26px] font-bold leading-none text-[#1d7667] max-md:text-xl">
-          IPB SRH
-        </p>
-        <p className="m-0 mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280] max-md:text-[8px]">
-          Deterministic media fixture
-        </p>
-      </div>
+      {facility.coverImageUrl ? (
+        <img
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+          src={facility.coverImageUrl}
+        />
+      ) : null}
+      <span className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-[#111827] shadow-[0_2px_4px_rgba(0,0,0,0.12)] max-md:px-2.5 max-md:text-[10px]">
+        {facility.category}
+      </span>
+      {!facility.coverImageUrl ? (
+        <>
+          <div className="absolute inset-[18px] rounded-[10px] border-4 border-[#9fd9b8]/70 max-md:inset-3" />
+          <div className="relative">
+            <p className="m-0 font-serif text-[26px] font-bold leading-none text-[#1d7667] max-md:text-xl">
+              IPB SRH
+            </p>
+            <p className="m-0 mt-2 text-[9px] font-bold tracking-normal text-[#1f2937] max-md:text-[8px]">
+              Deterministic media fixture
+            </p>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
 
 function FacilityCard({ facility }: { facility: StudentHomeFacility }) {
   return (
-    <article className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] max-md:rounded-[10px]">
+    <article className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
       <a
         className="flex h-full flex-col text-[#111827] no-underline outline-none focus-visible:ring-2 focus-visible:ring-[#10b981] focus-visible:ring-offset-4"
         href={facility.href}
       >
         <FacilityMedia facility={facility} />
         <div className="flex flex-1 flex-col p-5 max-md:p-3.5">
-          <div className="mb-2 flex items-center gap-1 text-[12px] font-semibold text-[#6b7280] max-md:text-[10px]">
-            <Star aria-hidden="true" className="fill-amber-400 text-amber-400" size={14} />
-            <span>{facility.rating}</span>
-            <span>·</span>
-            <span>{facility.reviewCount}</span>
-          </div>
-          <h3 className="m-0 mb-3 text-base font-bold leading-snug max-md:mb-2 max-md:text-sm">
+          <h3 className="m-0 mb-2 text-base font-bold leading-snug max-md:text-[15px]">
             {facility.name}
           </h3>
+          <div className="mb-3 flex items-center gap-1 text-xs font-semibold text-[#111827] max-md:text-[11px]">
+            <Star aria-hidden="true" className="fill-[#10b981] text-[#10b981]" size={14} />
+            <span>{facility.rating}</span>
+            <span className="font-normal text-[#6b7280]">({facility.reviewCount})</span>
+          </div>
           <p className="m-0 mb-5 flex-1 text-[13px] leading-[1.5] text-[#6b7280] max-md:mb-3.5 max-md:text-[11px]">
             {facility.description}
           </p>
-          <div className="flex justify-between gap-3 border-t border-[#e5e7eb] pt-4 text-xs font-medium text-[#6b7280] max-md:items-start max-md:gap-2.5 max-md:text-[10px]">
-            <span>Kapasitas: {facility.capacity}</span>
-            <span>Tipe: {facility.category}</span>
+          <div className="flex justify-between gap-3 border-t border-[#e5e7eb] pt-4 text-xs font-medium text-[#6b7280] max-md:flex-col max-md:gap-2 max-md:text-[10px]">
+            <span className="flex min-w-0 items-center gap-1.5">
+              <Users aria-hidden="true" className="shrink-0" size={16} />
+              Kapasitas: {facility.capacity}
+            </span>
+            <span className="shrink-0 font-semibold text-[#111827]">{facility.price}</span>
           </div>
         </div>
       </a>

@@ -106,6 +106,16 @@ function mockReservationFetch(body: StudentReservationWorkflowProjection) {
       );
     }
 
+    if (url === `http://localhost:8000/student/reservations/${body.id}/review`) {
+      return jsonResponse({
+        admin_removal_reason: null,
+        deleted_at: null,
+        deleted_by: null,
+        id: "review-1",
+        is_deleted: false,
+      }, 201);
+    }
+
     return jsonResponse({ detail: `Unhandled ${url}` }, 404);
   });
 }
@@ -141,7 +151,7 @@ describe("StudentReservationDetailReadOnlyPage", () => {
     expect(screen.getByText("surat-persetujuan-ditandatangani.pdf")).toBeVisible();
     expect(screen.getByText("bukti-pembayaran.jpg")).toBeVisible();
 
-    await user.click(screen.getByRole("button", { name: "Unduh Surat" }));
+    await user.click(screen.getByRole("button", { name: "Unduh" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -160,19 +170,34 @@ describe("StudentReservationDetailReadOnlyPage", () => {
     renderDetail();
 
     expect(await screen.findByText("Belum ada dokumen tersedia.")).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Unduh Surat" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Unduh" })).not.toBeInTheDocument();
     expect(screen.queryByText("surat-persetujuan-ditandatangani.pdf")).not.toBeInTheDocument();
   });
 
-  it("shows review action only for completed reservations without a visible review", async () => {
-    mockReservationFetch(reservation({ status: "completed" }));
+  it("shows the inline review form for completed reservations without a visible review", async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockReservationFetch(reservation({ status: "completed" }));
 
     renderDetail();
 
-    expect(await screen.findByRole("link", { name: "Tulis Ulasan" })).toHaveAttribute(
-      "href",
-      "/student/reservations/reservation-1/review",
+    expect(await screen.findByRole("heading", { name: "Tulis Ulasan" })).toBeVisible();
+    await user.click(screen.getByRole("radio", { name: "5 dari 5" }));
+    await user.type(screen.getByLabelText("Komentar"), "Ruang bersih dan perangkat audio siap digunakan.");
+    await user.click(screen.getByRole("button", { name: "Kirim Ulasan" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8000/student/reservations/reservation-1/review",
+        expect.objectContaining({
+          body: JSON.stringify({
+            comment: "Ruang bersih dan perangkat audio siap digunakan.",
+            rating: 5,
+          }),
+          method: "POST",
+        }),
+      ),
     );
+    expect(await screen.findByText("Reservasi telah selesai dan ulasan Anda sudah tercatat.")).toBeVisible();
     expect(screen.queryByRole("link", { name: "Ajukan Pembatalan" })).not.toBeInTheDocument();
   });
 
@@ -192,6 +217,22 @@ describe("StudentReservationDetailReadOnlyPage", () => {
 
     expect(await screen.findByText("Reservasi telah selesai dan ulasan Anda sudah tercatat.")).toBeVisible();
     expect(screen.queryByRole("link", { name: "Tulis Ulasan" })).not.toBeInTheDocument();
+  });
+
+  it("shows the cancellation reason on cancelled reservation detail", async () => {
+    mockReservationFetch(reservation({
+      cancellation_reason: "Jadwal kegiatan berubah: agenda organisasi dipindahkan.",
+      status: "cancelled",
+    }));
+
+    renderDetail();
+
+    expect(
+      await screen.findByText(
+        "Reservasi ini sudah dibatalkan. Alasan: Jadwal kegiatan berubah: agenda organisasi dipindahkan.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Ajukan Pembatalan" })).not.toBeInTheDocument();
   });
 
   it("redirects stale detail states to the canonical workflow route", async () => {

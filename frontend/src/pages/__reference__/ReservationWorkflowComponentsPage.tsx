@@ -143,7 +143,7 @@ export function ReservationWorkflowComponentsPage() {
               <p className="m-0 mt-1 text-sm leading-6 text-slate-500">PDF/JPG/PNG maksimal 5 MB</p>
               <div className="mt-5 flex flex-wrap justify-center gap-3.5 max-md:grid">
                 <Button variant="secondary">Pilih File</Button>
-                <Button variant="primary">Unggah Dokumen</Button>
+                <Button variant="primary">Unggah</Button>
               </div>
             </div>
           </Card>
@@ -155,7 +155,7 @@ export function ReservationWorkflowComponentsPage() {
               <p className="m-0 text-sm leading-6 text-slate-500">
                 Transfer ke rekening IPB Smart Reserve Hub dan unggah bukti pembayaran.
               </p>
-              <Button className="mt-4" variant="primary">Unggah Bukti</Button>
+              <Button className="mt-4" variant="primary">Kirim</Button>
             </div>
           </Card>
 
@@ -169,7 +169,7 @@ export function ReservationWorkflowComponentsPage() {
                 Reservasi aktif. Simpan detail jadwal dan dokumen untuk kebutuhan registrasi kegiatan.
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-3.5 max-md:grid">
-                <Button variant="primary">Lihat Detail Reservasi</Button>
+                <Button variant="primary">Lihat Detail</Button>
                 <Button variant="warning">Ajukan Pembatalan</Button>
               </div>
             </div>

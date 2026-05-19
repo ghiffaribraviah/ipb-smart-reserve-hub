@@ -208,6 +208,13 @@ describe("StaffReservationDetailDecisionPages", () => {
     const dialog = await screen.findByRole("dialog", { name: "Tolak Dokumen Reservasi" });
     const rejectButton = within(dialog).getByRole("button", { name: "Tolak Dokumen" });
 
+    expect(within(dialog).getByRole("link", { name: "Kembali" })).toHaveAttribute(
+      "href",
+      "/staff/reservations/reservation-1",
+    );
+    expect(within(dialog).queryByText("Memerlukan Alasan")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText(/Menolak dokumen/)).not.toBeInTheDocument();
+
     await user.clear(await screen.findByLabelText("Alasan penolakan"));
     await user.click(rejectButton);
     expect(await screen.findByText("Alasan penolakan wajib diisi.")).toBeVisible();

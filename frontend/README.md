@@ -4,7 +4,13 @@ This directory contains the Vite React frontend for IPB Smart Reserve Hub.
 
 ## Run Locally
 
-Start the backend first from the repository root:
+Start the backend and frontend together from the repository root:
+
+```sh
+make dev
+```
+
+To run the frontend separately, start the backend first from the repository root:
 
 ```sh
 uv run python -m app.dev.seed

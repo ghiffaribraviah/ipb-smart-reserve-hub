@@ -149,7 +149,7 @@ function formatTime(value: string) {
 function cancellableBeforeApproval(reservation: StudentReservationWorkflowProjection) {
   return baseListItem(reservation, {
     bucket: "ongoing",
-    primaryAction: "Detail Reservasi",
+    primaryAction: "Lihat Detail",
     primaryHref: route(reservation),
     secondaryAction: "Batalkan",
     secondaryHref: route(reservation, "/cancel"),
@@ -164,17 +164,17 @@ export function mapStudentReservationWorkflow(
   if (reservation.status === "rejected" && reservation.rejection?.source === "document") {
     return baseListItem(reservation, {
       bucket: "history",
-      primaryAction: "Lihat Penolakan",
+      primaryAction: "Lihat Detail",
       primaryHref: route(reservation, "/verification/declined"),
       statusLabel: "Dokumen Ditolak",
-      tone: "rejected",
+      tone: "pending",
     });
   }
 
   if (reservation.status === "rejected" && reservation.rejection?.source === "payment") {
     return baseListItem(reservation, {
       bucket: "history",
-      primaryAction: "Lihat Penolakan",
+      primaryAction: "Lihat Detail",
       primaryHref: route(reservation, "/payment/declined"),
       statusLabel: "Pembayaran Ditolak",
       tone: "rejected",
@@ -184,7 +184,7 @@ export function mapStudentReservationWorkflow(
   if (reservation.status === "approved") {
     return baseListItem(reservation, {
       bucket: "ongoing",
-      primaryAction: "Detail Reservasi",
+      primaryAction: "Lihat Detail",
       primaryHref: route(reservation, "/accepted"),
       secondaryAction: "Ajukan Pembatalan",
       secondaryHref: route(reservation, "/cancellation"),
@@ -195,11 +195,11 @@ export function mapStudentReservationWorkflow(
 
   if (reservation.status === "cancellation_requested") {
     return baseListItem(reservation, {
-      bucket: "ongoing",
-      primaryAction: "Lihat Pengajuan",
-      primaryHref: route(reservation, "/cancellation-request"),
-      statusLabel: "Pembatalan Diajukan",
-      tone: "review",
+      bucket: "history",
+      primaryAction: "Lihat Detail",
+      primaryHref: route(reservation),
+      statusLabel: "Pembatalan Tercatat",
+      tone: "cancelled",
     });
   }
 
@@ -207,8 +207,8 @@ export function mapStudentReservationWorkflow(
     const hasVisibleReview = reservation.review !== null && !reservation.review.is_deleted;
     return baseListItem(reservation, {
       bucket: hasVisibleReview ? "history" : "ongoing",
-      primaryAction: hasVisibleReview ? "Detail Reservasi" : "Beri Ulasan",
-      primaryHref: route(reservation, hasVisibleReview ? "" : "/review"),
+      primaryAction: "Lihat Detail",
+      primaryHref: route(reservation),
       statusLabel: "Selesai",
       tone: "completed",
     });
@@ -217,7 +217,7 @@ export function mapStudentReservationWorkflow(
   if (reservation.status === "cancelled") {
     return baseListItem(reservation, {
       bucket: "history",
-      primaryAction: "Detail Reservasi",
+      primaryAction: "Lihat Detail",
       primaryHref: route(reservation),
       statusLabel: "Dibatalkan",
       tone: "cancelled",
@@ -227,7 +227,7 @@ export function mapStudentReservationWorkflow(
   if (reservation.status === "expired") {
     return baseListItem(reservation, {
       bucket: "history",
-      primaryAction: "Detail Reservasi",
+      primaryAction: "Lihat Detail",
       primaryHref: route(reservation),
       statusLabel: "Kedaluwarsa",
       tone: "rejected",
@@ -237,7 +237,7 @@ export function mapStudentReservationWorkflow(
   if (reservation.status === "rejected") {
     return baseListItem(reservation, {
       bucket: "history",
-      primaryAction: "Detail Reservasi",
+      primaryAction: "Lihat Detail",
       primaryHref: route(reservation),
       statusLabel: "Ditolak",
       tone: "rejected",
@@ -259,7 +259,7 @@ export function mapStudentReservationWorkflow(
   if (reservation.status === "pending_document_review" || reservation.document.review_status === "waiting_review") {
     return baseListItem(reservation, {
       bucket: "ongoing",
-      primaryAction: "Lihat Status",
+      primaryAction: "Lihat Detail",
       primaryHref: route(reservation, "/verification/waiting"),
       secondaryAction: "Batalkan",
       secondaryHref: route(reservation, "/cancel"),
@@ -283,7 +283,7 @@ export function mapStudentReservationWorkflow(
   if (reservation.status === "pending_payment" && reservation.payment.review_status === "waiting_review") {
     return baseListItem(reservation, {
       bucket: "ongoing",
-      primaryAction: "Lihat Status",
+      primaryAction: "Lihat Detail",
       primaryHref: route(reservation, "/payment/waiting"),
       secondaryAction: "Batalkan",
       secondaryHref: route(reservation, "/cancel"),
@@ -298,7 +298,7 @@ export function mapStudentReservationWorkflow(
 
   return baseListItem(reservation, {
     bucket: "history",
-    primaryAction: "Detail Reservasi",
+    primaryAction: "Lihat Detail",
     primaryHref: route(reservation),
     statusLabel: "Ditolak",
     tone: "rejected",

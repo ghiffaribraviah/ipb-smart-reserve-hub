@@ -18,6 +18,7 @@ const facilitiesResponse = [
   {
     capacity: 300,
     category: "Auditorium / Seminar",
+    category_id: "category-auditorium",
     contact_email: "auditorium@apps.ipb.ac.id",
     contact_name: "Staff Auditorium",
     contact_phone: "08123456789",
@@ -26,6 +27,10 @@ const facilitiesResponse = [
     is_active: true,
     location: "Kampus Dramaga",
     name: "Grand Auditorium",
+    open_hours: [
+      { id: "open-hour-1", day_of_week: 0, opens_at: "08:00", closes_at: "18:00" },
+      { id: "open-hour-2", day_of_week: 1, opens_at: "08:00", closes_at: "18:00" },
+    ],
     open_hours_summary: "Senin-Jumat, 08:00-18:00",
     payment_instructions: null,
     price_rupiah: 100000,
@@ -34,6 +39,7 @@ const facilitiesResponse = [
   {
     capacity: 25,
     category: "Lanskap / Outdoor",
+    category_id: "category-outdoor",
     contact_email: null,
     contact_name: "Staff Greenhouse",
     contact_phone: "08129876543",
@@ -42,11 +48,18 @@ const facilitiesResponse = [
     is_active: false,
     location: "Kampus Barat",
     name: "Agri-Tech Greenhouses",
+    open_hours: [{ id: "open-hour-3", day_of_week: 0, opens_at: "08:00", closes_at: "16:00" }],
     open_hours_summary: "Senin-Jumat, 08:00-16:00",
     payment_instructions: null,
     price_rupiah: 0,
     price_summary: "Gratis",
   },
+];
+
+const categoriesResponse = [
+  { facility_count: 1, icon_hint: "presentation", id: "category-auditorium", name: "Auditorium / Seminar", slug: "auditorium" },
+  { facility_count: 0, icon_hint: "book", id: "category-classroom", name: "Ruang Kelas", slug: "kelas" },
+  { facility_count: 1, icon_hint: "leaf", id: "category-outdoor", name: "Lanskap / Outdoor", slug: "outdoor" },
 ];
 
 const scheduleResponse = [
@@ -240,10 +253,15 @@ describe("StaffFacilityPages", () => {
         return jsonResponse(facilitiesResponse);
       }
 
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse(categoriesResponse);
+      }
+
       if (url === "http://localhost:8000/staff/facilities/grand-auditorium" && init?.method === "PATCH") {
         expect(init.body).toBe(
           JSON.stringify({
             capacity: 350,
+            category_id: "category-classroom",
             contact_email: "auditorium@apps.ipb.ac.id",
             contact_name: "Staff Auditorium",
             contact_phone: "08123456789",
@@ -251,12 +269,27 @@ describe("StaffFacilityPages", () => {
             is_active: true,
             location: "Kampus Dramaga",
             name: "Grand Auditorium Baru",
-            open_hours_summary: "Senin-Jumat, 08:00-18:00",
+            open_hours: [
+              { closes_at: "18:00", day_of_week: 0, opens_at: "08:00" },
+              { closes_at: "18:00", day_of_week: 1, opens_at: "08:00" },
+              { closes_at: "17:00", day_of_week: 2, opens_at: "09:00" },
+            ],
             payment_instructions: null,
             price_rupiah: 100000,
           }),
         );
-        return jsonResponse({ ...facilitiesResponse[0], capacity: 350, name: "Grand Auditorium Baru" });
+        return jsonResponse({
+          ...facilitiesResponse[0],
+          capacity: 350,
+          category: "Ruang Kelas",
+          category_id: "category-classroom",
+          name: "Grand Auditorium Baru",
+          open_hours: [
+            ...facilitiesResponse[0].open_hours,
+            { id: "open-hour-4", day_of_week: 2, opens_at: "09:00", closes_at: "17:00" },
+          ],
+          open_hours_summary: "Senin 08:00-18:00; Selasa 08:00-18:00; Rabu 09:00-17:00",
+        });
       }
 
       return jsonResponse({ detail: `Unhandled ${url}` }, 404);
@@ -265,14 +298,30 @@ describe("StaffFacilityPages", () => {
     renderFacilityEdit();
 
     expect(await screen.findByLabelText("Nama")).toHaveValue("Grand Auditorium");
+    expect(screen.getByLabelText("Kategori Fasilitas")).toHaveValue("category-auditorium");
     await user.clear(screen.getByLabelText("Nama"));
     await user.type(screen.getByLabelText("Nama"), "Grand Auditorium Baru");
+    await user.selectOptions(screen.getByLabelText("Kategori Fasilitas"), "category-classroom");
     await user.clear(screen.getByLabelText("Kapasitas (Orang)"));
     await user.type(screen.getByLabelText("Kapasitas (Orang)"), "350");
+    await user.click(screen.getByRole("button", { name: "Tambah Baris Jam Buka" }));
+    await user.click(screen.getByRole("button", { name: "Hapus Jam Buka 3" }));
+    await user.click(screen.getByRole("button", { name: "Tambah Baris Jam Buka" }));
+    await user.selectOptions(screen.getByLabelText("Hari buka 3"), "2");
+    await user.clear(screen.getByLabelText("Jam buka mulai 3"));
+    await user.type(screen.getByLabelText("Jam buka mulai 3"), "09:00");
+    await user.clear(screen.getByLabelText("Jam buka selesai 3"));
+    await user.type(screen.getByLabelText("Jam buka selesai 3"), "17:00");
     await user.click(screen.getByRole("button", { name: "Simpan Perubahan" }));
 
     expect(await screen.findByText("Perubahan fasilitas tersimpan.")).toBeVisible();
     expect(screen.getByLabelText("Nama")).toHaveValue("Grand Auditorium Baru");
+    expect(screen.getByLabelText("Kategori Fasilitas")).toHaveValue("category-classroom");
+    expect(
+      screen.getAllByText((_, element) =>
+        Boolean(element?.textContent?.includes("Senin 08:00-18:00; Selasa 08:00-18:00; Rabu 09:00-17:00")),
+      )[0],
+    ).toBeVisible();
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
         "http://localhost:8000/staff/facilities/grand-auditorium",
@@ -288,6 +337,10 @@ describe("StaffFacilityPages", () => {
 
       if (url === "http://localhost:8000/staff/facilities" && !init?.method) {
         return jsonResponse(facilitiesResponse);
+      }
+
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse(categoriesResponse);
       }
 
       if (url === "http://localhost:8000/staff/facilities/grand-auditorium" && init?.method === "PATCH") {
@@ -306,6 +359,13 @@ describe("StaffFacilityPages", () => {
 
     await user.clear(screen.getByLabelText("Kapasitas (Orang)"));
     await user.type(screen.getByLabelText("Kapasitas (Orang)"), "300");
+    await user.clear(screen.getByLabelText("Jam buka selesai 1"));
+    await user.type(screen.getByLabelText("Jam buka selesai 1"), "07:00");
+    await user.click(screen.getByRole("button", { name: "Simpan Perubahan" }));
+    expect(await screen.findByText("Jam tutup harus setelah jam buka.")).toBeVisible();
+
+    await user.clear(screen.getByLabelText("Jam buka selesai 1"));
+    await user.type(screen.getByLabelText("Jam buka selesai 1"), "18:00");
     await user.click(screen.getByRole("button", { name: "Simpan Perubahan" }));
     expect(await screen.findByText("Harga sewa memerlukan verifikasi bendahara.")).toBeVisible();
   });
@@ -335,6 +395,10 @@ describe("StaffFacilityPages", () => {
         return jsonResponse(facilitiesResponse);
       }
 
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse(categoriesResponse);
+      }
+
       if (url === "http://localhost:8000/staff/facilities/grand-auditorium/deactivate" && init?.method === "POST") {
         return jsonResponse({ ...facilitiesResponse[0], is_active: false });
       }
@@ -349,13 +413,17 @@ describe("StaffFacilityPages", () => {
     expect(screen.getByText("Nonaktif")).toBeVisible();
   });
 
-  it("submits supported image, open-hour, and blackout creation payloads", async () => {
+  it("submits supported image and blackout creation payloads", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
       const url = String(input);
 
       if (url === "http://localhost:8000/staff/facilities" && !init?.method) {
         return jsonResponse(facilitiesResponse);
+      }
+
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse(categoriesResponse);
       }
 
       if (url === "http://localhost:8000/staff/facilities/grand-auditorium/images" && init?.method === "POST") {
@@ -368,11 +436,6 @@ describe("StaffFacilityPages", () => {
           }),
         );
         return jsonResponse({ id: "image-1" }, 201);
-      }
-
-      if (url === "http://localhost:8000/staff/facilities/grand-auditorium/open-hours" && init?.method === "POST") {
-        expect(init.body).toBe(JSON.stringify({ closes_at: "16:00", day_of_week: 0, opens_at: "08:00" }));
-        return jsonResponse({ id: "open-hour-1" }, 201);
       }
 
       if (url === "http://localhost:8000/staff/facilities/grand-auditorium/blackouts" && init?.method === "POST") {
@@ -396,9 +459,6 @@ describe("StaffFacilityPages", () => {
     await user.click(screen.getByRole("button", { name: "Tambah Gambar" }));
     expect(await screen.findByText("Gambar fasilitas ditambahkan.")).toBeVisible();
 
-    await user.click(screen.getByRole("button", { name: "Tambah Jam Buka" }));
-    expect(await screen.findByText("Jam buka fasilitas ditambahkan.")).toBeVisible();
-
     await user.type(screen.getByLabelText("Alasan blackout"), "Maintenance");
     await user.click(screen.getByRole("button", { name: "Tambah Blackout" }));
     expect(await screen.findByText("Blackout fasilitas ditambahkan.")).toBeVisible();
@@ -406,10 +466,6 @@ describe("StaffFacilityPages", () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
         "http://localhost:8000/staff/facilities/grand-auditorium/images",
-        expect.objectContaining({ method: "POST" }),
-      );
-      expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8000/staff/facilities/grand-auditorium/open-hours",
         expect.objectContaining({ method: "POST" }),
       );
       expect(fetchMock).toHaveBeenCalledWith(

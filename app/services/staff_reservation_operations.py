@@ -292,8 +292,7 @@ def _to_detail(reservation: Reservation) -> StaffReservationDetail:
             due_at=_optional_utc(reservation.payment_verification_due_at),
         ),
         cancellation=StaffReservationDetailCancellation(
-            requested=reservation.status == ReservationStatus.cancellation_requested
-            or reservation.cancellation_reason is not None,
+            requested=reservation.cancellation_reason is not None,
             review_status=_cancellation_projection(reservation).review_status,
             reason=reservation.cancellation_reason,
             rejection_reason=reservation.cancellation_rejection_reason,
@@ -378,8 +377,6 @@ def _queue_workflow(reservation: Reservation) -> tuple[str, str, datetime | None
         return "document_review", "pending_review", reservation.document_verification_due_at
     if reservation.status == ReservationStatus.pending_payment:
         return "payment_review", "pending_review", reservation.payment_verification_due_at
-    if reservation.status == ReservationStatus.cancellation_requested:
-        return "cancellation_review", "pending_review", None
     return "reservation", "not_actionable", None
 
 
@@ -419,7 +416,7 @@ def _payment_projection(reservation: Reservation) -> StaffReservationPaymentProj
 
 def _cancellation_projection(reservation: Reservation) -> StaffReservationCancellationProjection:
     if reservation.status == ReservationStatus.cancellation_requested:
-        return StaffReservationCancellationProjection(requested=True, review_status="pending_review")
+        return StaffReservationCancellationProjection(requested=True, review_status="not_actionable")
     if reservation.status == ReservationStatus.cancelled:
         return StaffReservationCancellationProjection(requested=True, review_status="approved")
     if reservation.cancellation_rejection_reason is not None:

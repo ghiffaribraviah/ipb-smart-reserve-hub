@@ -177,12 +177,15 @@ test.describe("super admin dashboard and users pages", () => {
     await expect(page.getByLabel("Cari pengguna")).toHaveAttribute("placeholder", "Cari nama, email, atau NIM");
     await expect(page.getByLabel("Filter role")).toHaveValue("all");
     await expect(page.getByLabel("Filter status")).toHaveValue("all");
+    await expect(page.getByRole("button", { name: "Tambah Pengguna" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Buat Pengguna" })).toBeDisabled();
+    await expect(page.getByLabel("Email pengguna baru")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Daftar Pengguna" })).toBeVisible();
     await expect(page.getByText("Student Aktif").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Ilmu Komputer").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Staff Fasilitas").filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Ubah status Student Aktif" }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Ekspor CSV ditunda" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Tambah Pengguna" })).toBeVisible();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);

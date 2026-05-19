@@ -98,8 +98,8 @@ export function RegisterPage() {
   }
 
   return (
-    <AuthLayout maxWidth="480px">
-      <div className="mb-12 text-center max-md:mb-6 max-md:border-b max-md:border-[#E2E8F0] max-md:pb-5">
+    <AuthLayout maxWidth="520px">
+      <div className="mb-8 text-center max-md:mb-6 max-md:border-b max-md:border-[#E2E8F0] max-md:pb-5">
         <h1 className="mb-2 font-serif text-5xl font-extrabold leading-[1.1] tracking-[1px] text-[#0A9361]">
           IPB
           <br />
@@ -109,7 +109,7 @@ export function RegisterPage() {
       </div>
 
       <h2 className="mb-2 text-2xl font-bold text-[#2D3748]">Daftar Akun</h2>
-      <p className="mb-8 text-sm leading-6 text-[#718096]">
+      <p className="mb-6 text-sm leading-6 text-[#718096]">
         Buat akun untuk mengelola peminjaman fasilitas kampus.
       </p>
       {showError ? (
@@ -123,79 +123,85 @@ export function RegisterPage() {
         </div>
       ) : null}
 
-      <form onSubmit={handleSubmit}>
-        <AuthField
-          autoComplete="name"
-          error={errors.fullName}
-          icon={<User aria-hidden="true" size={18} />}
-          id="register-name"
-          label="Nama Lengkap"
-          onChange={(event) => updateField("fullName", event.target.value)}
-          placeholder="Masukkan nama lengkap"
-          type="text"
-          value={form.fullName}
-        />
-
-        <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1 max-md:gap-0">
+      <form className="grid gap-5" onSubmit={handleSubmit}>
+        <fieldset className="m-0 grid gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4 max-md:p-3.5">
+          <legend className="px-1 text-sm font-bold text-[#2D3748]">Data Identitas</legend>
           <AuthField
-            error={errors.nim}
-            icon={<Hash aria-hidden="true" size={18} />}
-            id="register-nim"
-            label="NIM"
-            onChange={(event) => updateField("nim", event.target.value)}
-            placeholder="Contoh: G64..."
+            autoComplete="name"
+            error={errors.fullName}
+            icon={<User aria-hidden="true" size={18} />}
+            id="register-name"
+            label="Nama Lengkap"
+            onChange={(event) => updateField("fullName", event.target.value)}
+            placeholder="Masukkan nama lengkap"
             type="text"
-            value={form.nim}
+            value={form.fullName}
           />
-          <AuthField
-            autoComplete="email"
-            error={errors.email ?? (showError ? "Gunakan email aktif dengan domain @apps.ipb.ac.id." : undefined)}
-            icon={<Mail aria-hidden="true" size={18} />}
-            id="register-email"
-            label="Email Kampus"
-            onChange={(event) => updateField("email", event.target.value)}
-            placeholder="@apps.ipb.ac.id"
-            type="email"
-            value={form.email}
-          />
-        </div>
 
-        <AuthField
-          autoComplete="tel"
-          error={errors.phone}
-          icon={<Phone aria-hidden="true" size={18} />}
-          id="register-phone"
-          label="Nomor Telepon"
-          onChange={(event) => updateField("phone", event.target.value)}
-          placeholder="Contoh: 081234567890"
-          type="tel"
-          value={form.phone}
-        />
+          <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1 max-md:gap-0">
+            <AuthField
+              error={errors.nim}
+              icon={<Hash aria-hidden="true" size={18} />}
+              id="register-nim"
+              label="NIM"
+              onChange={(event) => updateField("nim", event.target.value)}
+              placeholder="Contoh: G64..."
+              type="text"
+              value={form.nim}
+            />
+            <AuthField
+              autoComplete="email"
+              error={errors.email ?? (showError ? "Gunakan email aktif dengan domain @apps.ipb.ac.id." : undefined)}
+              icon={<Mail aria-hidden="true" size={18} />}
+              id="register-email"
+              label="Email Kampus"
+              onChange={(event) => updateField("email", event.target.value)}
+              placeholder="@apps.ipb.ac.id"
+              type="email"
+              value={form.email}
+            />
+          </div>
 
-        <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1 max-md:gap-0">
           <AuthField
-            autoComplete="new-password"
-            error={errors.password}
-            icon={<Lock aria-hidden="true" size={18} />}
-            id="register-password"
-            label="Kata Sandi"
-            onChange={(event) => updateField("password", event.target.value)}
-            placeholder="••••••••"
-            type="password"
-            value={form.password}
+            autoComplete="tel"
+            error={errors.phone}
+            icon={<Phone aria-hidden="true" size={18} />}
+            id="register-phone"
+            label="Nomor Telepon"
+            onChange={(event) => updateField("phone", event.target.value)}
+            placeholder="Contoh: 081234567890"
+            type="tel"
+            value={form.phone}
           />
-          <AuthField
-            autoComplete="new-password"
-            error={errors.confirmPassword}
-            icon={<Lock aria-hidden="true" size={18} />}
-            id="register-confirm-password"
-            label="Surat Sandi"
-            onChange={(event) => updateField("confirmPassword", event.target.value)}
-            placeholder="••••••••"
-            type="password"
-            value={form.confirmPassword}
-          />
-        </div>
+        </fieldset>
+
+        <fieldset className="m-0 grid gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4 max-md:p-3.5">
+          <legend className="px-1 text-sm font-bold text-[#2D3748]">Buat Kata Sandi</legend>
+          <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1 max-md:gap-0">
+            <AuthField
+              autoComplete="new-password"
+              error={errors.password}
+              icon={<Lock aria-hidden="true" size={18} />}
+              id="register-password"
+              label="Kata Sandi"
+              onChange={(event) => updateField("password", event.target.value)}
+              placeholder="••••••••"
+              type="password"
+              value={form.password}
+            />
+            <AuthField
+              autoComplete="new-password"
+              error={errors.confirmPassword}
+              icon={<Lock aria-hidden="true" size={18} />}
+              id="register-confirm-password"
+              label="Konfirmasi Kata Sandi"
+              onChange={(event) => updateField("confirmPassword", event.target.value)}
+              placeholder="••••••••"
+              type="password"
+              value={form.confirmPassword}
+            />
+          </div>
+        </fieldset>
 
         <button
           className="mt-0.5 flex min-h-[46px] w-full items-center justify-center gap-2 rounded-lg border-0 bg-[#0A9361] p-3.5 text-base font-semibold text-white shadow-none transition hover:bg-[#087a50] disabled:cursor-not-allowed disabled:bg-[#94a3b8] max-md:mt-2 max-md:min-h-[52px]"
@@ -206,7 +212,7 @@ export function RegisterPage() {
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-[#718096]">
+      <div className="mt-8 pb-2 text-center text-sm text-[#718096]">
         Sudah punya akun?{" "}
         <Link className="font-semibold text-[#0A9361] no-underline" to="/login">
           Masuk di sini

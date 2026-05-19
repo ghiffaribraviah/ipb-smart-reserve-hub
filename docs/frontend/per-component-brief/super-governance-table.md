@@ -7,6 +7,8 @@
 ## Used By
 
 - `super-00-dashboard.md`
+- `super-01-pengguna.md`
+- `super-02-fasilitas.md`
 
 ## Reference Evidence
 
@@ -15,15 +17,15 @@
 
 ## Purpose
 
-Show administrator governance rows for Super Admin oversight.
+Show administrator, user, and facility governance rows for Super Admin oversight.
 
 ## Anatomy
 
-- Admin identity.
-- Scope/department.
-- Status.
-- Last activity/time.
-- Actions if referenced.
+- Entity identity.
+- Scope, unit, or facility metadata.
+- Status and coverage badges.
+- Last activity/time when available.
+- Actions when referenced.
 
 ## Variants
 
@@ -32,7 +34,8 @@ Show administrator governance rows for Super Admin oversight.
 
 ## Behavior
 
-- Read-only on dashboard; user-management page references define expanded management rows/actions.
+- Read-only on dashboard; user and facility management pages define expanded rows/actions.
+- Permanent deletion is not a table action in the current UI-fix track; use status, deactivate, or archive wording when a backend contract is not destructive.
 
 ## Accessibility
 
@@ -41,11 +44,11 @@ Show administrator governance rows for Super Admin oversight.
 
 ## Data Contract
 
-- Props/data fields: admin rows with name/email/status/scope/timestamp.
+- Props/data fields: admin/user/facility rows with identity, metadata, status, optional assignment coverage, and optional actions.
 
 ## Design Rules
 
-- Desktop: dense table.
+- Desktop: dense table with stable action column.
 - Mobile: cards with wrapped email/name text.
 - Color: Super Admin accent for links/actions.
 

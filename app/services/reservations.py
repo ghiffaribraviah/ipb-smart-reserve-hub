@@ -246,6 +246,15 @@ class ReservationModule:
         if self._reservation_lifecycle.effective_status(reservation) != ReservationStatus.approved:
             raise ReservationCancellationUnavailable
         self._reservation_lifecycle.request_cancellation(reservation, reason=reason)
+        self._audit_recorder.record(
+            actor=student,
+            action_type="reservation.cancelled",
+            target_type="reservation",
+            target_id=reservation.id,
+            facility_id=reservation.facility_id,
+            student_id=reservation.student_id,
+            reservation_id=reservation.id,
+        )
         refund_warning = None
         if reservation.price_rupiah > 0:
             refund_warning = "Sistem tidak memproses refund. Silakan hubungi TU fasilitas untuk tindak lanjut refund."

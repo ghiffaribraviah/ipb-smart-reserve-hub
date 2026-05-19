@@ -129,7 +129,7 @@ def test_payment_review_approves_or_rejects_reservation():
     assert rejected.rejection_source == ReservationRejectionSource.payment
 
 
-def test_cancellation_transitions_record_request_and_review_decisions():
+def test_cancellation_request_immediately_cancels_and_legacy_review_decisions_remain_documented():
     lifecycle = FacilityReservationLifecycleModule(
         booking_settings=BookingSettings.defaults(),
         clock=lambda: datetime(2026, 5, 1, 3, 0, tzinfo=UTC),
@@ -142,7 +142,7 @@ def test_cancellation_transitions_record_request_and_review_decisions():
     lifecycle.approve_cancellation(approved)
     lifecycle.reject_cancellation(rejected, reason="Sudah terlalu dekat dengan jadwal.")
 
-    assert requested.status == ReservationStatus.cancellation_requested
+    assert requested.status == ReservationStatus.cancelled
     assert requested.cancellation_reason == "Kegiatan dibatalkan."
     assert requested.cancellation_rejection_reason is None
     assert approved.status == ReservationStatus.cancelled

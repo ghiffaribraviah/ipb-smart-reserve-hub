@@ -22,11 +22,11 @@
 
 ## Design Contract
 
-- Layout: Student shell with fixed white header, hero/intro content, category shortcuts, featured facility cards, and footer.
+- Layout: Student shell with fixed white header, hero/intro content, category shortcuts, catalog-aligned featured facility cards, and footer.
 - Desktop behavior: `1200px` centered content, search in header, horizontal nav.
 - Mobile behavior: compact `64px` header, hamburger, hidden desktop nav/search, stacked sections.
 - Required copy/status labels: preserve `Beranda`, `Fasilitas`, `Reservasi`, and `IPB SRH`; profile access is the avatar, not a fourth nav item.
-- Source-of-truth notes: match green-led student visual tone and deterministic facility image treatment.
+- Source-of-truth notes: match green-led student visual tone and deterministic facility image treatment; featured facility cards follow the catalog card hierarchy with title, rating/reviews, location/open-hours summary, capacity, and price.
 
 ## UX Behavior
 
@@ -46,7 +46,7 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: active categories with counts and featured facilities with cover images, rating, capacity, price, and location.
+- Deterministic fixture requirements: active categories with counts and featured facilities with cover images or local deterministic placeholders, rating, review count, capacity, price, location, and open-hours summary.
 - Real entities: Facility Category, Facility Catalog item.
 - Fixture media: local deterministic facility placeholders.
 
@@ -77,7 +77,7 @@
 - Desktop screenshot at `1440 x 900`.
 - Mobile screenshot at `390 x 844`.
 - No mobile horizontal overflow.
-- Integration checks: category click opens catalog with category slug; featured card opens facility detail.
+- Integration checks: category click opens catalog with category slug; featured card opens facility detail and exposes catalog-style price/review metadata.
 
 ## Open Questions
 

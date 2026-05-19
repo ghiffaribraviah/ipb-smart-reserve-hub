@@ -33,16 +33,6 @@ const summaryRows = [
   { label: "Waktu", value: studentDocumentWorkflowFixture.time },
 ] as const;
 
-const paymentSummaryRows = [
-  ...summaryRows,
-  { label: "Total Pembayaran", value: studentDocumentWorkflowFixture.payment.amount },
-] as const;
-
-const acceptedSummaryRows = [
-  ...summaryRows,
-  { label: "Kode Reservasi", value: studentDocumentWorkflowFixture.payment.code },
-] as const;
-
 type ApprovalLetterResponse = {
   content_type: string;
   filename: string;
@@ -575,7 +565,7 @@ export function StudentApprovalLetterPage() {
                   onClick={() => downloadMutation.mutate()}
                   type="button"
                 >
-                  {downloadMutation.isPending ? "Mengunduh..." : "Unduh Surat"}
+                  {downloadMutation.isPending ? "Mengunduh..." : "Unduh"}
                 </button>
               }
               fileName={approvalLetter?.filename ?? "Memuat surat persetujuan..."}
@@ -594,53 +584,48 @@ export function StudentApprovalLetterPage() {
               Unggah surat permohonan yang sudah ditandatangani. Dokumen harus berformat PDF
               , JPG, JPEG, atau PNG dengan ukuran maksimal 5 MB.
             </p>
-            <label className="mt-6 block rounded-xl border-2 border-dashed border-[#bbf7d0] bg-[#f8fafc] p-7 text-center">
+            <div className="mt-6 block rounded-xl border-2 border-dashed border-[#bbf7d0] bg-[#f8fafc] p-7 text-center">
               <UploadCloud aria-hidden="true" className="mx-auto text-[#0f9d58]" size={34} />
               <p className="m-0 mt-3 text-base font-bold">Unggah Surat Persetujuan</p>
               <p className="m-0 mt-1 text-sm text-[#6b7280]">PDF/JPG/JPEG/PNG maksimal 5 MB</p>
               <input
+                id="signed-approval-letter-file"
                 aria-label="Pilih file surat persetujuan"
-                className="mx-auto mt-5 block max-w-full text-sm"
+                className="sr-only"
                 onChange={handleFileChange}
                 type="file"
               />
+              <p className="m-0 mt-5 text-sm font-semibold text-[#374151]">
+                {selectedFile ? selectedFile.name : "Belum ada file dipilih"}
+              </p>
               <div className="mt-5 flex justify-center gap-3 max-md:flex-col">
-                <button
-                  className="min-h-11 rounded-lg border border-[#d1d5db] bg-white px-5 text-sm font-bold text-[#374151]"
-                  type="button"
+                <label
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-5 text-sm font-bold text-[#374151]"
+                  htmlFor="signed-approval-letter-file"
                 >
                   Pilih File
-                </button>
+                </label>
                 <button
                   className="min-h-11 rounded-lg bg-[#0f9d58] px-5 text-sm font-bold text-white"
                   disabled={uploadMutation.isPending}
                   onClick={handleUpload}
                   type="button"
                 >
-                  {uploadMutation.isPending ? "Mengunggah..." : "Unggah Dokumen"}
+                  {uploadMutation.isPending ? "Mengunggah..." : "Unggah"}
                 </button>
               </div>
-            </label>
+            </div>
             {fileError || uploadError ? (
               <p className="m-0 mt-3 text-sm font-semibold text-[#991b1b]">{fileError ?? uploadError}</p>
             ) : null}
             {selectedFile ? (
               <div className="mt-5">
                 <FileRow
-                  badge={<StatusBadge tone="valid">Siap diunggah</StatusBadge>}
                   fileName={selectedFile.name}
                   metadata={`${contentTypeLabel(selectedFile.type)} · ${formatBytes(selectedFile.size)}`}
                 />
               </div>
-            ) : (
-              <div className="mt-5">
-              <FileRow
-                badge={<StatusBadge tone="valid">{studentDocumentWorkflowFixture.selectedFile.status}</StatusBadge>}
-                fileName={studentDocumentWorkflowFixture.selectedFile.fileName}
-                metadata={studentDocumentWorkflowFixture.selectedFile.metadata}
-              />
-              </div>
-            )}
+            ) : null}
           </section>
         </div>
 
@@ -651,7 +636,7 @@ export function StudentApprovalLetterPage() {
                 className="flex min-h-[52px] items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-base font-semibold text-white no-underline"
                 href={`/student/reservations/${reservationId}/verification/waiting`}
               >
-                Kirim Reservasi
+                Kirim
               </a>
               <p className="m-0 mt-4 text-center text-xs leading-5 text-[#6b7280]">
                 Pastikan surat yang diunggah sudah ditandatangani.
@@ -761,8 +746,13 @@ function PaymentUploadPage() {
           </div>
           {paymentQuery.data ? (
             <div className="mb-6 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-5 text-sm leading-6 text-[#166534]">
-              <strong className="block text-lg text-[#065f46]">{formatRupiah(paymentQuery.data.amount_rupiah)}</strong>
+              <strong className="block text-xs uppercase tracking-[0.06em] text-[#065f46]">
+                Tujuan Transfer
+              </strong>
               <p className="m-0 mt-2 whitespace-pre-line">{paymentQuery.data.payment_instructions}</p>
+              <p className="m-0 mt-4 border-t border-[#bbf7d0] pt-4 text-sm">
+                Total pembayaran: <strong className="text-[#065f46]">{formatRupiah(paymentQuery.data.amount_rupiah)}</strong>
+              </p>
             </div>
           ) : null}
           {paymentError ? (
@@ -771,32 +761,36 @@ function PaymentUploadPage() {
             </div>
           ) : null}
 
-          <label className="block rounded-xl border border-dashed border-[#86efac] bg-[#f7fffb] p-8 text-center max-md:p-6">
+          <div className="block rounded-xl border border-dashed border-[#86efac] bg-[#f7fffb] p-8 text-center max-md:p-6">
             <strong className="block text-base">Unggah Bukti Pembayaran</strong>
             <p className="m-0 mt-2 text-sm text-[#6b7280]">JPG/JPEG/PNG maksimal 5 MB</p>
             <input
+              id="payment-receipt-file"
               aria-label="Pilih file bukti pembayaran"
-              className="mx-auto mt-5 block max-w-full text-sm"
+              className="sr-only"
               onChange={handleFileChange}
               type="file"
             />
+            <p className="m-0 mt-5 text-sm font-semibold text-[#374151]">
+              {selectedFile ? selectedFile.name : "Belum ada file dipilih"}
+            </p>
             <div className="mt-6 flex justify-center gap-3 max-md:flex-col">
-              <button
-                className="min-h-11 rounded-lg border border-[#d1d5db] bg-white px-8 text-sm font-bold text-[#111827]"
-                type="button"
+              <label
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-8 text-sm font-bold text-[#111827]"
+                htmlFor="payment-receipt-file"
               >
                 Pilih File
-              </button>
+              </label>
               <button
                 className="min-h-11 rounded-lg bg-[#0f9d58] px-8 text-sm font-bold text-white"
                 disabled={uploadMutation.isPending || !paymentQuery.data}
                 onClick={handleUpload}
                 type="button"
               >
-                {uploadMutation.isPending ? "Mengunggah..." : "Unggah Bukti"}
+                {uploadMutation.isPending ? "Mengunggah..." : "Unggah"}
               </button>
             </div>
-          </label>
+          </div>
           {fileError || uploadError ? (
             <p className="m-0 mt-3 text-sm font-semibold text-[#991b1b]">{fileError ?? uploadError}</p>
           ) : null}
@@ -804,17 +798,10 @@ function PaymentUploadPage() {
           <div className="mt-5">
             {selectedFile ? (
               <FileRow
-                badge={<StatusBadge tone="valid">Siap diunggah</StatusBadge>}
                 fileName={selectedFile.name}
                 metadata={`${contentTypeLabel(selectedFile.type)} · ${formatBytes(selectedFile.size)}`}
               />
-            ) : (
-              <FileRow
-                badge={<StatusBadge tone="valid">Valid</StatusBadge>}
-                fileName={studentDocumentWorkflowFixture.payment.receiptFileName}
-                metadata={studentDocumentWorkflowFixture.payment.receiptMetadata}
-              />
-            )}
+            ) : null}
           </div>
         </section>
 
@@ -825,7 +812,7 @@ function PaymentUploadPage() {
                 className="flex min-h-[52px] items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-base font-semibold text-white no-underline"
                 href={`/student/reservations/${reservationId}/payment/waiting`}
               >
-                Unggah Bukti
+                Kirim
               </a>
               <p className="m-0 mt-4 text-center text-xs leading-5 text-[#6b7280]">
                 Pastikan bukti pembayaran terlihat jelas.
@@ -926,7 +913,7 @@ function PaymentStatusPage({
               className="mt-7 flex min-h-[52px] items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-sm font-bold text-white no-underline"
               href={studentDocumentWorkflowFixture.payment.detailHref}
             >
-              Lihat Detail Reservasi
+              Lihat Detail
             </a>
           ) : null}
           {!isWaiting && !isAccepted ? (
@@ -934,7 +921,7 @@ function PaymentStatusPage({
               className="mt-7 flex min-h-[48px] items-center justify-center rounded-lg bg-[#fee2e2] px-5 text-sm font-bold text-[#991b1b] no-underline"
               href={studentDocumentWorkflowFixture.payment.paymentHref}
             >
-              Unggah Ulang Bukti Pembayaran
+              Unggah Ulang
             </a>
           ) : null}
         </div>
@@ -1008,7 +995,7 @@ function DocumentStatusPage({
               className="mt-7 flex min-h-[48px] items-center justify-center rounded-lg bg-[#fee2e2] px-5 text-sm font-bold text-[#991b1b] no-underline"
               href={studentDocumentWorkflowFixture.reservationsHref}
             >
-              Kembali ke Daftar Reservasi
+              Kembali
             </a>
           ) : null}
         </div>

@@ -132,19 +132,19 @@ test.describe("staff reservation detail and decision surfaces", () => {
     await page.goto("/staff/reservations/RSV-STF-001/review-decision");
 
     await expect(page.getByRole("heading", { name: "Dialog Keputusan Review" })).toBeVisible();
-    await expect(page.getByRole("dialog", { name: "Tolak Dokumen Reservasi" })).toBeVisible();
-    await expect(page.getByText("surat-dekan.pdf")).toBeVisible();
-    await expect(page.getByText("Review Dokumen")).toBeVisible();
+    const dialog = page.getByRole("dialog", { name: "Tolak Dokumen Reservasi" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("Isi alasan yang jelas sebelum menolak pengajuan.")).toBeVisible();
     await expect(page.getByLabel("Alasan penolakan")).toHaveValue(
       "Surat persetujuan belum memuat tanda tangan pembina organisasi. Mohon unggah ulang dokumen yang sudah ditandatangani.",
     );
-    await expect(page.getByText("Menolak dokumen akan mengubah reservasi menjadi ditolak")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Kembali" })).toBeVisible();
-    await expect(
-      page
-        .getByRole("dialog", { name: "Tolak Dokumen Reservasi" })
-        .getByRole("button", { name: "Tolak Dokumen" }),
-    ).toBeVisible();
+    await expect(dialog.getByText("surat-dekan.pdf")).not.toBeVisible();
+    await expect(dialog.getByText("Menolak dokumen akan mengubah reservasi menjadi ditolak")).not.toBeVisible();
+    await expect(dialog.getByRole("link", { name: "Kembali" })).toHaveAttribute(
+      "href",
+      "/staff/reservations/RSV-STF-001",
+    );
+    await expect(dialog.getByRole("button", { name: "Tolak Dokumen" })).toBeVisible();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);

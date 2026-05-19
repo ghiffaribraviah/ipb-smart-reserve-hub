@@ -52,7 +52,7 @@
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /staff/reservations`.
-- Page-needed fields: reservation ID/code, student, organization, facility, date/time, lifecycle status, document/payment/cancellation review status, due dates.
+- Page-needed fields: reservation ID/code, student, organization, facility, date/time, lifecycle status, document/payment review status, due dates, and cancellation reason when a reservation is already cancelled.
 - Auth/session assumptions: assigned facilities only.
 - Source files: `app/api/routes/reservation_routes.py`, `app/api/routes/approval_letter_routes.py`, `app/api/routes/payment_routes.py`.
 
@@ -61,7 +61,7 @@
 - Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: staff reservation list.
-- Contract implemented: assigned-staff reservation list endpoint with filters for status, Facility, and date range.
+- Contract implemented: assigned-staff reservation list endpoint with filters for status, Facility, and date range. Cancellation requests are no longer a staff-review filter after automatic student cancellation.
 - Evidence: `app/api/routes/staff_reservation_operation_routes.py` registers `GET /staff/reservations`; `tests/test_staff_reservation_operations.py` verifies assigned-facility scoping, status/facility/date filters, lifecycle status, and document/payment/cancellation projections.
 - Source issue/PRD: `docs/issues/ISSUE-0009-signed-letter-upload-and-staff-document-review.md`, `docs/issues/ISSUE-0010-paid-facility-receipt-upload-and-payment-review.md`.
 

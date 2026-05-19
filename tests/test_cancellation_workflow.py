@@ -93,9 +93,13 @@ async def test_student_can_cancel_own_pre_approval_reservation_but_not_another_s
 
 
 @pytest.mark.anyio
-async def test_approved_paid_reservation_requires_cancellation_request_reason_and_returns_refund_warning():
-    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+async def test_approved_paid_reservation_cancellation_request_immediately_cancels_and_audits():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 5, 1, tzinfo=UTC),
+    )
     test_data = DataBuilder(app)
+    test_data.create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
     facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion", price_rupiah=250000)
     organization_unit_id = test_data.create_organization_unit(name="BEM KM IPB")
     reservation_id = test_data.create_reservation(
@@ -109,6 +113,7 @@ async def test_approved_paid_reservation_requires_cancellation_request_reason_an
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as client:
+        admin_token = await _login(client, email="admin@ipb.ac.id")
         student_token = await _login(client, email="student-approved-paid@apps.ipb.ac.id")
         immediate_cancel = await client.post(
             f"/student/reservations/{reservation_id}/cancel",
@@ -124,19 +129,34 @@ async def test_approved_paid_reservation_requires_cancellation_request_reason_an
             headers={"Authorization": f"Bearer {student_token}"},
             json={"reason": "Kegiatan dipindahkan."},
         )
+        after_cancel = await client.get(
+            f"/student/reservations/{reservation_id}",
+            headers={"Authorization": f"Bearer {student_token}"},
+        )
+        audit_logs = await client.get(
+            "/admin/audit-logs",
+            headers={"Authorization": f"Bearer {admin_token}"},
+            params={"action_type": "reservation.cancelled", "reservation_id": reservation_id},
+        )
 
     assert immediate_cancel.status_code == 409
     assert missing_reason.status_code == 400
     assert requested.status_code == 200
-    assert requested.json()["status"] == "cancellation_requested"
+    assert requested.json()["status"] == "cancelled"
     assert requested.json()["cancellation_reason"] == "Kegiatan dipindahkan."
     assert requested.json()["refund_warning"] == (
         "Sistem tidak memproses refund. Silakan hubungi TU fasilitas untuk tindak lanjut refund."
     )
+    assert after_cancel.json()["status"] == "cancelled"
+    assert after_cancel.json()["cancellation_reason"] == "Kegiatan dipindahkan."
+    assert audit_logs.status_code == 200
+    assert [log["action_type"] for log in audit_logs.json()] == ["reservation.cancelled"]
+    assert audit_logs.json()[0]["target_type"] == "reservation"
+    assert audit_logs.json()[0]["target_id"] == reservation_id
 
 
 @pytest.mark.anyio
-async def test_assigned_staff_reviews_cancellation_request_while_slot_stays_blocked():
+async def test_automatic_cancellation_releases_slot_and_leaves_no_staff_review_work():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
     test_data = DataBuilder(app)
     test_data.create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
@@ -182,32 +202,24 @@ async def test_assigned_staff_reviews_cancellation_request_while_slot_stays_bloc
             f"/staff/reservations/{reservation_id}/cancellation-review/approve",
             headers={"Authorization": f"Bearer {other_staff_token}"},
         )
-        reject_without_reason = await client.post(
-            f"/staff/reservations/{reservation_id}/cancellation-review/reject",
+        assigned_approve = await client.post(
+            f"/staff/reservations/{reservation_id}/cancellation-review/approve",
             headers={"Authorization": f"Bearer {staff_token}"},
-            json={"reason": "   "},
         )
-        rejected = await client.post(
+        assigned_reject = await client.post(
             f"/staff/reservations/{reservation_id}/cancellation-review/reject",
             headers={"Authorization": f"Bearer {staff_token}"},
             json={"reason": "Fasilitas sudah disiapkan."},
         )
-        await client.post(
-            f"/student/reservations/{reservation_id}/cancellation-request",
-            headers={"Authorization": f"Bearer {student_token}"},
-            json={"reason": "Tetap batal."},
-        )
-        approved = await client.post(
-            f"/staff/reservations/{reservation_id}/cancellation-review/approve",
+        queue = await client.get(
+            "/staff/reservations/verification-queue",
             headers={"Authorization": f"Bearer {staff_token}"},
         )
 
-    assert requested.json()["status"] == "cancellation_requested"
-    assert availability.json() == {"available": False, "reasons": ["reserved_time"]}
-    assert len(calendar.json()) == 1
+    assert requested.json()["status"] == "cancelled"
+    assert availability.json() == {"available": True, "reasons": []}
+    assert calendar.json() == []
     assert unassigned_approve.status_code == 403
-    assert reject_without_reason.status_code == 400
-    assert rejected.json()["status"] == "approved"
-    assert rejected.json()["rejection"] is None
-    assert rejected.json()["cancellation_rejection_reason"] == "Fasilitas sudah disiapkan."
-    assert approved.json()["status"] == "cancelled"
+    assert assigned_approve.status_code == 409
+    assert assigned_reject.status_code == 409
+    assert [item["workflow_type"] for item in queue.json()] == []

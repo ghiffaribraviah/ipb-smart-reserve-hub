@@ -8,7 +8,7 @@ export const superAdminNav = [
 
 export const superAdminDashboardFixture = {
   kpis: [
-    { icon: "users", label: "Total Pengguna", tone: "purple", trend: "↑ 2,4% bulan ini", value: "12,450" },
+    { icon: "users", label: "Total Pengguna", tone: "green", trend: "↑ 2,4% bulan ini", value: "12,450" },
     { icon: "building", label: "Fasilitas Aktif", tone: "blue", trend: "↑ 5 fasilitas baru", value: "142" },
     { icon: "calendar", label: "Total Reservasi", tone: "green", trend: "↑ 12% bulan ini", value: "3,892" },
     { icon: "settings", label: "Status Sistem", tone: "orange", trend: "Layanan inti aktif", value: "Aktif" },

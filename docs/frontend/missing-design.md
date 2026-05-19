@@ -113,16 +113,16 @@ Severity:
 - Owner action: None; reference now exists.
 - Reference added: `docs/frontend/html-reference/Shared - 02 - Data And Auth States.html`.
 
-### MD-STATE-03: Cancellation Pending And Cancellation Rejected
+### MD-STATE-03: Cancellation Consequence And Cancelled Detail
 
 - Severity: `non-blocking`
 - Type: `state`
-- Affected pages/components: `student-10-reservation-list.md`, `student-11-reservation-details-accepted.md`, staff reservation review pages.
-- Needed reference: `cancellation_requested` and rejected-cancellation states.
+- Affected pages/components: `student-10-reservation-list.md`, `student-11-reservation-details-accepted.md`, `student-13-cancellation-request.md`.
+- Needed reference: immediate student cancellation consequence copy and cancelled detail/list state.
 - Current fallback: Existing status badge and reservation detail card patterns.
 - Status: `resolved`
 - Owner action: None; reference now exists.
-- Reference added: `docs/frontend/html-reference/Student - 13 - Cancellation Request.html`.
+- Reference added: `docs/frontend/html-reference/Student - 13 - Cancellation Request.html`; ISSUE-0089 supersedes pending/rejected staff-review states with immediate cancellation behavior.
 
 ### MD-STATE-04: Overdue Verification And Expired Reservations
 

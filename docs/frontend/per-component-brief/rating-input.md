@@ -48,7 +48,7 @@ Collect a required 1-5 star rating.
 ## Design Rules
 
 - Large touch targets.
-- Selected/hovered stars use amber.
+- Selected/hovered stars use logo green.
 
 ## Implementation Notes
 

@@ -52,7 +52,7 @@ Display high-level operational metrics.
 
 - Desktop: four-card grid.
 - Mobile: stacked cards.
-- Color: Super Admin indigo accent where reference uses it.
+- Color: Super Admin logo green accent where reference uses it.
 
 ## Implementation Notes
 

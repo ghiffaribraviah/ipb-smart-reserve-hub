@@ -30,10 +30,10 @@
 
 ## UX Behavior
 
-- Primary actions: save facility profile.
-- Secondary actions: add image/open hour/blackout if implemented in the page.
+- Primary actions: save facility profile, including category and structured open-hour rows.
+- Secondary actions: add image/blackout if implemented in the page.
 - Loading state: disable save while pending.
-- Empty state: missing images/hours have quiet add states.
+- Empty state: missing images/hours have quiet add states; open hours use an add-row control instead of editable summary text.
 - Error state: field and form-level API errors.
 - Disabled state: controls disabled while saving.
 
@@ -45,15 +45,15 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: editable facility with images/hours/blackouts.
-- Real entities: FacilityManagementProfile, image/open-hour/blackout requests.
+- Deterministic fixture requirements: editable facility with category options, structured hours, images, and blackouts.
+- Real entities: FacilityManagementProfile, FacilityCategory, image/open-hour/blackout requests.
 - Fixture media: local facility image placeholders.
 - Contract normalization: amenities and last-change-by metadata are not supported as editable backend truth in this slice. If they return later, track them as separate backend gaps instead of fixture-only fields.
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: `GET /staff/facilities`, `PATCH /staff/facilities/:facilityId`, image/open-hours/blackout create endpoints.
-- Page-needed fields: profile fields in `FacilityManagementProfileResponse`; patch fields in `FacilityProfileUpdateRequest`.
+- Endpoints consumed: `GET /staff/facilities`, `GET /facility-categories`, `PATCH /staff/facilities/:facilityId`, image/blackout create endpoints.
+- Page-needed fields: profile fields in `FacilityManagementProfileResponse`, including `category_id`, category label, `open_hours_summary`, and structured `open_hours`; active category option fields from `FacilityCategoryResponse`; patch fields in `FacilityProfileUpdateRequest`, including `category_id` and full structured `open_hours` replacement.
 - Auth/session assumptions: staff assigned facility access only.
 - Source files: `app/api/routes/facility_management_routes.py`, `app/schemas/facility_management_schemas.py`.
 
@@ -62,9 +62,9 @@
 - Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: staff facility edit form.
-- Contract needed: read/update assigned facility profile and add operational child records.
-- Evidence: staff facility patch, deactivate, images, open-hours, and blackouts routes exist in `app/api/routes/facility_management_routes.py`.
-- Source issue/PRD: `docs/issues/ISSUE-0016-staff-facility-management-and-assignment-scope.md`.
+- Contract needed: read/update assigned facility profile, expose active category options, replace structured open-hour rows, keep derived `open_hours_summary`, and add operational child records.
+- Evidence: staff facility patch, deactivate, images, open-hours, and blackouts routes exist in `app/api/routes/facility_management_routes.py`; `FacilityManagementProfileResponse` exposes `category_id` and structured `open_hours`; `FacilityProfileUpdateRequest` accepts `category_id` and `open_hours`; `GET /facility-categories` exists in `app/api/routes/facility_routes.py`.
+- Source issue/PRD: `docs/issues/ISSUE-0016-staff-facility-management-and-assignment-scope.md`, `docs/issues/ISSUE-0091-staff-facility-structured-category-and-open-hours-management.md`.
 
 ## Shared Components
 
@@ -76,6 +76,7 @@
 
 - Desktop and mobile screenshots match references.
 - Integration checks: unauthorized assigned-facility access maps to not-found/forbidden state.
+- Structured category and open-hour edits are covered by integration tests and desktop/mobile Playwright snapshots.
 
 ## Open Questions
 

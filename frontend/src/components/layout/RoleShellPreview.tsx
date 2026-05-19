@@ -4,12 +4,10 @@ import type { ShellFixture } from "../../fixtures/layoutShells";
 
 const accentText = {
   green: "text-[#0f9d58] border-[#0f9d58]",
-  indigo: "text-[#6366f1] border-[#6366f1]",
 };
 
 const avatarColor = {
   green: "bg-[#0f9d58]",
-  indigo: "bg-[#6366f1]",
 };
 
 export function RoleShellPreview({ shell }: { shell: ShellFixture }) {

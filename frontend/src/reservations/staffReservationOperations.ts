@@ -115,6 +115,7 @@ export function mapStaffVerificationItem(item: StaffReservationOperationResponse
   const status = mapStaffOperationStatus(item);
 
   return {
+    actionLabel: "Tinjau Pengajuan",
     applicant: item.student.full_name,
     avatar: initials(item.student.full_name),
     avatarTone: avatarTone(item.id),
@@ -127,10 +128,17 @@ export function mapStaffVerificationItem(item: StaffReservationOperationResponse
   };
 }
 
+function listActionLabel(item: StaffReservationOperationResponse) {
+  return item.workflow_type === "document_review" || item.workflow_type === "payment_review"
+    ? "Tinjau Pengajuan"
+    : "Lihat Detail";
+}
+
 export function mapStaffReservationListItem(item: StaffReservationOperationResponse): StaffReservationListItem {
   const status = mapStaffReservationStatus(item.status);
 
   return {
+    actionLabel: listActionLabel(item),
     activity: item.activity_title,
     applicant: item.student.full_name,
     avatar: initials(item.student.full_name),

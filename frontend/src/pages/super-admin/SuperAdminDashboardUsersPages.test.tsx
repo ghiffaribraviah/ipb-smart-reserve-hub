@@ -401,6 +401,12 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("G64190001")[0]).toBeVisible();
     expect(screen.getAllByText("Staff Fasilitas")[0]).toBeVisible();
     expect(screen.getAllByText("Nonaktif")[0]).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Tambah Pengguna" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Ubah status / }).length).toBeGreaterThanOrEqual(2);
+    expect(
+      screen.getByLabelText("Email pengguna baru").compareDocumentPosition(screen.getByLabelText("Cari pengguna")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     await user.clear(screen.getByLabelText("Cari pengguna"));
     await user.type(screen.getByLabelText("Cari pengguna"), "staff");
@@ -493,8 +499,8 @@ describe("SuperAdminDashboardPage", () => {
     expect(await screen.findByText("Tidak ada pengguna untuk filter ini.")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Muat ulang pengguna" }));
-    await user.click((await screen.findAllByRole("button", { name: "Aktifkan Staff Fasilitas" }))[0]);
-    await user.click(screen.getAllByRole("button", { name: "Nonaktifkan Student Aktif" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ubah status Staff Fasilitas" }))[0]);
+    await user.click(screen.getAllByRole("button", { name: "Ubah status Student Aktif" })[0]);
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -522,12 +528,20 @@ describe("SuperAdminDashboardPage", () => {
     renderFacilities();
 
     expect((await screen.findAllByText("Grand Auditorium"))[0]).toBeVisible();
-    expect(screen.getByText("Kampus Dramaga - Auditorium - 300 kursi")).toBeVisible();
-    expect(screen.getByText("1/1 staff aktif")).toBeVisible();
+    expect(screen.getAllByText("Kampus Dramaga - Auditorium")[0]).toBeVisible();
+    expect(screen.getAllByText("300 kursi")[0]).toBeVisible();
+    expect(screen.getAllByText("1/1 aktif")[0]).toBeVisible();
     expect(screen.getAllByText("Lab Arsip")[0]).toBeVisible();
     expect(screen.getAllByText("Butuh Staff")[0]).toBeVisible();
-    expect(screen.getByText("needs_staff")).toBeVisible();
     expect(screen.getAllByText("Nonaktif")[0]).toBeVisible();
+    expect(screen.getAllByRole("link", { name: "Edit detail Grand Auditorium" })[0]).toHaveAttribute(
+      "href",
+      "/super-admin/facilities/facility-1/edit",
+    );
+    expect(screen.getAllByRole("button", { name: "Arsipkan Grand Auditorium" })[0]).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     expect(screen.getByRole("button", { name: "Impor Data ditunda" })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByRole("button", { name: "Tambah Fasilitas ditunda" })).toHaveAttribute("aria-disabled", "true");
 

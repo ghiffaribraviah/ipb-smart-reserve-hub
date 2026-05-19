@@ -256,10 +256,8 @@ async def test_dev_seed_supports_blackbox_student_staff_and_admin_workflows(tmp_
     assert reservations_by_code["DEV-SEED-COMPLETED"]["review"] is not None
 
     assert operations_queue.status_code == 200
-    assert {item["workflow_type"] for item in operations_queue.json()} >= {
-        "document_review",
-        "cancellation_review",
-    }
+    assert {item["workflow_type"] for item in operations_queue.json()} >= {"document_review"}
+    assert "cancellation_review" not in {item["workflow_type"] for item in operations_queue.json()}
     assert finance_queue.status_code == 200
     assert {item["workflow_type"] for item in finance_queue.json()} >= {"payment_review"}
     assert signed_download.status_code == 200

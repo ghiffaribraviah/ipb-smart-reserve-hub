@@ -21,15 +21,16 @@ Display a facility preview for comparison and navigation.
 ## Anatomy
 
 - Cover image.
-- Facility name.
-- Location/category/capacity.
 - Rating/review count.
-- Price/open-hours summary.
+- Facility name.
+- Location/open-hours summary.
+- Capacity and price footer.
+- Category badge on deterministic media.
 - Primary navigation action.
 
 ## Variants
 
-- Featured card.
+- Featured card on student home, aligned to catalog hierarchy.
 - Catalog card.
 - Missing image fallback.
 
@@ -50,6 +51,7 @@ Display a facility preview for comparison and navigation.
 
 - Desktop cards align in grids.
 - Mobile cards stack and keep image aspect ratio stable.
+- Card content order is cover image, name, rating/reviews, location/open-hours summary, then capacity/price metadata.
 - Long names/locations wrap.
 
 ## Implementation Notes

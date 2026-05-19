@@ -1,6 +1,7 @@
 export type StaffBadgeTone = "danger" | "neutral" | "success" | "warning";
 
 export type StaffVerificationItem = {
+  actionLabel: string;
   applicant: string;
   avatar: string;
   avatarTone: "dark" | "green" | "light" | "neutral";
@@ -13,6 +14,7 @@ export type StaffVerificationItem = {
 };
 
 export type StaffReservationListItem = {
+  actionLabel: string;
   activity: string;
   applicant: string;
   avatar: string;
@@ -30,6 +32,7 @@ export type StaffReservationListItem = {
 
 export const staffVerificationQueue: StaffVerificationItem[] = [
   {
+    actionLabel: "Tinjau Pengajuan",
     applicant: "Johnathan Doe",
     avatar: "JD",
     avatarTone: "dark",
@@ -41,6 +44,7 @@ export const staffVerificationQueue: StaffVerificationItem[] = [
     tone: "warning",
   },
   {
+    actionLabel: "Tinjau Pengajuan",
     applicant: "Elena Rodriguez",
     avatar: "ER",
     avatarTone: "neutral",
@@ -52,6 +56,7 @@ export const staffVerificationQueue: StaffVerificationItem[] = [
     tone: "warning",
   },
   {
+    actionLabel: "Tinjau Pengajuan",
     applicant: "Marcus Knight",
     avatar: "MK",
     avatarTone: "light",
@@ -63,6 +68,7 @@ export const staffVerificationQueue: StaffVerificationItem[] = [
     tone: "success",
   },
   {
+    actionLabel: "Tinjau Pengajuan",
     applicant: "Sarah Chen",
     avatar: "SC",
     avatarTone: "green",
@@ -74,6 +80,7 @@ export const staffVerificationQueue: StaffVerificationItem[] = [
     tone: "success",
   },
   {
+    actionLabel: "Tinjau Pengajuan",
     applicant: "Arthur Hansen",
     avatar: "AH",
     avatarTone: "neutral",
@@ -85,6 +92,7 @@ export const staffVerificationQueue: StaffVerificationItem[] = [
     tone: "danger",
   },
   {
+    actionLabel: "Tinjau Pengajuan",
     applicant: "Linda Wu",
     avatar: "LW",
     avatarTone: "light",
@@ -99,6 +107,7 @@ export const staffVerificationQueue: StaffVerificationItem[] = [
 
 export const staffReservationList: StaffReservationListItem[] = [
   {
+    actionLabel: "Lihat Detail",
     activity: "Praktikum Mikrobiologi Lanjutan",
     applicant: "Johnathan Doe",
     avatar: "JD",
@@ -113,6 +122,7 @@ export const staffReservationList: StaffReservationListItem[] = [
     tone: "success",
   },
   {
+    actionLabel: "Tinjau Pengajuan",
     activity: "Pengujian Material",
     applicant: "Elena Rodriguez",
     avatar: "ER",
@@ -127,6 +137,7 @@ export const staffReservationList: StaffReservationListItem[] = [
     tone: "warning",
   },
   {
+    actionLabel: "Lihat Detail",
     activity: "Seminar Industri 2024",
     applicant: "Marcus Knight",
     avatar: "MK",
@@ -141,6 +152,7 @@ export const staffReservationList: StaffReservationListItem[] = [
     tone: "success",
   },
   {
+    actionLabel: "Lihat Detail",
     activity: "Pertemuan Klub Mingguan",
     applicant: "Sarah Chen",
     avatar: "SC",
@@ -155,6 +167,7 @@ export const staffReservationList: StaffReservationListItem[] = [
     tone: "success",
   },
   {
+    actionLabel: "Lihat Detail",
     activity: "Praktikum Fisiologi Tanaman",
     applicant: "Arthur Hansen",
     avatar: "AH",
@@ -169,6 +182,7 @@ export const staffReservationList: StaffReservationListItem[] = [
     tone: "danger",
   },
   {
+    actionLabel: "Lihat Detail",
     activity: "Observasi Studi Perilaku",
     applicant: "Linda Wu",
     avatar: "LW",

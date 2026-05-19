@@ -26,7 +26,7 @@
 - Desktop behavior: KPI row, status/settings split.
 - Mobile behavior: stacked KPI cards, service cards, settings form.
 - Required copy/status labels: preserve `Sistem`, `Simpan Pengaturan`, `Status Layanan`, `Aturan Booking`.
-- Source-of-truth notes: use Super Admin indigo primary actions and clear service status badges.
+- Source-of-truth notes: use Super Admin logo-green primary actions and clear service status badges.
 
 ## UX Behavior
 

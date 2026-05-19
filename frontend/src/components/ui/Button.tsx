@@ -9,7 +9,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants: Record<ButtonVariant, string> = {
   primary: "border-[#0f9d58] bg-[#0f9d58] text-white hover:bg-[#0b7340]",
-  super: "border-[#6366f1] bg-[#6366f1] text-white hover:bg-[#4f46e5]",
+  super: "border-[#0f9d58] bg-[#0f9d58] text-white hover:bg-[#0b7340]",
   secondary: "border-[#e5e7eb] bg-white text-[#111827] hover:bg-slate-50",
   warning: "border-[#fde68a] bg-[#fffbeb] text-[#92400e] hover:bg-[#fef3c7]",
   danger: "border-[#fecaca] bg-[#fee2e2] text-[#dc2626] hover:bg-[#fecaca]",

@@ -270,11 +270,10 @@ function setAdminUserStatus(userId: string, active: boolean) {
 }
 
 const kpiTone = {
-  alert: "bg-[#ede9fe] text-[#6366f1]",
+  alert: "bg-[#e8f5e9] text-[#0f9d58]",
   blue: "bg-[#dff4ff] text-[#0ea5e9]",
-  green: "bg-[#d1fae5] text-[#10b981]",
+  green: "bg-[#e8f5e9] text-[#0f9d58]",
   orange: "bg-[#ffedd5] text-[#f97316]",
-  purple: "bg-[#ede9fe] text-[#6366f1]",
 };
 
 function SuperIcon({ name, size = 18 }: { name: string; size?: number }) {
@@ -342,7 +341,7 @@ export function SuperAdminShell({
                 aria-current={item.key === active ? "page" : undefined}
                 className={cn(
                   "border-b-2 border-transparent pb-1 text-sm font-bold text-[#6b7280] no-underline",
-                  item.key === active && "border-[#6366f1] text-[#6366f1]",
+                  item.key === active && "border-[#0f9d58] text-[#0f9d58]",
                 )}
                 href={item.href}
                 key={item.key}
@@ -356,7 +355,7 @@ export function SuperAdminShell({
             <NotificationSurface className="text-[#6b7280]" role="super_admin" />
             <a
               aria-label="Profil Super Admin"
-              className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#6366f1] text-[13px] font-bold text-white no-underline"
+              className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#0f9d58] text-[13px] font-bold text-white no-underline"
               href="/super-admin/profile"
             >
               SA
@@ -436,7 +435,7 @@ function SuperButton({
         deferred
           ? "cursor-not-allowed border-[#e5e7eb] bg-[#f8fafc] text-[#6b7280]"
           : primary
-          ? "border-[#6366f1] bg-[#6366f1] text-white"
+          ? "border-[#0f9d58] bg-[#0f9d58] text-white"
           : "border-[#e5e7eb] bg-white text-[#111827]",
       )}
       type="button"
@@ -449,7 +448,7 @@ function SuperButton({
 function KpiCard({
   icon,
   label,
-  tone = "purple",
+  tone = "green",
   trend,
   value,
 }: {
@@ -581,7 +580,7 @@ function DashboardStateMessage({
       <p className="m-0">{children}</p>
       {onRetry ? (
         <button
-          className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-[#6366f1] px-4 text-sm font-bold text-white"
+          className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-[#0f9d58] px-4 text-sm font-bold text-white"
           onClick={onRetry}
           type="button"
         >
@@ -808,7 +807,7 @@ function BookingSettingsForm({
         />
       </label>
       <button
-        className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#6366f1] px-5 text-sm font-bold text-white disabled:opacity-60"
+        className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-sm font-bold text-white disabled:opacity-60"
         disabled={unchanged || invalid || isSaving}
         type="submit"
       >
@@ -952,35 +951,106 @@ export function SuperAdminFacilitiesPage() {
           </DashboardStateMessage>
         ) : null}
 
-        <div className="mt-7 grid grid-cols-[2fr_1fr] gap-7 max-lg:grid-cols-1">
+        <div className="mt-7 grid gap-7">
           <SectionCard link="Lihat Semua" title="Daftar Fasilitas">
-            <div className="grid">
+            <table className="w-full border-collapse max-md:hidden">
+              <thead className="bg-[#f9fafb] text-left text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
+                <tr>
+                  <th className="w-[34%] px-5 py-3">Fasilitas</th>
+                  <th className="w-[14%] px-5 py-3">Kapasitas</th>
+                  <th className="w-[18%] px-5 py-3">Staff</th>
+                  <th className="w-[18%] px-5 py-3">Status</th>
+                  <th className="w-[16%] px-5 py-3">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {facilities.map((facility) => (
+                  <tr className="border-t border-[#e5e7eb]" key={facility.id}>
+                    <td className="px-5 py-4">
+                      <p className="m-0 text-sm font-bold">{facility.name}</p>
+                      <p className="m-0 mt-1 text-xs text-[#6b7280]">
+                        {facility.location} - {facility.category}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {facility.issue_flags.length > 0 ? (
+                          facility.issue_flags.map((flag) => <StatusBadge key={flag} status={coverageLabel(flag)} />)
+                        ) : (
+                          <span className="text-xs font-semibold text-[#6b7280]">Tidak ada issue</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-[#6b7280]">{facility.capacity} kursi</td>
+                    <td className="px-5 py-4 text-sm text-[#6b7280]">
+                      {facility.active_assigned_staff_count}/{facility.assigned_staff_count} aktif
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        <StatusBadge status={facility.is_active ? "Aktif" : "Nonaktif"} />
+                        <StatusBadge status={coverageLabel(facility.assignment_coverage)} />
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="grid gap-2">
+                        <a
+                          aria-label={`Edit detail ${facility.name}`}
+                          className="text-sm font-bold text-[#0f9d58] no-underline"
+                          href={`/super-admin/facilities/${facility.id}/edit`}
+                        >
+                          Edit Detail
+                        </a>
+                        <button
+                          aria-disabled="true"
+                          aria-label={`Arsipkan ${facility.name}`}
+                          className="text-left text-sm font-bold text-[#6b7280]"
+                          type="button"
+                        >
+                          Arsipkan ditunda
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="hidden gap-4 max-md:grid">
               {facilities.map((facility) => (
-                <article
-                  className="grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-4 border-t border-[#e5e7eb] p-5 first:border-t-0 max-md:grid-cols-1 max-md:items-start"
-                  key={facility.id}
-                >
-                  <FacilityThumb label={facility.name.slice(0, 2).toUpperCase()} />
-                  <div className="min-w-0">
-                    <h3 className="m-0 break-words text-base font-bold">{facility.name}</h3>
-                    <p className="m-0 mt-2 break-words text-sm text-[#6b7280]">
-                      {facility.location} - {facility.category} - {facility.capacity} kursi
-                    </p>
-                    <p className="m-0 mt-2 break-words text-xs font-semibold text-[#6b7280]">
-                      {facility.active_assigned_staff_count}/{facility.assigned_staff_count} staff aktif
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {facility.issue_flags.length > 0 ? (
-                        facility.issue_flags.map((flag) => <StatusBadge key={flag} status={flag} />)
-                      ) : (
-                        <span className="text-xs font-semibold text-[#6b7280]">Tidak ada issue</span>
-                      )}
+                <article className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]" key={facility.id}>
+                  <UserField label="Fasilitas">
+                    <strong>{facility.name}</strong>
+                    <span className="block break-words text-xs text-[#6b7280]">
+                      {facility.location} - {facility.category}
+                    </span>
+                  </UserField>
+                  <UserField label="Kapasitas">{facility.capacity} kursi</UserField>
+                  <UserField label="Staff">
+                    {facility.active_assigned_staff_count}/{facility.assigned_staff_count} aktif
+                  </UserField>
+                  <UserField label="Status">
+                    <div className="flex flex-wrap gap-2">
+                      <StatusBadge status={facility.is_active ? "Aktif" : "Nonaktif"} />
+                      <StatusBadge status={coverageLabel(facility.assignment_coverage)} />
+                      {facility.issue_flags.map((flag) => <StatusBadge key={flag} status={coverageLabel(flag)} />)}
                     </div>
-                  </div>
-                  <div className="grid justify-items-end gap-2 max-md:justify-items-start">
-                    <StatusBadge status={facility.is_active ? "Aktif" : "Nonaktif"} />
-                    <StatusBadge status={coverageLabel(facility.assignment_coverage)} />
-                  </div>
+                  </UserField>
+                  <UserField label="Aksi">
+                    <div className="grid gap-2">
+                      <a
+                        aria-label={`Edit detail ${facility.name}`}
+                        className="text-sm font-bold text-[#0f9d58] no-underline"
+                        href={`/super-admin/facilities/${facility.id}/edit`}
+                      >
+                        Edit Detail
+                      </a>
+                      <button
+                        aria-disabled="true"
+                        aria-label={`Arsipkan ${facility.name}`}
+                        className="text-left text-sm font-bold text-[#6b7280]"
+                        type="button"
+                      >
+                        Arsipkan ditunda
+                      </button>
+                    </div>
+                  </UserField>
                 </article>
               ))}
             </div>
@@ -993,7 +1063,7 @@ export function SuperAdminFacilitiesPage() {
               <div className="border-t border-[#e5e7eb] p-6 text-sm font-semibold text-[#6b7280]">
                 <p className="m-0">Belum ada data tata kelola fasilitas.</p>
                 <button
-                  className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-[#6366f1] px-4 text-sm font-bold text-white"
+                  className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-[#0f9d58] px-4 text-sm font-bold text-white"
                   onClick={() => void governanceQuery.refetch()}
                   type="button"
                 >
@@ -1033,7 +1103,7 @@ export function SuperAdminFacilitiesPage() {
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         aria-label={`Tugaskan staff ke ${facility.name}`}
-                        className="inline-flex min-h-10 items-center justify-center rounded-md bg-[#6366f1] px-3 text-xs font-bold text-white disabled:opacity-60"
+                        className="inline-flex min-h-10 items-center justify-center rounded-md bg-[#0f9d58] px-3 text-xs font-bold text-white disabled:opacity-60"
                         disabled={!staffId || assignmentMutation.isPending}
                         onClick={() =>
                           assignmentMutation.mutate({ action: "assign", facilityId: facility.id, staffId })
@@ -1086,7 +1156,7 @@ function TrendChart({ points }: { points: SuperAdminReportTrendPointResponse[] }
       {points.map((point) => (
         <div
           aria-label={`${point.date}: ${point.reservation_count} reservasi, ${formatRupiah(point.paid_total_rupiah)}`}
-          className="w-full rounded-t-lg bg-[#6366f1] opacity-90"
+          className="w-full rounded-t-lg bg-[#0f9d58] opacity-90"
           key={point.date}
           style={{ height: `${Math.max(18, (point.reservation_count / maxCount) * 100)}%` }}
         />
@@ -1218,7 +1288,7 @@ export function SuperAdminReportsPage() {
             <div className="mt-4 grid">
               {auditLogs.map((item) => (
                 <article className="flex gap-4 border-t border-[#e5e7eb] py-4 first:border-t-0" key={item.id}>
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ede9fe] text-[#6366f1]">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e8f5e9] text-[#0f9d58]">
                     <SuperIcon name="settings" size={17} />
                   </div>
                   <div className="min-w-0">
@@ -1241,7 +1311,7 @@ export function SuperAdminReportsPage() {
         <section className="mt-7 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:border-0 max-md:bg-transparent max-md:shadow-none">
           <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[#e5e7eb] px-6 max-md:min-h-12 max-md:border-0 max-md:px-0">
             <h2 className="m-0 text-lg font-bold text-[#111827]">Moderasi Ulasan</h2>
-            <a className="text-sm font-bold text-[#6366f1] no-underline" href="#">
+            <a className="text-sm font-bold text-[#0f9d58] no-underline" href="#">
               Lihat Semua
             </a>
           </div>
@@ -1268,7 +1338,7 @@ export function SuperAdminReportsPage() {
                   <td className="px-5 py-4">
                     <button
                       aria-label={`${row.is_deleted ? "Pulihkan" : "Hapus"} review ${row.id}`}
-                      className="text-sm font-bold text-[#6366f1]"
+                      className="text-sm font-bold text-[#0f9d58]"
                       disabled={reviewMutation.isPending}
                       onClick={() =>
                         reviewMutation.mutate({ action: row.is_deleted ? "restore" : "delete", reviewId: row.id })
@@ -1296,7 +1366,7 @@ export function SuperAdminReportsPage() {
                 <UserField label="Aksi">
                   <button
                     aria-label={`${row.is_deleted ? "Pulihkan" : "Hapus"} review ${row.id}`}
-                    className="text-sm font-bold text-[#6366f1]"
+                    className="text-sm font-bold text-[#0f9d58]"
                     disabled={reviewMutation.isPending}
                     onClick={() =>
                       reviewMutation.mutate({ action: row.is_deleted ? "restore" : "delete", reviewId: row.id })
@@ -1339,7 +1409,7 @@ function SectionCard({
       <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[#e5e7eb] px-6 max-md:px-5">
         <h2 className="m-0 text-lg font-bold text-[#111827] max-md:max-w-[180px]">{title}</h2>
         {link ? (
-          <a className="text-sm font-bold text-[#6366f1] no-underline" href="#">
+          <a className="text-sm font-bold text-[#0f9d58] no-underline" href="#">
             {link}
           </a>
         ) : null}
@@ -1363,7 +1433,7 @@ export function SuperAdminDashboardPage() {
         {
           icon: "users",
           label: "Total Pengguna",
-          tone: "purple" as const,
+          tone: "green" as const,
           value: String(dashboard.kpis.total_users),
         },
         {
@@ -1477,11 +1547,17 @@ export function SuperAdminDashboardPage() {
             ) : null}
           </SectionCard>
 
-          <SectionCard link="Log Lengkap" title="Log Aktivitas Sistem">
+          <section className="relative overflow-hidden rounded-xl border border-[#dbeafe] bg-[#f8fafc] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
+            <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[#dbeafe] px-6 max-md:px-5">
+              <h2 className="m-0 text-lg font-bold text-[#111827] max-md:max-w-[180px]">Log Aktivitas Sistem</h2>
+              <a className="text-sm font-bold text-[#0f9d58] no-underline" href="#">
+                Log Lengkap
+              </a>
+            </div>
             <ul className="m-0 list-none p-0">
               {activity.map((item) => (
-                <li className="flex gap-4 border-t border-[#e5e7eb] px-6 py-4 first:border-t-0 max-md:px-5" key={item.id}>
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f3f4f6] text-[#111827]">
+                <li className="flex gap-4 border-t border-[#dbeafe] px-6 py-4 first:border-t-0 max-md:px-5" key={item.id}>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#0f766e]">
                     <SuperIcon name="settings" size={17} />
                   </div>
                   <div className="min-w-0">
@@ -1494,11 +1570,11 @@ export function SuperAdminDashboardPage() {
               ))}
             </ul>
             {activity.length === 0 ? (
-              <div className="border-t border-[#e5e7eb] p-6 text-sm font-semibold text-[#6b7280]">
+              <div className="border-t border-[#dbeafe] p-6 text-sm font-semibold text-[#6b7280]">
                 Belum ada aktivitas sistem terbaru.
               </div>
             ) : null}
-          </SectionCard>
+          </section>
         </div>
 
         <div className="mt-8">
@@ -1631,10 +1707,6 @@ export function SuperAdminUsersPage() {
           title="Pengguna"
         >
           <SuperButton deferred>Ekspor CSV ditunda</SuperButton>
-          <SuperButton primary>
-            <Plus aria-hidden="true" size={15} />
-            Tambah Pengguna
-          </SuperButton>
         </PageHeader>
 
         <section className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-md:grid-cols-1 max-md:gap-5">
@@ -1648,39 +1720,8 @@ export function SuperAdminUsersPage() {
           ))}
         </section>
 
-        <section className="mt-7 grid grid-cols-[1fr_180px_180px] gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:grid-cols-1">
-          <input
-            aria-label="Cari pengguna"
-            className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
-            onChange={(event) => setFilters((current) => ({ ...current, page: 1, search: event.target.value }))}
-            placeholder="Cari nama, email, atau NIM"
-            value={filters.search}
-          />
-          <select
-            aria-label="Filter role"
-            className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
-            onChange={(event) => setFilters((current) => ({ ...current, page: 1, role: event.target.value }))}
-            value={filters.role}
-          >
-            <option value="all">Semua role</option>
-            <option value="student">Mahasiswa</option>
-            <option value="staff">Staff</option>
-            <option value="super_admin">Super Admin</option>
-          </select>
-          <select
-            aria-label="Filter status"
-            className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
-            onChange={(event) => setFilters((current) => ({ ...current, isActive: event.target.value, page: 1 }))}
-            value={filters.isActive}
-          >
-            <option value="all">Semua status</option>
-            <option value="true">Aktif</option>
-            <option value="false">Nonaktif</option>
-          </select>
-        </section>
-
         <form
-          className="mt-6 grid grid-cols-[1fr_1fr_160px_160px_auto] gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-lg:grid-cols-2 max-md:grid-cols-1"
+          className="mt-7 grid grid-cols-[1fr_1fr_160px_160px_auto] gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-lg:grid-cols-2 max-md:grid-cols-1"
           onSubmit={(event) => {
             event.preventDefault();
             createMutation.mutate();
@@ -1719,13 +1760,44 @@ export function SuperAdminUsersPage() {
             <option value="super_admin">Super Admin</option>
           </select>
           <button
-            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#6366f1] px-5 text-sm font-bold text-white disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-sm font-bold text-white disabled:opacity-60"
             disabled={busy || !createForm.email || !createForm.fullName || !createForm.password}
             type="submit"
           >
             Buat Pengguna
           </button>
         </form>
+
+        <section className="mt-6 grid grid-cols-[1fr_180px_180px] gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:grid-cols-1">
+          <input
+            aria-label="Cari pengguna"
+            className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+            onChange={(event) => setFilters((current) => ({ ...current, page: 1, search: event.target.value }))}
+            placeholder="Cari nama, email, atau NIM"
+            value={filters.search}
+          />
+          <select
+            aria-label="Filter role"
+            className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+            onChange={(event) => setFilters((current) => ({ ...current, page: 1, role: event.target.value }))}
+            value={filters.role}
+          >
+            <option value="all">Semua role</option>
+            <option value="student">Mahasiswa</option>
+            <option value="staff">Staff</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+          <select
+            aria-label="Filter status"
+            className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+            onChange={(event) => setFilters((current) => ({ ...current, isActive: event.target.value, page: 1 }))}
+            value={filters.isActive}
+          >
+            <option value="all">Semua status</option>
+            <option value="true">Aktif</option>
+            <option value="false">Nonaktif</option>
+          </select>
+        </section>
 
         {message ? (
           <div className="mt-4 rounded-lg border border-[#dcfce7] bg-[#f0fdf4] px-4 py-3 text-sm font-semibold text-[#0b7340]">
@@ -1746,7 +1818,7 @@ export function SuperAdminUsersPage() {
         <section className="mt-6 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:border-0 max-md:bg-transparent max-md:shadow-none">
           <div className="flex min-h-[88px] items-center justify-between gap-4 border-b border-[#e5e7eb] px-6 max-md:min-h-12 max-md:border-0 max-md:px-0">
             <h2 className="m-0 text-lg font-bold text-[#111827]">Daftar Pengguna</h2>
-            <a className="text-sm font-bold text-[#6366f1] no-underline" href="#">
+            <a className="text-sm font-bold text-[#0f9d58] no-underline" href="#">
               Filter Lanjutan
             </a>
           </div>
@@ -1773,13 +1845,13 @@ export function SuperAdminUsersPage() {
                   <td className="px-5 py-4"><StatusBadge status={activeLabel(user.is_active)} /></td>
                   <td className="px-5 py-4">
                     <button
-                      aria-label={`${user.is_active ? "Nonaktifkan" : "Aktifkan"} ${user.full_name}`}
-                      className="text-sm font-bold text-[#6366f1]"
+                      aria-label={`Ubah status ${user.full_name}`}
+                      className="text-sm font-bold text-[#0f9d58]"
                       disabled={busy}
                       onClick={() => statusMutation.mutate({ active: !user.is_active, userId: user.id })}
                       type="button"
                     >
-                      {user.is_active ? "Nonaktifkan" : "Aktifkan"}
+                      Ubah status
                     </button>
                   </td>
                 </tr>
@@ -1799,13 +1871,13 @@ export function SuperAdminUsersPage() {
                 <UserField label="Status"><StatusBadge status={activeLabel(user.is_active)} /></UserField>
                 <UserField label="Aksi">
                   <button
-                    aria-label={`${user.is_active ? "Nonaktifkan" : "Aktifkan"} ${user.full_name}`}
-                    className="text-sm font-bold text-[#6366f1]"
+                    aria-label={`Ubah status ${user.full_name}`}
+                    className="text-sm font-bold text-[#0f9d58]"
                     disabled={busy}
                     onClick={() => statusMutation.mutate({ active: !user.is_active, userId: user.id })}
                     type="button"
                   >
-                    {user.is_active ? "Nonaktifkan" : "Aktifkan"}
+                    Ubah status
                   </button>
                 </UserField>
               </article>
@@ -1820,7 +1892,7 @@ export function SuperAdminUsersPage() {
             <div className="border-t border-[#e5e7eb] p-6 text-sm font-semibold text-[#6b7280]">
               <p className="m-0">Tidak ada pengguna untuk filter ini.</p>
               <button
-                className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-[#6366f1] px-4 text-sm font-bold text-white"
+                className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-[#0f9d58] px-4 text-sm font-bold text-white"
                 onClick={() => void usersQuery.refetch()}
                 type="button"
               >

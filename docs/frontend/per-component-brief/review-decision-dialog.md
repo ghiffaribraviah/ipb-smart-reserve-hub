@@ -8,7 +8,7 @@
 
 - `staff-11-reservation-details.md`
 - `staff-12-review-decision-dialogs.md`
-- Staff review queues when approving/rejecting documents, payments, or cancellation requests.
+- Staff review queues when approving/rejecting documents or payments.
 
 ## Reference Evidence
 
@@ -32,7 +32,7 @@ Collect and confirm staff review decisions with the correct summary context, rea
 
 - Approve document/payment.
 - Reject document/payment with reason.
-- Confirm cancellation decision where backend supports it.
+- Legacy cancellation decision states are not surfaced in the integrated staff UI after automatic student cancellation.
 
 ## Behavior
 
@@ -49,7 +49,7 @@ Collect and confirm staff review decisions with the correct summary context, rea
 
 ## Data Contract
 
-- Props/data fields: reservation summary, review target, decision type, existing status, reason value, submitting/error state.
+- Props/data fields: reservation summary, document/payment review target, decision type, existing status, reason value, submitting/error state.
 - Events: close, confirm approve, confirm reject.
 
 ## Design Rules
@@ -70,4 +70,4 @@ Collect and confirm staff review decisions with the correct summary context, rea
 
 ## Open Questions
 
-- Exact backend route split for document, payment, and cancellation review decisions.
+- Exact backend route split for document and payment review decisions.

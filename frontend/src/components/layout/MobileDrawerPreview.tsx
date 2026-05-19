@@ -56,7 +56,7 @@ export function MobileDrawerPreview() {
           className="flex w-[312px] max-w-[84%] flex-col bg-white px-[18px] py-4 shadow-[0_10px_30px_rgba(15,23,42,0.16)]"
         >
           <div className="mb-[18px] flex items-center gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
-            <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#6366f1] text-[13px] font-bold text-white">
+            <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#0f9d58] text-[13px] font-bold text-white">
               {drawerFixture.profile.initials}
             </div>
             <div className="min-w-0">
@@ -69,14 +69,14 @@ export function MobileDrawerPreview() {
             {drawerFixture.nav.map((item) => {
               const Icon = drawerIcons[item.icon];
               const isGreen = item.key === drawerFixture.activeGreen;
-              const isIndigo = item.key === drawerFixture.activeIndigo;
+              const isSuper = item.key === drawerFixture.activeSuper;
 
               return (
                 <a
                   className={cn(
                     "flex items-center gap-3 rounded-[10px] px-2.5 py-3 text-sm font-bold text-slate-500 no-underline",
                     isGreen && "bg-[#e8f5e9] text-[#0f9d58]",
-                    isIndigo && "bg-[#ede9fe] text-[#6366f1]",
+                    isSuper && "bg-[#e8f5e9] text-[#0f9d58]",
                   )}
                   href="#"
                   key={item.key}

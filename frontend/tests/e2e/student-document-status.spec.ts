@@ -82,12 +82,12 @@ test.describe("student document workflow pages", () => {
     );
     await expect(page.getByRole("heading", { name: "Template Surat" })).toBeVisible();
     await expect(page.getByText("template-surat-permohonan-reservasi.pdf")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Unduh Surat" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Unggah Dokumen" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Unduh" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Unggah" })).toBeVisible();
     await expect(page.getByLabel("Pilih file surat persetujuan")).toBeVisible();
-    await expect(page.getByText("surat-reservasi.pdf")).toBeVisible();
-    await expect(page.getByText("PDF · 1,2 MB · siap dikirim")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Kirim Reservasi" })).toHaveAttribute(
+    await expect(page.getByText("Belum ada file dipilih")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Unggah" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Kirim" })).toHaveAttribute(
       "href",
       "/student/reservations/RSV-FIXTURE-001/verification/waiting",
     );
@@ -162,7 +162,7 @@ test.describe("student document workflow pages", () => {
     await expect(page.getByRole("heading", { name: "Dokumen Perlu Diperbaiki" })).toBeVisible();
     await expect(page.getByText("Reservasi belum dapat diterima karena dokumen perlu diperbaiki.")).toBeVisible();
     await expect(page.getByText("Tanda tangan pembina belum terlihat jelas.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Kembali ke Daftar Reservasi" })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "Kembali" })).toHaveAttribute(
       "href",
       "/student/reservations",
     );

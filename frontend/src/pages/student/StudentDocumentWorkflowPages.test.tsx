@@ -274,7 +274,7 @@ describe("StudentDocumentWorkflowPages", () => {
 
     renderDocumentRoutes("/student/reservations/reservation-1/letter");
 
-    await user.click(await screen.findByRole("button", { name: "Unduh Surat" }));
+    await user.click(await screen.findByRole("button", { name: "Unduh" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -312,7 +312,7 @@ describe("StudentDocumentWorkflowPages", () => {
       await screen.findByLabelText("Pilih file surat persetujuan"),
       new File(["pdf"], "signed-letter.pdf", { type: "application/pdf" }),
     );
-    await user.click(screen.getByRole("button", { name: "Unggah Dokumen" }));
+    await user.click(screen.getByRole("button", { name: "Unggah" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -333,10 +333,10 @@ describe("StudentDocumentWorkflowPages", () => {
       await screen.findByLabelText("Pilih file surat persetujuan"),
       new File(["pdf"], "signed-letter.pdf", { type: "application/pdf" }),
     );
-    await user.click(screen.getByRole("button", { name: "Unggah Dokumen" }));
+    await user.click(screen.getByRole("button", { name: "Unggah" }));
 
     expect(await screen.findByText("Ukuran surat bertanda tangan maksimal 5 MB.")).toBeVisible();
-    expect(screen.getByText("signed-letter.pdf")).toBeVisible();
+    expect(screen.getAllByText("signed-letter.pdf").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders waiting and declined state from reservation projection", async () => {
@@ -415,7 +415,7 @@ describe("StudentDocumentWorkflowPages", () => {
       await screen.findByLabelText("Pilih file bukti pembayaran"),
       new File(["jpg"], "receipt.jpg", { type: "image/jpeg" }),
     );
-    await user.click(screen.getByRole("button", { name: "Unggah Bukti" }));
+    await user.click(screen.getByRole("button", { name: "Unggah" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -436,10 +436,10 @@ describe("StudentDocumentWorkflowPages", () => {
       await screen.findByLabelText("Pilih file bukti pembayaran"),
       new File(["jpg"], "receipt.jpg", { type: "image/jpeg" }),
     );
-    await user.click(screen.getByRole("button", { name: "Unggah Bukti" }));
+    await user.click(screen.getByRole("button", { name: "Unggah" }));
 
     expect(await screen.findByText("Bukti pembayaran harus berupa JPG, JPEG, atau PNG.")).toBeVisible();
-    expect(screen.getByText("receipt.jpg")).toBeVisible();
+    expect(screen.getAllByText("receipt.jpg").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders payment declined reason from the backend projection", async () => {

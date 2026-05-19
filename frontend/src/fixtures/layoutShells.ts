@@ -1,7 +1,7 @@
 export type RoleKey = "student" | "staff" | "super_admin";
 
 export type ShellFixture = {
-  accent: "green" | "indigo";
+  accent: "green";
   active: string;
   contentLabels: readonly string[];
   profile: {
@@ -60,7 +60,7 @@ export const shellFixtures: ShellFixture[] = [
     ],
   },
   {
-    accent: "indigo",
+    accent: "green",
     active: "dashboard",
     contentLabels: ["KPI", "governance", "activity"],
     profile: {
@@ -69,7 +69,7 @@ export const shellFixtures: ShellFixture[] = [
       name: "Super Admin",
     },
     role: "super_admin",
-    subtitle: "indigo accent",
+    subtitle: "logo green accent",
     title: "Super Admin Shell",
     nav: [
       { href: "/super-admin", key: "dashboard", label: "Dashboard" },
@@ -83,7 +83,7 @@ export const shellFixtures: ShellFixture[] = [
 
 export const drawerFixture = {
   activeGreen: "student-home",
-  activeIndigo: "super-system",
+  activeSuper: "super-system",
   profile: shellFixtures[2].profile,
   nav: [
     { icon: "home", key: "student-home", label: "Beranda Mahasiswa" },

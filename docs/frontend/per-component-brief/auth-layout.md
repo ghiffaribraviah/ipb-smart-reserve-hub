@@ -48,7 +48,7 @@ Provide the shared authentication screen frame and institutional visual context.
 
 ## Design Rules
 
-- Desktop: split layout matching screenshots.
+- Desktop: split layout matching screenshots, with footer/link content participating in normal flow so long auth forms do not overlap lower content.
 - Mobile: single-column, no horizontal overflow.
 - Typography: Inter body, Playfair brand where shown.
 - Color: green primary action.
@@ -65,4 +65,3 @@ Provide the shared authentication screen frame and institutional visual context.
 ## Open Questions
 
 - None.
-

@@ -60,7 +60,8 @@ async function mockReservationApi(page: Page, reservation: Record<string, any>) 
     await route.fulfill({
       json: {
         ...reservation,
-        status: "cancellation_requested",
+        cancellation_reason: "Jadwal kegiatan berubah: agenda organisasi dipindahkan.",
+        status: "cancelled",
       },
     });
   });
@@ -93,31 +94,12 @@ async function mockProfileApi(page: Page) {
 }
 
 test.describe("student review, cancellation, and profile pages", () => {
-  test("matches the reservation review form reference", async ({ page }, testInfo) => {
-    const isMobile = testInfo.project.name.includes("mobile");
-    await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
+  test("redirects the deprecated reservation review route to detail", async ({ page }) => {
     await mockReservationApi(page, baseReservation);
     await page.goto("/student/reservations/RSV-FIXTURE-010/review");
 
-    await expect(page.getByRole("link", { name: "← Kembali ke Detail Reservasi" })).toHaveAttribute(
-      "href",
-      "/student/reservations/RSV-FIXTURE-010",
-    );
     await expect(page.getByRole("heading", { name: "Tulis Ulasan" })).toBeVisible();
-    await expect(page.getByRole("radiogroup", { name: "Penilaian Fasilitas" })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "5 dari 5" })).toBeVisible();
-    await expect(page.getByLabel("Komentar")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Kirim Ulasan" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Grand Auditorium" })).toBeVisible();
-
-    if (isMobile) {
-      await expectNoHorizontalOverflow(page);
-    }
-
-    await expectPageScreenshot(
-      page,
-      `student-review-form-${isMobile ? "mobile" : "desktop"}`,
-    );
+    await expect(page).toHaveURL(/\/student\/reservations\/RSV-FIXTURE-010#review$/);
   });
 
   test("matches the cancellation request reference", async ({ page }, testInfo) => {
@@ -138,8 +120,8 @@ test.describe("student review, cancellation, and profile pages", () => {
     await expect(page.getByLabel("Alasan Pembatalan")).toBeVisible();
     await expect(page.getByLabel("Detail Alasan")).toBeVisible();
     await expect(page.getByRole("button", { name: "Kirim Pengajuan" })).toBeVisible();
-    await expect(page.getByText("Pembatalan Menunggu Review")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Pembatalan Ditolak" })).toBeVisible();
+    await expect(page.getByText("Pembatalan dapat berdampak pada denda")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Reservasi Dibatalkan" })).toBeVisible();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);
@@ -159,6 +141,7 @@ test.describe("student review, cancellation, and profile pages", () => {
 
     await expect(page.getByRole("heading", { name: "Profil Mahasiswa" })).toBeVisible();
     await expect(page.getByText("Ari Rahman")).toBeVisible();
+    await expect(page.getByText("ari.rahman@apps.ipb.ac.id").first()).toBeVisible();
     await expect(page.getByText("Mahasiswa Aktif")).toBeVisible();
     await expect(page.getByRole("button", { name: "Keluar" })).toBeVisible();
     await expect(page.getByText("Nomor Induk Mahasiswa (NIM)")).toBeVisible();

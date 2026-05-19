@@ -8,7 +8,9 @@ Generated from `docs/issues/*.md` frontmatter. Edit issue files, then regenerate
 
 ## needs-info
 
-- None
+- ISSUE-0093 - Super Admin reservations governance page
+- ISSUE-0094 - Super Admin system statistics and letter template management
+- ISSUE-0095 - Production media asset sourcing follow-up
 
 ## ready-for-agent
 
@@ -108,3 +110,11 @@ Generated from `docs/issues/*.md` frontmatter. Edit issue files, then regenerate
 - ISSUE-0082 - Super Admin system and Booking Settings integration
 - ISSUE-0083 - Notification surface integration
 - ISSUE-0084 - Integration hardening and contract smoke
+- ISSUE-0085 - Shared UI brand, copy, and status polish
+- ISSUE-0086 - Auth registration layout and copy fixes
+- ISSUE-0087 - Student discovery and Facility detail layout cleanup
+- ISSUE-0088 - Student reservation workflow UI cleanup
+- ISSUE-0089 - Automatic student cancellation lifecycle
+- ISSUE-0090 - Staff reservation queue, list, and decision cleanup
+- ISSUE-0091 - Staff Facility structured category and open-hours management
+- ISSUE-0092 - Super Admin users, facilities, and dashboard governance cleanup

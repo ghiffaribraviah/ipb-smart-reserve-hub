@@ -141,6 +141,10 @@ function activeReviewTarget(detail: StaffReservationDetailResponse): StaffReview
   return "document";
 }
 
+function hasPendingReview(detail: StaffReservationDetailResponse, target: StaffReviewTarget) {
+  return detail[target].review_status === "pending_review";
+}
+
 function targetLabel(target: StaffReviewTarget) {
   return target === "document" ? "Dokumen" : target === "payment" ? "Pembayaran" : "Pembatalan";
 }
@@ -251,6 +255,7 @@ export function StaffReservationDetailPage() {
   const detail = detailQuery.data;
   const activeTarget = detail ? activeReviewTarget(detail) : "document";
   const activeLabel = targetLabel(activeTarget);
+  const canReviewActiveTarget = detail ? hasPendingReview(detail, activeTarget) : false;
   const status = detail ? mapStaffReservationStatus(
     activeTarget === "document"
       ? detail.document.review_status
@@ -368,13 +373,16 @@ export function StaffReservationDetailPage() {
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
               <h2 className="m-0 text-base font-bold text-[#111827]">Aksi Administrator</h2>
               <p className="m-0 mt-2 text-sm leading-6 text-[#6b7280]">
-                Tinjau tahap {activeLabel.toLowerCase()} dan kirim keputusan berdasarkan data backend.
+                {canReviewActiveTarget
+                  ? `Tinjau tahap ${activeLabel.toLowerCase()} dan kirim keputusan berdasarkan data backend.`
+                  : "Tidak ada tahap review yang membutuhkan keputusan saat ini."}
               </p>
               {actionError ? (
                 <p className="mt-4 rounded-lg border border-[#fecaca] bg-[#fef2f2] p-3 text-sm font-semibold text-[#991b1b]">
                   {actionError}
                 </p>
               ) : null}
+              {canReviewActiveTarget ? (
               <div className="mt-4 grid gap-3">
                 <button
                   disabled={approveMutation.isPending}
@@ -393,6 +401,7 @@ export function StaffReservationDetailPage() {
                   Tolak Pengajuan
                 </a>
               </div>
+              ) : null}
             </section>
           </aside>
         </div>
@@ -429,11 +438,14 @@ export function StaffReviewDecisionPage() {
   });
   const detail = detailQuery.data;
   const queryTarget = searchParams.get("target");
-  const selectedTarget: StaffReviewTarget = queryTarget === "payment" || queryTarget === "cancellation" || queryTarget === "document"
-    ? queryTarget
-    : detail
-      ? activeReviewTarget(detail)
-      : "document";
+  const requestedTarget: StaffReviewTarget | null =
+    queryTarget === "payment" || queryTarget === "cancellation" || queryTarget === "document" ? queryTarget : null;
+  const selectedTarget: StaffReviewTarget =
+    detail && requestedTarget && hasPendingReview(detail, requestedTarget)
+      ? requestedTarget
+      : detail
+        ? activeReviewTarget(detail)
+        : "document";
   const selectedLabel = targetLabel(selectedTarget);
   const [reason, setReason] = useState<string>(staffDecisionDialogFixture.reason);
   const [reasonError, setReasonError] = useState<string | null>(null);
@@ -514,36 +526,18 @@ export function StaffReviewDecisionPage() {
             className="w-[620px] max-w-[calc(100vw-40px)] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:w-full max-md:max-w-full"
             role="dialog"
           >
-            <div className="flex justify-between gap-4 border-b border-[#e5e7eb] p-6 max-md:p-5">
+            <div className="border-b border-[#e5e7eb] p-6 max-md:p-5">
               <div>
                 <h2 className="m-0 text-lg font-bold text-[#111827]" id="decision-title">
                   Tolak {selectedLabel} Reservasi
                 </h2>
                 <p className="m-0 mt-1 text-sm text-[#6b7280]">
-                  Alasan penolakan akan ditampilkan kepada mahasiswa.
+                  Isi alasan yang jelas sebelum menolak pengajuan.
                 </p>
               </div>
-              <button
-                aria-label="Tutup"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-xl"
-                type="button"
-              >
-                ×
-              </button>
             </div>
             <div className="p-6 max-md:p-5">
-              <div className="rounded-lg border border-[#e5e7eb] bg-[#f9fafb] p-4">
-                <DecisionSummaryRow
-                  label="File"
-                  value={detail?.document.signed_approval_letter?.filename ?? detail?.payment.receipt?.filename ?? "Tidak ada file"}
-                />
-                <DecisionSummaryRow label="Tahap" value={`Review ${selectedLabel}`} />
-                <DecisionSummaryRow
-                  label="Keputusan"
-                  value={<span className="rounded-full bg-[#fef3c7] px-2.5 py-1 text-xs text-[#92400e]">Memerlukan Alasan</span>}
-                />
-              </div>
-              <label className="mt-4 grid gap-2">
+              <label className="grid gap-2">
                 <span className="text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
                   Alasan penolakan
                 </span>
@@ -560,15 +554,14 @@ export function StaffReviewDecisionPage() {
               {mutationError ? (
                 <p className="m-0 mt-2 text-sm font-semibold text-[#dc2626]">{mutationError}</p>
               ) : null}
-              <div className="mt-4 rounded-lg border border-[#fecaca] bg-[#fef2f2] p-3 text-[13px] leading-5 text-[#991b1b]">
-                <strong>Surat:</strong> Menolak {selectedLabel.toLowerCase()} akan mengubah reservasi menjadi ditolak
-                dan menghentikan alur pembayaran.
-              </div>
             </div>
             <div className="flex justify-end gap-3 border-t border-[#e5e7eb] bg-[#f9fafb] p-5 max-md:grid max-md:grid-cols-1">
-              <button className="min-h-11 rounded-lg border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#111827]" type="button">
+              <a
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#111827] no-underline"
+                href={`/staff/reservations/${reservationId}`}
+              >
                 Kembali
-              </button>
+              </a>
               <button
                 className="min-h-11 rounded-lg border border-[#fecaca] bg-[#fee2e2] px-4 text-sm font-bold text-[#dc2626]"
                 disabled={rejectMutation.isPending || detailQuery.isLoading}

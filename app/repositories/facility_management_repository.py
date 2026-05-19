@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models import (
     Facility,
     FacilityBlackout,
+    FacilityCategory,
     FacilityImage,
     FacilityOpenHour,
     FacilityStaffAssignment,
@@ -20,6 +21,9 @@ class FacilityManagementRepository(Protocol):
         raise NotImplementedError
 
     def get_staff_user(self, staff_id: str) -> User | None:
+        raise NotImplementedError
+
+    def get_active_category(self, category_id: str) -> FacilityCategory | None:
         raise NotImplementedError
 
     def add_staff_assignment(self, facility_id: str, staff_id: str) -> FacilityStaffAssignment:
@@ -46,6 +50,9 @@ class FacilityManagementRepository(Protocol):
     def add_open_hour(self, open_hour: FacilityOpenHour) -> FacilityOpenHour:
         raise NotImplementedError
 
+    def replace_open_hours(self, facility_id: str, open_hours: list[FacilityOpenHour]) -> list[FacilityOpenHour]:
+        raise NotImplementedError
+
     def add_blackout(self, blackout: FacilityBlackout) -> FacilityBlackout:
         raise NotImplementedError
 
@@ -57,7 +64,7 @@ class SqlAlchemyFacilityManagementRepository:
     def get_facility(self, facility_id: str) -> Facility | None:
         return self._session.scalar(
             select(Facility)
-            .options(joinedload(Facility.category), joinedload(Facility.images))
+            .options(joinedload(Facility.category), joinedload(Facility.images), joinedload(Facility.open_hours))
             .where(Facility.id == facility_id)
         )
 
@@ -66,6 +73,14 @@ class SqlAlchemyFacilityManagementRepository:
         if user is None or user.role != UserRole.staff:
             return None
         return user
+
+    def get_active_category(self, category_id: str) -> FacilityCategory | None:
+        return self._session.scalar(
+            select(FacilityCategory).where(
+                FacilityCategory.id == category_id,
+                FacilityCategory.is_active.is_(True),
+            )
+        )
 
     def add_staff_assignment(self, facility_id: str, staff_id: str) -> FacilityStaffAssignment:
         assignment = self._session.scalar(
@@ -106,7 +121,7 @@ class SqlAlchemyFacilityManagementRepository:
             self._session.scalars(
                 select(Facility)
                 .join(FacilityStaffAssignment)
-                .options(joinedload(Facility.category), joinedload(Facility.images))
+                .options(joinedload(Facility.category), joinedload(Facility.images), joinedload(Facility.open_hours))
                 .where(FacilityStaffAssignment.staff_id == staff_id)
                 .order_by(Facility.name)
             ).unique()
@@ -137,6 +152,19 @@ class SqlAlchemyFacilityManagementRepository:
         self._session.add(open_hour)
         self._session.flush()
         return open_hour
+
+    def replace_open_hours(self, facility_id: str, open_hours: list[FacilityOpenHour]) -> list[FacilityOpenHour]:
+        self._session.execute(delete(FacilityOpenHour).where(FacilityOpenHour.facility_id == facility_id))
+        for open_hour in open_hours:
+            self._session.add(open_hour)
+        self._session.flush()
+        return list(
+            self._session.scalars(
+                select(FacilityOpenHour)
+                .where(FacilityOpenHour.facility_id == facility_id)
+                .order_by(FacilityOpenHour.day_of_week, FacilityOpenHour.opens_at)
+            )
+        )
 
     def add_blackout(self, blackout: FacilityBlackout) -> FacilityBlackout:
         self._session.add(blackout)

@@ -22,11 +22,11 @@
 
 ## Design Contract
 
-- Layout: reservation workflow card rhythm with template download, shared upload panel, file row, and summary.
+- Layout: reservation workflow card rhythm with template download, shared upload panel, selected-file row when a file is chosen, and summary.
 - Desktop behavior: main document panel plus side summary.
 - Mobile behavior: stacked panels and full-width upload/continue action.
-- Required copy/status labels: preserve Indonesian document and upload labels.
-- Source-of-truth notes: upload uses shared `upload`/`button-row` anatomy; file rows must wrap long filenames.
+- Required copy/status labels: use `Unduh`, `Unggah`, `Kirim`, `Pilih File`, and Indonesian selected-file/empty-file text.
+- Source-of-truth notes: upload uses shared `upload`/`button-row` anatomy; file rows must wrap long filenames and should not show redundant `valid` badges.
 
 ## UX Behavior
 

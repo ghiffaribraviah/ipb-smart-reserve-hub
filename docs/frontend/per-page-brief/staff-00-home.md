@@ -45,7 +45,7 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: mixed pending document/payment/cancellation queue items.
+- Deterministic fixture requirements: mixed pending document/payment queue items; cancellation requests are no longer actionable queue work.
 - Real entities: Staff reservation review queue/read model.
 - Fixture media: facility thumbnails if present in reference.
 
@@ -61,9 +61,9 @@
 - Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: staff home verification queue.
-- Contract implemented: assigned-staff read model for pending document, payment, and cancellation reviews.
-- Evidence: `app/api/routes/staff_reservation_operation_routes.py` registers `GET /staff/reservations/verification-queue`; `tests/test_staff_reservation_operations.py` verifies assigned-facility scoping and document/payment/cancellation queue item projections.
-- Source issue/PRD: `docs/issues/ISSUE-0009-signed-letter-upload-and-staff-document-review.md`, `docs/issues/ISSUE-0010-paid-facility-receipt-upload-and-payment-review.md`, `docs/issues/ISSUE-0013-cancellation-workflow.md`.
+- Contract implemented: assigned-staff read model for pending document and payment reviews; automatic student cancellation keeps cancellation review out of the actionable queue.
+- Evidence: `app/api/routes/staff_reservation_operation_routes.py` registers `GET /staff/reservations/verification-queue`; `tests/test_staff_reservation_operations.py` verifies assigned-facility scoping and document/payment queue item projections, and verifies cancellation review is not queued.
+- Source issue/PRD: `docs/issues/ISSUE-0009-signed-letter-upload-and-staff-document-review.md`, `docs/issues/ISSUE-0010-paid-facility-receipt-upload-and-payment-review.md`, `docs/issues/ISSUE-0089-automatic-student-cancellation-lifecycle.md`.
 
 ## Shared Components
 

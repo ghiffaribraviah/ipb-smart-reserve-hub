@@ -10,6 +10,7 @@ const assignedFacilities = [
   {
     capacity: 1200,
     category: "Auditorium / Seminar",
+    category_id: "category-auditorium",
     contact_email: "auditorium@apps.ipb.ac.id",
     contact_name: "TU Auditorium",
     contact_phone: "081200000000",
@@ -19,6 +20,10 @@ const assignedFacilities = [
     is_active: true,
     location: "Kampus Timur, Plaza Tengah",
     name: "Grand Auditorium",
+    open_hours: [
+      { id: "open-hour-1", day_of_week: 0, opens_at: "08:00", closes_at: "18:00" },
+      { id: "open-hour-2", day_of_week: 1, opens_at: "08:00", closes_at: "18:00" },
+    ],
     open_hours_summary: "Senin-Jumat, 08:00 - 18:00",
     payment_instructions: "Transfer ke rekening resmi IPB.",
     price_rupiah: 100000,
@@ -26,9 +31,29 @@ const assignedFacilities = [
   },
 ];
 
+const facilityCategories = [
+  {
+    facility_count: 1,
+    icon_hint: "presentation",
+    id: "category-auditorium",
+    name: "Auditorium / Seminar",
+    slug: "auditorium",
+  },
+  {
+    facility_count: 0,
+    icon_hint: "book",
+    id: "category-classroom",
+    name: "Ruang Kelas",
+    slug: "kelas",
+  },
+];
+
 async function mockStaffFacilityEditEndpoints(page: Page) {
   await page.route("http://localhost:8000/staff/facilities", async (route) => {
     await route.fulfill({ json: assignedFacilities });
+  });
+  await page.route("http://localhost:8000/facility-categories", async (route) => {
+    await route.fulfill({ json: facilityCategories });
   });
   await page.route("http://localhost:8000/staff/facilities/grand-auditorium**", async (route) => {
     await route.fulfill({ json: assignedFacilities[0] });
@@ -49,18 +74,23 @@ test.describe("staff edit facility page", () => {
     await expect(page.getByRole("heading", { name: "Edit Detail Fasilitas" })).toBeVisible();
     await expect(page.getByLabel("Nama", { exact: true })).toHaveValue("Grand Auditorium");
     await expect(page.getByLabel("Lokasi")).toHaveValue("Kampus Timur, Plaza Tengah");
+    await expect(page.getByLabel("Kategori Fasilitas")).toHaveValue("category-auditorium");
     await expect(page.getByLabel("Kapasitas (Orang)")).toHaveValue("1200");
     await expect(page.getByLabel("Harga sewa (Rupiah)")).toHaveValue("100000");
     await expect(page.getByLabel("Nama Kontak")).toHaveValue("TU Auditorium");
     await expect(page.getByLabel("Nomor Kontak")).toHaveValue("081200000000");
     await expect(page.getByLabel("Email Kontak")).toHaveValue("auditorium@apps.ipb.ac.id");
     await expect(page.getByRole("heading", { name: "Jadwal Operasional" })).toBeVisible();
-    await expect(page.getByLabel("Ringkasan Jam Buka")).toHaveValue("Senin-Jumat, 08:00 - 18:00");
+    await expect(page.getByText("Ringkasan saat ini: Senin-Jumat, 08:00 - 18:00")).toBeVisible();
+    await expect(page.getByLabel("Hari buka 1")).toHaveValue("0");
+    await expect(page.getByLabel("Jam buka mulai 1")).toHaveValue("08:00");
+    await expect(page.getByLabel("Jam buka selesai 1")).toHaveValue("18:00");
+    await expect(page.getByRole("button", { name: "Tambah Baris Jam Buka" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Hapus Jam Buka 1" })).toBeVisible();
     await expect(page.getByLabel("Instruksi Pembayaran")).toHaveValue("Transfer ke rekening resmi IPB.");
     await expect(page.getByRole("heading", { name: "Galeri Media" })).toBeVisible();
     await expect(page.getByLabel("URL Gambar")).toBeVisible();
     await expect(page.getByRole("button", { name: "Tambah Gambar" })).toBeDisabled();
-    await expect(page.getByRole("button", { name: "Tambah Jam Buka" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Tambah Blackout" })).toBeDisabled();
     await expect(page.getByRole("button", { name: "Simpan Perubahan" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Nonaktifkan" })).toBeVisible();

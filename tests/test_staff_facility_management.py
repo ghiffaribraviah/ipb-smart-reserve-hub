@@ -24,6 +24,7 @@ async def test_super_admin_assigns_staff_and_staff_manages_only_assigned_facilit
     staff_id = test_data.create_user(email="staff@ipb.ac.id", role=UserRole.staff)
     other_staff_id = test_data.create_user(email="other-staff@ipb.ac.id", role=UserRole.staff)
     student_id = test_data.create_user(email="student@apps.ipb.ac.id", role=UserRole.student)
+    seminar_category_id = test_data.create_facility_category(name="Seminar", slug="seminar", icon_hint="presentation")
     facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
     test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="08:00", closes_at="16:00")
     other_facility_id = test_data.create_facility(name="Lapangan Tenis Indoor")
@@ -61,9 +62,18 @@ async def test_super_admin_assigns_staff_and_staff_manages_only_assigned_facilit
                 "contact_email": "tu-auditorium@ipb.ac.id",
                 "price_rupiah": 250000,
                 "payment_instructions": "Transfer ke rekening resmi IPB.",
-                "open_hours_summary": "Senin-Jumat 08.00-16.00",
+                "category_id": seminar_category_id,
+                "open_hours": [
+                    {"day_of_week": 0, "opens_at": "08:00", "closes_at": "16:00"},
+                    {"day_of_week": 2, "opens_at": "10:00", "closes_at": "18:30"},
+                ],
                 "is_active": True,
             },
+        )
+        invalid_open_hours = await client.patch(
+            f"/staff/facilities/{facility_id}",
+            headers={"Authorization": f"Bearer {staff_token}"},
+            json={"open_hours": [{"day_of_week": 1, "opens_at": "16:00", "closes_at": "08:00"}]},
         )
         forbidden = await client.patch(
             f"/staff/facilities/{facility_id}",
@@ -114,8 +124,17 @@ async def test_super_admin_assigns_staff_and_staff_manages_only_assigned_facilit
     assert assigned_facilities.json()[0]["id"] == facility_id
     assert updated.status_code == 200
     assert updated.json()["name"] == "Auditorium AHN"
+    assert updated.json()["category_id"] == seminar_category_id
+    assert updated.json()["category"] == "Seminar"
+    assert updated.json()["open_hours"] == [
+        {"id": updated.json()["open_hours"][0]["id"], "day_of_week": 0, "opens_at": "08:00", "closes_at": "16:00"},
+        {"id": updated.json()["open_hours"][1]["id"], "day_of_week": 2, "opens_at": "10:00", "closes_at": "18:30"},
+    ]
+    assert updated.json()["open_hours_summary"] == "Senin 08:00-16:00; Rabu 10:00-18:30"
     assert updated.json()["price_rupiah"] == 250000
     assert updated.json()["payment_instructions"] == "Transfer ke rekening resmi IPB."
+    assert invalid_open_hours.status_code == 400
+    assert invalid_open_hours.json()["detail"] == "Jam tutup harus setelah jam buka."
     assert forbidden.status_code == 403
     assert unrelated_forbidden.status_code == 403
     assert created_reservation.status_code == 201

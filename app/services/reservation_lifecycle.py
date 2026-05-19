@@ -63,7 +63,7 @@ class FacilityReservationLifecycleModule:
         reservation.status = ReservationStatus.cancelled
 
     def request_cancellation(self, reservation: Reservation, *, reason: str) -> None:
-        reservation.status = ReservationStatus.cancellation_requested
+        reservation.status = ReservationStatus.cancelled
         reservation.cancellation_reason = reason
         reservation.cancellation_rejection_reason = None
 

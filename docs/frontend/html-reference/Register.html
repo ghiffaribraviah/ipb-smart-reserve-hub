@@ -112,6 +112,20 @@
         }
 
         /* Form Styling */
+        .form-section {
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0 0 1.25rem;
+        }
+
+        .form-section legend {
+            padding: 0 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
         .form-row {
             display: flex;
             gap: 1rem;
@@ -193,7 +207,8 @@
         /* Bottom Link */
         .login-link {
             text-align: center;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
+            padding-bottom: 0.5rem;
             font-size: 0.875rem;
             color: var(--text-muted);
         }
@@ -376,6 +391,9 @@
 
                 <form action="#" method="POST">
                     
+                    <fieldset class="form-section">
+                        <legend>Data Identitas</legend>
+
                     <div class="form-group">
                         <label for="name">Nama Lengkap</label>
                         <div class="input-wrapper">
@@ -410,6 +428,11 @@
                         </div>
                     </div>
 
+                    </fieldset>
+
+                    <fieldset class="form-section">
+                        <legend>Buat Kata Sandi</legend>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="password">Kata Sandi</label>
@@ -420,13 +443,15 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="confirm_password">Surat Sandi</label>
+                            <label for="confirm_password">Konfirmasi Kata Sandi</label>
                             <div class="input-wrapper">
                                 <span class="input-icon" aria-hidden="true"><svg class="lucide-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
                                 <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required>
                             </div>
                         </div>
                     </div>
+
+                    </fieldset>
 
                     <button type="submit" class="btn-submit">
                         Buat Akun <span aria-hidden="true">&#8594;</span>

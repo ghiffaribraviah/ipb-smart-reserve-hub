@@ -1,5 +1,7 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, CalendarDays, FileText, Info, MapPin, Menu, Search, Star } from "lucide-react";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { ApiError, apiDownload, apiRequest } from "../../api/http";
 import { NotificationSurface } from "../../components/NotificationSurface";
@@ -15,6 +17,14 @@ type ReservationDocument = {
   fileName: string;
   metadata: string;
   statusLabel: string;
+};
+
+type ReviewResponse = {
+  admin_removal_reason?: string | null;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  id: string;
+  is_deleted?: boolean;
 };
 
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -56,7 +66,7 @@ function buildDocuments(reservation: StudentReservationWorkflowProjection): Rese
 
   if (reservation.document.approval_letter) {
     documents.push({
-      actionLabel: "Unduh Surat",
+      actionLabel: "Unduh",
       downloadPath: `/student/reservations/${reservation.id}/approval-letter/download`,
       fileName: reservation.document.approval_letter.filename,
       metadata: metadataLabel(reservation.document.approval_letter),
@@ -88,21 +98,11 @@ function buildDocuments(reservation: StudentReservationWorkflowProjection): Rese
 }
 
 function actionForReservation(reservation: StudentReservationWorkflowProjection) {
-  const hasVisibleReview = reservation.review !== null && !reservation.review.is_deleted;
-
   if (reservation.status === "approved") {
     return {
       href: `/student/reservations/${reservation.id}/cancellation`,
       label: "Ajukan Pembatalan",
       tone: "caution" as const,
-    };
-  }
-
-  if (reservation.status === "completed" && !hasVisibleReview) {
-    return {
-      href: `/student/reservations/${reservation.id}/review`,
-      label: "Tulis Ulasan",
-      tone: "primary" as const,
     };
   }
 
@@ -123,7 +123,9 @@ function noticeForReservation(reservation: StudentReservationWorkflowProjection)
   }
 
   if (reservation.status === "cancelled") {
-    return "Reservasi ini sudah dibatalkan.";
+    return reservation.cancellation_reason
+      ? `Reservasi ini sudah dibatalkan. Alasan: ${reservation.cancellation_reason}`
+      : "Reservasi ini sudah dibatalkan.";
   }
 
   return "Detail reservasi tersedia untuk ditinjau.";
@@ -337,6 +339,124 @@ function DocumentRow({ document }: { document: ReservationDocument }) {
   );
 }
 
+function ReservationReviewPanel({ detail }: { detail: StudentReservationWorkflowProjection }) {
+  const queryClient = useQueryClient();
+  const [rating, setRating] = useState<number | null>(null);
+  const [comment, setComment] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const hasVisibleReview = detail.review !== null && !detail.review.is_deleted;
+  const reviewMutation = useMutation({
+    mutationFn: () =>
+      apiRequest<ReviewResponse>(`/student/reservations/${detail.id}/review`, {
+        body: { comment: comment.trim() || null, rating },
+        method: "POST",
+      }),
+    onSuccess: (review) => {
+      queryClient.setQueryData<StudentReservationWorkflowProjection>(["student-reservation-detail", detail.id], {
+        ...detail,
+        review: {
+          admin_removal_reason: review.admin_removal_reason ?? null,
+          deleted_at: review.deleted_at ?? null,
+          deleted_by: review.deleted_by ?? null,
+          id: review.id,
+          is_deleted: review.is_deleted ?? false,
+        },
+      });
+    },
+  });
+
+  if (detail.status !== "completed") {
+    return null;
+  }
+
+  if (hasVisibleReview) {
+    return (
+      <section id="review" className="mt-9 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-6">
+        <h2 className="m-0 text-xl font-bold text-[#065f46]">Ulasan Anda</h2>
+        <p className="m-0 mt-3 text-sm leading-6 text-[#166534]">
+          Ulasan Anda sudah tercatat.
+        </p>
+      </section>
+    );
+  }
+
+  function submitReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setValidationError(null);
+
+    if (rating === null) {
+      setValidationError("Penilaian bintang wajib diisi.");
+      return;
+    }
+
+    reviewMutation.mutate();
+  }
+
+  return (
+    <section id="review" className="mt-9 rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-6">
+      <h2 className="m-0 text-xl font-bold">Tulis Ulasan</h2>
+      <p className="m-0 mt-3 max-w-[560px] text-sm leading-6 text-[#6b7280]">
+        Bagikan pengalaman Anda menggunakan fasilitas ini untuk membantu mahasiswa lain.
+      </p>
+      <form className="mt-7" onSubmit={submitReview}>
+        <fieldset className="m-0 border-0 p-0">
+          <legend className="mb-4 text-sm font-bold">
+            Penilaian Fasilitas <span className="text-[#dc2626]">*</span>
+          </legend>
+          <div aria-label="Penilaian Fasilitas" className="flex gap-3" role="radiogroup">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <label
+                className={`flex h-11 w-11 cursor-pointer items-center justify-center ${
+                  rating !== null && rating >= star ? "text-[#0f9d58]" : "text-[#d1d5db]"
+                }`}
+                key={star}
+              >
+                <input
+                  checked={rating === star}
+                  className="sr-only"
+                  name="rating"
+                  onChange={() => setRating(star)}
+                  type="radio"
+                  value={star}
+                />
+                <span className="sr-only">{star} dari 5</span>
+                <Star aria-hidden="true" className="fill-current" size={30} />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <label className="mt-7 block">
+          <span className="mb-3 block text-sm font-bold">Komentar</span>
+          <textarea
+            aria-label="Komentar"
+            className="min-h-[132px] w-full rounded-lg border border-[#d1d5db] bg-white p-4 text-sm leading-6"
+            onChange={(event) => setComment(event.target.value)}
+            placeholder="Opsional: ceritakan pengalaman Anda terkait kebersihan, kelengkapan alat, pelayanan, atau hal lain yang membantu."
+            value={comment}
+          />
+        </label>
+        <p className="m-0 mt-3 text-sm leading-6 text-[#6b7280]">
+          Komentar bersifat opsional. Penilaian bintang wajib diisi.
+        </p>
+        {validationError || reviewMutation.isError ? (
+          <p className="m-0 mt-3 text-sm font-semibold text-[#b91c1c]">
+            {validationError ?? (reviewMutation.error as ApiError).message}
+          </p>
+        ) : null}
+        <div className="mt-7 flex justify-end">
+          <button
+            className="min-h-[52px] rounded-lg bg-[#0f9d58] px-6 text-sm font-bold text-white"
+            disabled={reviewMutation.isPending}
+            type="submit"
+          >
+            {reviewMutation.isPending ? "Mengirim..." : "Kirim Ulasan"}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
 function DetailContent({ detail }: { detail: StudentReservationWorkflowProjection }) {
   const documents = buildDocuments(detail);
   const action = actionForReservation(detail);
@@ -349,22 +469,9 @@ function DetailContent({ detail }: { detail: StudentReservationWorkflowProjectio
         <a className="text-sm font-bold text-[#0f9d58] no-underline" href="/student/reservations">
           ← Kembali
         </a>
-        {action ? (
-          <a
-            className={`flex min-h-[44px] items-center justify-center rounded-lg px-5 text-sm font-bold no-underline ${
-              action.tone === "primary"
-                ? "bg-[#0f9d58] text-white"
-                : "border border-[#fbbf24] bg-[#fffbeb] text-[#92400e]"
-            }`}
-            href={action.href}
-          >
-            {action.label}
-          </a>
-        ) : (
-          <span className="rounded-full bg-[#dcfce7] px-3 py-1.5 text-xs font-bold text-[#047857]">
-            {statusLabel}
-          </span>
-        )}
+        <span className="rounded-full bg-[#dcfce7] px-3 py-1.5 text-xs font-bold text-[#047857]">
+          {statusLabel}
+        </span>
       </div>
 
       <h1 className="m-0 mt-9 text-[34px] font-bold leading-tight max-md:text-[30px]">
@@ -419,6 +526,19 @@ function DetailContent({ detail }: { detail: StudentReservationWorkflowProjectio
         <Info aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
         <p className="m-0">{notice}</p>
       </div>
+
+      <ReservationReviewPanel detail={detail} />
+
+      {action ? (
+        <div className="mt-9 flex justify-end border-t border-[#e5e7eb] pt-7 max-md:justify-stretch">
+          <a
+            className="flex min-h-[44px] items-center justify-center rounded-lg border border-[#fbbf24] bg-[#fffbeb] px-5 text-sm font-bold text-[#92400e] no-underline max-md:w-full"
+            href={action.href}
+          >
+            {action.label}
+          </a>
+        </div>
+      ) : null}
     </div>
   );
 }

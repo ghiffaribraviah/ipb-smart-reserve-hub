@@ -25,6 +25,7 @@ import { cn } from "../../utils/cn";
 type FacilityManagementProfileResponse = {
   capacity: number;
   category: string;
+  category_id: string;
   contact_email: string | null;
   contact_name: string;
   contact_phone: string;
@@ -33,10 +34,26 @@ type FacilityManagementProfileResponse = {
   is_active: boolean;
   location: string;
   name: string;
+  open_hours: FacilityOpenHourResponse[];
   open_hours_summary: string;
   payment_instructions: string | null;
   price_rupiah: number;
   price_summary: string;
+};
+
+type FacilityCategoryResponse = {
+  facility_count: number;
+  icon_hint: string | null;
+  id: string;
+  name: string;
+  slug: string;
+};
+
+type FacilityOpenHourResponse = {
+  closes_at: string;
+  day_of_week: number;
+  id?: string;
+  opens_at: string;
 };
 
 type StaffFacilityScheduleEntryResponse = {
@@ -57,6 +74,7 @@ type StaffFacilityScheduleEntryResponse = {
 
 type FacilityEditForm = {
   capacity: string;
+  category_id: string;
   contact_email: string;
   contact_name: string;
   contact_phone: string;
@@ -64,12 +82,14 @@ type FacilityEditForm = {
   is_active: boolean;
   location: string;
   name: string;
+  open_hours: FacilityOpenHourResponse[];
   open_hours_summary: string;
   payment_instructions: string;
   price_rupiah: string;
 };
 
-type ApiJsonObject = { [key: string]: string | number | boolean | null };
+type ApiJsonValue = string | number | boolean | null | ApiJsonObject | ApiJsonValue[];
+type ApiJsonObject = { [key: string]: ApiJsonValue };
 import { StaffShell } from "./StaffReservationOperationsPages";
 
 const imageToneClasses = {
@@ -89,6 +109,10 @@ function fetchStaffFacilities() {
   return apiRequest<FacilityManagementProfileResponse[]>("/staff/facilities");
 }
 
+function fetchFacilityCategories() {
+  return apiRequest<FacilityCategoryResponse[]>("/facility-categories");
+}
+
 function updateStaffFacility(facilityId: string, body: ApiJsonObject) {
   return apiRequest<FacilityManagementProfileResponse>(`/staff/facilities/${facilityId}`, {
     body,
@@ -104,10 +128,6 @@ function deactivateStaffFacility(facilityId: string) {
 
 function createStaffFacilityImage(facilityId: string, body: ApiJsonObject) {
   return apiRequest<unknown>(`/staff/facilities/${facilityId}/images`, { body, method: "POST" });
-}
-
-function createStaffFacilityOpenHour(facilityId: string, body: ApiJsonObject) {
-  return apiRequest<unknown>(`/staff/facilities/${facilityId}/open-hours`, { body, method: "POST" });
 }
 
 function createStaffFacilityBlackout(facilityId: string, body: ApiJsonObject) {
@@ -211,6 +231,7 @@ function mapStaffFacility(facility: FacilityManagementProfileResponse): StaffFac
 function facilityToEditForm(facility: FacilityManagementProfileResponse): FacilityEditForm {
   return {
     capacity: String(facility.capacity),
+    category_id: facility.category_id,
     contact_email: facility.contact_email ?? "",
     contact_name: facility.contact_name,
     contact_phone: facility.contact_phone,
@@ -218,6 +239,7 @@ function facilityToEditForm(facility: FacilityManagementProfileResponse): Facili
     is_active: facility.is_active,
     location: facility.location,
     name: facility.name,
+    open_hours: facility.open_hours ?? [],
     open_hours_summary: facility.open_hours_summary,
     payment_instructions: facility.payment_instructions ?? "",
     price_rupiah: String(facility.price_rupiah),
@@ -755,11 +777,16 @@ export function StaffFacilityEditPage() {
     queryFn: fetchStaffFacilities,
     queryKey: ["staff", "facilities"],
   });
+  const categoriesQuery = useQuery({
+    queryFn: fetchFacilityCategories,
+    queryKey: ["facility-categories"],
+  });
   const facility = facilitiesQuery.data?.find((item) => item.id === facilityId) ?? null;
   const accessDenied =
     facilitiesQuery.error instanceof ApiError && [403, 404].includes(facilitiesQuery.error.status);
   const emptyForm: FacilityEditForm = {
     capacity: "",
+    category_id: "",
     contact_email: "",
     contact_name: "",
     contact_phone: "",
@@ -767,6 +794,7 @@ export function StaffFacilityEditPage() {
     is_active: true,
     location: "",
     name: "",
+    open_hours: [],
     open_hours_summary: "",
     payment_instructions: "",
     price_rupiah: "",
@@ -776,11 +804,6 @@ export function StaffFacilityEditPage() {
   const [formError, setFormError] = useState("");
   const [message, setMessage] = useState("");
   const [imageForm, setImageForm] = useState({ alt_text: "", url: "" });
-  const [openHourForm, setOpenHourForm] = useState({
-    closes_at: "16:00",
-    day_of_week: "0",
-    opens_at: "08:00",
-  });
   const [blackoutForm, setBlackoutForm] = useState({
     ends_at: "2026-06-01T04:00",
     reason: "",
@@ -808,8 +831,20 @@ export function StaffFacilityEditPage() {
         throw new Error("Harga sewa tidak boleh negatif.");
       }
 
+      const openHours = form.open_hours.map((openHour) => {
+        if (openHour.closes_at <= openHour.opens_at) {
+          throw new Error("Jam tutup harus setelah jam buka.");
+        }
+        return {
+          closes_at: openHour.closes_at,
+          day_of_week: openHour.day_of_week,
+          opens_at: openHour.opens_at,
+        };
+      });
+
       return updateStaffFacility(facilityId, {
         capacity,
+        category_id: form.category_id,
         contact_email: form.contact_email.trim() || null,
         contact_name: form.contact_name.trim(),
         contact_phone: form.contact_phone.trim(),
@@ -817,7 +852,7 @@ export function StaffFacilityEditPage() {
         is_active: form.is_active,
         location: form.location.trim(),
         name: form.name.trim(),
-        open_hours_summary: form.open_hours_summary.trim(),
+        open_hours: openHours,
         payment_instructions: form.payment_instructions.trim() || null,
         price_rupiah: price,
       });
@@ -867,23 +902,6 @@ export function StaffFacilityEditPage() {
     },
   });
 
-  const openHourMutation = useMutation({
-    mutationFn: () =>
-      createStaffFacilityOpenHour(facilityId, {
-        closes_at: openHourForm.closes_at,
-        day_of_week: Number(openHourForm.day_of_week),
-        opens_at: openHourForm.opens_at,
-      }),
-    onError: (error) => {
-      setMessage("");
-      setFormError(apiErrorMessage(error, "Jam buka belum dapat ditambahkan."));
-    },
-    onSuccess: () => {
-      setFormError("");
-      setMessage("Jam buka fasilitas ditambahkan.");
-    },
-  });
-
   const blackoutMutation = useMutation({
     mutationFn: () =>
       createStaffFacilityBlackout(facilityId, {
@@ -906,12 +924,44 @@ export function StaffFacilityEditPage() {
     saveMutation.isPending ||
     deactivateMutation.isPending ||
     imageMutation.isPending ||
-    openHourMutation.isPending ||
     blackoutMutation.isPending;
 
   const updateField = (field: keyof FacilityEditForm, value: string | boolean) => {
     setFormEdits((current) => ({ ...current, [field]: value }));
   };
+
+  const updateOpenHour = (index: number, updates: Partial<FacilityOpenHourResponse>) => {
+    setFormEdits((current) => {
+      const currentOpenHours = current.open_hours ?? form.open_hours;
+      return {
+        ...current,
+        open_hours: currentOpenHours.map((openHour, currentIndex) =>
+          currentIndex === index ? { ...openHour, ...updates } : openHour
+        ),
+      };
+    });
+  };
+
+  const addOpenHourRow = () => {
+    setFormEdits((current) => ({
+      ...current,
+      open_hours: [
+        ...(current.open_hours ?? form.open_hours),
+        { day_of_week: 0, opens_at: "08:00", closes_at: "16:00" },
+      ],
+    }));
+  };
+
+  const removeOpenHourRow = (index: number) => {
+    setFormEdits((current) => ({
+      ...current,
+      open_hours: (current.open_hours ?? form.open_hours).filter((_, currentIndex) => currentIndex !== index),
+    }));
+  };
+
+  const categoryOptions = categoriesQuery.data ?? (
+    facility ? [{ id: facility.category_id, name: facility.category }] : []
+  );
 
   return (
     <StaffShell active="facilities">
@@ -979,6 +1029,22 @@ export function StaffFacilityEditPage() {
                     value={form.location}
                   />
                 </Field>
+                <Field id="facility-category" label="Kategori Fasilitas">
+                  <select
+                    aria-label="Kategori Fasilitas"
+                    className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+                    disabled={busy || categoriesQuery.isLoading}
+                    id="facility-category"
+                    onChange={(event) => updateField("category_id", event.target.value)}
+                    value={form.category_id}
+                  >
+                    {categoryOptions.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
                 <div className="col-span-2 grid gap-2 max-md:col-span-1">
                   <label className="text-[13px] font-semibold text-[#111827]" htmlFor="facility-about">
                     Tentang Fasilitas
@@ -1045,16 +1111,89 @@ export function StaffFacilityEditPage() {
             </section>
 
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6">
-              <h2 className="m-0 mb-6 text-sm font-bold text-[#111827]">Jadwal Operasional</h2>
-              <Field id="facility-open-hours-summary" label="Ringkasan Jam Buka">
-                <input
-                  className="h-[46px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white max-md:h-[52px]"
+              <div className="mb-6 flex items-start justify-between gap-4 max-md:grid">
+                <div>
+                  <h2 className="m-0 text-sm font-bold text-[#111827]">Jadwal Operasional</h2>
+                  <p className="m-0 mt-2 text-sm leading-6 text-[#6b7280]">
+                    Ringkasan saat ini: {form.open_hours_summary || "Belum ada jam buka"}
+                  </p>
+                </div>
+                <button
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#d1fae5] bg-[#e8f5e9] px-4 text-sm font-bold text-[#0f9d58]"
                   disabled={busy}
-                  id="facility-open-hours-summary"
-                  onChange={(event) => updateField("open_hours_summary", event.target.value)}
-                  value={form.open_hours_summary}
-                />
-              </Field>
+                  onClick={addOpenHourRow}
+                  type="button"
+                >
+                  <Plus aria-hidden="true" size={16} />
+                  Tambah Baris Jam Buka
+                </button>
+              </div>
+              <div className="grid gap-3">
+                {form.open_hours.length === 0 ? (
+                  <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm font-semibold text-[#6b7280]">
+                    Belum ada jam buka terstruktur.
+                  </div>
+                ) : null}
+                {form.open_hours.map((openHour, index) => {
+                  const rowNumber = index + 1;
+                  return (
+                    <div
+                      className="grid grid-cols-[1.1fr_1fr_1fr_auto] items-end gap-3 rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3 max-md:grid-cols-1"
+                      key={openHour.id ?? `new-${index}`}
+                    >
+                      <label className="grid gap-2 text-[13px] font-semibold text-[#111827]">
+                        Hari
+                        <select
+                          aria-label={`Hari buka ${rowNumber}`}
+                          className="h-10 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm"
+                          disabled={busy}
+                          onChange={(event) => updateOpenHour(index, { day_of_week: Number(event.target.value) })}
+                          value={String(openHour.day_of_week)}
+                        >
+                          <option value="0">Senin</option>
+                          <option value="1">Selasa</option>
+                          <option value="2">Rabu</option>
+                          <option value="3">Kamis</option>
+                          <option value="4">Jumat</option>
+                          <option value="5">Sabtu</option>
+                          <option value="6">Minggu</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-2 text-[13px] font-semibold text-[#111827]">
+                        Jam Buka
+                        <input
+                          aria-label={`Jam buka mulai ${rowNumber}`}
+                          className="h-10 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm"
+                          disabled={busy}
+                          onChange={(event) => updateOpenHour(index, { opens_at: event.target.value })}
+                          type="time"
+                          value={openHour.opens_at}
+                        />
+                      </label>
+                      <label className="grid gap-2 text-[13px] font-semibold text-[#111827]">
+                        Jam Tutup
+                        <input
+                          aria-label={`Jam buka selesai ${rowNumber}`}
+                          className="h-10 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm"
+                          disabled={busy}
+                          onChange={(event) => updateOpenHour(index, { closes_at: event.target.value })}
+                          type="time"
+                          value={openHour.closes_at}
+                        />
+                      </label>
+                      <button
+                        aria-label={`Hapus Jam Buka ${rowNumber}`}
+                        className="min-h-10 rounded-lg border border-[#fecaca] bg-white px-4 text-sm font-bold text-[#dc2626]"
+                        disabled={busy}
+                        onClick={() => removeOpenHourRow(index)}
+                        type="button"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
               <div className="mt-5 grid gap-2">
                 <label className="text-[13px] font-semibold text-[#111827]" htmlFor="facility-payment-instructions">
                   Instruksi Pembayaran
@@ -1141,47 +1280,6 @@ export function StaffFacilityEditPage() {
             </div>
 
             <div className="mt-5 grid gap-3 border-t border-[#e5e7eb] pt-5 text-sm">
-              <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
-                <p className="m-0 mb-3 font-bold text-[#111827]">Tambah Jam Buka</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <select
-                    aria-label="Hari buka"
-                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
-                    onChange={(event) => setOpenHourForm((current) => ({ ...current, day_of_week: event.target.value }))}
-                    value={openHourForm.day_of_week}
-                  >
-                    <option value="0">Sen</option>
-                    <option value="1">Sel</option>
-                    <option value="2">Rab</option>
-                    <option value="3">Kam</option>
-                    <option value="4">Jum</option>
-                    <option value="5">Sab</option>
-                    <option value="6">Min</option>
-                  </select>
-                  <input
-                    aria-label="Jam buka mulai"
-                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
-                    onChange={(event) => setOpenHourForm((current) => ({ ...current, opens_at: event.target.value }))}
-                    type="time"
-                    value={openHourForm.opens_at}
-                  />
-                  <input
-                    aria-label="Jam buka selesai"
-                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
-                    onChange={(event) => setOpenHourForm((current) => ({ ...current, closes_at: event.target.value }))}
-                    type="time"
-                    value={openHourForm.closes_at}
-                  />
-                </div>
-                <button
-                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#0f9d58] px-4 text-sm font-bold text-white"
-                  disabled={busy}
-                  onClick={() => openHourMutation.mutate()}
-                  type="button"
-                >
-                  Tambah Jam Buka
-                </button>
-              </div>
               <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
                 <p className="m-0 mb-3 font-bold text-[#111827]">Tambah Blackout</p>
                 <div className="grid gap-2">

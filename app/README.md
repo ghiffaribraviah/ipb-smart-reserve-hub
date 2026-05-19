@@ -7,6 +7,12 @@ This directory contains the FastAPI backend for IPB Smart Reserve Hub.
 From the repository root:
 
 ```sh
+make dev
+```
+
+To run only the backend from the repository root:
+
+```sh
 uv sync --extra dev
 uv run python -m app.dev.seed
 uv run uvicorn app.main:create_app --factory --reload
@@ -175,6 +181,8 @@ Common endpoints:
 | `GET` | `/admin/settings` | Super Admin |
 | `PATCH` | `/admin/settings` | Super Admin |
 | `GET` | `/admin/system-status` | Super Admin |
+
+Staff facility profiles include the assigned facility category ID/label, `open_hours_summary`, and structured `open_hours` rows. Staff facility updates can change editable profile fields, category, active state, payment instructions, and replace structured open-hour rows; invalid open-hour ranges and inactive/missing categories are rejected while assigned-facility access control is preserved.
 
 For more detail, inspect route files in `app/api/routes/` and schemas in `app/schemas/`.
 

@@ -23,7 +23,7 @@ export function RatingInput({ value }: RatingInputProps) {
             />
             <span
               aria-hidden="true"
-              className={rating <= value ? "text-[#f59e0b]" : "text-[#d1d5db]"}
+              className={rating <= value ? "text-[#0f9d58]" : "text-[#d1d5db]"}
             >
               ★
             </span>

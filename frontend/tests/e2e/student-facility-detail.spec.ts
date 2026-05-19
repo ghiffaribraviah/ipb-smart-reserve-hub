@@ -56,13 +56,13 @@ const facilityDetail = {
 
 const calendarResponse = [
   {
-    ends_at: "2026-06-01T04:00:00Z",
-    starts_at: "2026-06-01T02:00:00Z",
+    ends_at: "2026-05-19T04:00:00Z",
+    starts_at: "2026-05-19T02:00:00Z",
     status: "reserved",
   },
   {
-    ends_at: "2026-06-01T07:00:00Z",
-    starts_at: "2026-06-01T05:00:00Z",
+    ends_at: "2026-05-19T07:00:00Z",
+    starts_at: "2026-05-19T05:00:00Z",
     status: "reserved",
   },
 ];
@@ -100,6 +100,9 @@ test.describe("student facility detail page", () => {
     );
     await expect(page.getByRole("heading", { name: "Ulasan Peminjam" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Kalender Publik" })).toBeVisible();
+    const calendarBox = await page.getByRole("heading", { name: "Kalender Publik" }).boundingBox();
+    const reviewsBox = await page.getByRole("heading", { name: "Ulasan Peminjam" }).boundingBox();
+    expect(calendarBox?.y).toBeLessThan(reviewsBox?.y ?? 0);
     await expect(page.getByText("Waktu sudah dipesan").first()).toBeVisible();
     await expect(page.getByText("Detail kegiatan tidak ditampilkan pada kalender publik.").first()).toBeVisible();
     await expect(page.getByText("Simposium Etika AI 2024")).toHaveCount(0);

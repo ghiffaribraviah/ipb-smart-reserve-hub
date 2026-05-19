@@ -74,7 +74,6 @@ class SqlAlchemyStaffReservationOperationsRepository:
                             [
                                 ReservationStatus.pending_document_review,
                                 ReservationStatus.overdue_verification,
-                                ReservationStatus.cancellation_requested,
                             ]
                         )
                     )

@@ -30,7 +30,7 @@
 
 ## UX Behavior
 
-- Primary actions: continue workflow or view detail.
+- Primary actions: continue workflow or use `Lihat Detail` for reservation detail/status navigation.
 - Secondary actions: cancellation where eligible.
 - Loading state: stable card skeleton.
 - Empty state: empty reservation list prompt to browse facilities.

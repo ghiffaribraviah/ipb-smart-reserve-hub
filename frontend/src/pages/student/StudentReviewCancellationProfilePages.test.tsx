@@ -82,7 +82,6 @@ function renderWorkflowRoutes(initialEntry: string) {
       <Route element={<StudentReviewPage />} path="/student/reservations/:reservationId/review" />
       <Route element={<StudentCancellationRequestPage />} path="/student/reservations/:reservationId/cancellation" />
       <Route element={<p>Detail route</p>} path="/student/reservations/:reservationId" />
-      <Route element={<p>Cancellation requested route</p>} path="/student/reservations/:reservationId/cancellation-request" />
     </Routes>,
     { initialEntries: [initialEntry] },
   );
@@ -94,17 +93,12 @@ describe("StudentReviewCancellationProfilePages", () => {
     sessionStorage.clear();
   });
 
-  it("submits a completed reservation review and returns to detail", async () => {
-    const user = userEvent.setup();
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+  it("redirects the deprecated review route to the completed detail page", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
 
       if (url === "http://localhost:8000/student/reservations/reservation-1") {
         return jsonResponse(reservation());
-      }
-
-      if (url === "http://localhost:8000/student/reservations/reservation-1/review" && init?.method === "POST") {
-        return jsonResponse({ id: "review-1" }, 201);
       }
 
       return jsonResponse({ detail: `Unhandled ${url}` }, 404);
@@ -112,45 +106,7 @@ describe("StudentReviewCancellationProfilePages", () => {
 
     renderWorkflowRoutes("/student/reservations/reservation-1/review");
 
-    await user.click(await screen.findByRole("radio", { name: "5 dari 5" }));
-    await user.type(screen.getByLabelText("Komentar"), "Ruang bersih dan perangkat audio siap digunakan.");
-    await user.click(screen.getByRole("button", { name: "Kirim Ulasan" }));
-
-    await screen.findByText("Detail route");
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8000/student/reservations/reservation-1/review",
-      expect.objectContaining({
-        body: JSON.stringify({
-          comment: "Ruang bersih dan perangkat audio siap digunakan.",
-          rating: 5,
-        }),
-        method: "POST",
-      }),
-    );
-  });
-
-  it("keeps duplicate review errors on the form", async () => {
-    const user = userEvent.setup();
-    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
-      const url = String(input);
-
-      if (url === "http://localhost:8000/student/reservations/reservation-1") {
-        return jsonResponse(reservation());
-      }
-
-      if (url === "http://localhost:8000/student/reservations/reservation-1/review" && init?.method === "POST") {
-        return jsonResponse({ detail: "Review untuk reservasi ini sudah dikirim." }, 409);
-      }
-
-      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
-    });
-
-    renderWorkflowRoutes("/student/reservations/reservation-1/review");
-
-    await user.click(await screen.findByRole("radio", { name: "4 dari 5" }));
-    await user.click(screen.getByRole("button", { name: "Kirim Ulasan" }));
-
-    expect(await screen.findByText("Review untuk reservasi ini sudah dikirim.")).toBeVisible();
+    expect(await screen.findByText("Detail route")).toBeVisible();
   });
 
   it("submits cancellation reason for approved reservations", async () => {
@@ -163,7 +119,13 @@ describe("StudentReviewCancellationProfilePages", () => {
       }
 
       if (url === "http://localhost:8000/student/reservations/reservation-1/cancellation-request" && init?.method === "POST") {
-        return jsonResponse(reservation({ status: "cancellation_requested" }));
+        return jsonResponse(
+          reservation({
+            cancellation_reason:
+              "Jadwal kegiatan berubah: Kegiatan organisasi dipindahkan ke jadwal lain setelah koordinasi fakultas.",
+            status: "cancelled",
+          }),
+        );
       }
 
       return jsonResponse({ detail: `Unhandled ${url}` }, 404);
@@ -177,7 +139,7 @@ describe("StudentReviewCancellationProfilePages", () => {
     );
     await user.click(screen.getByRole("button", { name: "Kirim Pengajuan" }));
 
-    await screen.findByText("Cancellation requested route");
+    await screen.findByText("Detail route");
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8000/student/reservations/reservation-1/cancellation-request",
       expect.objectContaining({
@@ -203,7 +165,7 @@ describe("StudentReviewCancellationProfilePages", () => {
 
     renderWorkflowRoutes("/student/reservations/reservation-1/cancellation");
 
-    expect(await screen.findByRole("heading", { name: "Tulis Ulasan" })).toBeVisible();
+    expect(await screen.findByText("Detail route")).toBeVisible();
   });
 
   it("keeps cancellation backend errors on the form", async () => {
@@ -259,6 +221,7 @@ describe("StudentReviewCancellationProfilePages", () => {
     renderWithProviders(<StudentProfilePage />, { initialEntries: ["/student/profile"] });
 
     expect(await screen.findByText("Nabila Putri")).toBeVisible();
+    expect(screen.getAllByText("nabila@apps.ipb.ac.id")).toHaveLength(2);
     expect(screen.getAllByText("G64190099")).toHaveLength(2);
     expect(screen.getByText("081234567890")).toBeVisible();
     expect(screen.getByText("Ilmu Komputer")).toBeVisible();

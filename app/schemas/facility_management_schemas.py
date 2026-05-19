@@ -13,6 +13,7 @@ class FacilityManagementProfileResponse(BaseModel):
     name: str
     location: str
     capacity: int
+    category_id: str
     category: str
     description: str
     contact_name: str
@@ -22,6 +23,7 @@ class FacilityManagementProfileResponse(BaseModel):
     price_summary: str
     payment_instructions: str | None
     open_hours_summary: str
+    open_hours: list["FacilityOpenHourResponse"] = []
     is_active: bool
 
 
@@ -42,6 +44,7 @@ class FacilityProfileUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1)
     location: str | None = Field(default=None, min_length=1)
     capacity: int | None = Field(default=None, ge=1)
+    category_id: str | None = Field(default=None, min_length=1)
     description: str | None = Field(default=None, min_length=1)
     contact_name: str | None = Field(default=None, min_length=1)
     contact_phone: str | None = Field(default=None, min_length=1)
@@ -49,6 +52,7 @@ class FacilityProfileUpdateRequest(BaseModel):
     price_rupiah: int | None = Field(default=None, ge=0)
     payment_instructions: str | None = None
     open_hours_summary: str | None = Field(default=None, min_length=1)
+    open_hours: list["FacilityOpenHourCreateRequest"] | None = None
     is_active: bool | None = None
 
 

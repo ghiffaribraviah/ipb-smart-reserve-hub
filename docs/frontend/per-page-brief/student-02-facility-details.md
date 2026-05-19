@@ -22,8 +22,8 @@
 
 ## Design Contract
 
-- Layout: Student shell, facility gallery, metadata cards, description/contact/pricing/review/calendar sections.
-- Desktop behavior: asymmetric gallery and side information rhythm from screenshot.
+- Layout: Student shell, facility gallery, metadata cards, description/contact/pricing/calendar/review sections.
+- Desktop behavior: asymmetric gallery and side information rhythm from screenshot; public calendar appears in the main content column above reviews so it sits near the sticky price/reservation widget where space permits.
 - Mobile behavior: stacked gallery and cards with wrapped metadata.
 - Required copy/status labels: preserve `Reservasi Sekarang` and Indonesian metadata labels.
 - Source-of-truth notes: gallery image proportions and card spacing are important.
@@ -31,7 +31,7 @@
 ## UX Behavior
 
 - Primary actions: reserve facility.
-- Secondary actions: browse reviews, inspect calendar.
+- Secondary actions: inspect calendar before browsing reviews.
 - Loading state: stable gallery/card skeleton.
 - Empty state: no reviews or no blocked slots should still keep section structure.
 - Error state: not-found or unavailable facility maps to page-level state.
@@ -85,7 +85,7 @@
 ## Acceptance Checks
 
 - Desktop and mobile screenshots match references.
-- Integration checks: not-found maps to stable page error; reserve CTA carries facility ID.
+- Integration checks: not-found maps to stable page error; reserve CTA carries facility ID; public calendar appears above reviews while preserving privacy-safe calendar behavior.
 
 ## Open Questions
 

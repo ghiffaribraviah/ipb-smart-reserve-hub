@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time
 
 from app.models import Facility, FacilityBlackout, FacilityImage, FacilityOpenHour
 from app.repositories.facility_management_repository import FacilityManagementRepository
@@ -18,6 +18,14 @@ class FacilityManagementError(Exception):
 
 
 class FacilityNotFound(FacilityManagementError):
+    pass
+
+
+class FacilityCategoryNotFound(FacilityManagementError):
+    pass
+
+
+class FacilityOpenHourInvalid(FacilityManagementError):
     pass
 
 
@@ -41,6 +49,7 @@ class FacilityManagementProfile:
     name: str
     location: str
     capacity: int
+    category_id: str
     category: str
     description: str
     contact_name: str
@@ -50,6 +59,7 @@ class FacilityManagementProfile:
     price_summary: str
     payment_instructions: str | None
     open_hours_summary: str
+    open_hours: list["FacilityOpenHourProfile"]
     is_active: bool
 
 
@@ -72,6 +82,7 @@ class FacilityProfileUpdate:
     name: str | None = None
     location: str | None = None
     capacity: int | None = None
+    category_id: str | None = None
     description: str | None = None
     contact_name: str | None = None
     contact_phone: str | None = None
@@ -79,6 +90,7 @@ class FacilityProfileUpdate:
     price_rupiah: int | None = None
     payment_instructions: str | None = None
     open_hours_summary: str | None = None
+    open_hours: list["FacilityOpenHourCreation"] | None = None
     is_active: bool | None = None
 
 
@@ -195,6 +207,12 @@ class FacilityManagementModule:
             facility.location = update.location
         if update.capacity is not None:
             facility.capacity = update.capacity
+        if update.category_id is not None:
+            category = self._facility_management_repository.get_active_category(update.category_id)
+            if category is None:
+                raise FacilityCategoryNotFound
+            facility.category_id = category.id
+            facility.category = category
         if update.description is not None:
             facility.description = update.description
         if update.contact_name is not None:
@@ -209,6 +227,13 @@ class FacilityManagementModule:
             facility.payment_instructions = update.payment_instructions
         if update.open_hours_summary is not None:
             facility.open_hours_summary = update.open_hours_summary
+        if update.open_hours is not None:
+            open_hours = [
+                _open_hour_from_creation(facility_id=facility.id, creation=creation)
+                for creation in update.open_hours
+            ]
+            facility.open_hours = self._facility_management_repository.replace_open_hours(facility.id, open_hours)
+            facility.open_hours_summary = _summarize_open_hours(facility.open_hours)
         if update.is_active is not None:
             facility.is_active = update.is_active
         return _to_facility_profile(facility)
@@ -244,6 +269,7 @@ class FacilityManagementModule:
         creation: FacilityOpenHourCreation,
     ) -> FacilityOpenHourProfile:
         self._require_assigned_facility(staff, facility_id)
+        _ensure_valid_open_hour(creation.day_of_week, creation.opens_at, creation.closes_at)
         open_hour = self._facility_management_repository.add_open_hour(
             FacilityOpenHour(
                 facility_id=facility_id,
@@ -285,6 +311,7 @@ def _to_facility_profile(facility: Facility) -> FacilityManagementProfile:
         name=facility.name,
         location=facility.location,
         capacity=facility.capacity,
+        category_id=facility.category_id,
         category=facility.category.name,
         description=facility.description,
         contact_name=facility.contact_name,
@@ -294,6 +321,7 @@ def _to_facility_profile(facility: Facility) -> FacilityManagementProfile:
         price_summary=summarize_price(facility.price_rupiah),
         payment_instructions=facility.payment_instructions,
         open_hours_summary=facility.open_hours_summary,
+        open_hours=[_to_open_hour_profile(open_hour) for open_hour in facility.open_hours],
         is_active=facility.is_active,
     )
 
@@ -347,10 +375,48 @@ def _to_blackout_profile(blackout: FacilityBlackout) -> FacilityBlackoutProfile:
     )
 
 
-def _time_from_string(value: str):
-    from datetime import time
+def _time_from_string(value: str) -> time:
+    try:
+        return time.fromisoformat(value)
+    except ValueError:
+        raise FacilityOpenHourInvalid from None
 
-    return time.fromisoformat(value)
+
+def _open_hour_from_creation(
+    *, facility_id: str, creation: FacilityOpenHourCreation | dict[str, object]
+) -> FacilityOpenHour:
+    if isinstance(creation, dict):
+        creation = FacilityOpenHourCreation(
+            day_of_week=int(creation["day_of_week"]),
+            opens_at=str(creation["opens_at"]),
+            closes_at=str(creation["closes_at"]),
+        )
+    _ensure_valid_open_hour(creation.day_of_week, creation.opens_at, creation.closes_at)
+    return FacilityOpenHour(
+        facility_id=facility_id,
+        day_of_week=creation.day_of_week,
+        opens_at=_time_from_string(creation.opens_at),
+        closes_at=_time_from_string(creation.closes_at),
+    )
+
+
+def _ensure_valid_open_hour(day_of_week: int, opens_at: str, closes_at: str) -> None:
+    if day_of_week < 0 or day_of_week > 6:
+        raise FacilityOpenHourInvalid
+    if _time_from_string(closes_at) <= _time_from_string(opens_at):
+        raise FacilityOpenHourInvalid
+
+
+_DAY_NAMES = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+
+
+def _summarize_open_hours(open_hours: list[FacilityOpenHour]) -> str:
+    if not open_hours:
+        return "Belum ada jam buka"
+    return "; ".join(
+        f"{_DAY_NAMES[open_hour.day_of_week]} {open_hour.opens_at.isoformat(timespec='minutes')}-{open_hour.closes_at.isoformat(timespec='minutes')}"
+        for open_hour in sorted(open_hours, key=lambda item: (item.day_of_week, item.opens_at))
+    )
 
 
 def _as_utc(value: datetime) -> datetime:

@@ -21,7 +21,7 @@ Display payment instructions, receipt upload, and payment review state.
 
 ## Anatomy
 
-- Amount/instructions.
+- Transfer destination/instructions before amount or summary context.
 - Receipt upload or metadata row.
 - Status/reason area.
 - Primary action.
@@ -40,7 +40,7 @@ Display payment instructions, receipt upload, and payment review state.
 
 ## Accessibility
 
-- Amount and instructions are text.
+- Amount and instructions are text, with transfer destination preceding amount context.
 - Upload control labelled.
 - Rejection reason text-visible.
 

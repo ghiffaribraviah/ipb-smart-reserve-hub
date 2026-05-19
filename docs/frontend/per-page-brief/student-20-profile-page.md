@@ -25,7 +25,7 @@
 - Layout: Student shell with identity sidebar/card and academic information card.
 - Desktop behavior: sidebar plus main card.
 - Mobile behavior: stacked cards, single-column label/value rows.
-- Required copy/status labels: preserve `Profil`, `Keluar`, `Aktif`, NIM/phone/program/faculty labels.
+- Required copy/status labels: preserve `Profil`, `Keluar`, `Aktif`, email, NIM/phone/program/faculty labels.
 - Source-of-truth notes: profile is read-only for MVP.
 
 ## UX Behavior
@@ -74,7 +74,7 @@
 ## Acceptance Checks
 
 - Desktop and mobile screenshots match references.
-- Integration checks: failed session redirects to login; partial academic profile does not break layout.
+- Integration checks: failed session redirects to login; partial academic profile does not break layout; session email is visible in the identity card and academic information.
 
 ## Open Questions
 

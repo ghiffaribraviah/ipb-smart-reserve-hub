@@ -15,7 +15,7 @@
 
 ## Purpose
 
-Display recent system/admin activity in a compact list.
+Display recent system/admin activity in a compact list that remains visually distinct from governance tables.
 
 ## Anatomy
 
@@ -45,7 +45,7 @@ Display recent system/admin activity in a compact list.
 
 ## Design Rules
 
-- Desktop: compact list in dashboard panel.
+- Desktop: compact list in a tinted dashboard panel, separate from table surfaces.
 - Mobile: stacked list items.
 - Use Indonesian relative/time text in UI.
 

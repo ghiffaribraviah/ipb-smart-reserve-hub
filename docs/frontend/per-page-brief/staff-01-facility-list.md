@@ -26,7 +26,7 @@
 - Desktop behavior: dense table/list with compact actions.
 - Mobile behavior: cards with actions stacked or icon-labelled.
 - Required copy/status labels: preserve `Fasilitas`, active/inactive labels.
-- Source-of-truth notes: staff pages use green admin shell, not super-admin indigo.
+- Source-of-truth notes: staff pages use the green staff shell and Super Admin uses logo-derived green accents.
 
 ## UX Behavior
 

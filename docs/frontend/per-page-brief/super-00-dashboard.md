@@ -22,15 +22,15 @@
 
 ## Design Contract
 
-- Layout: Super Admin shell with fixed header, four KPI cards, governance table/cards, and activity log.
-- Desktop behavior: KPI grid then two-column content.
+- Layout: Super Admin shell with fixed header, four KPI cards, governance table/cards, and a visually distinct activity log.
+- Desktop behavior: KPI grid, admin governance plus activity in two columns, then facility governance.
 - Mobile behavior: stacked KPI cards, governance table converted to cards, compact activity list.
 - Required copy/status labels: preserve `Dashboard`, `Pengguna`, `Fasilitas`, `Laporan`, `Sistem`, `Ekspor Laporan`, `Tambah Admin`.
-- Source-of-truth notes: use indigo Super Admin accent for primary actions/profile affordance.
+- Source-of-truth notes: use logo green Super Admin accent for primary actions/profile affordance.
 
 ## UX Behavior
 
-- Primary actions: add admin. Export report remains a deferred action unless a backend export contract is added.
+- Primary actions: add admin remains deferred. Export report remains a deferred action unless a backend export contract is added.
 - Secondary actions: navigate dashboard sections.
 - Loading state: KPI/table/activity skeletons.
 - Empty state: no admins or no activity.
@@ -86,6 +86,7 @@
 
 - Desktop and mobile screenshots match references.
 - Integration checks: existing system status/audit calls can populate partial data; unresolved dashboard aggregate gaps are tracked before full integration.
+- Admin governance rows and activity log entries are visually distinguishable so the page does not read as two competing tables.
 
 ## Open Questions
 

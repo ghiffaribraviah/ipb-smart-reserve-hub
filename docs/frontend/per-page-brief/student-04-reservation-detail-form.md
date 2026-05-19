@@ -22,15 +22,15 @@
 
 ## Design Contract
 
-- Layout: reservation workflow shell with form card and summary card.
-- Desktop behavior: main form plus right summary/sidebar.
-- Mobile behavior: form first, summary second, full-width submit action.
+- Layout: reservation workflow shell with form card and right summary/policy/action column.
+- Desktop behavior: main form plus right summary/sidebar; `Lanjutkan` lives in the right policy/summary area.
+- Mobile behavior: form first, summary and policy second, full-width submit action in the summary/action column.
 - Required copy/status labels: preserve Indonesian field labels and checkbox option copy.
 - Source-of-truth notes: checkbox rows and policy box spacing must match reference.
 
 ## UX Behavior
 
-- Primary actions: submit reservation.
+- Primary actions: submit reservation from the right summary/policy area.
 - Secondary actions: back to time selection.
 - Loading state: submit button disabled while creating hold.
 - Empty state: organization unit list unavailable uses inline error.

@@ -694,7 +694,6 @@ export function StudentFacilityDetailPage() {
               </div>
             </section>
 
-            <Reviews detail={detail} />
             <PublicCalendar
               entries={calendarEntries}
               isError={calendarQuery.isError}
@@ -704,6 +703,7 @@ export function StudentFacilityDetailPage() {
               onSelectDate={setSelectedDateKey}
               selectedDateKey={selectedDateKey}
             />
+            <Reviews detail={detail} />
           </div>
 
           <ReserveWidget detail={detail} />

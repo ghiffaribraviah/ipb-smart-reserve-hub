@@ -81,7 +81,7 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "ongoing",
         primaryHref: "/student/reservations/reservation-1/verification/waiting",
-        primaryLabel: "Lihat Status",
+        primaryLabel: "Lihat Detail",
         secondaryHref: "/student/reservations/reservation-1/cancel",
         secondaryLabel: "Batalkan",
         statusLabel: "Menunggu Verifikasi Dokumen",
@@ -98,11 +98,11 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "history",
         primaryHref: "/student/reservations/reservation-1/verification/declined",
-        primaryLabel: "Lihat Penolakan",
+        primaryLabel: "Lihat Detail",
         secondaryHref: undefined,
         secondaryLabel: undefined,
         statusLabel: "Dokumen Ditolak",
-        tone: "rejected",
+        tone: "pending",
       },
     ],
     [
@@ -134,7 +134,7 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "ongoing",
         primaryHref: "/student/reservations/reservation-1/payment/waiting",
-        primaryLabel: "Lihat Status",
+        primaryLabel: "Lihat Detail",
         secondaryHref: "/student/reservations/reservation-1/cancel",
         secondaryLabel: "Batalkan",
         statusLabel: "Menunggu Verifikasi Pembayaran",
@@ -152,7 +152,7 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "history",
         primaryHref: "/student/reservations/reservation-1/payment/declined",
-        primaryLabel: "Lihat Penolakan",
+        primaryLabel: "Lihat Detail",
         secondaryHref: undefined,
         secondaryLabel: undefined,
         statusLabel: "Pembayaran Ditolak",
@@ -165,7 +165,7 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "ongoing",
         primaryHref: "/student/reservations/reservation-1/accepted",
-        primaryLabel: "Detail Reservasi",
+        primaryLabel: "Lihat Detail",
         secondaryHref: "/student/reservations/reservation-1/cancellation",
         secondaryLabel: "Ajukan Pembatalan",
         statusLabel: "Disetujui",
@@ -177,8 +177,8 @@ describe("mapStudentReservationWorkflow", () => {
       reservation({ review: null, status: "completed" }),
       {
         bucket: "ongoing",
-        primaryHref: "/student/reservations/reservation-1/review",
-        primaryLabel: "Beri Ulasan",
+        primaryHref: "/student/reservations/reservation-1",
+        primaryLabel: "Lihat Detail",
         secondaryHref: undefined,
         secondaryLabel: undefined,
         statusLabel: "Selesai",
@@ -191,7 +191,7 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "history",
         primaryHref: "/student/reservations/reservation-1",
-        primaryLabel: "Detail Reservasi",
+        primaryLabel: "Lihat Detail",
         secondaryHref: undefined,
         secondaryLabel: undefined,
         statusLabel: "Selesai",
@@ -204,7 +204,7 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "history",
         primaryHref: "/student/reservations/reservation-1",
-        primaryLabel: "Detail Reservasi",
+        primaryLabel: "Lihat Detail",
         secondaryHref: undefined,
         secondaryLabel: undefined,
         statusLabel: "Dibatalkan",
@@ -217,7 +217,7 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "history",
         primaryHref: "/student/reservations/reservation-1",
-        primaryLabel: "Detail Reservasi",
+        primaryLabel: "Lihat Detail",
         secondaryHref: undefined,
         secondaryLabel: undefined,
         statusLabel: "Kedaluwarsa",
@@ -230,7 +230,7 @@ describe("mapStudentReservationWorkflow", () => {
       {
         bucket: "history",
         primaryHref: "/student/reservations/reservation-1",
-        primaryLabel: "Detail Reservasi",
+        primaryLabel: "Lihat Detail",
         secondaryHref: undefined,
         secondaryLabel: undefined,
         statusLabel: "Ditolak",
@@ -238,16 +238,16 @@ describe("mapStudentReservationWorkflow", () => {
       },
     ],
     [
-      "cancellation requested",
+      "legacy cancellation requested",
       reservation({ cancellation_reason: "Agenda pindah.", status: "cancellation_requested" }),
       {
-        bucket: "ongoing",
-        primaryHref: "/student/reservations/reservation-1/cancellation-request",
-        primaryLabel: "Lihat Pengajuan",
+        bucket: "history",
+        primaryHref: "/student/reservations/reservation-1",
+        primaryLabel: "Lihat Detail",
         secondaryHref: undefined,
         secondaryLabel: undefined,
-        statusLabel: "Pembatalan Diajukan",
-        tone: "review",
+        statusLabel: "Pembatalan Tercatat",
+        tone: "cancelled",
       },
     ],
   ])("maps %s", (_, input, expected) => {

@@ -138,7 +138,14 @@ test.describe("super admin facilities and reports pages", () => {
     await expect(page.getByText("Grand Auditorium").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Lab Arsip").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Butuh Staff").filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByText("needs_staff").filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Edit detail Grand Auditorium" })).toHaveAttribute(
+      "href",
+      "/super-admin/facilities/facility-1/edit",
+    );
+    await expect(page.getByRole("button", { name: "Arsipkan Grand Auditorium" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     await expect(page.getByRole("heading", { name: "Penugasan Terbaru" })).toBeVisible();
     await expect(page.getByLabel("Staff ID untuk Lab Arsip")).toBeVisible();
     await expect(page.getByRole("button", { name: "Impor Data ditunda" })).toBeVisible();

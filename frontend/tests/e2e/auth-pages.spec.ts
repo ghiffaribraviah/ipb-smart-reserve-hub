@@ -30,9 +30,12 @@ test.describe("auth pages", () => {
     await page.goto("/register");
 
     await expect(page.getByRole("heading", { name: "Daftar Akun" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Data Identitas" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Buat Kata Sandi" })).toBeVisible();
     await expect(page.getByLabel("Nama Lengkap")).toBeVisible();
     await expect(page.getByLabel("NIM")).toBeVisible();
     await expect(page.getByLabel("Email Kampus")).toBeVisible();
+    await expect(page.getByLabel("Konfirmasi Kata Sandi")).toBeVisible();
     await expect(page.getByRole("button", { name: "Buat Akun" })).toBeVisible();
     await expect(page.getByText("Sudah punya akun?")).toBeVisible();
 

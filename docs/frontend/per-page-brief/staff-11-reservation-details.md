@@ -16,9 +16,9 @@
 
 ## Purpose
 
-- User job: inspect reservation details/documents/receipts and approve or reject workflow steps.
+- User job: inspect reservation details/documents/receipts and approve or reject document/payment workflow steps.
 - Entry points: staff home/list/schedule.
-- Exit points: staff list, document/payment/cancellation review actions.
+- Exit points: staff list and document/payment review actions.
 
 ## Design Contract
 
@@ -46,14 +46,14 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: document review, payment review, and cancellation review detail variants.
-- Real entities: Staff reservation detail read model and review mutation responses.
+- Deterministic fixture requirements: document review, payment review, and read-only cancelled detail variants.
+- Real entities: Staff reservation detail read model and document/payment review mutation responses.
 - Fixture media: none.
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: `GET /staff/reservations/:reservationId`; existing approve/reject/download endpoints for document/payment/cancellation.
-- Page-needed fields: reservation detail, student/org/facility, submitted files, payment receipt, cancellation request, workflow status and reasons.
+- Endpoints consumed: `GET /staff/reservations/:reservationId`; existing approve/reject/download endpoints for document/payment. Cancellation review endpoints are legacy and not surfaced as integrated UI actions.
+- Page-needed fields: reservation detail, student/org/facility, submitted files, payment receipt, cancellation reason when present, workflow status and reasons.
 - Auth/session assumptions: staff assigned facility access only.
 - Source files: `app/api/routes/approval_letter_routes.py`, `app/api/routes/payment_routes.py`, `app/api/routes/reservation_routes.py`.
 

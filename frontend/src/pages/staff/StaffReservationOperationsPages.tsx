@@ -1,7 +1,6 @@
 import {
   Check,
   Clock,
-  Download,
   FileText,
   Filter,
   Menu,
@@ -78,6 +77,10 @@ function fetchStaffVerificationQueue() {
 
 function fetchStaffReservations(filters: StaffReservationFilters) {
   return apiRequest<StaffReservationOperationResponse[]>(staffReservationsPath(filters));
+}
+
+function isActionableQueueItem(item: StaffReservationOperationResponse) {
+  return item.workflow_type === "document_review" || item.workflow_type === "payment_review";
 }
 
 export function StaffShell({
@@ -217,33 +220,14 @@ function VerificationActionButtons({ item }: { item: StaffVerificationItem }) {
   const detailHref = `/staff/reservations/${item.id}`;
 
   return (
-    <div className="grid items-center gap-3 md:flex md:gap-4 max-md:grid-cols-3 max-md:border-t max-md:border-[#e5e7eb] max-md:pt-4">
+    <div className="max-md:border-t max-md:border-[#e5e7eb] max-md:pt-4">
       <a
-        aria-label={`Unduh dokumen ${item.applicant}`}
-        className="inline-flex min-h-10 flex-col items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f8fafc] text-[#6b7280] md:min-h-0 md:border-0 md:bg-transparent md:p-1"
+        aria-label={`${item.actionLabel} ${item.applicant}`}
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center text-[13px] font-bold text-[#0f9d58] no-underline md:min-h-0 md:w-auto md:border-0 md:bg-transparent md:p-0"
         href={detailHref}
-        title="Unduh"
+        title={item.actionLabel}
       >
-        <Download aria-hidden="true" size={18} />
-        <span className="mt-1 text-[11px] font-bold md:sr-only">Unduh</span>
-      </a>
-      <a
-        aria-label={`Verifikasi ${item.applicant}`}
-        className="inline-flex min-h-10 flex-col items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f8fafc] text-[#10b981] md:min-h-0 md:border-0 md:bg-transparent md:p-1"
-        href={detailHref}
-        title="Verifikasi"
-      >
-        <Check aria-hidden="true" size={18} />
-        <span className="mt-1 text-[11px] font-bold md:sr-only">Verifikasi</span>
-      </a>
-      <a
-        aria-label={`Tolak ${item.applicant}`}
-        className="inline-flex min-h-10 flex-col items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f8fafc] text-[#ef4444] md:min-h-0 md:border-0 md:bg-transparent md:p-1"
-        href={detailHref}
-        title="Tolak"
-      >
-        <X aria-hidden="true" size={18} />
-        <span className="mt-1 text-[11px] font-bold md:sr-only">Tolak</span>
+        {item.actionLabel}
       </a>
     </div>
   );
@@ -261,10 +245,10 @@ function VerificationRow({ item }: { item: StaffVerificationItem }) {
           </div>
         </div>
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-1 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Nama_Fasilitas']">
+      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-1 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Fasilitas']">
         {item.facility}
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-2 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:text-right max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Tanggal_Pengajuan']">
+      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-2 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:text-right max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Jadwal']">
         {item.date}
       </td>
       <td className="border-b border-[#e5e7eb] px-8 py-5 align-middle max-md:col-start-2 max-md:row-start-1 max-md:border-0 max-md:p-0 max-md:text-right">
@@ -302,11 +286,11 @@ function ReservationRow({ item }: { item: StaffReservationListItem }) {
       </td>
       <td className="border-b border-[#e5e7eb] px-8 py-5 align-middle max-md:col-span-2 max-md:row-start-3 max-md:border-0 max-md:p-0 max-md:border-t max-md:border-[#e5e7eb] max-md:pt-4">
         <a
-          aria-label={`Lihat Detail ${item.applicant}`}
+          aria-label={`${item.actionLabel} ${item.applicant}`}
           className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center text-[13px] font-bold text-[#0f9d58] no-underline md:min-h-0 md:w-auto md:border-0 md:bg-transparent md:p-0"
           href={item.detailHref}
         >
-          Lihat Detail
+          {item.actionLabel}
         </a>
       </td>
     </tr>
@@ -318,12 +302,13 @@ export function StaffHomePage() {
     queryFn: fetchStaffVerificationQueue,
     queryKey: ["staff-verification-queue"],
   });
-  const verificationItems = queueQuery.data?.map(mapStaffVerificationItem) ?? [];
-  const pendingCount = queueQuery.data?.length ?? 0;
+  const actionableQueue = queueQuery.data?.filter(isActionableQueueItem) ?? [];
+  const verificationItems = actionableQueue.map(mapStaffVerificationItem);
+  const pendingCount = actionableQueue.length;
   const visibleCount = verificationItems.length;
 
   return (
-    <StaffShell active="reservations">
+    <StaffShell active="home">
       <main className="mx-auto mt-28 w-[1200px] max-w-[95%] max-md:mt-[92px] max-md:w-full max-md:max-w-full max-md:px-[26px]">
         <section className="max-w-[620px]">
           <h1 className="m-0 text-[32px] font-bold leading-tight max-md:text-[32px]">
@@ -331,7 +316,7 @@ export function StaffHomePage() {
           </h1>
           <p className="m-0 mt-3 text-sm leading-6 text-[#6b7280]">
             Tinjau pengajuan reservasi, verifikasi dokumen, dan kelola akses fasilitas kampus
-            dalam satu tampilan operasional.
+            dalam satu antrean yang hanya menampilkan pekerjaan yang perlu tindakan.
           </p>
         </section>
 
@@ -366,19 +351,19 @@ export function StaffHomePage() {
           <table className="w-full border-collapse text-left max-md:block">
             <thead className="bg-[#f9fafb] max-md:hidden">
               <tr>
-                <th className="border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[24%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Pemohon
                 </th>
-                <th className="border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
-                  Nama Fasilitas
+                <th className="w-[28%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                  Fasilitas
                 </th>
-                <th className="border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
-                  Tanggal Pengajuan
+                <th className="w-[18%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                  Jadwal
                 </th>
-                <th className="border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
-                  Status Dokumen
+                <th className="w-[17%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                  Status
                 </th>
-                <th className="border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[13%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Aksi
                 </th>
               </tr>
@@ -525,7 +510,6 @@ export function StaffReservationListPage() {
                 <option value="approved">Disetujui</option>
                 <option value="pending_document_review">Menunggu Verifikasi Dokumen</option>
                 <option value="pending_payment">Menunggu Pembayaran</option>
-                <option value="cancellation_requested">Menunggu Pembatalan</option>
               </select>
             </label>
             <label className="min-w-0 max-md:col-span-2">

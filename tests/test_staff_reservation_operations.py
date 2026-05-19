@@ -232,7 +232,7 @@ async def test_assigned_staff_reservation_list_supports_status_facility_and_date
 
 
 @pytest.mark.anyio
-async def test_staff_verification_queue_includes_payment_and_cancellation_review_work():
+async def test_staff_verification_queue_includes_payment_review_but_not_cancellation_review_work():
     app = create_app(
         database_url="sqlite+pysqlite:///:memory:",
         clock=lambda: datetime(2026, 5, 1, tzinfo=UTC),
@@ -287,11 +287,7 @@ async def test_staff_verification_queue_includes_payment_and_cancellation_review
         "review_status": "pending_review",
         "due_at": "2026-05-05T00:00:00Z",
     }
-    assert workflows["Cancel Approved Event"]["workflow_type"] == "cancellation_review"
-    assert workflows["Cancel Approved Event"]["cancellation"] == {
-        "requested": True,
-        "review_status": "pending_review",
-    }
+    assert "Cancel Approved Event" not in workflows
 
 
 @pytest.mark.anyio

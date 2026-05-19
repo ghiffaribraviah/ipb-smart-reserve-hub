@@ -22,7 +22,7 @@
 
 ## Design Contract
 
-- Layout: facility heading, metadata, gallery/detail cards, document section, action area.
+- Layout: facility heading, metadata, gallery/detail cards, document section, notice, and lower action area.
 - Desktop behavior: asymmetric gallery and information cards.
 - Mobile behavior: stacked gallery, wrapped document rows, full-width actions.
 - Required copy/status labels: preserve `Ajukan Pembatalan`, `Dokumen Reservasi`, `Terverifikasi`.
@@ -30,7 +30,7 @@
 
 ## UX Behavior
 
-- Primary actions: request cancellation.
+- Primary actions: request cancellation from the lower content action area.
 - Secondary actions: download/view documents and receipt.
 - Loading state: detail skeleton with stable gallery/card dimensions.
 - Empty state: missing optional files are omitted rather than faked.

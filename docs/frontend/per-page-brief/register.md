@@ -23,15 +23,15 @@
 ## Design Contract
 
 - Layout: same auth-layout family as login, with register-specific form density.
-- Desktop behavior: preserve split layout and form hierarchy.
+- Desktop behavior: preserve split auth layout, with registration fields grouped into `Data Identitas` and `Buat Kata Sandi` sections.
 - Mobile behavior: single-column form with readable labels and no horizontal overflow.
-- Required copy/status labels: preserve Indonesian form labels, validation copy, and primary action.
+- Required copy/status labels: preserve Indonesian form labels, validation copy, and primary action; password confirmation is `Konfirmasi Kata Sandi`.
 - Source-of-truth notes: do not invent extra profile fields beyond reference/backend contract.
 
 ## UX Behavior
 
 - Primary actions: submit registration.
-- Secondary actions: return to login.
+- Secondary actions: return to login through a separated `Sudah punya akun?` area that must not collide with the footer or lower content.
 - Loading state: disable submit while pending.
 - Empty state: not applicable.
 - Error state: field validation, duplicate account, invalid email domain.
@@ -74,6 +74,7 @@
 
 ## Acceptance Checks
 
+- Behavior checks: corrected password confirmation label and section structure.
 - Desktop screenshot at `1440 x 900`.
 - Mobile screenshot at `390 x 844`.
 - No mobile horizontal overflow.
@@ -82,4 +83,3 @@
 ## Open Questions
 
 - None.
-

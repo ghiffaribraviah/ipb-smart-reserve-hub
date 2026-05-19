@@ -8,7 +8,22 @@ IPB Smart Reserve Hub is a campus facility reservation app for three roles:
 
 ## Quick Start
 
-Run the backend and frontend in two separate terminals.
+Run the backend and frontend together from the repository root:
+
+```sh
+make dev
+```
+
+This installs/syncs missing local dependencies, seeds development data, starts the backend at `http://localhost:8000`, and starts the frontend at Vite's local URL, usually `http://localhost:5173`.
+
+Use these environment variables when needed:
+
+```sh
+SKIP_SYNC=1 SKIP_SEED=1 make dev
+VITE_API_BASE_URL=http://localhost:8000 make dev
+```
+
+To run each side manually, use separate terminals.
 
 ### 1. Backend
 
@@ -109,6 +124,12 @@ More technical details live in:
 - [Backend deployment guide](docs/backend-deployment.md)
 
 ## Common Commands
+
+Full stack:
+
+```sh
+make dev
+```
 
 Backend:
 

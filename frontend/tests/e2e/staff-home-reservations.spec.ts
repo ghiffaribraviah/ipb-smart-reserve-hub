@@ -114,7 +114,7 @@ const listResponse = queueResponse.map((item, index) => ({
     "2024-10-28T06:00:00Z",
   ][index],
   status: ["approved", "pending_payment", "completed", "approved", "rejected", "pending_document_review"][index],
-  workflow_type: "reservation",
+  workflow_type: ["reservation", "payment_review", "reservation", "reservation", "reservation", "document_review"][index],
 }));
 
 async function mockStaffOperationsApi(page: Page) {
@@ -135,15 +135,13 @@ test.describe("staff operations pages", () => {
 
     await expect(page.getByRole("heading", { name: "Hub Verifikasi" })).toBeVisible();
     await expect(page.getByText("MENUNGGU VERIFIKASI", { exact: true })).toBeVisible();
-    await expect(page.getByText("6", { exact: true })).toBeVisible();
+    await expect(page.getByText("3", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Pengajuan Reservasi" })).toBeVisible();
     await expect(page.getByText("Johnathan Doe")).toBeVisible();
     await expect(page.getByText("Menunggu Verifikasi Dokumen").first()).toBeVisible();
     await expect(page.getByText("Menunggu Verifikasi Pembayaran")).toBeVisible();
-    await expect(page.getByRole("table").getByText("Reservasi").first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Unduh dokumen Johnathan Doe" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Verifikasi Johnathan Doe" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Tolak Johnathan Doe" })).toBeVisible();
+    await expect(page.getByText("Marcus Knight")).not.toBeVisible();
+    await expect(page.getByRole("link", { name: "Tinjau Pengajuan Johnathan Doe" })).toBeVisible();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);
@@ -169,6 +167,10 @@ test.describe("staff operations pages", () => {
     await expect(page.getByRole("link", { name: "Lihat Detail Johnathan Doe" })).toHaveAttribute(
       "href",
       "/staff/reservations/RSV-STF-001",
+    );
+    await expect(page.getByRole("link", { name: "Tinjau Pengajuan Linda Wu" })).toHaveAttribute(
+      "href",
+      "/staff/reservations/RSV-STF-006",
     );
 
     if (isMobile) {

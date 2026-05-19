@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { FormEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ApiError, apiRequest } from "../../api/http";
 import { NotificationSurface } from "../../components/NotificationSurface";
@@ -909,6 +909,7 @@ export function StudentReservationDetailPage() {
   const [extraNotes, setExtraNotes] = useState("");
   const [errors, setErrors] = useState<ReservationFormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const organizationUnitsQuery = useQuery({
     queryFn: fetchOrganizationUnits,
     queryKey: ["organization-units"],
@@ -965,6 +966,8 @@ export function StudentReservationDetailPage() {
     <PageFrame backHref={`/student/facilities/${facilityId}/reserve/time`} currentStep={2}>
       <div className="flex items-start gap-8 max-lg:flex-col">
         <form
+          id="student-reservation-detail-form"
+          ref={formRef}
           className="flex-1 rounded-xl bg-white p-10 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-6"
           onSubmit={handleSubmit}
         >
@@ -1090,23 +1093,24 @@ export function StudentReservationDetailPage() {
               {errors.extraNotes ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.extraNotes}</span> : null}
             </label>
           </div>
-          <div className="mt-12 flex items-center justify-between gap-4 border-t border-transparent pt-3 max-md:flex-col">
+          <div className="mt-12 flex items-center justify-start gap-4 border-t border-transparent pt-3">
             <a className="text-sm font-semibold text-[#6b7280] no-underline max-md:order-2" href={`/student/facilities/${facilityId}/reserve/time`}>
               Kembali ke Pencarian
             </a>
-            <button
-              className="rounded-lg bg-[#0f9d58] px-6 py-3.5 text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#d1d5db] max-md:order-1 max-md:flex max-md:min-h-[52px] max-md:w-full max-md:items-center max-md:justify-center"
-              disabled={submitMutation.isPending || organizationsUnavailable}
-              type="submit"
-            >
-              {submitMutation.isPending ? "Menyimpan..." : "Lanjut ke Surat"}
-            </button>
           </div>
         </form>
 
         <aside className="flex w-[400px] flex-col gap-6 max-lg:w-full">
           <ReservationSummary />
           <PolicyBox />
+          <button
+            className="flex min-h-[52px] w-full items-center justify-center rounded-lg bg-[#0f9d58] px-6 text-[15px] font-semibold text-white shadow-[0_4px_6px_rgba(15,157,88,0.18)] disabled:cursor-not-allowed disabled:bg-[#d1d5db]"
+            disabled={submitMutation.isPending || organizationsUnavailable}
+            onClick={() => formRef.current?.requestSubmit()}
+            type="button"
+          >
+            {submitMutation.isPending ? "Menyimpan..." : "Lanjutkan"}
+          </button>
         </aside>
       </div>
     </PageFrame>

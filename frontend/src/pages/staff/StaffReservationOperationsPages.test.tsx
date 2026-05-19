@@ -85,6 +85,15 @@ const approvedListItem: StaffOperationItem = {
   workflow_type: "reservation",
 };
 
+const cancelledQueueItem: StaffOperationItem = {
+  ...approvedListItem,
+  activity_title: "Kegiatan Dibatalkan",
+  cancellation: { requested: true, review_status: "approved" },
+  id: "cancelled-reservation",
+  reservation_code: "RSV-CANCELLED",
+  status: "cancelled",
+};
+
 function mockStaffFetch({
   list = [approvedListItem],
   queue = [queueItem, paymentQueueItem],
@@ -132,7 +141,7 @@ describe("StaffReservationOperationsPages", () => {
   });
 
   it("loads actionable verification queue items from the backend", async () => {
-    const fetchMock = mockStaffFetch();
+    const fetchMock = mockStaffFetch({ queue: [queueItem, paymentQueueItem, approvedListItem, cancelledQueueItem] });
 
     renderStaffHome();
 
@@ -141,7 +150,10 @@ describe("StaffReservationOperationsPages", () => {
     expect(screen.getAllByText("Auditorium Andi Hakim Nasoetion")[0]).toBeVisible();
     expect(screen.getByText("Menunggu Verifikasi Dokumen")).toBeVisible();
     expect(screen.getByText("Menunggu Verifikasi Pembayaran")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Verifikasi Siti Aminah" })).toHaveAttribute(
+    expect(screen.queryByText("Seminar Approved")).not.toBeInTheDocument();
+    expect(screen.queryByText("Kegiatan Dibatalkan")).not.toBeInTheDocument();
+    expect(screen.getByText("2", { selector: "p" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Tinjau Pengajuan Siti Aminah" })).toHaveAttribute(
       "href",
       "/staff/reservations/reservation-1",
     );
@@ -152,6 +164,23 @@ describe("StaffReservationOperationsPages", () => {
         expect.any(Object),
       );
     });
+  });
+
+  it("uses the same reservation table language on home and list without legacy cancellation filters", async () => {
+    mockStaffFetch();
+
+    renderStaffHome();
+
+    expect(await screen.findByRole("columnheader", { name: "Pemohon" })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "Fasilitas" })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "Jadwal" })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "Status" })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "Aksi" })).toBeVisible();
+
+    renderStaffList();
+
+    expect(await screen.findByLabelText("Filter status")).toBeVisible();
+    expect(screen.queryByRole("option", { name: "Menunggu Pembatalan" })).not.toBeInTheDocument();
   });
 
   it("loads assigned reservations and sends supported filter parameters", async () => {

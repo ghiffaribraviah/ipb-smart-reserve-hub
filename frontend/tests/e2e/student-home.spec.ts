@@ -112,7 +112,8 @@ test.describe("student home page", () => {
       "/student/facilities/grand-auditorium",
     );
     await expect(page.getByText("Kapasitas: 1,200")).toBeVisible();
-    await expect(page.getByText("Tipe: Seminar").first()).toBeVisible();
+    await expect(page.getByText("Rp 100k / sesi")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Grand Auditorium/ })).toContainText("(128 ulasan)");
     await expect(page.getByRole("contentinfo")).toContainText(
       "© 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.",
     );

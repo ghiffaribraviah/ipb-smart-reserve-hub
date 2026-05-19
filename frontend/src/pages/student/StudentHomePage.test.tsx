@@ -74,8 +74,8 @@ function mockDiscoveryFetch({
 }
 
 async function categoryLink(name: string) {
-  await screen.findByText(name);
-  const link = screen.getByText(name).closest("a");
+  const matches = await screen.findAllByText(name);
+  const link = matches.find((match) => match.closest('a[href^="/student/facilities?category="]'))?.closest("a");
   expect(link).not.toBeNull();
   return link as HTMLAnchorElement;
 }
@@ -104,9 +104,10 @@ describe("StudentHomePage", () => {
       "/student/facilities/facility-uuid-1",
     );
     expect(screen.getByText("Kapasitas: 1,200")).toBeVisible();
-    expect(screen.getByText("Tipe: Auditorium / Seminar")).toBeVisible();
+    expect(screen.getByText("Rp100.000 / sesi")).toBeVisible();
+    expect(screen.getByText("Kampus Timur · Senin-Jumat 08:00-18:00")).toBeVisible();
     expect(screen.getByText("4.8")).toBeVisible();
-    expect(screen.getByText("128 ulasan")).toBeVisible();
+    expect(screen.getByText("(128 ulasan)")).toBeVisible();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/facility-categories", expect.any(Object));

@@ -12,17 +12,17 @@
 - Proposed route: `/student/reservations/:reservationId/review`
 - Auth/role: `student`
 - Unauthorized behavior: redirect to login.
-- Redirect behavior: successful submit returns to completed reservation detail.
+- Redirect behavior: deprecated route redirects to completed reservation detail review section.
 
 ## Purpose
 
-- User job: rate a completed reservation/facility and optionally leave a comment.
-- Entry points: completed reservation detail.
+- User job: previously rate a completed reservation/facility and optionally leave a comment.
+- Entry points: legacy deep links only; active review entry is now inline on completed reservation detail.
 - Exit points: completed reservation detail.
 
 ## Design Contract
 
-- Layout: two-column form plus reservation summary on desktop.
+- Layout: deprecated standalone route; form UI is owned by `student-11-reservation-details-completed.md`.
 - Desktop behavior: form card first, summary card beside it.
 - Mobile behavior: form first, summary second, stacked full-width actions.
 - Required copy/status labels: preserve `Tulis Ulasan`, `Kirim Ulasan`, `Komentar`.
@@ -30,7 +30,7 @@
 
 ## UX Behavior
 
-- Primary actions: submit review.
+- Primary actions: redirect to completed reservation detail review section.
 - Secondary actions: cancel/back.
 - Loading state: disable submit while pending.
 - Empty state: not applicable.
@@ -75,9 +75,8 @@
 ## Acceptance Checks
 
 - Desktop and mobile screenshots match references.
-- Integration checks: duplicate/ineligible review maps to visible error.
+- Integration checks: legacy review route redirects to completed reservation detail; inline duplicate/ineligible review handling is covered by completed detail tests.
 
 ## Open Questions
 
 - None.
-

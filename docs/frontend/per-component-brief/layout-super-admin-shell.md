@@ -53,7 +53,7 @@ Provide Super Admin navigation and role-specific accenting.
 
 - Desktop: `72px` fixed shared shell header, `1200px` content.
 - Mobile: `64px` header with hamburger, inline brand, notification, and `SA` profile.
-- Color: indigo Super Admin accent for primary actions/profile affordance.
+- Color: logo green Super Admin accent for primary actions/profile affordance.
 - Overflow: stacked mobile sections.
 
 ## Implementation Notes

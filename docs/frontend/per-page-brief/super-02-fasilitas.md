@@ -22,15 +22,15 @@
 
 ## Design Contract
 
-- Layout: Super Admin shell, facility KPI cards, facility list/cards, assignment sidebar.
-- Desktop behavior: KPI row then list/sidebar.
-- Mobile behavior: stacked actions, KPI cards, facility cards, assignment cards.
-- Required copy/status labels: preserve `Fasilitas`, `Tambah Fasilitas`, `Butuh Staff`, `Aktif`, `Nonaktif`.
-- Source-of-truth notes: use deterministic facility thumbnails and Super Admin indigo primary actions.
+- Layout: Super Admin shell, facility KPI cards, facility governance table/cards, and assignment controls.
+- Desktop behavior: KPI row, users-page-like governance table, then assignment controls.
+- Mobile behavior: stacked actions, KPI cards, facility governance cards, assignment cards.
+- Required copy/status labels: preserve `Fasilitas`, `Tambah Fasilitas`, `Butuh Staff`, `Aktif`, `Nonaktif`, `Edit Detail`, and archive/deactivate wording.
+- Source-of-truth notes: use deterministic facility thumbnails and Super Admin logo-green primary actions.
 
 ## UX Behavior
 
-- Primary actions: view facility governance. Add facility remains deferred unless a backend creation contract is added.
+- Primary actions: view facility governance and edit detail entry points. Add facility remains deferred unless a backend creation contract is added.
 - Secondary actions: view all and manage assignment. Import remains deferred unless a backend import contract is added.
 - Loading state: KPI/list/assignment skeletons.
 - Empty state: no facilities or no assignment issues.
@@ -85,6 +85,7 @@
 
 - Desktop and mobile screenshots match references.
 - Integration checks: assignment actions respect Super Admin role and facility IDs.
+- Facility governance rows align with the Super Admin users table/card pattern and expose edit/detail plus deferred archive actions without introducing permanent deletion.
 
 ## Open Questions
 

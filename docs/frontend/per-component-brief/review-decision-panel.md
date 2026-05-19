@@ -15,7 +15,7 @@
 
 ## Purpose
 
-Let assigned staff approve or reject document, payment, or cancellation reviews.
+Let assigned staff approve or reject document and payment reviews.
 
 ## Anatomy
 
@@ -28,12 +28,11 @@ Let assigned staff approve or reject document, payment, or cancellation reviews.
 
 - Document review.
 - Payment review.
-- Cancellation review.
 - Read-only completed review.
 
 ## Behavior
 
-- Approve/reject submits to workflow-specific endpoint.
+- Approve/reject submits to the document or payment workflow endpoint.
 - Reject requires reason.
 
 ## Accessibility

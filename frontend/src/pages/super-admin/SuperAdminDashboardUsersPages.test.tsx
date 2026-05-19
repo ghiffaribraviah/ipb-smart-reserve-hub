@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Route, Routes } from "react-router-dom";
 import { renderWithProviders } from "../../test/render";
 import {
+  SuperAdminAuditLogsPage,
   SuperAdminDashboardPage,
   SuperAdminFacilitiesPage,
   SuperAdminReportsPage,
@@ -146,6 +147,14 @@ function renderUsers() {
 const facilityGovernanceResponse = [
   {
     active_assigned_staff_count: 1,
+    assigned_staff: [
+      {
+        email: "staff@ipb.ac.id",
+        full_name: "Staff Fasilitas",
+        id: "staff-1",
+        is_active: true,
+      },
+    ],
     assigned_staff_count: 1,
     assignment_coverage: "covered",
     capacity: 300,
@@ -158,6 +167,14 @@ const facilityGovernanceResponse = [
   },
   {
     active_assigned_staff_count: 0,
+    assigned_staff: [
+      {
+        email: "inactive-staff@ipb.ac.id",
+        full_name: "Staff Nonaktif",
+        id: "staff-old",
+        is_active: false,
+      },
+    ],
     assigned_staff_count: 1,
     assignment_coverage: "needs_staff",
     capacity: 40,
@@ -199,18 +216,18 @@ const reportAggregateResponse = {
 };
 
 const auditLogResponse = [
-  {
+  ...Array.from({ length: 12 }, (_, index) => ({
     action_type: "review.admin_deleted",
     actor_email: "admin@ipb.ac.id",
     actor_id: "admin-1",
-    created_at: "2026-05-02T04:30:00Z",
+    created_at: `2026-05-${String(index + 1).padStart(2, "0")}T04:30:00Z`,
     facility_id: "facility-1",
-    id: "audit-1",
+    id: `audit-${index + 1}`,
     reservation_id: "reservation-1",
     student_id: "student-1",
-    target_id: "review-1",
+    target_id: `review-${index + 1}`,
     target_type: "review",
-  },
+  })),
 ];
 
 const adminReviewResponse = [
@@ -246,12 +263,13 @@ const adminReviewResponse = [
   },
 ];
 
-function renderReports() {
+function renderReports(initialEntry = "/super-admin/reports") {
   return renderWithProviders(
     <Routes>
       <Route element={<SuperAdminReportsPage />} path="/super-admin/reports" />
+      <Route element={<SuperAdminAuditLogsPage />} path="/super-admin/reports/logs" />
     </Routes>,
-    { initialEntries: ["/super-admin/reports"] },
+    { initialEntries: [initialEntry] },
   );
 }
 
@@ -534,6 +552,8 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("Kampus Dramaga - Auditorium")[0]).toBeVisible();
     expect(screen.getAllByText("300 kursi")[0]).toBeVisible();
     expect(screen.getAllByText("1/1 aktif")[0]).toBeVisible();
+    expect(screen.getAllByText(/Ditugaskan: Staff Fasilitas/)[0]).toBeVisible();
+    expect(screen.getAllByText(/Staff Nonaktif/)[0]).toBeVisible();
     expect(screen.getAllByText("Lab Arsip")[0]).toBeVisible();
     expect(screen.getAllByText("Butuh Staff")[0]).toBeVisible();
     expect(screen.getAllByText("Nonaktif")[0]).toBeVisible();
@@ -567,15 +587,20 @@ describe("SuperAdminDashboardPage", () => {
       if (url === "http://localhost:8000/admin/users?role=staff&is_active=true&page=1&page_size=100") {
         return jsonResponse({
           ...usersResponse,
-          items: [{ ...usersResponse.items[1], id: "staff-9", full_name: "Staff Arsip", email: "staff-arsip@ipb.ac.id" }],
-          total: 1,
+          items: [
+            { ...usersResponse.items[1], id: "staff-9", full_name: "Staff Arsip", email: "staff-arsip@ipb.ac.id" },
+            { ...usersResponse.items[1], id: "staff-old", full_name: "Staff Nonaktif", email: "inactive-staff@ipb.ac.id" },
+          ],
+          total: 2,
         });
       }
 
       if (url === "http://localhost:8000/admin/facilities/facility-2/staff-assignments/staff-9") {
-        return init?.method === "PUT"
-          ? jsonResponse({ facility_id: "facility-2", staff_id: "staff-9" })
-          : jsonResponse(null, 204);
+        return jsonResponse({ facility_id: "facility-2", staff_id: "staff-9" });
+      }
+
+      if (url === "http://localhost:8000/admin/facilities/facility-2/staff-assignments/staff-old") {
+        return jsonResponse(null, 204);
       }
 
       return jsonResponse({ detail: `Unhandled ${url}` }, 404);
@@ -584,8 +609,14 @@ describe("SuperAdminDashboardPage", () => {
     renderFacilities();
 
     await user.selectOptions(await screen.findByLabelText("Pilih staff untuk Lab Arsip"), "staff-9");
+    expect(await screen.findByText("Staff Arsip belum ditugaskan ke fasilitas ini.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Hapus staff dari Lab Arsip" })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Tugaskan staff ke Lab Arsip" }));
     expect(await screen.findByText("Penugasan staff diperbarui.")).toBeVisible();
+
+    await user.selectOptions(screen.getByLabelText("Pilih staff untuk Lab Arsip"), "staff-old");
+    expect(await screen.findByText("Staff Nonaktif sudah ditugaskan ke fasilitas ini.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Tugaskan staff ke Lab Arsip" })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Hapus staff dari Lab Arsip" }));
 
     await waitFor(() => {
@@ -594,7 +625,7 @@ describe("SuperAdminDashboardPage", () => {
         expect.objectContaining({ method: "PUT" }),
       );
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8000/admin/facilities/facility-2/staff-assignments/staff-9",
+        "http://localhost:8000/admin/facilities/facility-2/staff-assignments/staff-old",
         expect.objectContaining({ method: "DELETE" }),
       );
     });
@@ -648,11 +679,24 @@ describe("SuperAdminDashboardPage", () => {
 
     renderReports();
 
-    expect(await screen.findByText("20")).toBeVisible();
-    expect(screen.getByText("Rp12.800.000")).toBeVisible();
-    expect(screen.getByText("approved: 8")).toBeVisible();
-    expect(screen.getByLabelText("2026-05-02: 15 reservasi, Rp8.800.000")).toBeVisible();
-    expect(screen.getByText("admin@ipb.ac.id - review admin deleted")).toBeVisible();
+    expect((await screen.findAllByText("20"))[0]).toBeVisible();
+    expect(screen.getAllByText("Rp12.800.000")[0]).toBeVisible();
+    expect(screen.getByText("Disetujui: 8")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Tren Reservasi Mingguan" })).toBeVisible();
+    expect(screen.getByLabelText("1 Mei 2026: 5 reservasi, Rp4.000.000")).toBeVisible();
+    expect(screen.getByLabelText("2 Mei 2026: 15 reservasi, Rp8.800.000")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Mingguan" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: "Bulanan" }));
+    expect(screen.getByRole("heading", { name: "Tren Reservasi Bulanan" })).toBeVisible();
+    expect(screen.getByLabelText("Minggu 27 April 2026: 20 reservasi, Rp12.800.000")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Tahunan" }));
+    expect(screen.getByRole("heading", { name: "Tren Reservasi Tahunan" })).toBeVisible();
+    expect(screen.getByLabelText("Mei 2026: 20 reservasi, Rp12.800.000")).toBeVisible();
+    expect(screen.getAllByText("admin@ipb.ac.id - review admin deleted")).toHaveLength(10);
+    expect(screen.getByRole("link", { name: "Lihat semua log" })).toHaveAttribute(
+      "href",
+      "/super-admin/reports/logs",
+    );
     expect(screen.getAllByText(/2 Mei 2026/)[0]).toBeVisible();
     expect(screen.getAllByText("Ruang bersih dan nyaman.")[0]).toBeVisible();
     expect(screen.getAllByText("Review kasar")[0]).toBeVisible();
@@ -674,6 +718,31 @@ describe("SuperAdminDashboardPage", () => {
         expect.any(Object),
       );
     });
+  });
+
+  it("opens a dedicated full audit log page from reports", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/admin/audit-logs") {
+        return jsonResponse(auditLogResponse);
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderReports("/super-admin/reports/logs");
+
+    expect(await screen.findByRole("heading", { name: "Log Audit" })).toBeVisible();
+    expect(await screen.findByText("12 log")).toBeVisible();
+    expect(screen.getAllByText("admin@ipb.ac.id - review admin deleted")).toHaveLength(12);
+    expect(screen.getByText(/review-12/)).toBeVisible();
+    expect(screen.getByRole("link", { name: "Kembali ke Laporan" })).toHaveAttribute(
+      "href",
+      "/super-admin/reports",
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/admin/audit-logs", expect.any(Object));
   });
 
   it("deletes and restores moderated reviews", async () => {

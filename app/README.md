@@ -117,6 +117,179 @@ workers/           Background/deadline processing modules.
 
 Keep business rules in services. ORM classes should stay focused on database mapping.
 
+## Folder Structure And Ownership
+
+The backend is organised by responsibility: HTTP routes translate requests, services own business behaviour, repositories isolate persistence, schemas define API contracts, and models map database tables.
+
+Keep new backend code on the layer that owns the decision:
+
+- Routes should parse HTTP inputs, call access policy dependencies, and delegate to services.
+- Services should hold domain rules, workflow decisions, status transitions, and orchestration.
+- Repositories should hold SQLAlchemy queries and persistence details.
+- Schemas should hold request/response shape only.
+- Models should stay focused on ORM mapping and enums.
+
+Top-level structure:
+
+```text
+app/
+  api/              FastAPI route registration and shared response helpers.
+  core/             Configuration, database session setup, security, access policy, dependency factories.
+  dev/              Local seed tooling for development/demo data.
+  models/           SQLAlchemy ORM models and domain enums.
+  notifications/    Notification package namespace.
+  pdf/              PDF generation package namespace.
+  repositories/     Database readers/writers and query boundaries.
+  schemas/          Pydantic API request and response contracts.
+  services/         Business workflow modules and domain orchestration.
+  storage/          File storage abstraction.
+  workers/          Background/deadline worker namespace.
+  main.py           FastAPI application factory entrypoint.
+```
+
+### `api/`
+
+```text
+api/
+  http_application.py  Builds the FastAPI app and registers routes.
+  responses.py         Shared response helpers.
+  routes/              Feature route modules.
+```
+
+Route files are grouped by user-facing feature area:
+
+```text
+routes/
+  account_routes.py                       Auth, session, and account profile endpoints.
+  facility_routes.py                      Public facility discovery, details, calendar, and reservation creation.
+  reservation_routes.py                   Student reservation list/detail/workflow endpoints.
+  staff_reservation_operation_routes.py   Staff queues, reservation decisions, and assigned facility operations.
+  facility_management_routes.py           Super Admin facility governance and staff assignment.
+  super_admin_dashboard_routes.py         Super Admin dashboard aggregates.
+  super_admin_report_routes.py            Super Admin report aggregates.
+  audit_log_routes.py                     Super Admin audit log listing.
+  review_routes.py                        Public reviews and Super Admin review moderation.
+  notification_routes.py                  Notification listing and read state.
+  booking_setting_routes.py               Super Admin booking/deadline settings.
+  system_status_routes.py                 Super Admin system health.
+  organization_unit_routes.py             Organization unit lookup.
+  payment_routes.py                       Payment upload/review workflow.
+  approval_letter_routes.py               Approval letter generation/download workflow.
+```
+
+### `core/`
+
+```text
+core/
+  access_policy.py          Role and permission checks.
+  database.py               Engine/session setup and metadata creation.
+  module_factories.py       Dependency factory wiring for routes.
+  security.py               Password hashing and token helpers.
+  settings.py               Environment-backed settings.
+  student_email_policy.py   Student email domain validation.
+```
+
+Use `module_factories.py` when a route needs a service/repository dependency. Avoid manually constructing service graphs inside route handlers.
+
+### `models/`
+
+```text
+models/
+  __init__.py  SQLAlchemy models and domain enums.
+```
+
+The current backend keeps ORM classes in a single model module. If this grows, split by aggregate only when it reduces real navigation or merge conflict pain.
+
+### `repositories/`
+
+Repositories are persistence boundaries. They should return domain data needed by services without leaking HTTP details.
+
+```text
+repositories/
+  user_repository.py
+  facility_catalog_reader.py
+  facility_availability_reader.py
+  facility_management_repository.py
+  reservation_repository.py
+  staff_reservation_operations_repository.py
+  review_repository.py
+  audit_log_repository.py
+  notification_repository.py
+  booking_settings_repository.py
+  organization_unit_repository.py
+```
+
+Prefer adding query methods here instead of embedding SQLAlchemy queries in services or routes.
+
+### `services/`
+
+Services own observable backend behaviour and should be the main place for business rules.
+
+```text
+services/
+  accounts.py
+  academic_profiles.py
+  facilities.py
+  facility_availability.py
+  facility_management.py
+  reservations.py
+  reservation_lifecycle.py
+  reservation_time_selection.py
+  reservation_private_files.py
+  student_reservation_workflow_projections.py
+  staff_reservation_operations.py
+  staff_reservation_review_access.py
+  assigned_facility_access.py
+  reviews.py
+  public_facility_reviews.py
+  public_facility_calendar.py
+  payments.py
+  approval_letters.py
+  notifications.py
+  audit_logs.py
+  booking_settings.py
+  super_admin_dashboard.py
+  super_admin_reports.py
+  system_status.py
+  organization_units.py
+  deadline_worker.py
+```
+
+When adding a feature, start with the smallest service method that exposes the behaviour through an existing public route or a new route contract.
+
+### `schemas/`
+
+Schemas define stable API contracts for the frontend and tests.
+
+```text
+schemas/
+  account_schemas.py
+  facility_schemas.py
+  facility_management_schemas.py
+  reservation_schemas.py
+  reservation_time_selection_schemas.py
+  review_schemas.py
+  audit_log_schemas.py
+  notification_schemas.py
+  booking_setting_schemas.py
+  organization_unit_schemas.py
+  super_admin_dashboard_schemas.py
+  super_admin_report_schemas.py
+  system_status_schemas.py
+```
+
+Use schemas for request/response shape. Keep database models and internal service objects out of frontend-facing contracts.
+
+## Adding A Backend Feature
+
+1. Add or update a behavior test through the public HTTP/service interface.
+2. Add or update the response/request schema in `schemas/`.
+3. Add repository query/write methods if persistence is needed.
+4. Add service logic for the domain behaviour.
+5. Register or update the route in `api/routes/`.
+6. Wire dependencies in `core/module_factories.py` when a new service graph is needed.
+7. Update frontend backend-gap/page brief docs if the frontend-facing contract changed.
+
 ## Tests
 
 Run all backend tests from the repository root:

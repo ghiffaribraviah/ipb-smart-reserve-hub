@@ -175,9 +175,10 @@ function catalogPath({
   sort: string;
 }) {
   const params = new URLSearchParams();
+  const normalizedMinCapacity = minCapacity && Number(minCapacity) < 0 ? "0" : minCapacity;
   if (query) params.set("q", query);
   if (category) params.set("category", category);
-  if (minCapacity) params.set("min_capacity", minCapacity);
+  if (normalizedMinCapacity) params.set("min_capacity", normalizedMinCapacity);
   params.set("sort", sort);
   params.set("page", page);
   params.set("page_size", String(pageSize));
@@ -286,7 +287,8 @@ export function StudentFacilityCatalogPage() {
   const navigate = useNavigate();
   const query = searchParams.get("q") ?? "";
   const category = searchParams.get("category") ?? "";
-  const minCapacity = searchParams.get("min_capacity") ?? "";
+  const requestedMinCapacity = searchParams.get("min_capacity") ?? "";
+  const minCapacity = requestedMinCapacity && Number(requestedMinCapacity) < 0 ? "0" : requestedMinCapacity;
   const requestedSort = searchParams.get("sort") ?? defaultSort;
   const sort = supportedSorts.has(requestedSort) ? requestedSort : defaultSort;
   const page = searchParams.get("page") ?? "1";
@@ -400,7 +402,13 @@ export function StudentFacilityCatalogPage() {
                 className="min-w-0 flex-1 border-0 bg-transparent py-3 text-sm outline-none placeholder:text-[#9ca3af] max-md:text-[13px]"
                 defaultValue={minCapacity}
                 id="catalog-min-capacity"
+                min="0"
                 name="min_capacity"
+                onChange={(event) => {
+                  if (Number(event.target.value) < 0) {
+                    event.target.value = "0";
+                  }
+                }}
                 placeholder="Contoh: 50"
                 type="number"
               />

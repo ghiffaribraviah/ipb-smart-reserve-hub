@@ -85,10 +85,28 @@ async function mockCatalogApi(page: Page) {
   });
 }
 
+async function authenticateStudent(page: Page) {
+  await page.route("http://localhost:8000/auth/me", async (route) => {
+    await route.fulfill({
+      json: {
+        email: "student@apps.ipb.ac.id",
+        full_name: "Student Aktif",
+        id: "student-1",
+        is_active: true,
+        role: "student",
+      },
+    });
+  });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("ipb-srh-token", "e2e-student-token");
+  });
+}
+
 test.describe("student facility catalog page", () => {
   test("matches the facility catalog reference", async ({ page }, testInfo) => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
+    await authenticateStudent(page);
     await mockCatalogApi(page);
     await page.goto("/student/facilities");
 
@@ -96,6 +114,7 @@ test.describe("student facility catalog page", () => {
     await expect(page.getByLabel("Pencarian")).toBeVisible();
     await expect(page.getByLabel("Kategori Fasilitas")).toBeVisible();
     await expect(page.getByLabel("Min. Kapasitas")).toBeVisible();
+    await expect(page.getByLabel("Min. Kapasitas")).toHaveAttribute("min", "0");
     await expect(page.getByText("Menampilkan 12 dari 48 fasilitas")).toBeVisible();
     await expect(page.getByRole("link", { name: /Grand Auditorium/ })).toHaveAttribute(
       "href",
@@ -116,6 +135,7 @@ test.describe("student facility catalog page", () => {
 
   test("renders backend query catalog state", async ({ page }) => {
     await page.setViewportSize(screenshotViewports.desktop);
+    await authenticateStudent(page);
     await mockCatalogApi(page);
     await page.goto(
       "/student/facilities?q=studio&category=peralatan&min_capacity=10&sort=rating_desc&page=1",

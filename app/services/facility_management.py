@@ -64,6 +64,14 @@ class FacilityManagementProfile:
 
 
 @dataclass(frozen=True)
+class FacilityAssignedStaff:
+    email: str
+    full_name: str
+    id: str
+    is_active: bool
+
+
+@dataclass(frozen=True)
 class FacilityGovernance:
     id: str
     name: str
@@ -73,6 +81,7 @@ class FacilityGovernance:
     is_active: bool
     assigned_staff_count: int
     active_assigned_staff_count: int
+    assigned_staff: list[FacilityAssignedStaff]
     assignment_coverage: str
     issue_flags: list[str]
 
@@ -341,6 +350,15 @@ def _to_facility_governance(facility: Facility) -> FacilityGovernance:
         is_active=facility.is_active,
         assigned_staff_count=assigned_staff_count,
         active_assigned_staff_count=active_assigned_staff_count,
+        assigned_staff=[
+            FacilityAssignedStaff(
+                email=assignment.staff.email,
+                full_name=assignment.staff.full_name,
+                id=assignment.staff.id,
+                is_active=assignment.staff.is_active,
+            )
+            for assignment in sorted(facility.staff_assignments, key=lambda item: item.staff.full_name.lower())
+        ],
         assignment_coverage="covered" if active_assigned_staff_count > 0 else "needs_staff",
         issue_flags=issue_flags,
     )

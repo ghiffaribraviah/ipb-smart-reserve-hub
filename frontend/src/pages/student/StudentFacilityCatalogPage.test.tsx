@@ -103,6 +103,28 @@ describe("StudentFacilityCatalogPage", () => {
     });
   });
 
+  it("clamps negative minimum capacity to zero", async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockCatalogFetch();
+
+    renderCatalog("/student/facilities?min_capacity=-5");
+
+    const capacityInput = await screen.findByLabelText("Min. Kapasitas");
+    expect(capacityInput).toHaveAttribute("min", "0");
+    expect(capacityInput).toHaveValue(0);
+
+    await user.clear(capacityInput);
+    await user.type(capacityInput, "-1");
+    expect(capacityInput).toHaveValue(0);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8000/facilities?min_capacity=0&sort=name_asc&page=1&page_size=12",
+        expect.any(Object),
+      );
+    });
+  });
+
   it("renders backend category options and supported sort values", async () => {
     mockCatalogFetch();
 

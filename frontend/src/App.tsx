@@ -41,6 +41,7 @@ import {
 } from "./pages/staff/StaffFacilityPages";
 import {
   SuperAdminDashboardPage,
+  SuperAdminAuditLogsPage,
   SuperAdminFacilitiesPage,
   SuperAdminReportsPage,
   SuperAdminSystemPage,
@@ -83,6 +84,7 @@ export function App() {
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminUsersPage /></RequireRole>} path="/super-admin/users" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminFacilitiesPage /></RequireRole>} path="/super-admin/facilities" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminReportsPage /></RequireRole>} path="/super-admin/reports" />
+      <Route element={<RequireRole allow={["super_admin"]}><SuperAdminAuditLogsPage /></RequireRole>} path="/super-admin/reports/logs" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminSystemPage /></RequireRole>} path="/super-admin/system" />
       <Route element={<RequireRole allow={["student"]}><StudentApprovalLetterPage /></RequireRole>} path="/student/reservations/:reservationId/letter" />
       <Route element={<RequireRole allow={["student"]}><StudentPaymentPage /></RequireRole>} path="/student/reservations/:reservationId/payment" />

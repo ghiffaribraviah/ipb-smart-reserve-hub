@@ -244,7 +244,13 @@ function HeroSearch() {
         <span className="sr-only">Kapasitas</span>
         <input
           className="min-w-0 flex-1 border-0 bg-transparent px-2 py-3 text-sm text-[#111827] outline-none max-md:py-2.5 max-md:text-[13px]"
+          min="0"
           name="capacity"
+          onChange={(event) => {
+            if (Number(event.target.value) < 0) {
+              event.target.value = "0";
+            }
+          }}
           placeholder="Kapasitas"
           type="number"
         />

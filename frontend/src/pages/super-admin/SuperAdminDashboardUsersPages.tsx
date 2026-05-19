@@ -51,6 +51,12 @@ type SuperAdminDashboardAdministratorResponse = {
 
 type SuperAdminFacilityGovernanceResponse = {
   active_assigned_staff_count: number;
+  assigned_staff?: {
+    email: string;
+    full_name: string;
+    id: string;
+    is_active: boolean;
+  }[];
   assigned_staff_count: number;
   assignment_coverage: string;
   capacity: number;
@@ -95,6 +101,22 @@ function unassignFacilityStaff(facilityId: string, staffId: string) {
 type ReportDateRange = {
   end: string;
   start: string;
+};
+
+type ReportTrendMode = "weekly" | "monthly" | "yearly";
+
+type TrendChartPoint = {
+  date: string;
+  label: string;
+  paid_total_rupiah: number;
+  reservation_count: number;
+  shortLabel: string;
+};
+
+const reportTrendModeLabels: Record<ReportTrendMode, string> = {
+  monthly: "Bulanan",
+  weekly: "Mingguan",
+  yearly: "Tahunan",
 };
 
 type SuperAdminReportAggregateResponse = {
@@ -151,16 +173,23 @@ function reportRangeParams(range: ReportDateRange) {
   };
 }
 
+function auditLogsPath(range?: ReportDateRange) {
+  if (!range) {
+    return "/admin/audit-logs";
+  }
+  const rangeParams = reportRangeParams(range);
+  const params = new URLSearchParams({ created_from: rangeParams.start, created_to: rangeParams.end });
+  return `/admin/audit-logs?${params.toString()}`;
+}
+
 function fetchReportAggregate(range: ReportDateRange) {
   const rangeParams = reportRangeParams(range);
   const params = new URLSearchParams({ start: rangeParams.start, end: rangeParams.end });
   return apiRequest<SuperAdminReportAggregateResponse>(`/admin/reports/aggregate?${params.toString()}`);
 }
 
-function fetchAdminAuditLogs(range: ReportDateRange) {
-  const rangeParams = reportRangeParams(range);
-  const params = new URLSearchParams({ created_from: rangeParams.start, created_to: rangeParams.end });
-  return apiRequest<AdminAuditLogResponse[]>(`/admin/audit-logs?${params.toString()}`);
+function fetchAdminAuditLogs(range?: ReportDateRange) {
+  return apiRequest<AdminAuditLogResponse[]>(auditLogsPath(range));
 }
 
 function fetchAdminReviews() {
@@ -531,6 +560,15 @@ function coverageLabel(value: string) {
   return value.replaceAll("_", " ");
 }
 
+function assignedStaffLabel(staff: NonNullable<SuperAdminFacilityGovernanceResponse["assigned_staff"]>) {
+  if (staff.length === 0) {
+    return "Belum ada staff ditugaskan";
+  }
+  return staff
+    .map((member) => `${member.full_name}${member.is_active ? "" : " (nonaktif)"}`)
+    .join(", ");
+}
+
 function formatAuditTime(value: string) {
   return new Intl.DateTimeFormat("id-ID", {
     day: "numeric",
@@ -560,6 +598,117 @@ function auditActionLabel(actionType: string) {
     "user.deactivated": "Menonaktifkan pengguna",
   };
   return labels[actionType] ?? actionType.replaceAll("_", " ").replaceAll(".", " ");
+}
+
+function reportStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    approved: "Disetujui",
+    cancelled: "Dibatalkan",
+    completed: "Selesai",
+    expired: "Kedaluwarsa",
+    pending_document_review: "Review Dokumen",
+    pending_document_upload: "Unggah Dokumen",
+    pending_payment: "Pembayaran",
+    rejected: "Ditolak",
+  };
+  return labels[status] ?? status.replaceAll("_", " ");
+}
+
+function formatTrendDate(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "Asia/Jakarta",
+  }).format(new Date(`${value}T00:00:00+07:00`));
+}
+
+function isoDate(value: Date) {
+  return value.toISOString().slice(0, 10);
+}
+
+function parseTrendDate(value: string) {
+  return new Date(`${value}T00:00:00.000Z`);
+}
+
+function weekStartDate(value: string) {
+  const date = parseTrendDate(value);
+  const day = date.getUTCDay();
+  const offset = day === 0 ? -6 : 1 - day;
+  date.setUTCDate(date.getUTCDate() + offset);
+  return isoDate(date);
+}
+
+function formatLongTrendDate(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00+07:00`));
+}
+
+function formatMonthYear(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    month: "long",
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00+07:00`));
+}
+
+function trendGroupKey(value: string, mode: ReportTrendMode) {
+  if (mode === "monthly") {
+    return weekStartDate(value);
+  }
+  if (mode === "yearly") {
+    return `${value.slice(0, 7)}-01`;
+  }
+  return value;
+}
+
+function trendLabel(value: string, mode: ReportTrendMode) {
+  if (mode === "monthly") {
+    return `Minggu ${formatLongTrendDate(value)}`;
+  }
+  if (mode === "yearly") {
+    return formatMonthYear(value);
+  }
+  return formatLongTrendDate(value);
+}
+
+function trendShortLabel(value: string, mode: ReportTrendMode) {
+  if (mode === "monthly") {
+    return formatTrendDate(value);
+  }
+  if (mode === "yearly") {
+    return new Intl.DateTimeFormat("id-ID", { month: "short", timeZone: "Asia/Jakarta" })
+      .format(new Date(`${value}T00:00:00+07:00`));
+  }
+  return formatTrendDate(value);
+}
+
+function aggregateTrendPoints(points: SuperAdminReportTrendPointResponse[], mode: ReportTrendMode): TrendChartPoint[] {
+  const groups = new Map<string, TrendChartPoint>();
+
+  points.forEach((point) => {
+    const key = trendGroupKey(point.date, mode);
+    const existing = groups.get(key);
+
+    if (existing) {
+      existing.paid_total_rupiah += point.paid_total_rupiah;
+      existing.reservation_count += point.reservation_count;
+      return;
+    }
+
+    groups.set(key, {
+      date: key,
+      label: trendLabel(key, mode),
+      paid_total_rupiah: point.paid_total_rupiah,
+      reservation_count: point.reservation_count,
+      shortLabel: trendShortLabel(key, mode),
+    });
+  });
+
+  return Array.from(groups.values()).sort((first, second) => first.date.localeCompare(second.date));
 }
 
 function roleLabel(role: string) {
@@ -1014,7 +1163,12 @@ export function SuperAdminFacilitiesPage() {
                     </td>
                     <td className="px-5 py-4 text-sm text-[#6b7280]">{facility.capacity} kursi</td>
                     <td className="px-5 py-4 text-sm text-[#6b7280]">
-                      {facility.active_assigned_staff_count}/{facility.assigned_staff_count} aktif
+                      <span className="font-semibold text-[#111827]">
+                        {facility.active_assigned_staff_count}/{facility.assigned_staff_count} aktif
+                      </span>
+                      <span className="mt-1 block break-words text-xs">
+                        Ditugaskan: {assignedStaffLabel(facility.assigned_staff ?? [])}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-2">
@@ -1059,7 +1213,10 @@ export function SuperAdminFacilitiesPage() {
                   </UserField>
                   <UserField label="Kapasitas">{facility.capacity} kursi</UserField>
                   <UserField label="Staff">
-                    {facility.active_assigned_staff_count}/{facility.assigned_staff_count} aktif
+                    <strong>{facility.active_assigned_staff_count}/{facility.assigned_staff_count} aktif</strong>
+                    <span className="mt-1 block break-words text-xs text-[#6b7280]">
+                      Ditugaskan: {assignedStaffLabel(facility.assigned_staff ?? [])}
+                    </span>
                   </UserField>
                   <UserField label="Status">
                     <div className="flex flex-wrap gap-2">
@@ -1119,6 +1276,23 @@ export function SuperAdminFacilitiesPage() {
             <div className="grid">
               {facilities.map((facility) => {
                 const staffId = staffInputs[facility.id]?.trim() ?? "";
+                const selectedStaff = staffOptions.find((staff) => staff.id === staffId);
+                const assignedStaff = facility.assigned_staff ?? [];
+                const selectableStaff = [
+                  ...staffOptions,
+                  ...assignedStaff
+                    .filter((staff) => !staffOptions.some((option) => option.id === staff.id))
+                    .map((staff) => ({
+                      ...staff,
+                      academic_profile: null,
+                      nim: null,
+                      phone: null,
+                      role: "staff" as const,
+                    })),
+                ];
+                const selectedStaffName =
+                  selectedStaff?.full_name ?? assignedStaff.find((staff) => staff.id === staffId)?.full_name;
+                const isSelectedStaffAssigned = assignedStaff.some((staff) => staff.id === staffId);
                 return (
                   <article
                     className="grid gap-3 border-b border-[#e5e7eb] py-5 last:border-b-0"
@@ -1129,6 +1303,25 @@ export function SuperAdminFacilitiesPage() {
                       <p className="m-0 mt-1 break-words text-xs text-[#6b7280]">
                         {facility.active_assigned_staff_count}/{facility.assigned_staff_count} aktif
                       </p>
+                      <div className="mt-3 rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
+                        <p className="m-0 text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
+                          Ditugaskan
+                        </p>
+                        {assignedStaff.length > 0 ? (
+                          <ul className="m-0 mt-2 grid list-none gap-1 p-0">
+                            {assignedStaff.map((staff) => (
+                              <li className="break-words text-xs font-semibold text-[#111827]" key={staff.id}>
+                                {staff.full_name} - {staff.email}
+                                {!staff.is_active ? <span className="text-[#b91c1c]"> (nonaktif)</span> : null}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="m-0 mt-2 text-xs font-semibold text-[#6b7280]">
+                            Belum ada staff ditugaskan.
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <select
                       aria-label={`Pilih staff untuk ${facility.name}`}
@@ -1142,17 +1335,24 @@ export function SuperAdminFacilitiesPage() {
                       <option value="">
                         {staffUsersQuery.isLoading ? "Memuat staff..." : "Pilih staff aktif"}
                       </option>
-                      {staffOptions.map((staff) => (
+                      {selectableStaff.map((staff) => (
                         <option key={staff.id} value={staff.id}>
-                          {staff.full_name} - {staff.email}
+                          {staff.full_name} - {staff.email}{staff.is_active ? "" : " (nonaktif)"}
                         </option>
                       ))}
                     </select>
+                    {selectedStaffName ? (
+                      <p className="m-0 text-xs font-semibold text-[#6b7280]">
+                        {isSelectedStaffAssigned
+                          ? `${selectedStaffName} sudah ditugaskan ke fasilitas ini.`
+                          : `${selectedStaffName} belum ditugaskan ke fasilitas ini.`}
+                      </p>
+                    ) : null}
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         aria-label={`Tugaskan staff ke ${facility.name}`}
                         className="inline-flex min-h-10 items-center justify-center rounded-md bg-[#0f9d58] px-3 text-xs font-bold text-white disabled:opacity-60"
-                        disabled={!staffId || assignmentMutation.isPending}
+                        disabled={!staffId || isSelectedStaffAssigned || assignmentMutation.isPending}
                         onClick={() =>
                           assignmentMutation.mutate({ action: "assign", facilityId: facility.id, staffId })
                         }
@@ -1163,7 +1363,7 @@ export function SuperAdminFacilitiesPage() {
                       <button
                         aria-label={`Hapus staff dari ${facility.name}`}
                         className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#e5e7eb] bg-white px-3 text-xs font-bold text-[#111827] disabled:opacity-60"
-                        disabled={!staffId || assignmentMutation.isPending}
+                        disabled={!staffId || !isSelectedStaffAssigned || assignmentMutation.isPending}
                         onClick={() =>
                           assignmentMutation.mutate({ action: "unassign", facilityId: facility.id, staffId })
                         }
@@ -1193,29 +1393,200 @@ function formatRupiah(value: number) {
     .replace(/\s/g, "");
 }
 
-function TrendChart({ points }: { points: SuperAdminReportTrendPointResponse[] }) {
+function TrendChart({ mode, points }: { mode: ReportTrendMode; points: TrendChartPoint[] }) {
   const maxCount = Math.max(...points.map((point) => point.reservation_count), 1);
+  const totalCount = points.reduce((total, point) => total + point.reservation_count, 0);
+  const totalPaid = points.reduce((total, point) => total + point.paid_total_rupiah, 0);
+  const peak = points.reduce(
+    (currentPeak, point) => point.reservation_count > currentPeak.reservation_count ? point : currentPeak,
+    points[0],
+  );
+  const chartWidth = 860;
+  const chartHeight = 260;
+  const padding = { bottom: 38, left: 46, right: 24, top: 18 };
+  const plotWidth = chartWidth - padding.left - padding.right;
+  const plotHeight = chartHeight - padding.top - padding.bottom;
+  const chartPoints = points.map((point, index) => {
+    const x = points.length === 1
+      ? padding.left + plotWidth / 2
+      : padding.left + (index / (points.length - 1)) * plotWidth;
+    const y = padding.top + plotHeight - (point.reservation_count / maxCount) * plotHeight;
+    return { ...point, x, y };
+  });
+  const linePath = chartPoints
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+  const baselineY = padding.top + plotHeight;
+  const areaPath = `${linePath} L ${chartPoints.at(-1)?.x ?? padding.left} ${baselineY} L ${chartPoints[0]?.x ?? padding.left} ${baselineY} Z`;
+  const labelStep = Math.max(1, Math.ceil(points.length / 6));
+  const yTicks = [maxCount, Math.round(maxCount / 2), 0];
+
   return (
-    <div
-      aria-label="Grafik tren reservasi"
-      className="flex h-[200px] items-end gap-4 px-6 pb-7 pt-9 max-md:h-[190px] max-md:px-4"
-      role="img"
-    >
-      {points.map((point) => (
-        <div
-          aria-label={`${point.date}: ${point.reservation_count} reservasi, ${formatRupiah(point.paid_total_rupiah)}`}
-          className="w-full rounded-t-lg bg-[#0f9d58] opacity-90"
-          key={point.date}
-          style={{ height: `${Math.max(18, (point.reservation_count / maxCount) * 100)}%` }}
-        />
-      ))}
+    <div className="p-6 max-md:p-4">
+      <div className="mb-5 grid grid-cols-3 gap-3 max-md:grid-cols-1">
+        <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
+          <p className="m-0 text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">Total Tren</p>
+          <p className="m-0 mt-1 text-xl font-bold text-[#111827]">{totalCount}</p>
+        </div>
+        <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
+          <p className="m-0 text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">Puncak</p>
+          <p className="m-0 mt-1 text-xl font-bold text-[#111827]">
+            {peak.reservation_count} <span className="text-xs text-[#6b7280]">{peak.shortLabel}</span>
+          </p>
+        </div>
+        <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
+          <p className="m-0 text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">Pembayaran</p>
+          <p className="m-0 mt-1 text-xl font-bold text-[#111827]">{formatRupiah(totalPaid)}</p>
+        </div>
+      </div>
+      <div
+        aria-label="Grafik tren reservasi"
+        className="relative overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc]"
+        role="img"
+      >
+        <svg className="block h-[280px] w-full max-md:h-[240px]" preserveAspectRatio="none" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+          <defs>
+            <linearGradient id={`reservation-trend-fill-${mode}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.24" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          {yTicks.map((tick) => {
+            const y = padding.top + plotHeight - (tick / maxCount) * plotHeight;
+            return (
+              <g key={tick}>
+                <line stroke="#e5e7eb" strokeDasharray="4 6" x1={padding.left} x2={chartWidth - padding.right} y1={y} y2={y} />
+                <text fill="#64748b" fontSize="10" fontWeight="700" x="12" y={y + 4}>
+                  {tick}
+                </text>
+              </g>
+            );
+          })}
+          <path d={areaPath} fill={`url(#reservation-trend-fill-${mode})`} />
+          <path d={linePath} fill="none" stroke="#059669" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
+          {chartPoints.map((point, index) =>
+            index % labelStep === 0 || index === chartPoints.length - 1 ? (
+              <text
+                fill="#64748b"
+                fontSize="10"
+                fontWeight="700"
+                key={point.date}
+                textAnchor="middle"
+                x={point.x}
+                y={chartHeight - 12}
+              >
+                {point.shortLabel}
+              </text>
+            ) : null,
+          )}
+        </svg>
+        {chartPoints.map((point) => {
+          const label = `${point.label}: ${point.reservation_count} reservasi, ${formatRupiah(point.paid_total_rupiah)}`;
+          return (
+            <button
+              aria-label={label}
+              className="group absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#059669] shadow-[0_2px_8px_rgba(5,150,105,0.35)] outline-none focus-visible:ring-2 focus-visible:ring-[#0f9d58] focus-visible:ring-offset-2"
+              key={point.date}
+              style={{
+                left: `${(point.x / chartWidth) * 100}%`,
+                top: `${(point.y / chartHeight) * 100}%`,
+              }}
+              title={label}
+              type="button"
+            >
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-6 left-1/2 z-20 hidden min-w-[190px] -translate-x-1/2 rounded-lg bg-[#0f172a] px-3 py-2 text-center text-xs font-semibold leading-5 text-white shadow-lg group-hover:block group-focus:block"
+              >
+                {point.label}
+                <br />
+                {point.reservation_count} reservasi
+                <br />
+                {formatRupiah(point.paid_total_rupiah)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-4 text-xs font-semibold text-[#6b7280] max-md:grid">
+        <span>Granularitas: {reportTrendModeLabels[mode]}</span>
+        <span>Hover titik grafik untuk melihat detail.</span>
+      </div>
     </div>
+  );
+}
+
+function TrendModeButton({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-pressed={active}
+      className={`min-h-10 rounded-lg px-4 text-xs font-bold transition ${
+        active
+          ? "bg-[#0f9d58] text-white"
+          : "border border-[#e5e7eb] bg-white text-[#475569] hover:bg-[#f8fafc]"
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
+function ReportRangeControls({
+  mode,
+  range,
+  setMode,
+  setRange,
+}: {
+  mode: ReportTrendMode;
+  range: ReportDateRange;
+  setMode: (mode: ReportTrendMode) => void;
+  setRange: (range: ReportDateRange) => void;
+}) {
+  return (
+    <section className="mb-6 grid grid-cols-[auto_180px_180px] gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-lg:grid-cols-1">
+      <div aria-label="Granularitas tren laporan" className="flex flex-wrap gap-2">
+        {(["weekly", "monthly", "yearly"] as const).map((nextMode) => (
+          <TrendModeButton
+            active={mode === nextMode}
+            key={nextMode}
+            onClick={() => setMode(nextMode)}
+          >
+            {reportTrendModeLabels[nextMode]}
+          </TrendModeButton>
+        ))}
+      </div>
+      <input
+        aria-label="Tanggal mulai laporan"
+        className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+        onChange={(event) => setRange({ ...range, start: event.target.value })}
+        type="date"
+        value={range.start}
+      />
+      <input
+        aria-label="Tanggal akhir laporan"
+        className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+        onChange={(event) => setRange({ ...range, end: event.target.value })}
+        type="date"
+        value={range.end}
+      />
+    </section>
   );
 }
 
 export function SuperAdminReportsPage() {
   const queryClient = useQueryClient();
   const [range, setRange] = useState<ReportDateRange>({ end: "2026-05-31", start: "2026-05-01" });
+  const [trendMode, setTrendMode] = useState<ReportTrendMode>("weekly");
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
   const rangeError = range.start && range.end && range.start > range.end
@@ -1236,7 +1607,10 @@ export function SuperAdminReportsPage() {
     queryKey: ["super-admin", "reports", "reviews"],
   });
   const aggregate = aggregateQuery.data;
+  const trendPoints = aggregate ? aggregateTrendPoints(aggregate.trend, trendMode) : [];
   const auditLogs = auditQuery.data ?? [];
+  const previewAuditLogs = auditLogs.slice(0, 10);
+  const hasMoreAuditLogs = auditLogs.length > previewAuditLogs.length;
   const reviews = reviewsQuery.data ?? [];
   const reviewMutation = useMutation({
     mutationFn: ({ action, reviewId }: { action: "delete" | "restore"; reviewId: string }) =>
@@ -1266,27 +1640,12 @@ export function SuperAdminReportsPage() {
           <SuperButton deferred>Ekspor Laporan ditunda</SuperButton>
         </PageHeader>
 
-        <section className="mb-6 grid grid-cols-[180px_180px] gap-3 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:grid-cols-1">
-          <input
-            aria-label="Tanggal mulai laporan"
-            className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
-            onChange={(event) => setRange((current) => ({ ...current, start: event.target.value }))}
-            type="date"
-            value={range.start}
-          />
-          <input
-            aria-label="Tanggal akhir laporan"
-            className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
-            onChange={(event) => setRange((current) => ({ ...current, end: event.target.value }))}
-            type="date"
-            value={range.end}
-          />
-          {rangeError ? (
-            <p className="col-span-2 m-0 text-sm font-semibold text-[#b91c1c] max-md:col-span-1">
-              {rangeError}
-            </p>
-          ) : null}
-        </section>
+        <ReportRangeControls mode={trendMode} range={range} setMode={setTrendMode} setRange={setRange} />
+        {rangeError ? (
+          <p className="mb-6 mt-[-14px] rounded-lg border border-[#fecaca] bg-[#fee2e2] px-4 py-3 text-sm font-semibold text-[#b91c1c]">
+            {rangeError}
+          </p>
+        ) : null}
 
         <section className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-md:grid-cols-1">
           <PlainKpiCard label="Reservasi Bulan Ini" value={aggregate ? String(aggregate.kpis.total_reservations) : "-"} />
@@ -1322,8 +1681,8 @@ export function SuperAdminReportsPage() {
         ) : null}
 
         <div className="mt-7 grid grid-cols-[1.4fr_1fr] gap-7 max-lg:grid-cols-1">
-          <SectionCard link="" title="Tren Reservasi Mingguan">
-            {aggregate?.trend.length ? <TrendChart points={aggregate.trend} /> : null}
+          <SectionCard link="" title={`Tren Reservasi ${reportTrendModeLabels[trendMode]}`}>
+            {trendPoints.length ? <TrendChart mode={trendMode} points={trendPoints} /> : null}
             {aggregateQuery.isLoading ? (
               <div className="border-t border-[#e5e7eb] p-6 text-sm font-semibold text-[#6b7280]">
                 Memuat tren reservasi...
@@ -1335,18 +1694,30 @@ export function SuperAdminReportsPage() {
               </div>
             ) : null}
             {aggregate ? (
-              <div className="flex flex-wrap gap-2 border-t border-[#e5e7eb] p-4 text-xs font-bold text-[#6b7280]">
+              <div className="flex flex-wrap gap-2 border-t border-[#e5e7eb] p-4 text-xs font-bold text-[#475569]">
                 {Object.entries(aggregate.status_counts).map(([status, count]) => (
-                  <span key={status}>{status}: {count}</span>
+                  <span className="rounded-full bg-[#f8fafc] px-3 py-1.5" key={status}>
+                    {reportStatusLabel(status)}: {count}
+                  </span>
                 ))}
               </div>
             ) : null}
           </SectionCard>
 
           <section className="rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
-            <h2 className="m-0 text-lg font-bold">Log Audit Terbaru</h2>
-            <div className="mt-4 grid">
-              {auditLogs.map((item) => (
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="m-0 text-lg font-bold">Log Audit Terbaru</h2>
+                <p className="m-0 mt-1 text-xs font-semibold text-[#6b7280]">
+                  Menampilkan maksimal 10 log terakhir.
+                </p>
+              </div>
+              <span className="rounded-full bg-[#f8fafc] px-3 py-1 text-xs font-bold text-[#6b7280]">
+                {Math.min(auditLogs.length, 10)}/10
+              </span>
+            </div>
+            <div className="mt-4 grid max-h-[460px] overflow-y-auto pr-1">
+              {previewAuditLogs.map((item) => (
                 <article className="flex gap-4 border-t border-[#e5e7eb] py-4 first:border-t-0" key={item.id}>
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e8f5e9] text-[#0f9d58]">
                     <SuperIcon name="settings" size={17} />
@@ -1360,6 +1731,14 @@ export function SuperAdminReportsPage() {
                 </article>
               ))}
             </div>
+            {hasMoreAuditLogs ? (
+              <a
+                className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-[#d1fae5] bg-[#f0fdf4] px-4 text-sm font-bold text-[#047857] no-underline"
+                href="/super-admin/reports/logs"
+              >
+                Lihat semua log
+              </a>
+            ) : null}
             {auditQuery.isSuccess && auditLogs.length === 0 ? (
               <div className="mt-4 text-sm font-semibold text-[#6b7280]">
                 Belum ada log audit untuk rentang ini.
@@ -1445,6 +1824,77 @@ export function SuperAdminReportsPage() {
           {reviewsQuery.isSuccess && reviews.length === 0 ? (
             <div className="border-t border-[#e5e7eb] p-6 text-sm font-semibold text-[#6b7280]">
               Belum ada ulasan untuk dimoderasi.
+            </div>
+          ) : null}
+        </section>
+      </main>
+    </SuperAdminShell>
+  );
+}
+
+export function SuperAdminAuditLogsPage() {
+  const auditQuery = useQuery({
+    queryFn: () => fetchAdminAuditLogs(),
+    queryKey: ["super-admin", "reports", "audit", "all"],
+  });
+  const auditLogs = auditQuery.data ?? [];
+
+  return (
+    <SuperAdminShell active="reports">
+      <main className="mx-auto mt-30 w-[1200px] max-w-[95%] pt-[50px] max-md:mt-16 max-md:max-w-full max-md:px-4 max-md:pt-8">
+        <PageHeader
+          description="Telusuri log audit administratif lengkap dari sistem."
+          title="Log Audit"
+        >
+          <a
+            className="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-[#e5e7eb] bg-white px-5 text-sm font-bold text-[#111827] no-underline max-md:min-h-11 max-md:w-full"
+            href="/super-admin/reports"
+          >
+            Kembali ke Laporan
+          </a>
+        </PageHeader>
+
+        {auditQuery.isError ? (
+          <DashboardStateMessage actionLabel="Muat ulang log" onRetry={() => void auditQuery.refetch()}>
+            Log audit belum dapat dimuat.
+          </DashboardStateMessage>
+        ) : null}
+
+        <section className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
+          <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[#e5e7eb] px-6 max-md:px-5">
+            <h2 className="m-0 text-lg font-bold text-[#111827]">Semua Log Audit</h2>
+            <span className="rounded-full bg-[#f8fafc] px-3 py-1 text-xs font-bold text-[#6b7280]">
+              {auditLogs.length} log
+            </span>
+          </div>
+          <div className="grid">
+            {auditLogs.map((item) => (
+              <article className="grid grid-cols-[44px_1fr_auto] gap-4 border-t border-[#e5e7eb] px-6 py-4 first:border-t-0 max-md:grid-cols-[44px_1fr] max-md:px-5" key={item.id}>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8f5e9] text-[#0f9d58]">
+                  <SuperIcon name="settings" size={17} />
+                </div>
+                <div className="min-w-0">
+                  <p className="m-0 break-words text-sm font-bold">
+                    {item.actor_email ?? "Sistem"} - {auditActionLabel(item.action_type)}
+                  </p>
+                  <p className="m-0 mt-1 break-words text-xs text-[#6b7280]">
+                    {item.target_type} - {item.target_id}
+                  </p>
+                </div>
+                <time className="text-right text-xs font-semibold text-[#6b7280] max-md:col-span-2 max-md:text-left" dateTime={item.created_at}>
+                  {formatAuditTime(item.created_at)}
+                </time>
+              </article>
+            ))}
+          </div>
+          {auditQuery.isLoading ? (
+            <div className="border-t border-[#e5e7eb] p-6 text-sm font-semibold text-[#6b7280]">
+              Memuat log audit...
+            </div>
+          ) : null}
+          {auditQuery.isSuccess && auditLogs.length === 0 ? (
+            <div className="border-t border-[#e5e7eb] p-6 text-sm font-semibold text-[#6b7280]">
+              Belum ada log audit.
             </div>
           ) : null}
         </section>

@@ -49,6 +49,14 @@ async def test_super_admin_lists_facility_governance_with_assignment_coverage_an
         "is_active": True,
         "assigned_staff_count": 1,
         "active_assigned_staff_count": 1,
+        "assigned_staff": [
+            {
+                "email": "staff@ipb.ac.id",
+                "full_name": "Seed User",
+                "id": staff_id,
+                "is_active": True,
+            }
+        ],
         "assignment_coverage": "covered",
         "issue_flags": [],
     }
@@ -61,6 +69,14 @@ async def test_super_admin_lists_facility_governance_with_assignment_coverage_an
         "is_active": False,
         "assigned_staff_count": 1,
         "active_assigned_staff_count": 0,
+        "assigned_staff": [
+            {
+                "email": "inactive-staff@ipb.ac.id",
+                "full_name": "Seed User",
+                "id": inactive_staff_id,
+                "is_active": False,
+            }
+        ],
         "assignment_coverage": "needs_staff",
         "issue_flags": ["needs_staff"],
     }

@@ -27,6 +27,13 @@ class FacilityManagementProfileResponse(BaseModel):
     is_active: bool
 
 
+class FacilityAssignedStaffResponse(BaseModel):
+    email: str
+    full_name: str
+    id: str
+    is_active: bool
+
+
 class FacilityGovernanceResponse(BaseModel):
     id: str
     name: str
@@ -36,6 +43,7 @@ class FacilityGovernanceResponse(BaseModel):
     is_active: bool
     assigned_staff_count: int
     active_assigned_staff_count: int
+    assigned_staff: list[FacilityAssignedStaffResponse]
     assignment_coverage: str
     issue_flags: list[str]
 

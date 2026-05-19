@@ -32,6 +32,7 @@
 
 - Primary actions: browse facilities, open featured facility, start category browsing.
 - Secondary actions: header search, notifications, profile.
+- Search behavior: capacity search input is numeric and clamps at `0`; browser steppers and typed negative values must not leave a negative query value.
 - Loading state: category and facility sections keep stable skeleton/card dimensions.
 - Empty state: show a quiet empty section if no categories or featured facilities exist.
 - Error state: retry panel inside the affected section.

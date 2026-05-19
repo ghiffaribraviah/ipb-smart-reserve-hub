@@ -6,9 +6,34 @@ import {
   screenshotViewports,
 } from "./utils/visual";
 
+async function authenticateSuperAdmin(page: Page) {
+  await page.route("http://localhost:8000/auth/me", async (route) => {
+    await route.fulfill({
+      json: {
+        email: "super-admin@ipb.ac.id",
+        full_name: "Super Admin",
+        id: "admin-1",
+        is_active: true,
+        role: "super_admin",
+      },
+    });
+  });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("ipb-srh-token", "e2e-super-admin-token");
+  });
+}
+
 const facilityGovernance = [
   {
     active_assigned_staff_count: 1,
+    assigned_staff: [
+      {
+        email: "staff@ipb.ac.id",
+        full_name: "Staff Fasilitas",
+        id: "staff-1",
+        is_active: true,
+      },
+    ],
     assigned_staff_count: 1,
     assignment_coverage: "covered",
     capacity: 300,
@@ -21,6 +46,14 @@ const facilityGovernance = [
   },
   {
     active_assigned_staff_count: 0,
+    assigned_staff: [
+      {
+        email: "inactive-staff@ipb.ac.id",
+        full_name: "Staff Nonaktif",
+        id: "staff-old",
+        is_active: false,
+      },
+    ],
     assigned_staff_count: 1,
     assignment_coverage: "needs_staff",
     capacity: 40,
@@ -52,20 +85,18 @@ const reportAggregate = {
   ],
 };
 
-const auditLogs = [
-  {
+const auditLogs = Array.from({ length: 12 }, (_, index) => ({
     action_type: "review.admin_deleted",
     actor_email: "admin@ipb.ac.id",
     actor_id: "admin-1",
-    created_at: "2026-05-02T04:30:00Z",
+    created_at: `2026-05-${String(index + 1).padStart(2, "0")}T04:30:00Z`,
     facility_id: "facility-1",
-    id: "audit-1",
+    id: `audit-${index + 1}`,
     reservation_id: "reservation-1",
     student_id: "student-1",
-    target_id: "review-1",
+    target_id: `review-${index + 1}`,
     target_type: "review",
-  },
-];
+}));
 
 const adminReviews = [
   {
@@ -122,6 +153,7 @@ test.describe("super admin facilities and reports pages", () => {
   test("matches the super admin fasilitas reference", async ({ page }, testInfo) => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
+    await authenticateSuperAdmin(page);
     await mockFacilityGovernance(page);
     await page.goto("/super-admin/facilities");
 
@@ -138,16 +170,14 @@ test.describe("super admin facilities and reports pages", () => {
     await expect(page.getByText("Grand Auditorium").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Lab Arsip").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Butuh Staff").filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Edit detail Grand Auditorium" })).toHaveAttribute(
-      "href",
-      "/super-admin/facilities/facility-1/edit",
-    );
     await expect(page.getByRole("button", { name: "Arsipkan Grand Auditorium" })).toHaveAttribute(
       "aria-disabled",
       "true",
     );
     await expect(page.getByRole("heading", { name: "Penugasan Terbaru" })).toBeVisible();
-    await expect(page.getByLabel("Staff ID untuk Lab Arsip")).toBeVisible();
+    await expect(page.getByLabel("Pilih staff untuk Lab Arsip")).toBeVisible();
+    await expect(page.getByText(/Ditugaskan: Staff Fasilitas/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(/Staff Nonaktif/).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Impor Data ditunda" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Tambah Fasilitas ditunda" })).toBeVisible();
 
@@ -161,6 +191,7 @@ test.describe("super admin facilities and reports pages", () => {
   test("matches the super admin laporan reference", async ({ page }, testInfo) => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
+    await authenticateSuperAdmin(page);
     await mockReports(page);
     await page.goto("/super-admin/reports");
 
@@ -173,16 +204,30 @@ test.describe("super admin facilities and reports pages", () => {
     }
     await expect(page.getByText("Reservasi Bulan Ini")).toBeVisible();
     await expect(page.locator("article").filter({ hasText: "Reservasi Bulan Ini" }).getByText("20")).toBeVisible();
-    await expect(page.getByText("Rp12.800.000")).toBeVisible();
+    await expect(page.getByText("Rp12.800.000").first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Tren Reservasi Mingguan" })).toBeVisible();
     await expect(page.getByLabel("Grafik tren reservasi")).toBeVisible();
-    await expect(page.getByText("approved: 8")).toBeVisible();
+    await expect(page.getByLabel("1 Mei 2026: 5 reservasi, Rp4.000.000")).toBeVisible();
+    await expect(page.getByLabel("2 Mei 2026: 15 reservasi, Rp8.800.000")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mingguan" })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: "Bulanan" }).click();
+    await expect(page.getByRole("heading", { name: "Tren Reservasi Bulanan" })).toBeVisible();
+    await expect(page.getByLabel("Minggu 27 April 2026: 20 reservasi, Rp12.800.000")).toBeVisible();
+    await page.getByRole("button", { name: "Tahunan" }).click();
+    await expect(page.getByRole("heading", { name: "Tren Reservasi Tahunan" })).toBeVisible();
+    await expect(page.getByLabel("Mei 2026: 20 reservasi, Rp12.800.000")).toBeVisible();
+    await page.getByRole("button", { name: "Mingguan" }).click();
+    await expect(page.getByText("Disetujui: 8")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Log Audit Terbaru" })).toBeVisible();
-    await expect(page.getByText("admin@ipb.ac.id melakukan review.admin_deleted")).toBeVisible();
+    await expect(page.getByText("admin@ipb.ac.id - review admin deleted")).toHaveCount(10);
+    await expect(page.getByRole("link", { name: "Lihat semua log" })).toHaveAttribute(
+      "href",
+      "/super-admin/reports/logs",
+    );
     await expect(page.getByRole("heading", { name: "Moderasi Ulasan" })).toBeVisible();
     await expect(page.getByText("Review kasar").filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByText("Dihapus").filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Rentang Waktu" })).toBeVisible();
+    await expect(page.getByText("Disembunyikan").filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText("Rentang Waktu")).toBeVisible();
     await expect(page.getByRole("button", { name: "Ekspor Laporan ditunda" })).toBeVisible();
 
     if (isMobile) {
@@ -190,5 +235,20 @@ test.describe("super admin facilities and reports pages", () => {
     }
 
     await expectPageScreenshot(page, `super-admin-reports-${isMobile ? "mobile" : "desktop"}`);
+  });
+
+  test("opens the super admin full audit log page", async ({ page }) => {
+    await authenticateSuperAdmin(page);
+    await mockReports(page);
+    await page.goto("/super-admin/reports/logs");
+
+    await expect(page.getByRole("heading", { exact: true, name: "Log Audit" })).toBeVisible();
+    await expect(page.getByText("12 log")).toBeVisible();
+    await expect(page.getByText("admin@ipb.ac.id - review admin deleted")).toHaveCount(12);
+    await expect(page.getByText(/review-12/)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Kembali ke Laporan" })).toHaveAttribute(
+      "href",
+      "/super-admin/reports",
+    );
   });
 });

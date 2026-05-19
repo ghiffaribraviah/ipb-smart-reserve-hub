@@ -82,10 +82,28 @@ async function mockStudentHomeDiscovery(page: import("@playwright/test").Page) {
   });
 }
 
+async function authenticateStudent(page: import("@playwright/test").Page) {
+  await page.route("http://localhost:8000/auth/me", async (route) => {
+    await route.fulfill({
+      json: {
+        email: "student@apps.ipb.ac.id",
+        full_name: "Student Aktif",
+        id: "student-1",
+        is_active: true,
+        role: "student",
+      },
+    });
+  });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("ipb-srh-token", "e2e-student-token");
+  });
+}
+
 test.describe("student home page", () => {
   test("matches the student home reference", async ({ page }, testInfo) => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
+    await authenticateStudent(page);
     await mockStudentHomeDiscovery(page);
     await page.goto("/student");
 
@@ -113,6 +131,7 @@ test.describe("student home page", () => {
     );
     await expect(page.getByText("Kapasitas: 1,200")).toBeVisible();
     await expect(page.getByText("Rp 100k / sesi")).toBeVisible();
+    await expect(page.getByPlaceholder("Kapasitas")).toHaveAttribute("min", "0");
     await expect(page.getByRole("link", { name: /Grand Auditorium/ })).toContainText("(128 ulasan)");
     await expect(page.getByRole("contentinfo")).toContainText(
       "© 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.",

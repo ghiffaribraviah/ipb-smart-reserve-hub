@@ -32,6 +32,7 @@
 
 - Primary actions: open facility detail.
 - Secondary actions: search, category filter, capacity filter, sort, paginate.
+- Filter behavior: minimum capacity is clamped to `0` in the UI and before calling the catalog endpoint.
 - Loading state: stable card grid skeleton.
 - Empty state: no-results panel using shared state style.
 - Error state: retry catalog query.

@@ -80,9 +80,7 @@ export function LoginPage() {
           <label className="text-sm font-semibold text-[#2D3748]" htmlFor="login-password">
             Kata Sandi
           </label>
-          <a className="text-sm font-medium text-[#0A9361] no-underline" href="#">
-            Lupa kata sandi?
-          </a>
+          <span className="text-sm font-medium text-[#718096]">Hubungi admin</span>
         </div>
         <div className="relative mb-6">
           <span className="absolute left-4 top-1/2 flex -translate-y-1/2 text-[#718096]">

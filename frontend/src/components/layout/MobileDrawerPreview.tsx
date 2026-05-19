@@ -78,7 +78,7 @@ export function MobileDrawerPreview() {
                     isGreen && "bg-[#e8f5e9] text-[#0f9d58]",
                     isSuper && "bg-[#e8f5e9] text-[#0f9d58]",
                   )}
-                  href="#"
+                  href={item.href}
                   key={item.key}
                 >
                   <span className="flex w-6 justify-center">
@@ -93,7 +93,7 @@ export function MobileDrawerPreview() {
           <div className="mt-auto border-t border-[#e5e7eb] pt-4">
             <a
               className="flex items-center gap-3 rounded-[10px] px-2.5 py-3 text-sm font-bold text-[#dc2626] no-underline"
-              href="#"
+              href="/login"
             >
               <span className="flex w-6 justify-center">
                 <LogOut aria-hidden="true" size={18} />

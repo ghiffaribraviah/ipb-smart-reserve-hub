@@ -311,7 +311,7 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("Admin Nonaktif")[0]).toBeVisible();
     expect(screen.getAllByText("Grand Auditorium")[0]).toBeVisible();
     expect(screen.getAllByText("Butuh Staff")[0]).toBeVisible();
-    expect(screen.getByText("admin@ipb.ac.id melakukan staff_assignment.created")).toBeVisible();
+    expect(screen.getByText("admin@ipb.ac.id menambahkan penugasan staff")).toBeVisible();
     expect(screen.queryByText(/↑/)).not.toBeInTheDocument();
 
     await waitFor(() => {
@@ -521,6 +521,9 @@ describe("SuperAdminDashboardPage", () => {
       if (url === "http://localhost:8000/admin/facilities/governance") {
         return jsonResponse(facilityGovernanceResponse);
       }
+      if (url === "http://localhost:8000/admin/users?role=staff&is_active=true&page=1&page_size=100") {
+        return jsonResponse({ ...usersResponse, items: [usersResponse.items[1]], total: 1 });
+      }
 
       return jsonResponse({ detail: `Unhandled ${url}` }, 404);
     });
@@ -534,9 +537,9 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("Lab Arsip")[0]).toBeVisible();
     expect(screen.getAllByText("Butuh Staff")[0]).toBeVisible();
     expect(screen.getAllByText("Nonaktif")[0]).toBeVisible();
-    expect(screen.getAllByRole("link", { name: "Edit detail Grand Auditorium" })[0]).toHaveAttribute(
-      "href",
-      "/super-admin/facilities/facility-1/edit",
+    expect(screen.getAllByRole("button", { name: "Edit detail Grand Auditorium" })[0]).toHaveAttribute(
+      "aria-disabled",
+      "true",
     );
     expect(screen.getAllByRole("button", { name: "Arsipkan Grand Auditorium" })[0]).toHaveAttribute(
       "aria-disabled",
@@ -561,6 +564,13 @@ describe("SuperAdminDashboardPage", () => {
       if (url === "http://localhost:8000/admin/facilities/governance" && !init?.method) {
         return jsonResponse(facilityGovernanceResponse);
       }
+      if (url === "http://localhost:8000/admin/users?role=staff&is_active=true&page=1&page_size=100") {
+        return jsonResponse({
+          ...usersResponse,
+          items: [{ ...usersResponse.items[1], id: "staff-9", full_name: "Staff Arsip", email: "staff-arsip@ipb.ac.id" }],
+          total: 1,
+        });
+      }
 
       if (url === "http://localhost:8000/admin/facilities/facility-2/staff-assignments/staff-9") {
         return init?.method === "PUT"
@@ -573,7 +583,7 @@ describe("SuperAdminDashboardPage", () => {
 
     renderFacilities();
 
-    await user.type(await screen.findByLabelText("Staff ID untuk Lab Arsip"), "staff-9");
+    await user.selectOptions(await screen.findByLabelText("Pilih staff untuk Lab Arsip"), "staff-9");
     await user.click(screen.getByRole("button", { name: "Tugaskan staff ke Lab Arsip" }));
     expect(await screen.findByText("Penugasan staff diperbarui.")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Hapus staff dari Lab Arsip" }));
@@ -642,11 +652,11 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getByText("Rp12.800.000")).toBeVisible();
     expect(screen.getByText("approved: 8")).toBeVisible();
     expect(screen.getByLabelText("2026-05-02: 15 reservasi, Rp8.800.000")).toBeVisible();
-    expect(screen.getByText("admin@ipb.ac.id melakukan review.admin_deleted")).toBeVisible();
+    expect(screen.getByText("admin@ipb.ac.id - review admin deleted")).toBeVisible();
     expect(screen.getAllByText(/2 Mei 2026/)[0]).toBeVisible();
     expect(screen.getAllByText("Ruang bersih dan nyaman.")[0]).toBeVisible();
     expect(screen.getAllByText("Review kasar")[0]).toBeVisible();
-    expect(screen.getAllByText("Dihapus")[0]).toBeVisible();
+    expect(screen.getAllByText("Disembunyikan")[0]).toBeVisible();
     expect(screen.getByRole("button", { name: "Ekspor Laporan ditunda" })).toHaveAttribute("aria-disabled", "true");
 
     await user.clear(screen.getByLabelText("Tanggal mulai laporan"));
@@ -693,7 +703,7 @@ describe("SuperAdminDashboardPage", () => {
 
     renderReports();
 
-    await user.click((await screen.findAllByRole("button", { name: "Hapus review review-1" }))[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Sembunyikan review review-1" }))[0]);
     expect(await screen.findByText("Moderasi ulasan diperbarui.")).toBeVisible();
     await user.click(screen.getAllByRole("button", { name: "Pulihkan review review-2" })[0]);
 

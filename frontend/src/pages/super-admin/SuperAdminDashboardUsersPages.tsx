@@ -259,6 +259,10 @@ function fetchAdminUsers(filters: UserFilters) {
   return apiRequest<AdminUsersResponse>(adminUsersPath(filters));
 }
 
+function fetchActiveStaffUsers() {
+  return fetchAdminUsers({ isActive: "true", page: 1, pageSize: 100, role: "staff", search: "" });
+}
+
 function createAdminUser(body: { email: string; full_name: string; is_active: boolean; password: string; role: string }) {
   return apiRequest<AdminUserResponse>("/admin/users", { body, method: "POST" });
 }
@@ -438,10 +442,20 @@ function SuperButton({
           ? "border-[#0f9d58] bg-[#0f9d58] text-white"
           : "border-[#e5e7eb] bg-white text-[#111827]",
       )}
+      disabled={deferred}
       type="button"
     >
       {children}
     </button>
+  );
+}
+
+function tableActionButtonClass(tone: "danger" | "primary" | "secondary" = "primary") {
+  return cn(
+    "inline-flex min-h-9 items-center justify-center rounded-md border px-3 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-[#0f9d58] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
+    tone === "primary" && "border-[#bbf7d0] bg-[#f0fdf4] text-[#047857] hover:bg-[#dcfce7]",
+    tone === "secondary" && "border-[#e5e7eb] bg-[#f8fafc] text-[#6b7280] hover:bg-[#f3f4f6]",
+    tone === "danger" && "border-[#fecaca] bg-[#fef2f2] text-[#b91c1c] hover:bg-[#fee2e2]",
   );
 }
 
@@ -485,6 +499,7 @@ function StatusBadge({ status }: { status: string }) {
         "inline-flex rounded-full px-2.5 py-1 text-xs font-bold",
         status === "Aktif" && "bg-[#d1fae5] text-[#047857]",
         status === "Nonaktif" && "bg-[#fee2e2] text-[#b91c1c]",
+        status === "Disembunyikan" && "bg-[#fee2e2] text-[#b91c1c]",
         (status === "Butuh Staff" || status === "Perlu Aksi" || status === "Perlu Tinjauan") &&
           "bg-[#fef3c7] text-[#b45309]",
         status === "Baru" && "bg-[#dff4ff] text-[#0284c7]",
@@ -531,7 +546,20 @@ function formatAuditTime(value: string) {
 
 function dashboardActivityText(item: SuperAdminAuditLogResponse) {
   const actor = item.actor_email ?? "Sistem";
-  return `${actor} melakukan ${item.action_type}`;
+  return `${actor} ${auditActionLabel(item.action_type).toLowerCase()}`;
+}
+
+function auditActionLabel(actionType: string) {
+  const labels: Record<string, string> = {
+    "review.deleted": "Menyembunyikan ulasan",
+    "review.restored": "Memulihkan ulasan",
+    "staff_assignment.created": "Menambahkan penugasan staff",
+    "staff_assignment.removed": "Menghapus penugasan staff",
+    "user.activated": "Mengaktifkan pengguna",
+    "user.created": "Membuat pengguna",
+    "user.deactivated": "Menonaktifkan pengguna",
+  };
+  return labels[actionType] ?? actionType.replaceAll("_", " ").replaceAll(".", " ");
 }
 
 function roleLabel(role: string) {
@@ -872,7 +900,12 @@ export function SuperAdminFacilitiesPage() {
     queryFn: fetchFacilityGovernance,
     queryKey: ["super-admin", "facility-governance"],
   });
+  const staffUsersQuery = useQuery({
+    queryFn: fetchActiveStaffUsers,
+    queryKey: ["super-admin", "staff-options"],
+  });
   const facilities = governanceQuery.data ?? [];
+  const staffOptions = staffUsersQuery.data?.items ?? [];
   const activeFacilities = facilities.filter((facility) => facility.is_active).length;
   const needsStaff = facilities.filter((facility) => facility.assignment_coverage === "needs_staff").length;
   const activeAssignedStaff = facilities.reduce(
@@ -952,7 +985,7 @@ export function SuperAdminFacilitiesPage() {
         ) : null}
 
         <div className="mt-7 grid gap-7">
-          <SectionCard link="Lihat Semua" title="Daftar Fasilitas">
+          <SectionCard link="Lihat Semua" linkHref="/super-admin/facilities" title="Daftar Fasilitas">
             <table className="w-full border-collapse max-md:hidden">
               <thead className="bg-[#f9fafb] text-left text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
                 <tr>
@@ -991,20 +1024,23 @@ export function SuperAdminFacilitiesPage() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="grid gap-2">
-                        <a
+                        <button
+                          aria-disabled="true"
                           aria-label={`Edit detail ${facility.name}`}
-                          className="text-sm font-bold text-[#0f9d58] no-underline"
-                          href={`/super-admin/facilities/${facility.id}/edit`}
+                          className={tableActionButtonClass("secondary")}
+                          disabled
+                          type="button"
                         >
-                          Edit Detail
-                        </a>
+                          Edit detail
+                        </button>
                         <button
                           aria-disabled="true"
                           aria-label={`Arsipkan ${facility.name}`}
-                          className="text-left text-sm font-bold text-[#6b7280]"
+                          className={tableActionButtonClass("secondary")}
+                          disabled
                           type="button"
                         >
-                          Arsipkan ditunda
+                          Arsipkan
                         </button>
                       </div>
                     </td>
@@ -1034,20 +1070,23 @@ export function SuperAdminFacilitiesPage() {
                   </UserField>
                   <UserField label="Aksi">
                     <div className="grid gap-2">
-                      <a
+                      <button
+                        aria-disabled="true"
                         aria-label={`Edit detail ${facility.name}`}
-                        className="text-sm font-bold text-[#0f9d58] no-underline"
-                        href={`/super-admin/facilities/${facility.id}/edit`}
+                        className={tableActionButtonClass("secondary")}
+                        disabled
+                        type="button"
                       >
-                        Edit Detail
-                      </a>
+                        Edit detail
+                      </button>
                       <button
                         aria-disabled="true"
                         aria-label={`Arsipkan ${facility.name}`}
-                        className="text-left text-sm font-bold text-[#6b7280]"
+                        className={tableActionButtonClass("secondary")}
+                        disabled
                         type="button"
                       >
-                        Arsipkan ditunda
+                        Arsipkan
                       </button>
                     </div>
                   </UserField>
@@ -1091,15 +1130,24 @@ export function SuperAdminFacilitiesPage() {
                         {facility.active_assigned_staff_count}/{facility.assigned_staff_count} aktif
                       </p>
                     </div>
-                    <input
-                      aria-label={`Staff ID untuk ${facility.name}`}
+                    <select
+                      aria-label={`Pilih staff untuk ${facility.name}`}
                       className="min-h-10 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
                       onChange={(event) =>
                         setStaffInputs((current) => ({ ...current, [facility.id]: event.target.value }))
                       }
-                      placeholder="staff-id"
+                      disabled={staffUsersQuery.isLoading}
                       value={staffInputs[facility.id] ?? ""}
-                    />
+                    >
+                      <option value="">
+                        {staffUsersQuery.isLoading ? "Memuat staff..." : "Pilih staff aktif"}
+                      </option>
+                      {staffOptions.map((staff) => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.full_name} - {staff.email}
+                        </option>
+                      ))}
+                    </select>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         aria-label={`Tugaskan staff ke ${facility.name}`}
@@ -1170,11 +1218,16 @@ export function SuperAdminReportsPage() {
   const [range, setRange] = useState<ReportDateRange>({ end: "2026-05-31", start: "2026-05-01" });
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
+  const rangeError = range.start && range.end && range.start > range.end
+    ? "Tanggal mulai tidak boleh setelah tanggal akhir."
+    : "";
   const aggregateQuery = useQuery({
+    enabled: !rangeError,
     queryFn: () => fetchReportAggregate(range),
     queryKey: ["super-admin", "reports", "aggregate", range],
   });
   const auditQuery = useQuery({
+    enabled: !rangeError,
     queryFn: () => fetchAdminAuditLogs(range),
     queryKey: ["super-admin", "reports", "audit", range],
   });
@@ -1207,7 +1260,9 @@ export function SuperAdminReportsPage() {
           description="Ringkasan reservasi, log audit, dan moderasi ulasan untuk pengawasan lintas platform."
           title="Laporan"
         >
-          <SuperButton>Rentang Waktu</SuperButton>
+          <span className="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-[#e5e7eb] bg-white px-5 text-sm font-bold text-[#111827] max-md:min-h-11 max-md:w-full max-md:px-3 max-md:text-[13px]">
+            Rentang Waktu
+          </span>
           <SuperButton deferred>Ekspor Laporan ditunda</SuperButton>
         </PageHeader>
 
@@ -1226,6 +1281,11 @@ export function SuperAdminReportsPage() {
             type="date"
             value={range.end}
           />
+          {rangeError ? (
+            <p className="col-span-2 m-0 text-sm font-semibold text-[#b91c1c] max-md:col-span-1">
+              {rangeError}
+            </p>
+          ) : null}
         </section>
 
         <section className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-md:grid-cols-1">
@@ -1262,7 +1322,7 @@ export function SuperAdminReportsPage() {
         ) : null}
 
         <div className="mt-7 grid grid-cols-[1.4fr_1fr] gap-7 max-lg:grid-cols-1">
-          <SectionCard link="Detail" title="Tren Reservasi Mingguan">
+          <SectionCard link="" title="Tren Reservasi Mingguan">
             {aggregate?.trend.length ? <TrendChart points={aggregate.trend} /> : null}
             {aggregateQuery.isLoading ? (
               <div className="border-t border-[#e5e7eb] p-6 text-sm font-semibold text-[#6b7280]">
@@ -1293,7 +1353,7 @@ export function SuperAdminReportsPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="m-0 break-words text-sm font-bold">
-                      {item.actor_email ?? "Sistem"} melakukan {item.action_type}
+                      {item.actor_email ?? "Sistem"} - {auditActionLabel(item.action_type)}
                     </p>
                     <p className="m-0 mt-1 break-words text-xs text-[#6b7280]">{formatAuditTime(item.created_at)}</p>
                   </div>
@@ -1311,9 +1371,7 @@ export function SuperAdminReportsPage() {
         <section className="mt-7 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:border-0 max-md:bg-transparent max-md:shadow-none">
           <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[#e5e7eb] px-6 max-md:min-h-12 max-md:border-0 max-md:px-0">
             <h2 className="m-0 text-lg font-bold text-[#111827]">Moderasi Ulasan</h2>
-            <a className="text-sm font-bold text-[#0f9d58] no-underline" href="#">
-              Lihat Semua
-            </a>
+            <span className="text-sm font-bold text-[#6b7280]">Semua ulasan termuat</span>
           </div>
           <table className="w-full border-collapse max-md:hidden">
             <thead className="bg-[#f9fafb] text-left text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
@@ -1334,18 +1392,18 @@ export function SuperAdminReportsPage() {
                     </p>
                   </td>
                   <td className="px-5 py-4">{row.facility_name}</td>
-                  <td className="px-5 py-4"><StatusBadge status={row.is_deleted ? "Dihapus" : "Aktif"} /></td>
+                  <td className="px-5 py-4"><StatusBadge status={row.is_deleted ? "Disembunyikan" : "Aktif"} /></td>
                   <td className="px-5 py-4">
                     <button
-                      aria-label={`${row.is_deleted ? "Pulihkan" : "Hapus"} review ${row.id}`}
-                      className="text-sm font-bold text-[#0f9d58]"
+                      aria-label={`${row.is_deleted ? "Pulihkan" : "Sembunyikan"} review ${row.id}`}
+                      className={tableActionButtonClass(row.is_deleted ? "primary" : "danger")}
                       disabled={reviewMutation.isPending}
                       onClick={() =>
                         reviewMutation.mutate({ action: row.is_deleted ? "restore" : "delete", reviewId: row.id })
                       }
                       type="button"
                     >
-                      {row.is_deleted ? "Pulihkan" : "Hapus"}
+                      {row.is_deleted ? "Pulihkan" : "Sembunyikan"}
                     </button>
                   </td>
                 </tr>
@@ -1362,18 +1420,18 @@ export function SuperAdminReportsPage() {
                   </span>
                 </UserField>
                 <UserField label="Fasilitas">{row.facility_name}</UserField>
-                <UserField label="Status"><StatusBadge status={row.is_deleted ? "Dihapus" : "Aktif"} /></UserField>
+                <UserField label="Status"><StatusBadge status={row.is_deleted ? "Disembunyikan" : "Aktif"} /></UserField>
                 <UserField label="Aksi">
                   <button
-                    aria-label={`${row.is_deleted ? "Pulihkan" : "Hapus"} review ${row.id}`}
-                    className="text-sm font-bold text-[#0f9d58]"
+                    aria-label={`${row.is_deleted ? "Pulihkan" : "Sembunyikan"} review ${row.id}`}
+                    className={tableActionButtonClass(row.is_deleted ? "primary" : "danger")}
                     disabled={reviewMutation.isPending}
                     onClick={() =>
                       reviewMutation.mutate({ action: row.is_deleted ? "restore" : "delete", reviewId: row.id })
                     }
                     type="button"
                   >
-                    {row.is_deleted ? "Pulihkan" : "Hapus"}
+                    {row.is_deleted ? "Pulihkan" : "Sembunyikan"}
                   </button>
                 </UserField>
               </article>
@@ -1398,18 +1456,20 @@ export function SuperAdminReportsPage() {
 function SectionCard({
   children,
   link,
+  linkHref,
   title,
 }: {
   children: ReactNode;
   link: string;
+  linkHref?: string;
   title: string;
 }) {
   return (
     <section className="relative overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
       <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[#e5e7eb] px-6 max-md:px-5">
         <h2 className="m-0 text-lg font-bold text-[#111827] max-md:max-w-[180px]">{title}</h2>
-        {link ? (
-          <a className="text-sm font-bold text-[#0f9d58] no-underline" href="#">
+        {link && linkHref ? (
+          <a className="text-sm font-bold text-[#0f9d58] no-underline" href={linkHref}>
             {link}
           </a>
         ) : null}
@@ -1493,7 +1553,7 @@ export function SuperAdminDashboardPage() {
         </section>
 
         <div className="mt-8 grid grid-cols-[2fr_1fr] gap-8 max-lg:grid-cols-1 max-md:gap-6">
-          <SectionCard link="Lihat Semua" title="Administrator Departemen">
+          <SectionCard link="Lihat Semua" linkHref="/super-admin/users" title="Administrator Departemen">
             <table className="w-full border-collapse max-md:hidden">
               <thead className="bg-[#f9fafb] text-left text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
                 <tr>
@@ -1550,7 +1610,7 @@ export function SuperAdminDashboardPage() {
           <section className="relative overflow-hidden rounded-xl border border-[#dbeafe] bg-[#f8fafc] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
             <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[#dbeafe] px-6 max-md:px-5">
               <h2 className="m-0 text-lg font-bold text-[#111827] max-md:max-w-[180px]">Log Aktivitas Sistem</h2>
-              <a className="text-sm font-bold text-[#0f9d58] no-underline" href="#">
+              <a className="text-sm font-bold text-[#0f9d58] no-underline" href="/super-admin/reports">
                 Log Lengkap
               </a>
             </div>
@@ -1578,7 +1638,7 @@ export function SuperAdminDashboardPage() {
         </div>
 
         <div className="mt-8">
-        <SectionCard link="Kelola Fasilitas" title="Tata Kelola Fasilitas">
+        <SectionCard link="Kelola Fasilitas" linkHref="/super-admin/facilities" title="Tata Kelola Fasilitas">
           <table className="w-full border-collapse max-md:hidden">
             <thead className="bg-[#f9fafb] text-left text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
               <tr>
@@ -1818,9 +1878,7 @@ export function SuperAdminUsersPage() {
         <section className="mt-6 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:border-0 max-md:bg-transparent max-md:shadow-none">
           <div className="flex min-h-[88px] items-center justify-between gap-4 border-b border-[#e5e7eb] px-6 max-md:min-h-12 max-md:border-0 max-md:px-0">
             <h2 className="m-0 text-lg font-bold text-[#111827]">Daftar Pengguna</h2>
-            <a className="text-sm font-bold text-[#0f9d58] no-underline" href="#">
-              Filter Lanjutan
-            </a>
+            <span className="text-sm font-bold text-[#6b7280]">Filter standar aktif</span>
           </div>
           <table className="w-full border-collapse max-md:hidden">
             <thead className="bg-[#f9fafb] text-left text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
@@ -1846,7 +1904,7 @@ export function SuperAdminUsersPage() {
                   <td className="px-5 py-4">
                     <button
                       aria-label={`Ubah status ${user.full_name}`}
-                      className="text-sm font-bold text-[#0f9d58]"
+                      className={tableActionButtonClass(user.is_active ? "danger" : "primary")}
                       disabled={busy}
                       onClick={() => statusMutation.mutate({ active: !user.is_active, userId: user.id })}
                       type="button"
@@ -1872,7 +1930,7 @@ export function SuperAdminUsersPage() {
                 <UserField label="Aksi">
                   <button
                     aria-label={`Ubah status ${user.full_name}`}
-                    className="text-sm font-bold text-[#0f9d58]"
+                    className={tableActionButtonClass(user.is_active ? "danger" : "primary")}
                     disabled={busy}
                     onClick={() => statusMutation.mutate({ active: !user.is_active, userId: user.id })}
                     type="button"

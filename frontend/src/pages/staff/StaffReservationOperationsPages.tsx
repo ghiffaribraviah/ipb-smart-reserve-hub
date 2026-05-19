@@ -339,13 +339,13 @@ export function StaffHomePage() {
             <h2 className="m-0 text-lg font-bold text-[#111827] max-md:text-xl">
               Pengajuan Reservasi
             </h2>
-            <button
-              className="inline-flex items-center gap-2 rounded-md border border-[#e5e7eb] bg-white px-4 py-2 text-[13px] font-bold text-[#6b7280]"
-              type="button"
+            <a
+              className="inline-flex items-center gap-2 rounded-md border border-[#e5e7eb] bg-white px-4 py-2 text-[13px] font-bold text-[#6b7280] no-underline"
+              href="/staff/reservations"
             >
               <Filter aria-hidden="true" size={15} />
               Filter
-            </button>
+            </a>
           </div>
 
           <table className="w-full border-collapse text-left max-md:block">
@@ -422,7 +422,8 @@ export function StaffHomePage() {
                 Sebelumnya
               </button>
               <button
-                className="rounded-md border border-[#e5e7eb] bg-white px-4 py-2 text-[13px] font-semibold text-[#111827]"
+                className="rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-4 py-2 text-[13px] font-semibold text-[#9ca3af]"
+                disabled
                 type="button"
               >
                 Berikutnya
@@ -603,7 +604,8 @@ export function StaffReservationListPage() {
                 Sebelumnya
               </button>
               <button
-                className="rounded-md border border-[#e5e7eb] bg-white px-4 py-2 text-[13px] font-semibold text-[#111827]"
+                className="rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-4 py-2 text-[13px] font-semibold text-[#9ca3af]"
+                disabled
                 type="button"
               >
                 Berikutnya

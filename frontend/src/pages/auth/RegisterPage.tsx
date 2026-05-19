@@ -40,14 +40,25 @@ export function RegisterPage() {
 
   function validateForm() {
     const nextErrors: RegisterErrors = {};
+    const normalizedEmail = form.email.trim().toLowerCase();
+    const normalizedNim = form.nim.trim().toUpperCase();
+    const normalizedPhone = form.phone.trim();
 
     if (!form.fullName.trim()) nextErrors.fullName = "Nama lengkap wajib diisi.";
-    if (!form.nim.trim()) nextErrors.nim = "NIM wajib diisi.";
-    if (!form.phone.trim()) nextErrors.phone = "Nomor telepon wajib diisi.";
-    if (!form.email.trim()) {
+    if (!normalizedNim) {
+      nextErrors.nim = "NIM wajib diisi.";
+    } else if (!/^[A-Z][0-9]{7,12}$/.test(normalizedNim)) {
+      nextErrors.nim = "Gunakan format NIM IPB, contoh G64190011.";
+    }
+    if (!normalizedPhone) {
+      nextErrors.phone = "Nomor telepon wajib diisi.";
+    } else if (!/^08[0-9]{8,13}$/.test(normalizedPhone)) {
+      nextErrors.phone = "Nomor telepon harus diawali 08 dan berisi 10-15 digit.";
+    }
+    if (!normalizedEmail) {
       nextErrors.email = "Email kampus wajib diisi.";
-    } else if (!form.email.endsWith("@apps.ipb.ac.id")) {
-      nextErrors.email = "Gunakan email aktif dengan domain @apps.ipb.ac.id.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      nextErrors.email = "Gunakan format email yang valid.";
     }
     if (form.password.length < 8) {
       nextErrors.password = "Kata sandi minimal 8 karakter.";
@@ -76,11 +87,11 @@ export function RegisterPage() {
     try {
       await apiRequest("/auth/register", {
         body: {
-          email: form.email,
-          full_name: form.fullName,
-          nim: form.nim,
+          email: form.email.trim().toLowerCase(),
+          full_name: form.fullName.trim(),
+          nim: form.nim.trim().toUpperCase(),
           password: form.password,
-          phone: form.phone,
+          phone: form.phone.trim(),
         },
         method: "POST",
       });
@@ -123,7 +134,7 @@ export function RegisterPage() {
         </div>
       ) : null}
 
-      <form className="grid gap-5" onSubmit={handleSubmit}>
+      <form className="grid gap-5" noValidate onSubmit={handleSubmit}>
         <fieldset className="m-0 grid gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4 max-md:p-3.5">
           <legend className="px-1 text-sm font-bold text-[#2D3748]">Data Identitas</legend>
           <AuthField
@@ -151,12 +162,12 @@ export function RegisterPage() {
             />
             <AuthField
               autoComplete="email"
-              error={errors.email ?? (showError ? "Gunakan email aktif dengan domain @apps.ipb.ac.id." : undefined)}
+              error={errors.email ?? (showError ? "Gunakan email aktif dengan domain yang diizinkan." : undefined)}
               icon={<Mail aria-hidden="true" size={18} />}
               id="register-email"
               label="Email Kampus"
               onChange={(event) => updateField("email", event.target.value)}
-              placeholder="@apps.ipb.ac.id"
+              placeholder="nama@domain.ac.id"
               type="email"
               value={form.email}
             />

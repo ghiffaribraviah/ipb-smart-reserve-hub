@@ -392,11 +392,13 @@ export function StaffFacilityListPage() {
             </p>
           </div>
           <button
+            aria-disabled="true"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#0f9d58] px-5 text-sm font-bold text-white max-md:w-full"
+            disabled
             type="button"
           >
             <Plus aria-hidden="true" size={18} />
-            Aksi tambah ditunda
+            Tambah Fasilitas
           </button>
         </section>
 

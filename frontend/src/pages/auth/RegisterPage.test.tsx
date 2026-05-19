@@ -74,16 +74,16 @@ describe("RegisterPage", () => {
     expect(screen.getByText("Sudah punya akun?")).toBeVisible();
   });
 
-  it("catches invalid campus email domains before submit", async () => {
+  it("catches invalid email formats before submit", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch");
 
     renderRegister();
     const user = await fillValidForm();
     await user.clear(screen.getByLabelText("Email Kampus"));
-    await user.type(screen.getByLabelText("Email Kampus"), "nadia@example.com");
+    await user.type(screen.getByLabelText("Email Kampus"), "nadia");
     await user.click(screen.getByRole("button", { name: /Buat Akun/ }));
 
-    expect(await screen.findByText("Gunakan email aktif dengan domain @apps.ipb.ac.id.")).toBeVisible();
+    expect(await screen.findByText("Gunakan format email yang valid.")).toBeVisible();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

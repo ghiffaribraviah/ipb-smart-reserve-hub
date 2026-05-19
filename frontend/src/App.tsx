@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { RequireRole } from "./auth/session";
+import { StaffProfilePage, SuperAdminProfilePage } from "./pages/account/AccountProfilePage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
 import { StudentFacilityCatalogPage } from "./pages/student/StudentFacilityCatalogPage";
@@ -64,6 +65,7 @@ export function App() {
       <Route element={<RequireRole allow={["student"]}><StudentFacilityCatalogPage /></RequireRole>} path="/student/facilities" />
       <Route element={<RequireRole allow={["student"]}><StudentReservationListPage /></RequireRole>} path="/student/reservations" />
       <Route element={<RequireRole allow={["staff"]}><StaffHomePage /></RequireRole>} path="/staff" />
+      <Route element={<RequireRole allow={["staff"]}><StaffProfilePage /></RequireRole>} path="/staff/profile" />
       <Route element={<RequireRole allow={["staff"]}><StaffReservationListPage /></RequireRole>} path="/staff/reservations" />
       <Route
         element={<RequireRole allow={["staff"]}><StaffReviewDecisionPage /></RequireRole>}
@@ -77,6 +79,7 @@ export function App() {
         path="/staff/facilities/:facilityId/schedule"
       />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminDashboardPage /></RequireRole>} path="/super-admin" />
+      <Route element={<RequireRole allow={["super_admin"]}><SuperAdminProfilePage /></RequireRole>} path="/super-admin/profile" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminUsersPage /></RequireRole>} path="/super-admin/users" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminFacilitiesPage /></RequireRole>} path="/super-admin/facilities" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminReportsPage /></RequireRole>} path="/super-admin/reports" />

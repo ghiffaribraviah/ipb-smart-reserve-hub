@@ -8,7 +8,7 @@ type AuthLayoutProps = {
 export function AuthLayout({ children, maxWidth = "420px" }: AuthLayoutProps) {
   return (
     <main className="min-h-screen bg-white text-[#2D3748] md:flex">
-      <section className="relative flex min-h-screen flex-1 flex-col items-center justify-center overflow-hidden bg-white px-8 py-8 max-md:block max-md:bg-[#F8FAFC] max-md:px-5 max-md:pb-6 max-md:pt-[132px]">
+      <section className="relative flex min-h-screen flex-1 flex-col items-center justify-center overflow-y-auto overflow-x-hidden bg-white px-8 py-10 max-md:block max-md:bg-[#F8FAFC] max-md:px-5 max-md:pb-6 max-md:pt-[132px]">
         <div
           aria-hidden="true"
           className="absolute inset-x-0 top-0 hidden h-[230px] bg-[linear-gradient(135deg,rgba(6,78,59,0.92),rgba(10,147,97,0.72),rgba(217,180,93,0.48))] max-md:block"
@@ -25,16 +25,16 @@ export function AuthLayout({ children, maxWidth = "420px" }: AuthLayoutProps) {
         >
           {children}
         </div>
-        <footer className="relative z-10 mt-8 w-full text-center text-xs text-[#718096] max-md:mt-[22px] max-md:px-2">
+        <footer className="relative z-10 mt-10 w-full shrink-0 text-center text-xs text-[#718096] max-md:mt-[22px] max-md:px-2">
           © 2026 IPB Smart Reserve Hub.
           <div className="mt-1 flex items-center justify-center gap-2 max-md:hidden">
-            <a className="text-[#718096] no-underline" href="#">
+            <span className="text-[#718096]">
               Protokol Keamanan
-            </a>
+            </span>
             <span>-</span>
-            <a className="text-[#718096] no-underline" href="#">
+            <span className="text-[#718096]">
               Ketentuan Akses
-            </a>
+            </span>
           </div>
         </footer>
       </section>

@@ -35,6 +35,8 @@ class AcademicProfileDeriver:
 def _derive_entry_year(nim: str) -> int | None:
     if len(nim) < 5 or not nim[3:5].isdigit():
         return None
+    if len(nim) >= 7 and nim[3:5] == "01" and nim[6].isdigit():
+        return 2020 + int(nim[6])
     return 2000 + int(nim[3:5])
 
 

@@ -86,9 +86,9 @@ export const drawerFixture = {
   activeSuper: "super-system",
   profile: shellFixtures[2].profile,
   nav: [
-    { icon: "home", key: "student-home", label: "Beranda Mahasiswa" },
-    { icon: "building", key: "facility", label: "Fasilitas" },
-    { icon: "calendar", key: "reservation", label: "Reservasi" },
-    { icon: "settings", key: "super-system", label: "Sistem Super Admin" },
+    { href: "/student", icon: "home", key: "student-home", label: "Beranda Mahasiswa" },
+    { href: "/student/facilities", icon: "building", key: "facility", label: "Fasilitas" },
+    { href: "/student/reservations", icon: "calendar", key: "reservation", label: "Reservasi" },
+    { href: "/super-admin/system", icon: "settings", key: "super-system", label: "Sistem Super Admin" },
   ],
 } as const;

@@ -1,7 +1,7 @@
 import { CalendarDays, Check, Clock, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDownload, apiRequest } from "../../api/http";
 import {
   staffDecisionDialogFixture,
@@ -431,6 +431,7 @@ function DecisionSummaryRow({
 export function StaffReviewDecisionPage() {
   const { reservationId = staffReservationDetailFixture.detailHref.split("/").at(-2) ?? "" } = useParams();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const detailQuery = useQuery({
     queryFn: () => fetchStaffReservationDetail(reservationId),
@@ -456,6 +457,7 @@ export function StaffReviewDecisionPage() {
     onSuccess: async () => {
       setMutationError(null);
       await queryClient.invalidateQueries({ queryKey: ["staff-reservation-detail", reservationId] });
+      navigate(`/staff/reservations/${reservationId}`, { replace: true });
     },
   });
 
@@ -481,14 +483,14 @@ export function StaffReviewDecisionPage() {
       <main className="relative mx-auto mt-28 w-[1200px] max-w-[95%] max-md:mt-[88px] max-md:w-full max-md:max-w-full max-md:px-4">
         <section className="mb-7">
           <h1 className="m-0 text-[32px] font-bold leading-tight text-[#111827] max-md:text-[28px]">
-            Dialog Keputusan Review
+            Tolak Pengajuan
           </h1>
           <p className="m-0 mt-2 text-sm text-[#6b7280]">
-            Referensi modal untuk approve, reject, dan konfirmasi aksi destruktif staff.
+            Isi alasan yang jelas sebelum menolak dokumen, pembayaran, atau pembatalan.
           </p>
         </section>
 
-        <div className="grid grid-cols-[1fr_280px] gap-6 opacity-55 blur-[1px] max-md:hidden">
+        <div className="grid grid-cols-[1fr_280px] gap-6 max-md:hidden">
           <section className="min-h-[380px] rounded-xl border border-[#e5e7eb] bg-white p-7 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
             <h2 className="m-0 text-lg font-bold text-[#111827]">Detail Reservasi #RSV-2048</h2>
             <p className="m-0 mt-2 text-sm text-[#6b7280]">
@@ -520,10 +522,10 @@ export function StaffReviewDecisionPage() {
           </aside>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 top-[72px] z-[60] flex items-start justify-center bg-slate-900/40 px-5 py-16 max-md:static max-md:block max-md:bg-transparent max-md:p-0">
+        <div className="mt-8 flex items-start justify-center">
           <section
             aria-labelledby="decision-title"
-            className="w-[620px] max-w-[calc(100vw-40px)] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:w-full max-md:max-w-full"
+            className="w-[620px] max-w-full overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]"
             role="dialog"
           >
             <div className="border-b border-[#e5e7eb] p-6 max-md:p-5">

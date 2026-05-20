@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IPB Smart Reserve Hub Architecture Map</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07111d;
+        --panel: rgba(11, 22, 37, 0.92);
+        --panel-2: rgba(17, 32, 53, 0.88);
+        --panel-3: rgba(14, 27, 44, 0.76);
+        --border: rgba(126, 162, 207, 0.24);
+        --border-strong: rgba(138, 188, 255, 0.38);
+        --text: #e8f0ff;
+        --muted: #93abc8;
+        --accent: #58d7c4;
+        --accent-2: #58a6ff;
+        --warning: #f3bf64;
+        --danger: #f27f7f;
+        --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+        --card-radius: 16px;
+        --column-width: 280px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(88, 214, 196, 0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(88, 166, 255, 0.13), transparent 24%),
+          linear-gradient(180deg, #07111d 0%, #081423 40%, #07111d 100%);
+        color: var(--text);
+      }
+
+      body {
+        padding: 24px;
+      }
+
+      .page {
+        display: grid;
+        gap: 18px;
+      }
+
+      .page-header {
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(11, 22, 37, 0.92), rgba(8, 20, 35, 0.92));
+        box-shadow: var(--shadow);
+        padding: 24px 26px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .header-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .header-card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--panel-3);
+        padding: 14px 15px;
+      }
+
+      .presentation-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 18px;
+        align-items: start;
+      }
+
+      main {
+        min-width: 0;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .hero {
+        display: grid;
+        gap: 14px;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+        line-height: 1.1;
+      }
+
+      .hero p {
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 14px;
+      }
+
+      .meta-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .meta-row {
+        background: var(--panel-3);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+
+      .meta-row strong {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--border);
+        background: rgba(88, 166, 255, 0.08);
+        color: #d6e7ff;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      .section {
+        display: grid;
+        gap: 12px;
+      }
+
+      .section h2 {
+        font-size: 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .flow-list,
+      .assumption-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .flow-button,
+      .action-button {
+        width: 100%;
+        text-align: left;
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        cursor: pointer;
+        transition: 140ms ease;
+      }
+
+      .flow-button:hover,
+      .action-button:hover,
+      .card:hover {
+        transform: translateY(-1px);
+        border-color: var(--border-strong);
+      }
+
+      .flow-button.active {
+        border-color: rgba(88, 214, 196, 0.56);
+        background: rgba(88, 214, 196, 0.12);
+        box-shadow: 0 0 0 1px rgba(88, 214, 196, 0.16) inset;
+      }
+
+      .flow-button strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .flow-button span,
+      .assumption-list p,
+      .detail-panel p,
+      .detail-panel li {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .assumption-card {
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--warning);
+        background: rgba(243, 191, 100, 0.07);
+        border-radius: 12px;
+        padding: 12px 13px;
+      }
+
+      .assumption-card strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+      }
+
+      .diagram-shell {
+        position: relative;
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(11, 22, 37, 0.88), rgba(7, 17, 29, 0.92));
+        box-shadow: var(--shadow);
+      }
+
+      .diagram-header {
+        position: sticky;
+        left: 0;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(7, 17, 29, 0.92);
+        backdrop-filter: blur(8px);
+      }
+
+      .diagram-header h2 {
+        font-size: 22px;
+      }
+
+      .diagram-header p {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 6px;
+      }
+
+      .diagram-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .diagram-board {
+        position: relative;
+        min-width: 1760px;
+        padding: 28px 22px 30px;
+      }
+
+      .columns {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(240px, 1fr));
+        gap: 18px;
+        align-items: start;
+      }
+
+      .column {
+        display: grid;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .column-head {
+        position: sticky;
+        top: 82px;
+        z-index: 2;
+        background: rgba(7, 17, 29, 0.95);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      }
+
+      .column-head strong {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+
+      .column-head span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .card {
+        position: relative;
+        border: 1px solid var(--border);
+        border-radius: var(--card-radius);
+        padding: 14px 14px 12px;
+        background: linear-gradient(180deg, rgba(17, 32, 53, 0.92), rgba(11, 22, 37, 0.92));
+        cursor: pointer;
+        transition: 160ms ease;
+      }
+
+      .card.active {
+        border-color: rgba(88, 214, 196, 0.65);
+        box-shadow: 0 0 0 1px rgba(88, 214, 196, 0.18) inset, 0 14px 28px rgba(0, 0, 0, 0.24);
+      }
+
+      .card.dimmed {
+        opacity: 0.34;
+      }
+
+      .card.flow-hit {
+        border-color: rgba(88, 166, 255, 0.68);
+        box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.16) inset;
+      }
+
+      .card h3 {
+        font-size: 15px;
+        line-height: 1.3;
+        margin-bottom: 8px;
+      }
+
+      .card p {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      .card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .tag {
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        padding: 4px 8px;
+        font-size: 11px;
+        color: #d6e7ff;
+        background: rgba(88, 214, 196, 0.08);
+      }
+
+      .tag.inferred {
+        background: rgba(243, 191, 100, 0.12);
+        color: #ffe6ad;
+      }
+
+      .paths {
+        margin-top: 12px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .path {
+        color: #bed0ea;
+        background: rgba(7, 17, 29, 0.54);
+        border: 1px solid rgba(126, 162, 207, 0.16);
+        border-radius: 10px;
+        padding: 6px 8px;
+        font-size: 11px;
+        overflow-wrap: anywhere;
+      }
+
+      .edge-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .edge {
+        fill: none;
+        stroke: rgba(130, 164, 211, 0.22);
+        stroke-width: 1.5;
+      }
+
+      .edge.flow-hit {
+        stroke: rgba(88, 214, 196, 0.75);
+        stroke-width: 2.6;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 24px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .sidebar-panel,
+      .detail-panel {
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--panel);
+        padding: 18px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .sidebar-panel h2,
+      .detail-panel h2 {
+        font-size: 18px;
+      }
+
+      .detail-panel ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .step-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .step-card {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 10px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--panel-3);
+        padding: 12px;
+      }
+
+      .step-number {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(243, 191, 100, 0.16);
+        color: #ffe5a3;
+        border: 1px solid rgba(243, 191, 100, 0.36);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .step-card strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 13px;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .detail-box {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--panel-3);
+        padding: 12px 13px;
+      }
+
+      .detail-box strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      @media (max-width: 1100px) {
+        body {
+          padding: 16px;
+        }
+
+        .header-grid,
+        .presentation-grid,
+        .meta-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="page-header">
+        <div class="header-grid">
+          <div class="hero">
+            <div class="eyebrow">Living Architecture Map</div>
+            <h1>IPB Smart Reserve Hub</h1>
+            <p>
+              Code-derived presentation map of the app structure, user paths, workflow seams, persistence adapters,
+              and deployment/testing path. Select a flow to highlight the exact route through the system.
+            </p>
+          </div>
+          <div class="header-card">
+            <div class="eyebrow">Presentation Use</div>
+            <p>
+              This page is optimized to explain the system in one screen: columns show the architecture layers,
+              the right sidebar explains one flow at a time, and the bottom panel gives drill-down context.
+            </p>
+          </div>
+        </div>
+
+        <div class="meta-grid" id="meta-grid"></div>
+      </section>
+
+      <div class="presentation-grid">
+        <main>
+          <section class="diagram-shell">
+            <div class="diagram-header">
+              <div>
+                <div class="eyebrow">Architecture Diagram</div>
+                <h2>Application Architecture</h2>
+                <p>
+                  Read left to right: actors, frontend surfaces, backend/API registration, workflow modules,
+                  persistence seams, then build and deployment concerns.
+                </p>
+              </div>
+              <div class="diagram-actions">
+                <button class="action-button" id="clear-flow" type="button">Clear Flow Highlight</button>
+                <button class="action-button" id="focus-reset" type="button">Reset Card Focus</button>
+              </div>
+            </div>
+
+            <div class="diagram-board" id="diagram-board">
+              <svg class="edge-layer" id="edge-layer"></svg>
+              <div class="columns" id="columns"></div>
+            </div>
+          </section>
+
+          <section class="detail-panel" id="detail-panel"></section>
+        </main>
+
+        <aside class="sidebar">
+          <section class="sidebar-panel">
+            <div class="section">
+              <h2>Flows</h2>
+              <div class="flow-list" id="flow-list"></div>
+            </div>
+          </section>
+
+          <section class="sidebar-panel">
+            <div class="eyebrow">Selected Flow</div>
+            <h2 id="steps-title">Choose A Flow</h2>
+            <p id="steps-summary">
+              Pick a flow to highlight the actor, frontend surface, backend path, and the easier step-by-step explanation.
+            </p>
+            <div class="step-list" id="step-list"></div>
+          </section>
+
+          <section class="sidebar-panel">
+            <div class="section">
+              <h2>Observed Uncertainty</h2>
+              <div class="assumption-list" id="assumption-list"></div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      const architecture = {
+        project: {
+          name: "IPB Smart Reserve Hub",
+          generated_on: "2026-05-18",
+          summary:
+            "Campus facility reservation platform with React/Vite frontend, FastAPI backend, SQLAlchemy persistence, and workflow-driven reservation processing for student, staff, and super_admin roles.",
+          frameworks: {
+            backend: ["FastAPI", "SQLAlchemy"],
+            frontend: ["React", "React Router", "TanStack Query", "Tailwind CSS", "Vite"]
+          },
+          testing: {
+            backend: ["pytest"],
+            frontend: ["Vitest", "React Testing Library", "Playwright"]
+          },
+          deployment: ["Railway backend service", "SQLite local / PostgreSQL deployment"]
+        },
+        columns: [
+          {
+            id: "Actors",
+            title: "Actors / Users",
+            summary: "Human or scheduled initiators that drive the system."
+          },
+          {
+            id: "Frontend",
+            title: "Frontend Surfaces",
+            summary: "Browser entrypoints, auth/session runtime, and role-specific pages."
+          },
+          {
+            id: "Backend/API",
+            title: "Backend / API",
+            summary: "FastAPI app factory, dependency assembly, and route groups."
+          },
+          {
+            id: "Services",
+            title: "Services / Modules",
+            summary: "Workflow and domain modules that own behavior and status transitions."
+          },
+          {
+            id: "Persistence",
+            title: "Database / Storage",
+            summary: "Repository adapters, ORM models, private storage, and schema/runtime."
+          },
+          {
+            id: "Build/Deploy",
+            title: "Build / Deploy",
+            summary: "Local test/build commands, browser storage, and Railway deployment target."
+          }
+        ],
+        components: [
+          {
+            id: "actor_guest",
+            name: "Guest Visitor",
+            kind: "actor",
+            column: "Actors",
+            description: "Unauthenticated user who can browse public facility data and self-register as a student.",
+            file_paths: ["README.md", "app/api/routes/account_routes.py", "app/api/routes/facility_routes.py"],
+            inferred: false
+          },
+          {
+            id: "actor_student",
+            name: "Student User",
+            kind: "actor",
+            column: "Actors",
+            description: "Authenticated student who browses facilities, creates reservations, uploads required files, reviews outcomes, and receives notifications.",
+            file_paths: ["CONTEXT.md", "frontend/src/App.tsx", "app/core/access_policy.py"],
+            inferred: false
+          },
+          {
+            id: "actor_staff",
+            name: "Staff User",
+            kind: "actor",
+            column: "Actors",
+            description: "Assigned facility operator who reviews reservation documents, payments, cancellation requests, and manages assigned facilities.",
+            file_paths: ["CONTEXT.md", "frontend/src/App.tsx", "app/core/access_policy.py"],
+            inferred: false
+          },
+          {
+            id: "actor_super_admin",
+            name: "Super Admin User",
+            kind: "actor",
+            column: "Actors",
+            description: "Administrator who manages users, facility governance, reports, booking settings, reviews, and system status.",
+            file_paths: ["CONTEXT.md", "frontend/src/App.tsx", "app/core/access_policy.py"],
+            inferred: false
+          },
+          {
+            id: "actor_worker",
+            name: "Scheduled Deadline Worker",
+            kind: "actor",
+            column: "Actors",
+            description: "Background process concept that advances reservation deadlines and emits notifications/audit logs when run.",
+            file_paths: ["app/services/deadline_worker.py", "docs/backend-deployment.md"],
+            inferred: false
+          },
+          {
+            id: "frontend_router",
+            name: "Frontend Route Shell",
+            kind: "frontend_runtime",
+            column: "Frontend",
+            description: "BrowserRouter + top-level route table for auth, student, staff, super_admin, and reference pages.",
+            file_paths: ["frontend/src/main.tsx", "frontend/src/App.tsx"],
+            inferred: false
+          },
+          {
+            id: "frontend_providers",
+            name: "Frontend Providers",
+            kind: "frontend_runtime",
+            column: "Frontend",
+            description: "AppProviders creates TanStack Query client and mounts AuthProvider.",
+            file_paths: ["frontend/src/AppProviders.tsx"],
+            inferred: false
+          },
+          {
+            id: "frontend_auth_session",
+            name: "Auth Session Layer",
+            kind: "frontend_runtime",
+            column: "Frontend",
+            description: "Stores bearer token in memory + sessionStorage, restores sessions through GET /auth/me, protects role routes, and redirects on 401.",
+            file_paths: ["frontend/src/auth/session.tsx", "frontend/src/api/http.ts"],
+            inferred: false
+          },
+          {
+            id: "frontend_http",
+            name: "Frontend HTTP Client",
+            kind: "frontend_runtime",
+            column: "Frontend",
+            description: "Shared fetch wrapper that attaches bearer token, handles JSON/FormData, raises ApiError, and supports downloads.",
+            file_paths: ["frontend/src/api/http.ts"],
+            inferred: false
+          },
+          {
+            id: "frontend_notifications",
+            name: "Notification Surface",
+            kind: "frontend_surface",
+            column: "Frontend",
+            description: "Shared notification dropdown used across role shells; reads /notifications and resolves target links per role.",
+            file_paths: ["frontend/src/components/NotificationSurface.tsx"],
+            inferred: false
+          },
+          {
+            id: "frontend_auth_pages",
+            name: "Auth Pages",
+            kind: "frontend_surface",
+            column: "Frontend",
+            description: "Login and register pages wired to /auth/login and /auth/register.",
+            file_paths: ["frontend/src/pages/auth/LoginPage.tsx", "frontend/src/pages/auth/RegisterPage.tsx"],
+            inferred: false
+          },
+          {
+            id: "frontend_student_surfaces",
+            name: "Student Surfaces",
+            kind: "frontend_surface",
+            column: "Frontend",
+            description: "Student home, catalog, facility detail, reservation create steps, reservation list/detail, document workflow, review, cancellation, and profile screens.",
+            file_paths: [
+              "frontend/src/pages/student/StudentHomePage.tsx",
+              "frontend/src/pages/student/StudentFacilityCatalogPage.tsx",
+              "frontend/src/pages/student/StudentFacilityDetailPage.tsx",
+              "frontend/src/pages/student/StudentReservationCreatePages.tsx",
+              "frontend/src/pages/student/StudentReservationListPage.tsx",
+              "frontend/src/pages/student/StudentReservationDetailReadOnlyPage.tsx",
+              "frontend/src/pages/student/StudentDocumentWorkflowPages.tsx",
+              "frontend/src/pages/student/StudentReviewCancellationProfilePages.tsx"
+            ],
+            inferred: false
+          },
+          {
+            id: "frontend_staff_surfaces",
+            name: "Staff Surfaces",
+            kind: "frontend_surface",
+            column: "Frontend",
+            description: "Staff home/list, reservation detail/decision, facility list/edit, and schedule pages.",
+            file_paths: [
+              "frontend/src/pages/staff/StaffReservationOperationsPages.tsx",
+              "frontend/src/pages/staff/StaffReservationDetailDecisionPages.tsx",
+              "frontend/src/pages/staff/StaffFacilityPages.tsx"
+            ],
+            inferred: false
+          },
+          {
+            id: "frontend_admin_surfaces",
+            name: "Super Admin Surfaces",
+            kind: "frontend_surface",
+            column: "Frontend",
+            description: "Dashboard, users, facilities governance, reports, and system/settings pages.",
+            file_paths: ["frontend/src/pages/super-admin/SuperAdminDashboardUsersPages.tsx"],
+            inferred: false
+          },
+          {
+            id: "frontend_reference_surfaces",
+            name: "Reference And Harness Pages",
+            kind: "frontend_surface",
+            column: "Frontend",
+            description: "Design/reference routes and harness pages used for visual implementation and testing rather than end-user workflows.",
+            file_paths: ["frontend/src/pages/__reference__", "frontend/src/pages/__harness__"],
+            inferred: false
+          },
+          {
+            id: "frontend_workflow_mappers",
+            name: "Frontend Reservation Workflow Mappers",
+            kind: "frontend_module",
+            column: "Frontend",
+            description: "Client-side mapping helpers for reservation status projections and staff reservation presentation.",
+            file_paths: ["frontend/src/reservations/studentReservationWorkflow.ts", "frontend/src/reservations/staffReservationOperations.ts"],
+            inferred: false
+          },
+          {
+            id: "backend_factory",
+            name: "FastAPI App Factory",
+            kind: "backend_runtime",
+            column: "Backend/API",
+            description: "create_app loads settings and delegates construction to HttpApplicationModule.",
+            file_paths: ["app/main.py"],
+            inferred: false
+          },
+          {
+            id: "backend_http_application",
+            name: "HTTP Application And Runtime Registry",
+            kind: "backend_runtime",
+            column: "Backend/API",
+            description: "Builds FastAPI, enables permissive CORS, creates DB schema on startup, assembles grouped dependencies, and registers all route groups.",
+            file_paths: ["app/api/http_application.py", "app/core/module_factories.py", "app/core/database.py"],
+            inferred: false
+          },
+          {
+            id: "backend_account_routes",
+            name: "Account Route Group",
+            kind: "api_routes",
+            column: "Backend/API",
+            description: "Auth, current-user, admin-managed user CRUD-lite, and shell endpoints.",
+            file_paths: ["app/api/routes/account_routes.py", "app/schemas/account_schemas.py"],
+            inferred: false
+          },
+          {
+            id: "backend_facility_routes",
+            name: "Public Facility Route Group",
+            kind: "api_routes",
+            column: "Backend/API",
+            description: "Public categories, catalog, detail, calendar, availability, and reservation time selection endpoints.",
+            file_paths: ["app/api/routes/facility_routes.py", "app/schemas/facility_schemas.py", "app/schemas/reservation_time_selection_schemas.py"],
+            inferred: false
+          },
+          {
+            id: "backend_reservation_routes",
+            name: "Reservation Workflow Route Groups",
+            kind: "api_routes",
+            column: "Backend/API",
+            description: "Reservation submission/list/detail/cancellation, approval letter workflow, payment workflow, and review submission/moderation endpoints.",
+            file_paths: [
+              "app/api/routes/reservation_routes.py",
+              "app/api/routes/approval_letter_routes.py",
+              "app/api/routes/payment_routes.py",
+              "app/api/routes/review_routes.py"
+            ],
+            inferred: false
+          },
+          {
+            id: "backend_staff_routes",
+            name: "Staff Operation Route Groups",
+            kind: "api_routes",
+            column: "Backend/API",
+            description: "Assigned reservation queue/list/detail, facility schedule, and assigned facility management endpoints.",
+            file_paths: ["app/api/routes/staff_reservation_operation_routes.py", "app/api/routes/facility_management_routes.py"],
+            inferred: false
+          },
+          {
+            id: "backend_admin_routes",
+            name: "Super Admin Route Groups",
+            kind: "api_routes",
+            column: "Backend/API",
+            description: "Dashboard, reports, booking settings, organization units, audit logs, system status, and facility governance endpoints.",
+            file_paths: [
+              "app/api/routes/super_admin_dashboard_routes.py",
+              "app/api/routes/super_admin_report_routes.py",
+              "app/api/routes/booking_setting_routes.py",
+              "app/api/routes/organization_unit_routes.py",
+              "app/api/routes/audit_log_routes.py",
+              "app/api/routes/system_status_routes.py"
+            ],
+            inferred: false
+          },
+          {
+            id: "service_accounts",
+            name: "User Account Module",
+            kind: "service",
+            column: "Services",
+            description: "Student registration, admin-created users, login, refresh, token resolution, active-user lookup, and academic profile projection.",
+            file_paths: ["app/services/accounts.py", "app/services/academic_profiles.py", "app/core/security.py"],
+            inferred: false
+          },
+          {
+            id: "service_catalog",
+            name: "Facility Catalog Module",
+            kind: "service",
+            column: "Services",
+            description: "Public facility categories, catalog results, facility detail projection, and public calendar projection.",
+            file_paths: ["app/services/facilities.py", "app/services/public_facility_reviews.py", "app/services/public_facility_calendar.py"],
+            inferred: false
+          },
+          {
+            id: "service_availability",
+            name: "Facility Availability Module",
+            kind: "service",
+            column: "Services",
+            description: "Determines open-hours fit, blackout overlap, and blocking reservation overlap for a candidate reservation time.",
+            file_paths: ["app/services/facility_availability.py", "app/repositories/facility_availability_reader.py"],
+            inferred: false
+          },
+          {
+            id: "service_time_selection",
+            name: "Reservation Time Selection Module",
+            kind: "service",
+            column: "Services",
+            description: "Applies booking-window and local time rules, then combines them with facility availability into one validation result.",
+            file_paths: ["app/services/reservation_time_selection.py", "app/services/booking_settings.py"],
+            inferred: false
+          },
+          {
+            id: "service_reservations",
+            name: "Reservation Module",
+            kind: "service",
+            column: "Services",
+            description: "Reservation submission, student list/detail, pre-approval cancellation, cancellation-request workflow, notifications, audit, and student-facing workflow projection mapping.",
+            file_paths: ["app/services/reservations.py", "app/services/student_reservation_workflow_projections.py"],
+            inferred: false
+          },
+          {
+            id: "service_lifecycle",
+            name: "Facility Reservation Lifecycle",
+            kind: "service",
+            column: "Services",
+            description: "Owns reservation status transitions, due-date assignment, effective completed status, overdue verification, and expiration rules.",
+            file_paths: ["app/services/reservation_lifecycle.py"],
+            inferred: false
+          },
+          {
+            id: "service_approval_letters",
+            name: "Approval Letter Module",
+            kind: "service",
+            column: "Services",
+            description: "Lazily generates approval-letter PDFs, stores/downloads private files, handles signed-letter upload, and processes staff document review decisions.",
+            file_paths: ["app/services/approval_letters.py", "app/services/reservation_private_files.py", "app/pdf/__init__.py"],
+            inferred: false
+          },
+          {
+            id: "service_payments",
+            name: "Payment Module",
+            kind: "service",
+            column: "Services",
+            description: "Exposes student payment instructions, stores payment receipts, and handles staff payment approval/rejection.",
+            file_paths: ["app/services/payments.py", "app/services/reservation_private_files.py"],
+            inferred: false
+          },
+          {
+            id: "service_reviews",
+            name: "Review Module",
+            kind: "service",
+            column: "Services",
+            description: "Student review submission/deletion, staff facility review listing/statistics, and admin review moderation.",
+            file_paths: ["app/services/reviews.py"],
+            inferred: false
+          },
+          {
+            id: "service_notifications",
+            name: "Notification Module",
+            kind: "service",
+            column: "Services",
+            description: "Creates student and staff/admin notifications for reservation workflow events and maps notification targets to frontend routes by role.",
+            file_paths: ["app/services/notifications.py"],
+            inferred: false
+          },
+          {
+            id: "service_staff_ops",
+            name: "Staff Reservation Operations Module",
+            kind: "service",
+            column: "Services",
+            description: "Read-model projection module for staff queue/list/detail/schedule screens.",
+            file_paths: ["app/services/staff_reservation_operations.py"],
+            inferred: false
+          },
+          {
+            id: "service_facility_management",
+            name: "Facility Management Module",
+            kind: "service",
+            column: "Services",
+            description: "Facility governance, staff assignment, assigned facility updates, images, open hours, blackouts, and related audit logging.",
+            file_paths: ["app/services/facility_management.py", "app/services/assigned_facility_access.py"],
+            inferred: false
+          },
+          {
+            id: "service_org_units",
+            name: "Organization Unit Management Module",
+            kind: "service",
+            column: "Services",
+            description: "Create, update, activate/deactivate, and list active organization units.",
+            file_paths: ["app/services/organization_units.py"],
+            inferred: false
+          },
+          {
+            id: "service_booking_settings",
+            name: "Booking Settings Module",
+            kind: "service",
+            column: "Services",
+            description: "Loads default+stored booking settings, validates admin updates, and provides policy values to auth and reservation workflow timings.",
+            file_paths: ["app/services/booking_settings.py"],
+            inferred: false
+          },
+          {
+            id: "service_admin_dashboard",
+            name: "Super Admin Dashboard Module",
+            kind: "service",
+            column: "Services",
+            description: "Aggregates high-level counts, administrator list, facility governance, recent audit activity, and system status.",
+            file_paths: ["app/services/super_admin_dashboard.py"],
+            inferred: false
+          },
+          {
+            id: "service_admin_reports",
+            name: "Super Admin Report Module",
+            kind: "service",
+            column: "Services",
+            description: "Date-range aggregate KPIs, reservation status counts, and per-day trend calculation for reports.",
+            file_paths: ["app/services/super_admin_reports.py"],
+            inferred: false
+          },
+          {
+            id: "service_system_status",
+            name: "System Status Module",
+            kind: "service",
+            column: "Services",
+            description: "Reports backend/database health plus storage/worker placeholders.",
+            file_paths: ["app/services/system_status.py"],
+            inferred: false
+          },
+          {
+            id: "service_deadline_worker",
+            name: "Deadline Worker Module",
+            kind: "service",
+            column: "Services",
+            description: "Scans reservations, applies lifecycle deadline transitions, records audit entries, and emits notifications.",
+            file_paths: ["app/services/deadline_worker.py"],
+            inferred: false
+          },
+          {
+            id: "repo_sqlalchemy_adapters",
+            name: "SQLAlchemy Repository Adapters",
+            kind: "repository",
+            column: "Persistence",
+            description: "Write/read adapters for users, booking settings, facilities, reservations, staff operations, notifications, reviews, organization units, and audit logs.",
+            file_paths: [
+              "app/repositories/user_repository.py",
+              "app/repositories/booking_settings_repository.py",
+              "app/repositories/facility_catalog_reader.py",
+              "app/repositories/facility_availability_reader.py",
+              "app/repositories/facility_management_repository.py",
+              "app/repositories/reservation_repository.py",
+              "app/repositories/staff_reservation_operations_repository.py",
+              "app/repositories/notification_repository.py",
+              "app/repositories/review_repository.py",
+              "app/repositories/organization_unit_repository.py",
+              "app/repositories/audit_log_repository.py"
+            ],
+            inferred: false
+          },
+          {
+            id: "orm_models",
+            name: "ORM Models",
+            kind: "persistence_model",
+            column: "Persistence",
+            description: "Single SQLAlchemy model module containing users, facilities, categories, assignments, reservations, reviews, audit logs, notifications, organization units, and private file metadata tables.",
+            file_paths: ["app/models/__init__.py"],
+            inferred: false
+          },
+          {
+            id: "api_schemas",
+            name: "Pydantic API Schemas",
+            kind: "api_contract",
+            column: "Persistence",
+            description: "Request/response schemas for accounts, facilities, reservations, reviews, settings, audit, notifications, and admin aggregates.",
+            file_paths: ["app/schemas"],
+            inferred: false
+          },
+          {
+            id: "private_storage",
+            name: "Private File Storage",
+            kind: "storage",
+            column: "Persistence",
+            description: "Only concrete adapter in code is InMemoryPrivateStorage; approval letters, signed letters, and payment receipts store bytes here via ReservationPrivateFileModule.",
+            file_paths: ["app/storage/__init__.py", "app/services/reservation_private_files.py"],
+            inferred: false
+          },
+          {
+            id: "pdf_generator",
+            name: "Approval Letter PDF Generator",
+            kind: "storage",
+            column: "Persistence",
+            description: "Minimal internal PDF generator used to create reservation approval letters without external PDF service dependency.",
+            file_paths: ["app/pdf/__init__.py"],
+            inferred: false
+          },
+          {
+            id: "database_runtime",
+            name: "Database Runtime",
+            kind: "database",
+            column: "Persistence",
+            description: "SQLAlchemy engine/session factory with SQLite defaults for local use and PostgreSQL expected in deployment. Schema is created with Base.metadata.create_all().",
+            file_paths: ["app/core/database.py", "app/core/settings.py", "docs/backend-deployment.md"],
+            inferred: false
+          },
+          {
+            id: "browser_session_storage",
+            name: "Browser Session Storage",
+            kind: "external_runtime",
+            column: "Build/Deploy",
+            description: "Client-side storage used for bearer token mirroring between reloads.",
+            file_paths: ["frontend/src/auth/session.tsx"],
+            inferred: false
+          },
+          {
+            id: "frontend_build_pipeline",
+            name: "Frontend Build/Test Pipeline",
+            kind: "build_pipeline",
+            column: "Build/Deploy",
+            description: "Vite dev/build, Vitest unit/integration tests, and Playwright screenshot/e2e runs with local Vite webServer.",
+            file_paths: ["frontend/package.json", "frontend/vite.config.ts", "frontend/playwright.config.ts"],
+            inferred: false
+          },
+          {
+            id: "backend_build_pipeline",
+            name: "Backend Build/Test Pipeline",
+            kind: "build_pipeline",
+            column: "Build/Deploy",
+            description: "uv-managed dependency sync, pytest behavior tests, dev seed command, and uvicorn app startup.",
+            file_paths: ["pyproject.toml", "README.md", "app/dev/seed.py", "tests"],
+            inferred: false
+          },
+          {
+            id: "railway_deploy",
+            name: "Railway Deployment Target",
+            kind: "deployment",
+            column: "Build/Deploy",
+            description: "Backend deployment target configured with NIXPACKS builder, uvicorn start command, and /health health check.",
+            file_paths: ["railway.toml", "docs/backend-deployment.md"],
+            inferred: false
+          }
+        ],
+        dependencies: [
+          ["actor_guest", "frontend_auth_pages"],
+          ["actor_guest", "frontend_student_surfaces"],
+          ["actor_student", "frontend_student_surfaces"],
+          ["actor_staff", "frontend_staff_surfaces"],
+          ["actor_super_admin", "frontend_admin_surfaces"],
+          ["actor_worker", "service_deadline_worker"],
+          ["frontend_router", "frontend_auth_pages"],
+          ["frontend_router", "frontend_student_surfaces"],
+          ["frontend_router", "frontend_staff_surfaces"],
+          ["frontend_router", "frontend_admin_surfaces"],
+          ["frontend_providers", "frontend_auth_session"],
+          ["frontend_auth_session", "frontend_http"],
+          ["frontend_auth_session", "browser_session_storage"],
+          ["frontend_notifications", "frontend_http"],
+          ["frontend_student_surfaces", "frontend_http"],
+          ["frontend_staff_surfaces", "frontend_http"],
+          ["frontend_admin_surfaces", "frontend_http"],
+          ["frontend_student_surfaces", "frontend_workflow_mappers"],
+          ["frontend_staff_surfaces", "frontend_workflow_mappers"],
+          ["backend_factory", "backend_http_application"],
+          ["backend_http_application", "backend_account_routes"],
+          ["backend_http_application", "backend_facility_routes"],
+          ["backend_http_application", "backend_reservation_routes"],
+          ["backend_http_application", "backend_staff_routes"],
+          ["backend_http_application", "backend_admin_routes"],
+          ["backend_http_application", "database_runtime"],
+          ["backend_account_routes", "service_accounts"],
+          ["backend_facility_routes", "service_catalog"],
+          ["backend_facility_routes", "service_availability"],
+          ["backend_facility_routes", "service_time_selection"],
+          ["backend_reservation_routes", "service_reservations"],
+          ["backend_reservation_routes", "service_approval_letters"],
+          ["backend_reservation_routes", "service_payments"],
+          ["backend_reservation_routes", "service_reviews"],
+          ["backend_staff_routes", "service_staff_ops"],
+          ["backend_staff_routes", "service_facility_management"],
+          ["backend_admin_routes", "service_admin_dashboard"],
+          ["backend_admin_routes", "service_admin_reports"],
+          ["backend_admin_routes", "service_booking_settings"],
+          ["backend_admin_routes", "service_org_units"],
+          ["backend_admin_routes", "service_system_status"],
+          ["service_accounts", "repo_sqlalchemy_adapters"],
+          ["service_catalog", "repo_sqlalchemy_adapters"],
+          ["service_availability", "repo_sqlalchemy_adapters"],
+          ["service_time_selection", "service_availability"],
+          ["service_time_selection", "service_booking_settings"],
+          ["service_reservations", "service_time_selection"],
+          ["service_reservations", "service_lifecycle"],
+          ["service_reservations", "service_notifications"],
+          ["service_reservations", "repo_sqlalchemy_adapters"],
+          ["service_approval_letters", "service_lifecycle"],
+          ["service_approval_letters", "private_storage"],
+          ["service_approval_letters", "pdf_generator"],
+          ["service_approval_letters", "service_notifications"],
+          ["service_payments", "service_lifecycle"],
+          ["service_payments", "private_storage"],
+          ["service_payments", "service_notifications"],
+          ["service_staff_ops", "repo_sqlalchemy_adapters"],
+          ["service_facility_management", "repo_sqlalchemy_adapters"],
+          ["service_admin_dashboard", "service_accounts"],
+          ["service_admin_dashboard", "service_facility_management"],
+          ["service_admin_dashboard", "service_system_status"],
+          ["service_admin_reports", "orm_models"],
+          ["repo_sqlalchemy_adapters", "orm_models"],
+          ["orm_models", "database_runtime"],
+          ["service_deadline_worker", "service_lifecycle"],
+          ["service_deadline_worker", "service_notifications"],
+          ["service_deadline_worker", "database_runtime"],
+          ["backend_build_pipeline", "backend_factory"],
+          ["frontend_build_pipeline", "frontend_router"],
+          ["railway_deploy", "backend_factory"]
+        ],
+        flows: [
+          {
+            id: "auth_login_and_session_restore",
+            name: "Auth Login And Session Restore",
+            summary: "Guest or authenticated user signs in, receives a token, stores it in sessionStorage, and restores identity via /auth/me.",
+            components: ["actor_guest", "actor_student", "actor_staff", "actor_super_admin", "frontend_auth_pages", "frontend_auth_session", "backend_account_routes", "service_accounts", "repo_sqlalchemy_adapters", "browser_session_storage"],
+            steps: [
+              { title: "User starts from login", text: "A guest or existing user opens the login page in the browser." },
+              { title: "Frontend sends credentials", text: "The auth page posts email and password to `/auth/login` through the shared HTTP client." },
+              { title: "Backend verifies the account", text: "The account route passes the request to `UserAccountModule`, which checks password validity and active status." },
+              { title: "Token is issued", text: "If the account is valid, the backend returns an access token." },
+              { title: "Session is restored", text: "The frontend stores the token, calls `/auth/me`, and routes the user to the correct role shell." }
+            ]
+          },
+          {
+            id: "student_browse_catalog_and_detail",
+            name: "Student Browse Catalog And Facility Detail",
+            summary: "Public/student browser requests categories, catalog pages, facility detail, and public calendar projections.",
+            components: ["actor_guest", "actor_student", "frontend_student_surfaces", "backend_facility_routes", "service_catalog", "repo_sqlalchemy_adapters", "orm_models"],
+            steps: [
+              { title: "User opens browse pages", text: "The home, catalog, or detail page requests categories, facilities, and public reservation calendar data." },
+              { title: "Public API routes respond", text: "FastAPI serves `/facility-categories`, `/facilities`, `/facilities/{id}`, and `/facilities/{id}/calendar`." },
+              { title: "Catalog module shapes the result", text: "The facility catalog service decides which fields, review summaries, and featured ordering are exposed." },
+              { title: "Repository loads active data", text: "SQLAlchemy readers fetch active categories, facilities, images, reviews, and visible reservation blocks." },
+              { title: "Frontend renders discovery screens", text: "The browser presents cards and detail pages using those public projections." }
+            ]
+          },
+          {
+            id: "student_validate_and_submit_reservation",
+            name: "Student Validate Time And Submit Reservation",
+            summary: "Student create flow validates calendar/time selection, then submits reservation and gets pending-document state plus notifications.",
+            components: ["actor_student", "frontend_student_surfaces", "backend_facility_routes", "service_time_selection", "backend_reservation_routes", "service_reservations", "service_lifecycle", "service_notifications", "repo_sqlalchemy_adapters"],
+            steps: [
+              { title: "Student chooses a time", text: "The reservation page loads the calendar and the student selects start and end times." },
+              { title: "System validates the slot", text: "The frontend calls the reservation-time-selection endpoint, which checks booking rules and real facility availability." },
+              { title: "Student submits event details", text: "The form sends activity details, organization unit, contact info, and extra requirements." },
+              { title: "Reservation is created", text: "The reservation service re-checks the slot, protects against overlapping holds, and saves the reservation." },
+              { title: "Workflow moves to next step", text: "The lifecycle marks the reservation as waiting for document upload and the system creates a notification." }
+            ]
+          },
+          {
+            id: "document_workflow_and_staff_document_review",
+            name: "Approval Letter, Signed Letter Upload, And Staff Document Review",
+            summary: "Approval letter is generated on demand, signed letter is uploaded, and staff approves or rejects document review.",
+            components: ["actor_student", "actor_staff", "frontend_student_surfaces", "backend_reservation_routes", "service_approval_letters", "pdf_generator", "private_storage", "frontend_staff_surfaces", "service_lifecycle", "service_notifications"],
+            steps: [
+              { title: "Student opens the document step", text: "The reservation workflow page requests the generated approval letter." },
+              { title: "Backend generates the PDF", text: "If the letter does not already exist, the approval-letter service creates it from reservation data and stores it." },
+              { title: "Student uploads the signed file", text: "After signing the document, the student uploads the signed approval letter as PDF or image." },
+              { title: "Staff reviews the upload", text: "Assigned staff open the reservation detail page, inspect the signed file, and approve or reject it." },
+              { title: "Workflow advances or fails", text: "Approval moves the reservation forward; rejection stores the reason and notifies the student." }
+            ]
+          },
+          {
+            id: "payment_workflow_and_staff_payment_review",
+            name: "Payment Receipt Upload And Staff Payment Review",
+            summary: "Student uploads proof of payment, then staff reviews it to approve or reject the reservation payment step.",
+            components: ["actor_student", "actor_staff", "frontend_student_surfaces", "backend_reservation_routes", "service_payments", "private_storage", "service_lifecycle", "service_notifications", "frontend_staff_surfaces"],
+            steps: [
+              { title: "Student opens the payment page", text: "For paid reservations, the student loads the amount due and the facility payment instructions." },
+              { title: "Receipt is uploaded", text: "The frontend sends the payment receipt image to the payment endpoint." },
+              { title: "Backend validates and stores it", text: "The payment service checks the reservation stage, validates file rules, and saves the receipt." },
+              { title: "Staff reviews payment proof", text: "Assigned staff download the receipt from the reservation detail view and decide whether it is acceptable." },
+              { title: "Reservation becomes approved or rejected", text: "Approval activates the reservation; rejection stores the reason and sends a student notification." }
+            ]
+          },
+          {
+            id: "student_cancellation_and_staff_review",
+            name: "Student Cancellation Request And Staff Decision",
+            summary: "Student requests cancellation for approved reservation and assigned staff resolves it through detail review actions.",
+            components: ["actor_student", "actor_staff", "frontend_student_surfaces", "backend_reservation_routes", "service_reservations", "service_lifecycle", "frontend_staff_surfaces"],
+            steps: [
+              { title: "Student requests cancellation", text: "The student opens the cancellation page for an approved reservation and enters a reason." },
+              { title: "Backend records the request", text: "The reservation service verifies ownership and status, then marks the reservation as waiting for cancellation review." },
+              { title: "Staff sees the request", text: "Assigned staff open the reservation detail page and see the pending cancellation decision." },
+              { title: "Staff approves or rejects", text: "The staff action posts to the cancellation review endpoint." },
+              { title: "Reservation closes the loop", text: "Approval cancels the reservation; rejection restores the approved state and stores the explanation." }
+            ]
+          },
+          {
+            id: "staff_operational_views_and_facility_management",
+            name: "Staff Queue, Schedule, Detail, And Assigned Facility Management",
+            summary: "Staff sees actionable reservation queues plus assigned facility data, schedules, edits, and operational metadata.",
+            components: ["actor_staff", "frontend_staff_surfaces", "backend_staff_routes", "service_staff_ops", "service_facility_management", "repo_sqlalchemy_adapters"],
+            steps: [
+              { title: "Staff opens operation screens", text: "The browser loads staff queue, list, detail, schedule, or assigned facility pages." },
+              { title: "API enforces staff access", text: "FastAPI checks staff role permissions before serving reservation-operation or facility-management routes." },
+              { title: "Read models prepare the queue", text: "The staff operations module builds list and detail projections with document, payment, and cancellation state." },
+              { title: "Facility changes are applied", text: "Facility management checks assignment access and then updates details, images, open hours, or blackout periods." },
+              { title: "Staff sees current operational state", text: "The frontend presents the active workload and assigned-facility configuration in one role shell." }
+            ]
+          },
+          {
+            id: "super_admin_governance_reporting_and_settings",
+            name: "Super Admin Dashboard, Users, Reports, Governance, And Settings",
+            summary: "Super admin surfaces aggregate dashboard counts, reports, audit/review moderation, governance, user management, and booking settings.",
+            components: ["actor_super_admin", "frontend_admin_surfaces", "backend_admin_routes", "service_admin_dashboard", "service_admin_reports", "service_accounts", "service_booking_settings", "service_facility_management", "service_system_status"],
+            steps: [
+              { title: "Super admin opens control screens", text: "The admin uses dashboard, users, facilities, reports, and system pages." },
+              { title: "Backend splits admin responsibilities", text: "Each endpoint goes to a dedicated route group for dashboard, reports, settings, users, governance, or moderation." },
+              { title: "Services aggregate platform-wide data", text: "Dashboard and report modules combine KPIs, trends, audit logs, governance state, and health checks." },
+              { title: "Admin updates policy and access", text: "User activation, staff assignment, review moderation, and booking-setting updates change product behavior." },
+              { title: "Frontend presents operational oversight", text: "The result is a system-wide management view suitable for presentation and operations." }
+            ]
+          },
+          {
+            id: "deadline_expiration_completion_and_notifications",
+            name: "Deadline Processing, Expiration, Completion, And Notifications",
+            summary: "Background worker scans reservations, applies lifecycle deadline rules, and persists notification/audit side effects.",
+            components: ["actor_worker", "service_deadline_worker", "service_lifecycle", "service_notifications", "database_runtime", "repo_sqlalchemy_adapters"],
+            steps: [
+              { title: "Worker run begins", text: "A scheduled worker execution opens a fresh database session." },
+              { title: "Reservations are scanned", text: "The worker checks every reservation against deadline and completion rules." },
+              { title: "Lifecycle decides the transition", text: "The lifecycle module determines whether a reservation should complete, expire, or move to overdue verification." },
+              { title: "Side effects are recorded", text: "Audit records and matching notifications are written for the affected reservations." },
+              { title: "New state is committed", text: "The transaction is saved so later screens reflect the updated workflow status." }
+            ]
+          }
+        ],
+        assumptions: [
+          {
+            title: "Private storage is not durable",
+            statement: "Only InMemoryPrivateStorage is implemented, so private files disappear across process restarts."
+          },
+          {
+            title: "Worker deployment is missing",
+            statement: "Deadline worker logic exists, but no deployed scheduler entrypoint was found and SystemStatus reports worker as not_configured."
+          },
+          {
+            title: "Schema uses create_all, not migrations",
+            statement: "Startup creates tables directly with Base.metadata.create_all() and no migration tooling was detected."
+          },
+          {
+            title: "Super admin notification route gap",
+            statement: "NotificationModule returns /super-admin/reservations/{reservation_id}, but App.tsx defines no matching frontend route."
+          },
+          {
+            title: "No CI config detected",
+            statement: "The visible pipeline is local commands plus Railway deployment; no repo CI workflow files were found."
+          },
+          {
+            title: "Facility image hosting is inferred",
+            statement: "Facility image URLs are plain strings, so final CDN/object storage origin appears to be external to the repo."
+          }
+        ]
+      };
+
+      const componentMap = new Map(architecture.components.map((component) => [component.id, component]));
+      const columnsEl = document.getElementById("columns");
+      const edgeLayerEl = document.getElementById("edge-layer");
+      const detailPanelEl = document.getElementById("detail-panel");
+      const flowListEl = document.getElementById("flow-list");
+      const assumptionListEl = document.getElementById("assumption-list");
+      const metaGridEl = document.getElementById("meta-grid");
+      const stepListEl = document.getElementById("step-list");
+      const stepsTitleEl = document.getElementById("steps-title");
+      const stepsSummaryEl = document.getElementById("steps-summary");
+      const clearFlowEl = document.getElementById("clear-flow");
+      const focusResetEl = document.getElementById("focus-reset");
+      const boardEl = document.getElementById("diagram-board");
+
+      let selectedFlowId = architecture.flows[0]?.id ?? null;
+      let selectedComponentId = null;
+
+      function renderMeta() {
+        const rows = [
+          ["Generated", architecture.project.generated_on],
+          ["Backend", architecture.project.frameworks.backend.join(" · ")],
+          ["Frontend", architecture.project.frameworks.frontend.join(" · ")],
+          ["Testing", [...architecture.project.testing.backend, ...architecture.project.testing.frontend].join(" · ")],
+          ["Deployment", architecture.project.deployment.join(" · ")]
+        ];
+
+        metaGridEl.innerHTML = rows
+          .map(
+            ([label, value]) => `
+              <div class="meta-row">
+                <strong>${label}</strong>
+                <div>${value}</div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderColumns() {
+        columnsEl.innerHTML = architecture.columns
+          .map((column) => {
+            const cards = architecture.components
+              .filter((component) => component.column === column.id)
+              .map(
+                (component) => `
+                  <article class="card" data-component-id="${component.id}">
+                    <h3>${component.name}</h3>
+                    <p>${component.description}</p>
+                    <div class="card-meta">
+                      <span class="tag">${component.kind}</span>
+                      ${component.inferred ? '<span class="tag inferred">inferred</span>' : ""}
+                    </div>
+                    <div class="paths">
+                      ${component.file_paths
+                        .slice(0, 4)
+                        .map((path) => `<div class="path">${path}</div>`)
+                        .join("")}
+                    </div>
+                  </article>
+                `
+              )
+              .join("");
+
+            return `
+              <section class="column" data-column-id="${column.id}">
+                <div class="column-head">
+                  <strong>${column.title}</strong>
+                  <span>${column.summary}</span>
+                </div>
+                ${cards}
+              </section>
+            `;
+          })
+          .join("");
+
+        columnsEl.querySelectorAll(".card").forEach((card) => {
+          card.addEventListener("click", () => {
+            selectedComponentId = card.dataset.componentId;
+            updateCardStates();
+            renderDetailPanel();
+          });
+        });
+      }
+
+      function renderFlows() {
+        flowListEl.innerHTML = architecture.flows
+          .map(
+            (flow) => `
+              <button class="flow-button" data-flow-id="${flow.id}" type="button">
+                <strong>${flow.name}</strong>
+                <span>${flow.summary}</span>
+              </button>
+            `
+          )
+          .join("");
+
+        flowListEl.querySelectorAll(".flow-button").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedFlowId = button.dataset.flowId;
+            updateFlowButtons();
+            updateCardStates();
+            drawEdges();
+            renderDetailPanel();
+            renderStepsPanel();
+          });
+        });
+      }
+
+      function renderAssumptions() {
+        assumptionListEl.innerHTML = architecture.assumptions
+          .map(
+            (item) => `
+              <div class="assumption-card">
+                <strong>${item.title}</strong>
+                <p>${item.statement}</p>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function updateFlowButtons() {
+        flowListEl.querySelectorAll(".flow-button").forEach((button) => {
+          button.classList.toggle("active", button.dataset.flowId === selectedFlowId);
+        });
+      }
+
+      function activeFlowComponents() {
+        if (!selectedFlowId) return null;
+        const flow = architecture.flows.find((item) => item.id === selectedFlowId);
+        return flow ? new Set(flow.components) : null;
+      }
+
+      function updateCardStates() {
+        const flowComponents = activeFlowComponents();
+        columnsEl.querySelectorAll(".card").forEach((card) => {
+          const id = card.dataset.componentId;
+          const isFlowHit = flowComponents ? flowComponents.has(id) : false;
+          const isActive = selectedComponentId === id;
+
+          card.classList.toggle("flow-hit", Boolean(flowComponents && isFlowHit));
+          card.classList.toggle("dimmed", Boolean(flowComponents && !isFlowHit));
+          card.classList.toggle("active", isActive);
+        });
+      }
+
+      function renderDetailPanel() {
+        const component = selectedComponentId ? componentMap.get(selectedComponentId) : null;
+        const flow = selectedFlowId ? architecture.flows.find((item) => item.id === selectedFlowId) : null;
+
+        if (component) {
+          const inbound = architecture.dependencies
+            .filter((edge) => edge[1] === component.id)
+            .map((edge) => componentMap.get(edge[0])?.name || edge[0]);
+          const outbound = architecture.dependencies
+            .filter((edge) => edge[0] === component.id)
+            .map((edge) => componentMap.get(edge[1])?.name || edge[1]);
+
+          detailPanelEl.innerHTML = `
+            <div>
+              <div class="eyebrow">Focused Component</div>
+              <h2>${component.name}</h2>
+            </div>
+            <p>${component.description}</p>
+            <div class="detail-grid">
+              <div class="detail-box">
+                <strong>File Paths</strong>
+                <ul>${component.file_paths.map((path) => `<li>${path}</li>`).join("")}</ul>
+              </div>
+              <div class="detail-box">
+                <strong>Connected Modules</strong>
+                <p><strong style="display:inline;color:var(--text);text-transform:none;letter-spacing:0;margin:0;">Inbound:</strong> ${inbound.join(" · ") || "None mapped"}</p>
+                <p style="margin-top:8px;"><strong style="display:inline;color:var(--text);text-transform:none;letter-spacing:0;margin:0;">Outbound:</strong> ${outbound.join(" · ") || "None mapped"}</p>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (flow) {
+          detailPanelEl.innerHTML = `
+            <div>
+              <div class="eyebrow">Highlighted Flow</div>
+              <h2>${flow.name}</h2>
+            </div>
+            <p>${flow.summary}</p>
+            <div class="detail-box">
+              <strong>Flow Components</strong>
+              <ul>${flow.components.map((id) => `<li>${componentMap.get(id)?.name || id}</li>`).join("")}</ul>
+            </div>
+          `;
+          return;
+        }
+
+        detailPanelEl.innerHTML = `
+          <div>
+            <div class="eyebrow">How To Use</div>
+            <h2>Inspect Cards Or Highlight A Flow</h2>
+          </div>
+          <p>
+            Click any card to inspect its connected modules and file paths, or select a flow from the sidebar to
+            highlight the components that participate in that end-to-end path.
+          </p>
+        `;
+      }
+
+      function renderStepsPanel() {
+        const flow = selectedFlowId ? architecture.flows.find((item) => item.id === selectedFlowId) : null;
+
+        if (!flow) {
+          stepsTitleEl.textContent = "Choose A Flow";
+          stepsSummaryEl.textContent =
+            "Pick a flow to highlight the actor, frontend surface, backend path, and the easier step-by-step explanation.";
+          stepListEl.innerHTML = "";
+          return;
+        }
+
+        stepsTitleEl.textContent = flow.name;
+        stepsSummaryEl.textContent = flow.summary;
+        stepListEl.innerHTML = (flow.steps || [])
+          .map(
+            (step, index) => `
+              <article class="step-card">
+                <div class="step-number">${index + 1}</div>
+                <div>
+                  <strong>${step.title}</strong>
+                  <p>${step.text}</p>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function cardCenter(id) {
+        const card = columnsEl.querySelector(`[data-component-id="${id}"]`);
+        if (!card) return null;
+
+        const cardRect = card.getBoundingClientRect();
+        const boardRect = boardEl.getBoundingClientRect();
+
+        return {
+          x: cardRect.left - boardRect.left + boardEl.scrollLeft + cardRect.width / 2,
+          y: cardRect.top - boardRect.top + boardEl.scrollTop + cardRect.height / 2
+        };
+      }
+
+      function activeEdges() {
+        if (!selectedFlowId) return new Set();
+        const flow = architecture.flows.find((item) => item.id === selectedFlowId);
+        if (!flow) return new Set();
+        const ids = new Set(flow.components);
+        return new Set(
+          architecture.dependencies
+            .filter(([from, to]) => ids.has(from) && ids.has(to))
+            .map(([from, to]) => `${from}->${to}`)
+        );
+      }
+
+      function drawEdges() {
+        const width = Math.max(boardEl.scrollWidth, boardEl.clientWidth);
+        const height = Math.max(boardEl.scrollHeight, boardEl.clientHeight);
+        edgeLayerEl.setAttribute("width", width);
+        edgeLayerEl.setAttribute("height", height);
+        edgeLayerEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+        const flowEdges = activeEdges();
+        edgeLayerEl.innerHTML = architecture.dependencies
+          .map(([from, to]) => {
+            const a = cardCenter(from);
+            const b = cardCenter(to);
+            if (!a || !b) return "";
+
+            const curve = Math.max(40, Math.abs(b.x - a.x) * 0.35);
+            const path = `M ${a.x} ${a.y} C ${a.x + curve} ${a.y}, ${b.x - curve} ${b.y}, ${b.x} ${b.y}`;
+            const classes = ["edge"];
+            if (flowEdges.has(`${from}->${to}`)) classes.push("flow-hit");
+            return `<path class="${classes.join(" ")}" d="${path}"></path>`;
+          })
+          .join("");
+      }
+
+      clearFlowEl.addEventListener("click", () => {
+        selectedFlowId = null;
+        updateFlowButtons();
+        updateCardStates();
+        drawEdges();
+        renderDetailPanel();
+        renderStepsPanel();
+      });
+
+      focusResetEl.addEventListener("click", () => {
+        selectedComponentId = null;
+        updateCardStates();
+        renderDetailPanel();
+      });
+
+      window.addEventListener("resize", drawEdges);
+      boardEl.addEventListener("scroll", drawEdges, { passive: true });
+
+      renderMeta();
+      renderColumns();
+      renderFlows();
+      renderAssumptions();
+      renderDetailPanel();
+      renderStepsPanel();
+      updateFlowButtons();
+      updateCardStates();
+      requestAnimationFrame(drawEdges);
+    </script>
+  </body>
+</html>

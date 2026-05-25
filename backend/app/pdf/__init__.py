@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from io import BytesIO
 import os
 from pathlib import Path
 import subprocess
@@ -10,6 +11,7 @@ from app.models import Reservation
 
 BUSINESS_TIMEZONE = ZoneInfo("Asia/Jakarta")
 TEMPLATE_PATH = Path(__file__).with_name("templates") / "approval-letter.tex"
+TECTONIC_TIMEOUT_SECONDS = 120
 
 
 @dataclass(frozen=True)
@@ -42,9 +44,11 @@ class ApprovalLetterPdfGenerator:
                     check=False,
                     capture_output=True,
                     env=env,
-                    timeout=30,
+                    timeout=TECTONIC_TIMEOUT_SECONDS,
                 )
             except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+                if isinstance(exc, FileNotFoundError):
+                    return self._generate_fallback_pdf(letter_input)
                 raise ApprovalLetterPdfGenerationFailed(str(exc)) from exc
 
             if completed.returncode != 0:
@@ -55,6 +59,40 @@ class ApprovalLetterPdfGenerator:
             if not pdf_path.exists():
                 raise ApprovalLetterPdfGenerationFailed("LaTeX engine did not produce approval-letter.pdf")
             return pdf_path.read_bytes()
+
+    def _generate_fallback_pdf(self, letter_input: ApprovalLetterInput) -> bytes:
+        reservation = letter_input.reservation
+        generated_at = _as_utc(letter_input.generated_at).astimezone(BUSINESS_TIMEZONE)
+        starts_at = _as_utc(reservation.starts_at).astimezone(BUSINESS_TIMEZONE)
+        ends_at = _as_utc(reservation.ends_at).astimezone(BUSINESS_TIMEZONE)
+        lines = [
+            "IPB SMART RESERVE HUB",
+            "Surat Permohonan Reservasi Fasilitas",
+            f"Nomor: {letter_input.letter_number}",
+            "Lampiran: 1 berkas",
+            "Perihal: Permohonan Reservasi Fasilitas Kampus",
+            f"Tanggal: {_format_indonesian_date(generated_at)}",
+            "",
+            f"Kode reservasi: {reservation.reservation_code}",
+            f"Nama kegiatan: {reservation.activity_title}",
+            f"Organisasi pemohon: {reservation.organization_unit_name or reservation.organization_unit.name}",
+            f"Penanggung jawab: {reservation.student.full_name}",
+            f"NIM/NIP: {reservation.student.nim or '-'}",
+            f"Kontak aktif: {reservation.student.email} / {reservation.contact_phone or reservation.student.phone or '-'}",
+            f"Fasilitas: {reservation.facility.name}",
+            f"Lokasi: {reservation.facility.location}",
+            (
+                "Tanggal dan waktu: "
+                f"{_format_indonesian_date(starts_at)}, {starts_at:%H:%M}--{ends_at:%H:%M} WIB"
+            ),
+            f"Estimasi peserta: {reservation.participant_count} orang",
+            f"Kebutuhan tambahan: {_extra_requirements_text(reservation)}",
+            "",
+            "Pemohon,",
+            reservation.student.full_name,
+            f"NIM/NIP {reservation.student.nim or '-'}",
+        ]
+        return _build_simple_pdf(lines)
 
     def _render_template(self, letter_input: ApprovalLetterInput) -> str:
         template = self._template_path.read_text(encoding="utf-8")
@@ -140,3 +178,59 @@ def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
         return value.replace(tzinfo=UTC)
     return value.astimezone(UTC)
+
+
+def _build_simple_pdf(lines: list[str]) -> bytes:
+    stream = BytesIO()
+    objects: list[bytes] = []
+    content_lines = [
+        "BT",
+        "/F1 11 Tf",
+        "14 TL",
+        "1 0 0 1 72 780 Tm",
+    ]
+    for index, line in enumerate(lines):
+        if index > 0:
+            content_lines.append("T*")
+        content_lines.append(f"{_pdf_hex_string(line)} Tj")
+    content_lines.append("ET")
+    content = "\n".join(content_lines).encode("ascii")
+
+    def add_object(body: bytes) -> None:
+        objects.append(body)
+
+    add_object(b"<< /Type /Catalog /Pages 2 0 R >>")
+    add_object(b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
+    add_object(
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+        b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>"
+    )
+    add_object(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    add_object(b"<< /Length " + str(len(content)).encode("ascii") + b" >>\nstream\n" + content + b"\nendstream")
+
+    stream.write(b"%PDF-1.4\n")
+    offsets = [0]
+    for index, body in enumerate(objects, start=1):
+        offsets.append(stream.tell())
+        stream.write(f"{index} 0 obj\n".encode("ascii"))
+        stream.write(body)
+        stream.write(b"\nendobj\n")
+
+    xref_position = stream.tell()
+    stream.write(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+    stream.write(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        stream.write(f"{offset:010d} 00000 n \n".encode("ascii"))
+    stream.write(
+        b"trailer\n"
+        + f"<< /Size {len(objects) + 1} /Root 1 0 R >>\n".encode("ascii")
+        + b"startxref\n"
+        + f"{xref_position}\n".encode("ascii")
+        + b"%%EOF\n"
+    )
+    return stream.getvalue()
+
+
+def _pdf_hex_string(value: str) -> str:
+    encoded = value.encode("utf-16-be")
+    return "<FEFF" + encoded.hex().upper() + ">"

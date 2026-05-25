@@ -32,7 +32,10 @@ From the repository root:
 ```sh
 cd backend
 uv sync --extra dev
+uv run python -m app.dev.reset_db
 uv run python -m app.dev.seed
+uv run python -m app.dev.catalog_seed
+uv run python -m app.dev.bootstrap_seed
 uv run uvicorn app.main:create_app --factory --reload
 ```
 
@@ -73,9 +76,23 @@ The frontend talks to `http://localhost:8000` by default. To point it somewhere 
 VITE_API_BASE_URL=http://localhost:8000 npm run dev
 ```
 
-## Demo Login Accounts
+## Local Accounts
 
-The development seed creates these local accounts:
+The backend provides two different local account sets:
+
+- `app.dev.seed` creates a full demo workflow set with reservations, notifications, reviews, and staff assignments.
+- `app.dev.bootstrap_seed` creates only the three minimal login accounts for smoke testing after a clean reset.
+
+### Demo Workflow Accounts
+
+Run:
+
+```sh
+cd backend
+uv run python -m app.dev.seed
+```
+
+These accounts are created by the full development seed:
 
 | Role | Email | Password |
 | --- | --- | --- |
@@ -85,6 +102,23 @@ The development seed creates these local accounts:
 | Staff facilities | `demo.staff.facilities@ipb.ac.id` | `demo12345` |
 | Staff finance | `demo.staff.finance@ipb.ac.id` | `demo12345` |
 | Super Admin | `demo.admin@ipb.ac.id` | `demo12345` |
+
+### Bootstrap Login Accounts
+
+Run:
+
+```sh
+cd backend
+uv run python -m app.dev.bootstrap_seed
+```
+
+These accounts are created by the minimal bootstrap seed:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Super Admin | `bootstrap.admin@ipb.ac.id` | `bootstrap12345` |
+| Staff | `bootstrap.staff@ipb.ac.id` | `bootstrap12345` |
+| Student | `bootstrap.student@apps.ipb.ac.id` | `bootstrap12345` |
 
 The seed includes 35 demo reservations across pending, review, approved, cancelled, rejected, expired, and completed states, plus 10 visible facility reviews and one hidden review for moderation demos.
 

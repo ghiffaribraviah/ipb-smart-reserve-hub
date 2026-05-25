@@ -1,24 +1,52 @@
-# Development Seed Data
+# Development Local Data
 
-`seed.py` membuat data demo untuk development lokal. Data ini idempotent: menjalankan seed berulang kali akan memperbarui data demo yang sama, bukan menggandakan row.
+Ada empat command local utama:
+- `reset_db.py` untuk wipe total database lokal
+- `catalog_seed.py` untuk load katalog fasilitas real
+- `bootstrap_seed.py` untuk 3 akun login minimal
+- `seed.py` untuk demo workflow lengkap
 
 Jangan jalankan seed ini untuk production. Script akan menolak environment `production`.
 
-## Cara Menjalankan
+## Demo Workflow Seed
 
 ```bash
 uv run python -m app.dev.seed
 ```
 
-## Login Demo
+`seed.py` membuat data demo lengkap untuk development lokal. Data ini idempotent: menjalankan seed berulang kali akan memperbarui data demo yang sama, bukan menggandakan row.
 
-Semua akun aktif dan memakai password yang sama:
+Jangan jalankan seed ini untuk production. Script akan menolak environment `production`.
+
+## Reset Database
+
+`reset_db.py` menghapus seluruh isi database lokal lalu membuat tabel kembali dari nol.
+
+Jangan jalankan command ini pada database production.
+
+```bash
+uv run python -m app.dev.reset_db
+```
+
+## Katalog Fasilitas
+
+`catalog_seed.py` memuat katalog fasilitas canonical yang diambil dari TLS IPB dan DUI IPB ke database yang sudah bersih atau sudah direfresh. Command ini tidak menambahkan user demo, reservasi demo, atau data workflow lain.
+
+Jangan jalankan command ini pada database production.
+
+```bash
+uv run python -m app.dev.catalog_seed
+```
+
+## Demo Workflow Accounts
+
+Semua akun demo workflow aktif dan memakai password yang sama:
 
 ```text
 demo12345
 ```
 
-## Akun
+## Demo Workflow Accounts Detail
 
 Total akun seed: 10.
 
@@ -62,6 +90,32 @@ Setiap fasilitas punya:
 - 2 gambar aktif: cover dan detail.
 - 5 row jam buka, Senin sampai Jumat pukul 08.00-16.00.
 - 1 staff assignment, dibagi bergantian ke tiga akun staff demo.
+
+## Bootstrap Login Seed
+
+`bootstrap_seed.py` membuat 3 akun login canonical untuk smoke test setelah reset.
+
+```bash
+uv run python -m app.dev.bootstrap_seed
+```
+
+Password bootstrap:
+
+```text
+bootstrap12345
+```
+
+| Role | Email |
+| --- | --- |
+| Super Admin | `bootstrap.admin@ipb.ac.id` |
+| Staff | `bootstrap.staff@ipb.ac.id` |
+| Student | `bootstrap.student@apps.ipb.ac.id` |
+
+Command ini juga local-only dan refuse di production.
+
+## Catatan Katalog Real
+
+`reset_db.py` dan `catalog_seed.py` dipakai bersama untuk membersihkan database lokal dan mengisi fasilitas real dari situs TLS/DUI. `bootstrap_seed.py` dipakai setelah reset kalau kamu masih perlu login minimal. `seed.py` tetap dipertahankan untuk kebutuhan blackbox testing alur reservasi, verifikasi dokumen, dan pembayaran.
 
 ## Kategori
 
@@ -117,8 +171,9 @@ Ringkasan variasi tambahan:
 
 ## Rekomendasi Akun Testing
 
-- Student flow baru: pakai `demo.student@apps.ipb.ac.id`, karena akun ini sengaja dibersihkan dari reservasi seed setiap seed dijalankan.
+- Student flow baru di data demo: pakai `demo.student@apps.ipb.ac.id`, karena akun ini sengaja dibersihkan dari reservasi seed setiap seed dijalankan.
 - Student flow dengan data semua state reservasi: pakai `demo.student.06@apps.ipb.ac.id`.
+- Smoke test setelah reset: pakai `bootstrap.student@apps.ipb.ac.id`.
 - Staff auditorium / review dokumen: pakai `demo.staff.operations@ipb.ac.id`.
 - Staff ruang kelas / flow pembayaran menunggu upload: pakai `demo.staff.facilities@ipb.ac.id`.
 - Staff fasilitas berbayar / review pembayaran: pakai `demo.staff.finance@ipb.ac.id`.

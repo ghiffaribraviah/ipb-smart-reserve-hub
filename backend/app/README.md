@@ -14,6 +14,9 @@ To run only the backend from the repository root:
 
 ```sh
 make backend-seed
+make backend-reset-db
+make backend-catalog-seed
+make backend-bootstrap-seed
 make backend-run
 ```
 
@@ -22,7 +25,10 @@ To work directly inside the backend project:
 ```sh
 cd backend
 uv sync --extra dev
+uv run python -m app.dev.reset_db
 uv run python -m app.dev.seed
+uv run python -m app.dev.catalog_seed
+uv run python -m app.dev.bootstrap_seed
 uv run uvicorn app.main:create_app --factory --reload
 ```
 
@@ -55,6 +61,8 @@ IPB_DATABASE_URL=sqlite+pysqlite:///./my_local.db uv run uvicorn app.main:create
 
 The app creates SQLAlchemy tables at startup for the current metadata. There is no migration runner in this repo right now, so an old local SQLite file may not match the current schema. If seed/startup fails with a missing-column error, use a fresh local database file.
 
+If you want to wipe a dirty local database and load the canonical facility catalog from TLS/DUI, use `make backend-reset-db` first, then `make backend-catalog-seed`.
+
 ## Development Seed
 
 Seed demo data:
@@ -65,6 +73,39 @@ uv run python -m app.dev.seed
 ```
 
 The seed is idempotent for current schema data and refuses to run when `IPB_ENVIRONMENT=production`.
+
+Reset and load the canonical facility catalog:
+
+```sh
+cd backend
+uv run python -m app.dev.reset_db
+uv run python -m app.dev.catalog_seed
+```
+
+These commands are local-only and refuse to run when `IPB_ENVIRONMENT=production`.
+
+## Akun Bootstrap
+
+`bootstrap_seed.py` membuat 3 akun login canonical untuk smoke test setelah reset.
+
+```sh
+cd backend
+uv run python -m app.dev.bootstrap_seed
+```
+
+Password bootstrap:
+
+```text
+bootstrap12345
+```
+
+| Role | Email |
+| --- | --- |
+| Super Admin | `bootstrap.admin@ipb.ac.id` |
+| Staff | `bootstrap.staff@ipb.ac.id` |
+| Student | `bootstrap.student@apps.ipb.ac.id` |
+
+The bootstrap seed is local-only and refuses to run when `IPB_ENVIRONMENT=production`.
 
 Demo credentials:
 
@@ -116,7 +157,7 @@ Main directories:
 ```text
 api/routes/        FastAPI route registration by feature area.
 core/              Settings, database setup, security, access policy, factories.
-dev/               Local development seed command.
+dev/               Local seed, reset, and catalog load commands.
 models/            SQLAlchemy ORM models and domain enums.
 repositories/      Persistence/query boundaries.
 schemas/           Pydantic request and response schemas.
@@ -145,7 +186,7 @@ Top-level structure:
 backend/app/
   api/              FastAPI route registration and shared response helpers.
   core/             Configuration, database session setup, security, access policy, dependency factories.
-  dev/              Local seed tooling for development/demo data.
+  dev/              Local seed tooling for development/demo data and bootstrap accounts.
   models/           SQLAlchemy ORM models and domain enums.
   notifications/    Notification package namespace.
   pdf/              PDF generation package namespace.

@@ -2,7 +2,7 @@ import { CalendarDays, Check, Clock, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { apiDownload, apiRequest } from "../../api/http";
+import { ApiError, apiDownload, apiPreview, apiRequest } from "../../api/http";
 import {
   staffDecisionDialogFixture,
   staffReservationDetailFixture,
@@ -190,14 +190,22 @@ function InfoItem({ label, value, wide }: { label: string; value: string; wide?:
 
 function DocumentRow({
   file,
+  onPreview,
   onDownload,
   status,
 }: {
   file: StaffFileMetadata;
+  onPreview: () => void;
   onDownload: () => void;
   status: string;
 }) {
   const uploadedAt = file.uploaded_at ?? file.generated_at;
+  const previewMutation = useMutation({
+    mutationFn: onPreview,
+  });
+  const downloadMutation = useMutation({
+    mutationFn: onDownload,
+  });
 
   return (
     <article className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-4 max-md:grid-cols-[44px_minmax(0,1fr)]">
@@ -215,14 +223,29 @@ function DocumentRow({
           {status}
         </span>
         <button
-          aria-label={`Unduh Dokumen ${file.filename}`}
+          aria-label={`Lihat Dokumen ${file.filename}`}
           className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-[13px] font-bold text-[#0f9d58] max-md:flex-1"
-          onClick={onDownload}
+          disabled={previewMutation.isPending}
+          onClick={() => previewMutation.mutate()}
           type="button"
         >
-          Unduh Dokumen
+          {previewMutation.isPending ? "Membuka..." : "Lihat Dokumen"}
+        </button>
+        <button
+          aria-label={`Unduh Dokumen ${file.filename}`}
+          className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-[13px] font-bold text-[#0f9d58] max-md:flex-1"
+          disabled={downloadMutation.isPending}
+          onClick={() => downloadMutation.mutate()}
+          type="button"
+        >
+          {downloadMutation.isPending ? "Mengunduh..." : "Unduh Dokumen"}
         </button>
       </div>
+      {previewMutation.isError || downloadMutation.isError ? (
+        <p className="m-0 text-xs font-semibold text-[#b91c1c] max-md:col-span-2">
+          {((previewMutation.error ?? downloadMutation.error) as ApiError).message}
+        </p>
+      ) : null}
     </article>
   );
 }
@@ -329,7 +352,8 @@ export function StaffReservationDetailPage() {
                 {documentFile && detail.review_actions.document.download_url ? (
                   <DocumentRow
                     file={documentFile}
-                    onDownload={() => void apiDownload(detail.review_actions.document.download_url as string)}
+                    onPreview={() => apiPreview(detail.review_actions.document.download_url as string)}
+                    onDownload={() => apiDownload(detail.review_actions.document.download_url as string)}
                     status={mapStaffReservationStatus(detail.document.review_status).label}
                   />
                 ) : (
@@ -340,7 +364,8 @@ export function StaffReservationDetailPage() {
                 {paymentFile && detail.review_actions.payment.download_url ? (
                   <DocumentRow
                     file={paymentFile}
-                    onDownload={() => void apiDownload(detail.review_actions.payment.download_url as string)}
+                    onPreview={() => apiPreview(detail.review_actions.payment.download_url as string)}
+                    onDownload={() => apiDownload(detail.review_actions.payment.download_url as string)}
                     status={mapStaffReservationStatus(detail.payment.review_status).label}
                   />
                 ) : null}
@@ -507,18 +532,10 @@ export function StaffReviewDecisionPage() {
             </div>
           </section>
           <aside className="rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
-            <h2 className="m-0 text-lg font-bold text-[#111827]">Aksi Review</h2>
+            <h2 className="m-0 text-lg font-bold text-[#111827]">Catatan Review</h2>
             <p className="m-0 mt-2 text-sm text-[#6b7280]">
-              Staff dapat menyetujui atau menolak dokumen setelah memeriksa file.
+              Form penolakan di bawah ini adalah aksi final untuk tahap review yang sedang dibuka.
             </p>
-            <div className="mt-5 grid gap-3">
-              <button className="rounded-lg bg-[#0f9d58] px-4 py-3 text-sm font-bold text-white" type="button">
-                Setujui Dokumen
-              </button>
-              <button className="rounded-lg bg-[#fee2e2] px-4 py-3 text-sm font-bold text-[#dc2626]" type="button">
-                Tolak Dokumen
-              </button>
-            </div>
           </aside>
         </div>
 

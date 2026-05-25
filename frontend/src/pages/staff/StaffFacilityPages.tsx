@@ -391,15 +391,6 @@ export function StaffFacilityListPage() {
               Anda.
             </p>
           </div>
-          <button
-            aria-disabled="true"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#0f9d58] px-5 text-sm font-bold text-white max-md:w-full"
-            disabled
-            type="button"
-          >
-            <Plus aria-hidden="true" size={18} />
-            Tambah Fasilitas
-          </button>
         </section>
 
         <section className="mt-8 flex items-center justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-white px-6 py-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:flex-col max-md:items-stretch max-md:p-4">

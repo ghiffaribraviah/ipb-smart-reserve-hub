@@ -76,6 +76,40 @@ const detailResponse = {
   },
 };
 
+async function authenticateStaff(page: Page) {
+  await page.route("http://localhost:8000/auth/me", async (route) => {
+    await route.fulfill({
+      json: {
+        email: "staff@apps.ipb.ac.id",
+        full_name: "Staf Fasilitas",
+        id: "staff-1",
+        is_active: true,
+        role: "staff",
+      },
+    });
+  });
+
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("ipb-srh-token", "e2e-staff-token");
+  });
+
+  await page.route("http://localhost:8000/notifications", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+  await page.route("http://localhost:8000/notifications?**", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+  await page.route("http://localhost:8000/notifications/unread-count", async (route) => {
+    await route.fulfill({ json: { unread_count: 0 } });
+  });
+  await page.route("http://localhost:8000/notifications/*/read", async (route) => {
+    await route.fulfill({ json: { id: "notification-1", read_at: "2026-05-26T00:00:00Z" } });
+  });
+  await page.route("http://localhost:8000/notifications/read-all", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+}
+
 async function mockStaffDetailApi(page: Page) {
   await page.route("http://localhost:8000/staff/reservations/RSV-STF-001", async (route) => {
     await route.fulfill({ json: detailResponse });
@@ -95,6 +129,7 @@ test.describe("staff reservation detail and decision surfaces", () => {
   test("matches the staff reservation detail reference", async ({ page }, testInfo) => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
+    await authenticateStaff(page);
     await mockStaffDetailApi(page);
     await page.goto("/staff/reservations/RSV-STF-001");
 
@@ -128,10 +163,11 @@ test.describe("staff reservation detail and decision surfaces", () => {
   test("matches the review decision dialog reference", async ({ page }, testInfo) => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
+    await authenticateStaff(page);
     await mockStaffDetailApi(page);
     await page.goto("/staff/reservations/RSV-STF-001/review-decision");
 
-    await expect(page.getByRole("heading", { name: "Dialog Keputusan Review" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Tolak Pengajuan" })).toBeVisible();
     const dialog = page.getByRole("dialog", { name: "Tolak Dokumen Reservasi" });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("Isi alasan yang jelas sebelum menolak pengajuan.")).toBeVisible();

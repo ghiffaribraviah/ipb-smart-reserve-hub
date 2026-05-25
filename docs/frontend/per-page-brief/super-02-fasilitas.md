@@ -22,16 +22,16 @@
 
 ## Design Contract
 
-- Layout: Super Admin shell, facility KPI cards, facility governance table/cards, and assignment controls.
-- Desktop behavior: KPI row, users-page-like governance table, then assignment controls.
-- Mobile behavior: stacked actions, KPI cards, facility governance cards, assignment cards.
-- Required copy/status labels: preserve `Fasilitas`, `Tambah Fasilitas`, `Butuh Staff`, `Aktif`, `Nonaktif`, `Edit Detail`, and archive/deactivate wording.
+- Layout: Super Admin shell, facility KPI cards, facility governance table/cards, pagination controls, and per-facility staff-assignment modal.
+- Desktop behavior: KPI row, users-page-like governance table, then pagination; staff assignment opens as modal from each row.
+- Mobile behavior: stacked actions, KPI cards, facility governance cards, pagination, and the same staff-assignment modal per card.
+- Required copy/status labels: preserve `Fasilitas`, `Tambah Fasilitas`, `Butuh Staff`, `Aktif`, `Nonaktif`, `Kelola staff`, `Edit Detail`, and archive/deactivate wording.
 - Source-of-truth notes: use deterministic facility thumbnails and Super Admin logo-green primary actions.
 
 ## UX Behavior
 
-- Primary actions: view facility governance and edit detail entry points. Add facility remains deferred unless a backend creation contract is added.
-- Secondary actions: view all and manage assignment. Import remains deferred unless a backend import contract is added.
+- Primary actions: view facility governance and manage staff assignment per facility. Add facility remains deferred unless a backend creation contract is added.
+- Secondary actions: paginate, inspect assigned staff, and manage assignment. Import remains deferred unless a backend import contract is added.
 - Loading state: KPI/list/assignment skeletons.
 - Empty state: no facilities or no assignment issues.
 - Error state: retry panels.
@@ -60,7 +60,7 @@
 
 - Status: `resolved`
 - Domain area: Super Admin
-- Affected UI: facility governance list, KPI cards, assignment coverage sidebar.
+- Affected UI: facility governance list, KPI cards, paginated table/card list, and assignment modal.
 - Contract implemented: Super Admin Facility governance list with active/inactive Facilities, assignment coverage, active assigned staff counts, and issue flags. Facility create/import remains out of scope.
 - Evidence: `backend/app/api/routes/facility_management_routes.py` registers `GET /admin/facilities/governance`; `backend/tests/test_super_admin_facility_governance.py` verifies active/inactive governance rows, assignment counts, issue flags, and non-admin denial; `backend/tests/test_http_application.py` verifies assignment mutation routes remain and no import route exists.
 - Source issue/PRD: `docs/issues/ISSUE-0016-staff-facility-management-and-assignment-scope.md`.
@@ -85,7 +85,7 @@
 
 - Desktop and mobile screenshots match references.
 - Integration checks: assignment actions respect Super Admin role and facility IDs.
-- Facility governance rows align with the Super Admin users table/card pattern and expose edit/detail plus deferred archive actions without introducing permanent deletion.
+- Facility governance rows align with the Super Admin users table/card pattern, paginate cleanly, and expose `Kelola staff` modal while edit/archive remain deferred until backend support exists.
 
 ## Open Questions
 

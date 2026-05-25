@@ -18,6 +18,7 @@ class AuditLogFilters:
     reservation_id: str | None = None
     created_from: datetime | None = None
     created_to: datetime | None = None
+    limit: int | None = None
 
 
 class AuditLogRepository(Protocol):
@@ -55,4 +56,7 @@ class SqlAlchemyAuditLogRepository:
             statement = statement.where(AuditLog.created_at >= filters.created_from)
         if filters.created_to is not None:
             statement = statement.where(AuditLog.created_at <= filters.created_to)
-        return list(self._session.scalars(statement.order_by(AuditLog.created_at.desc(), AuditLog.id.desc())))
+        statement = statement.order_by(AuditLog.created_at.desc(), AuditLog.id.desc())
+        if filters.limit is not None:
+            statement = statement.limit(filters.limit)
+        return list(self._session.scalars(statement))

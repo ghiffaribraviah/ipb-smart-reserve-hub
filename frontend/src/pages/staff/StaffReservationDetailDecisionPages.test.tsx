@@ -111,6 +111,10 @@ describe("StaffReservationDetailDecisionPages", () => {
 
   it("loads assigned reservation detail and downloads only available staff private files", async () => {
     const user = userEvent.setup();
+    const openMock = vi.spyOn(window, "open").mockImplementation(() => null);
+    const createObjectURLMock = vi
+      .spyOn(URL, "createObjectURL")
+      .mockImplementation(() => "blob:http://localhost/staff-preview");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
 
@@ -155,6 +159,7 @@ describe("StaffReservationDetailDecisionPages", () => {
     expect(screen.getByText("surat-persetujuan.pdf")).toBeVisible();
     expect(screen.getByText("bukti-pembayaran.png")).toBeVisible();
 
+    await user.click(screen.getByRole("button", { name: "Lihat Dokumen surat-persetujuan.pdf" }));
     await user.click(screen.getByRole("button", { name: "Unduh Dokumen surat-persetujuan.pdf" }));
     await user.click(screen.getByRole("button", { name: "Unduh Dokumen bukti-pembayaran.png" }));
 
@@ -168,6 +173,31 @@ describe("StaffReservationDetailDecisionPages", () => {
         expect.any(Object),
       );
     });
+    expect(createObjectURLMock).toHaveBeenCalledWith(expect.any(Blob));
+    expect(openMock).toHaveBeenCalledWith("blob:http://localhost/staff-preview", "_blank", "noopener,noreferrer");
+  });
+
+  it("shows inline file action errors when preview or download fails", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/staff/reservations/reservation-1") {
+        return jsonResponse(detailResponse);
+      }
+
+      if (url === "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letter/download") {
+        return jsonResponse({ detail: "Dokumen belum dikirim untuk verifikasi." }, 409);
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderDetail();
+
+    await user.click(await screen.findByRole("button", { name: "Lihat Dokumen surat-persetujuan.pdf" }));
+
+    expect(await screen.findByText("Dokumen belum dikirim untuk verifikasi.")).toBeVisible();
   });
 
   it("submits approve actions through the active review action URL and refetches detail", async () => {
@@ -251,6 +281,22 @@ describe("StaffReservationDetailDecisionPages", () => {
         expect.objectContaining({ method: "POST" }),
       );
     });
+  });
+
+  it("hides the redundant reject CTA when the dedicated review-decision route is open", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "http://localhost:8000/staff/reservations/reservation-1") {
+        return jsonResponse(detailResponse);
+      }
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderDetail("/staff/reservations/reservation-1/review-decision");
+
+    const dialog = await screen.findByRole("dialog", { name: "Tolak Dokumen Reservasi" });
+    expect(within(dialog).getByRole("button", { name: "Tolak Dokumen" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Tolak Pengajuan" })).not.toBeInTheDocument();
   });
 
   it("shows mutation errors and stable access errors", async () => {

@@ -129,7 +129,6 @@ test.describe("staff facility pages", () => {
     await page.goto("/staff/facilities");
 
     await expect(page.getByRole("heading", { name: "Fasilitas Terkelola" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Aksi tambah ditunda" })).toBeVisible();
     await expect(page.getByLabel("Filter by facility type")).toHaveValue("");
     await expect(page.getByLabel("Filter by facility status")).toHaveValue("");
     await expect(page.getByText("Menampilkan 4 fasilitas")).toBeVisible();

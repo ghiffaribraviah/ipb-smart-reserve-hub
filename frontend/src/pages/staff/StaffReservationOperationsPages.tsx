@@ -237,7 +237,7 @@ export function StaffShell({
         </div>
       ) : null}
 
-      <div className="md:pl-[78px]">{children}</div>
+      <div className="pb-20 md:pl-[78px] max-md:pb-14">{children}</div>
     </div>
   );
 }

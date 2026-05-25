@@ -26,6 +26,7 @@ def register_audit_log_routes(
         reservation_id: str | None = None,
         created_from: datetime | None = None,
         created_to: datetime | None = None,
+        limit: int | None = None,
         audit_logs: AuditLogModule = Depends(get_audit_logs),
         _: UserAccount = Depends(require_access(AccessPolicyAction.view_audit_logs)),
     ):
@@ -39,5 +40,6 @@ def register_audit_log_routes(
                 reservation_id=reservation_id,
                 created_from=created_from,
                 created_to=created_to,
+                limit=limit,
             )
         )

@@ -14,6 +14,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAdminHelp, setShowAdminHelp] = useState(false);
   const showRegisterSuccess = searchParams.get("registered") === "1";
   const showExpiredSession = searchParams.get("reason") === "expired";
 
@@ -80,7 +81,13 @@ export function LoginPage() {
           <label className="text-sm font-semibold text-[#2D3748]" htmlFor="login-password">
             Kata Sandi
           </label>
-          <span className="text-sm font-medium text-[#718096]">Hubungi admin</span>
+          <button
+            className="text-sm font-medium text-[#0A9361] no-underline hover:underline"
+            onClick={() => setShowAdminHelp(true)}
+            type="button"
+          >
+            Hubungi admin
+          </button>
         </div>
         <div className="relative mb-6">
           <span className="absolute left-4 top-1/2 flex -translate-y-1/2 text-[#718096]">
@@ -113,6 +120,39 @@ export function LoginPage() {
           Daftar di sini
         </Link>
       </div>
+
+      {showAdminHelp ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4"
+          onClick={() => setShowAdminHelp(false)}
+        >
+          <section
+            aria-modal="true"
+            aria-label="Hubungi admin"
+            role="dialog"
+            className="w-full max-w-[520px] rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-[0_24px_48px_rgba(15,23,42,0.18)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[#E2E8F0] pb-4">
+              <div>
+                <h2 className="m-0 text-xl font-bold text-[#2D3748]">Hubungi admin</h2>
+                <p className="m-0 mt-1 text-sm text-[#718096]">Pesan bantuan untuk tugas ini.</p>
+              </div>
+              <button
+                aria-label="Tutup bantuan admin"
+                className="text-sm font-semibold text-[#0A9361] hover:underline"
+                onClick={() => setShowAdminHelp(false)}
+                type="button"
+              >
+                Tutup
+              </button>
+            </div>
+            <p className="m-0 mt-5 text-sm leading-6 text-[#2D3748]">
+              reach out @fasya/@bravi/@daffakautsar/@salman from @ilkomerz60 at instagram :)
+            </p>
+          </section>
+        </div>
+      ) : null}
     </AuthLayout>
   );
 }

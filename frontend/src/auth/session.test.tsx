@@ -129,4 +129,19 @@ describe("session routing", () => {
     expect(await screen.findByRole("heading", { name: "Student Home" })).toBeVisible();
     expect(sessionStorage.getItem("ipb-srh-token")).toBe("new-token");
   });
+
+  it("opens the admin contact modal instead of navigating away", async () => {
+    const user = userEvent.setup();
+
+    renderRoutes("/login");
+    await user.click(screen.getByRole("button", { name: "Hubungi admin" }));
+
+    expect(await screen.findByRole("heading", { name: "Hubungi admin" })).toBeVisible();
+    expect(
+      screen.getByText("reach out @fasya/@bravi/@daffakautsar/@salman from @ilkomerz60 at instagram :)"),
+    ).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Tutup bantuan admin" }));
+    await waitFor(() => expect(screen.queryByRole("heading", { name: "Hubungi admin" })).not.toBeInTheDocument());
+  });
 });

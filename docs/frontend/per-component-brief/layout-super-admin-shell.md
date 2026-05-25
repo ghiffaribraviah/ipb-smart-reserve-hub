@@ -23,17 +23,15 @@ Provide Super Admin navigation and role-specific accenting.
 
 ## Anatomy
 
-- Fixed header.
-- Brand.
-- Desktop nav: `Dashboard`, `Pengguna`, `Fasilitas`, `Laporan`, `Sistem`.
-- Notification.
-- `SA` profile circle.
-- Footer.
+- Fixed header with brand, notification, and `SA` profile circle.
+- Desktop hover-expand sidebar nav: `Dashboard`, `Pengguna`, `Fasilitas`, `Laporan`, `Sistem`.
+- Mobile off-canvas drawer with the same nav items.
+- Main content shifted right on desktop to avoid the collapsed sidebar.
 
 ## Variants
 
 - Active nav item.
-- Mobile compact header.
+- Mobile compact header with drawer trigger.
 
 ## Behavior
 
@@ -51,18 +49,18 @@ Provide Super Admin navigation and role-specific accenting.
 
 ## Design Rules
 
-- Desktop: `72px` fixed shared shell header, `1200px` content.
+- Desktop: `72px` fixed shared shell header, `78px` collapsed sidebar that expands on hover, `1200px` content.
 - Mobile: `64px` header with hamburger, inline brand, notification, and `SA` profile.
 - Color: logo green Super Admin accent for primary actions/profile affordance.
-- Overflow: stacked mobile sections.
+- Overflow: stacked mobile sections, no footer.
 
 ## Implementation Notes
 
-- Do not force student green into Super Admin-only surfaces. Footer links mirror `Dashboard`, `Pengguna`, `Fasilitas`, `Laporan`, and `Sistem`.
+- Do not force student green into Super Admin-only surfaces. Use the same sidebar pattern as staff for desktop navigation, but keep Super Admin labels and profile affordance.
 
 ## Acceptance Checks
 
-- Super Admin page and shared shell screenshots match references.
+- Super Admin page and shared shell screenshots match references or the updated sidebar shell implementation.
 
 ## Open Questions
 

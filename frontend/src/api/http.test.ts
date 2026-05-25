@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiDownload, apiRequest, setAuthTokenProvider, setUnauthorizedHandler } from "./http";
+import { apiDownload, apiPreview, apiRequest, setAuthTokenProvider, setUnauthorizedHandler } from "./http";
 
 describe("apiRequest", () => {
   afterEach(() => {
@@ -119,5 +119,37 @@ describe("apiDownload", () => {
     expect(anchor.href).toBe("blob:http://localhost/approval");
     expect(removeChild).toHaveBeenCalledWith(anchor);
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:http://localhost/approval");
+  });
+});
+
+describe("apiPreview", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    setAuthTokenProvider(null);
+  });
+
+  it("opens a protected blob in a new tab", async () => {
+    const open = vi.fn();
+    const createObjectURL = vi.fn(() => "blob:http://localhost/preview");
+    const revokeObjectURL = vi.fn();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("binary", {
+        headers: {
+          "Content-Disposition": 'attachment; filename="approval.pdf"',
+          "Content-Type": "application/pdf",
+        },
+        status: 200,
+      }),
+    );
+    vi.spyOn(URL, "createObjectURL").mockImplementation(createObjectURL);
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(revokeObjectURL);
+    vi.spyOn(window, "open").mockImplementation(open as typeof window.open);
+
+    await expect(apiPreview("/files/approval")).resolves.toMatchObject({
+      url: "blob:http://localhost/preview",
+    });
+
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    expect(open).toHaveBeenCalledWith("blob:http://localhost/preview", "_blank", "noopener,noreferrer");
   });
 });

@@ -54,8 +54,6 @@ test.describe("auth pages", () => {
 
     await page.goto("/register?fixture=error");
     await expect(page.getByText("Email kampus sudah terdaftar")).toBeVisible();
-    await expect(
-      page.getByText("Gunakan email aktif dengan domain @apps.ipb.ac.id."),
-    ).toBeVisible();
+    await expect(page.getByText("Gunakan email aktif dengan domain yang diizinkan.")).toBeVisible();
   });
 });

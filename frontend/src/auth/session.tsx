@@ -38,7 +38,9 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const e2eAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === "1";
+const e2eAuthBypass =
+  (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_E2E_AUTH_BYPASS ===
+  "1";
 
 const roleLanding: Record<UserRole, string> = {
   staff: "/staff",

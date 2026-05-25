@@ -31,7 +31,7 @@
 ## UX Behavior
 
 - Primary actions: submit login form.
-- Secondary actions: navigate to registration and recover from redirect messages if shown.
+- Secondary actions: navigate to registration, recover from redirect messages if shown, and open a text-only admin help modal.
 - Loading state: disable submit and keep form dimensions stable.
 - Empty state: not applicable.
 - Error state: invalid credentials, expired session, and network failure use the reference form-error style.
@@ -78,9 +78,8 @@
 - Mobile screenshot at `390 x 844`.
 - No mobile horizontal overflow.
 - Text does not overlap or overflow controls.
-- Integration checks: valid login stores session; invalid login shows error; safe redirect is honored; external redirect is ignored.
+- Integration checks: valid login stores session; invalid login shows error; safe redirect is honored; external redirect is ignored; admin help opens a modal instead of navigating away.
 
 ## Open Questions
 
 - None.
-

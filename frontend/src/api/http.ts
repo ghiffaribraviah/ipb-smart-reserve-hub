@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL =
+  (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_API_BASE_URL ??
+  "http://localhost:8000";
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -155,6 +157,24 @@ export async function apiDownload(path: string, options: RequestInit = {}) {
   triggerBrowserDownload(blob, filename);
 
   return { blob, filename };
+}
+
+export async function apiPreview(path: string, options: RequestInit = {}) {
+  const response = await fetch(buildUrl(path), {
+    ...options,
+    headers: buildHeaders(undefined, options.headers),
+  });
+
+  if (!response.ok) {
+    const payload = await readError(response);
+    throw new ApiError(errorMessage(payload, response.statusText), response.status, payload);
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "noopener,noreferrer");
+
+  return { blob, url };
 }
 
 function triggerBrowserDownload(blob: Blob, filename: string) {

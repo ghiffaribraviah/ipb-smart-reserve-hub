@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 
 from app.core.access_policy import AccessPolicyAction
 from app.schemas.notification_schemas import NotificationResponse, NotificationUnreadCountResponse
@@ -16,10 +16,12 @@ def register_notification_routes(
 ) -> None:
     @app.get("/notifications", response_model=list[NotificationResponse])
     async def list_notifications(
+        limit: int = Query(default=20, ge=1, le=100),
+        offset: int = Query(default=0, ge=0),
         notifications: NotificationModule = Depends(get_notifications),
         current_user: UserAccount = Depends(require_access(AccessPolicyAction.view_notifications)),
     ):
-        return notifications.list_notifications(current_user)
+        return notifications.list_notifications(current_user, limit=limit, offset=offset)
 
     @app.get("/notifications/unread-count", response_model=NotificationUnreadCountResponse)
     async def unread_notification_count(

@@ -1,101 +1,40 @@
 import { Bell, CheckCircle2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { apiRequest } from "../api/http";
 import { cn } from "../utils/cn";
+import { Link } from "react-router-dom";
+import {
+  categoryLabel,
+  fetchNotifications,
+  fetchUnreadNotificationCount,
+  formatNotificationTime,
+  markAllNotificationsRead,
+  markNotificationRead,
+  notificationListingHref,
+  resolveNotificationHref,
+  type NotificationItem,
+  type NotificationRole,
+} from "../notifications/notificationCenter";
 
-type NotificationRole = "staff" | "student" | "super_admin";
+function markNotificationReadInCache(queryClient: ReturnType<typeof useQueryClient>, notificationId: string) {
+  queryClient.setQueryData<NotificationItem[] | undefined>(["notifications"], (current) => {
+    if (!current) {
+      return current;
+    }
 
-type NotificationTarget = {
-  reservation_id: string | null;
-  route: string;
-  type: string;
-};
+    return current.map((notification) =>
+      notification.id === notificationId && notification.read_at === null
+        ? { ...notification, read_at: new Date().toISOString() }
+        : notification,
+    );
+  });
+  queryClient.setQueryData<{ unread_count: number } | undefined>(["notifications", "unread-count"], (current) => {
+    if (!current || current.unread_count <= 0) {
+      return current;
+    }
 
-type NotificationItem = {
-  category: string;
-  created_at: string;
-  id: string;
-  message: string;
-  read_at: string | null;
-  reservation_id: string | null;
-  target: NotificationTarget | null;
-  title: string;
-};
-
-const roleLanding: Record<NotificationRole, string> = {
-  staff: "/staff",
-  student: "/student",
-  super_admin: "/super-admin",
-};
-
-const supportedRoutePatterns: Record<NotificationRole, RegExp[]> = {
-  staff: [/^\/staff$/, /^\/staff\/facilities(?:\/[^/]+)?$/, /^\/staff\/reservations(?:\/[^/]+)?$/],
-  student: [/^\/student$/, /^\/student\/facilities(?:\/[^/]+)?$/, /^\/student\/reservations(?:\/[^/]+)?$/],
-  super_admin: [
-    /^\/super-admin$/,
-    /^\/super-admin\/facilities(?:\/[^/]+)?$/,
-    /^\/super-admin\/reports$/,
-    /^\/super-admin\/system$/,
-    /^\/super-admin\/users$/,
-  ],
-};
-
-function fetchNotifications() {
-  return apiRequest<NotificationItem[]>("/notifications");
-}
-
-function fetchUnreadNotificationCount() {
-  return apiRequest<{ unread_count: number }>("/notifications/unread-count");
-}
-
-function markNotificationRead(notificationId: string) {
-  return apiRequest<NotificationItem>(`/notifications/${notificationId}/read`, { method: "POST" });
-}
-
-function markAllNotificationsRead() {
-  return apiRequest<NotificationItem[]>("/notifications/read-all", { method: "POST" });
-}
-
-function fillRouteTemplate(route: string, reservationId: string | null) {
-  if (!reservationId) {
-    return route;
-  }
-
-  return route.replace("{reservation_id}", encodeURIComponent(reservationId));
-}
-
-function isSupportedRoleRoute(route: string, role: NotificationRole) {
-  return supportedRoutePatterns[role].some((pattern) => pattern.test(route));
-}
-
-export function resolveNotificationHref(notification: NotificationItem, role: NotificationRole) {
-  const route = notification.target?.route
-    ? fillRouteTemplate(notification.target.route, notification.target.reservation_id ?? notification.reservation_id)
-    : null;
-
-  if (route && isSupportedRoleRoute(route, role)) {
-    return route;
-  }
-
-  return roleLanding[role];
-}
-
-function formatNotificationTime(value: string) {
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "short",
-  }).format(new Date(value));
-}
-
-function categoryLabel(category: string) {
-  if (category === "reservation") {
-    return "Reservasi";
-  }
-
-  return "Sistem";
+    return { unread_count: current.unread_count - 1 };
+  });
 }
 
 export function NotificationSurface({
@@ -120,6 +59,9 @@ export function NotificationSurface({
   });
   const markReadMutation = useMutation({
     mutationFn: markNotificationRead,
+    onMutate: async (notificationId) => {
+      markNotificationReadInCache(queryClient, notificationId);
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["notifications"] });
       await queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
@@ -203,20 +145,34 @@ export function NotificationSurface({
             {!notificationsQuery.isLoading && !notificationsQuery.isError
               ? notifications.map((notification) => {
                   const isUnread = notification.read_at === null;
+                  const href = resolveNotificationHref(notification, role);
                   return (
                     <article
-                      className="grid gap-2 border-b border-[#eef2f7] px-4 py-3 last:border-b-0"
+                      className={cn(
+                        "grid gap-2 border-b border-[#eef2f7] px-4 py-3 last:border-b-0 transition-colors",
+                        isUnread ? "bg-[#eef6f1]" : "bg-white",
+                      )}
                       key={notification.id}
                     >
                       <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="min-w-0">
+                        <Link
+                          aria-label={`Buka notifikasi ${notification.title}`}
+                          className="min-w-0 flex-1 rounded-lg no-underline outline-none transition-colors hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-[#0f9d58]"
+                          to={href}
+                          onClick={() => {
+                            if (isUnread) {
+                              markReadMutation.mutate(notification.id);
+                            }
+                            setIsOpen(false);
+                          }}
+                        >
                           <p className="m-0 break-words text-sm font-bold leading-5 text-[#111827]">
                             {notification.title}
                           </p>
                           <p className="m-0 mt-1 break-words text-xs font-medium leading-5 text-[#6b7280]">
                             {notification.message}
                           </p>
-                        </div>
+                        </Link>
                         <div className="flex shrink-0 items-start gap-1.5 pt-0.5">
                           {isUnread ? (
                             <span
@@ -244,18 +200,19 @@ export function NotificationSurface({
                         <time dateTime={notification.created_at}>{formatNotificationTime(notification.created_at)}</time>
                         <span>{isUnread ? "Belum dibaca" : "Sudah dibaca"}</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <a
-                          className="rounded-lg border border-[#dbe2ea] px-3 py-2 text-xs font-bold text-[#374151] no-underline"
-                          href={resolveNotificationHref(notification, role)}
-                        >
-                          Buka {notification.title}
-                        </a>
-                      </div>
                     </article>
                   );
                 })
               : null}
+          </div>
+          <div className="border-t border-[#e5e7eb] bg-[#f8fafc] px-4 py-3">
+            <Link
+              className="text-sm font-bold text-[#0f9d58] no-underline"
+              to={notificationListingHref(role)}
+              onClick={() => setIsOpen(false)}
+            >
+              Lihat semua notifikasi
+            </Link>
           </div>
         </div>
       ) : null}

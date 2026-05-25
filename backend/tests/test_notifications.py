@@ -2,9 +2,10 @@ from datetime import UTC, datetime
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
 
 from app.main import create_app
-from app.models import ReservationStatus, UserRole
+from app.models import Notification, ReservationStatus, User, UserRole
 from app.services.deadline_worker import DeadlineWorkerModule
 from tests.data_builder import DataBuilder
 
@@ -50,6 +51,28 @@ async def _create_reservation(
         },
     )
     return created.json()
+
+
+def _seed_notification(
+    app,
+    *,
+    recipient_id: str,
+    title: str,
+    message: str,
+    created_at: datetime,
+    read_at: datetime | None = None,
+) -> str:
+    with app.state.session_factory() as session:
+        notification = Notification(
+            recipient_id=recipient_id,
+            title=title,
+            message=message,
+            created_at=created_at,
+            read_at=read_at,
+        )
+        session.add(notification)
+        session.commit()
+        return notification.id
 
 
 @pytest.mark.anyio
@@ -199,6 +222,129 @@ async def test_user_can_view_unread_notification_count():
 
     assert count.status_code == 200
     assert count.json() == {"unread_count": 1}
+
+
+@pytest.mark.anyio
+async def test_notification_inbox_returns_only_most_recent_items():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        student_token = await _register_and_login(client, email="batas-notif@apps.ipb.ac.id")
+        with app.state.session_factory() as session:
+            student_id = session.scalar(select(User.id).where(User.email == "batas-notif@apps.ipb.ac.id"))
+
+        for index in range(25):
+            _seed_notification(
+                app,
+                recipient_id=student_id,
+                title=f"Notif {index + 1}",
+                message=f"Pesan {index + 1}",
+                created_at=datetime(2026, 5, 1, 0, index, tzinfo=UTC),
+            )
+
+        inbox = await client.get("/notifications", headers={"Authorization": f"Bearer {student_token}"})
+        unread_count = await client.get(
+            "/notifications/unread-count",
+            headers={"Authorization": f"Bearer {student_token}"},
+        )
+
+    assert inbox.status_code == 200
+    assert len(inbox.json()) == 20
+    assert inbox.json()[0]["title"] == "Notif 25"
+    assert inbox.json()[-1]["title"] == "Notif 6"
+    assert unread_count.status_code == 200
+    assert unread_count.json() == {"unread_count": 25}
+
+
+@pytest.mark.anyio
+async def test_notification_inbox_supports_limit_and_offset_for_older_entries():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        student_token = await _register_and_login(client, email="older-notif@apps.ipb.ac.id")
+        with app.state.session_factory() as session:
+            student_id = session.scalar(select(User.id).where(User.email == "older-notif@apps.ipb.ac.id"))
+
+        for index in range(25):
+            _seed_notification(
+                app,
+                recipient_id=student_id,
+                title=f"Notif {index + 1}",
+                message=f"Pesan {index + 1}",
+                created_at=datetime(2026, 5, 1, 0, index, tzinfo=UTC),
+            )
+
+        older_page = await client.get(
+            "/notifications?limit=10&offset=10",
+            headers={"Authorization": f"Bearer {student_token}"},
+        )
+
+    assert older_page.status_code == 200
+    assert len(older_page.json()) == 10
+    assert older_page.json()[0]["title"] == "Notif 15"
+    assert older_page.json()[-1]["title"] == "Notif 6"
+
+
+@pytest.mark.anyio
+async def test_mark_all_notifications_read_marks_only_unread_items_and_clears_older_unread_entries():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 5, 2, 9, 30, tzinfo=UTC),
+    )
+    transport = ASGITransport(app=app)
+    already_read_at = datetime(2026, 5, 1, 8, 0, tzinfo=UTC)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        student_token = await _register_and_login(client, email="mark-all@apps.ipb.ac.id")
+        with app.state.session_factory() as session:
+            student_id = session.scalar(select(User.id).where(User.email == "mark-all@apps.ipb.ac.id"))
+
+        already_read_id = _seed_notification(
+            app,
+            recipient_id=student_id,
+            title="Sudah dibaca",
+            message="Tetap pakai timestamp lama",
+            created_at=datetime(2026, 5, 1, 7, 0, tzinfo=UTC),
+            read_at=already_read_at,
+        )
+        for index in range(22):
+            _seed_notification(
+                app,
+                recipient_id=student_id,
+                title=f"Belum dibaca {index + 1}",
+                message=f"Pesan unread {index + 1}",
+                created_at=datetime(2026, 5, 1, 8, index, tzinfo=UTC),
+            )
+
+        mark_all = await client.post(
+            "/notifications/read-all",
+            headers={"Authorization": f"Bearer {student_token}"},
+        )
+        unread_count = await client.get(
+            "/notifications/unread-count",
+            headers={"Authorization": f"Bearer {student_token}"},
+        )
+
+    assert mark_all.status_code == 200
+    assert len(mark_all.json()) == 20
+    assert all(notification["read_at"] == "2026-05-02T09:30:00Z" for notification in mark_all.json())
+    assert unread_count.status_code == 200
+    assert unread_count.json() == {"unread_count": 0}
+
+    with app.state.session_factory() as session:
+        unread_notifications = list(session.scalars(select(Notification).where(Notification.recipient_id == student_id, Notification.read_at.is_(None))))
+        already_read = session.get(Notification, already_read_id)
+
+    assert unread_notifications == []
+    assert already_read.read_at == already_read_at.replace(tzinfo=None)
 
 
 @pytest.mark.anyio

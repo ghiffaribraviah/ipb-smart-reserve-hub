@@ -1,6 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { Route, Routes } from "react-router-dom";
 import { NotificationSurface } from "./NotificationSurface";
 import { renderWithProviders } from "../test/render";
 
@@ -48,10 +49,15 @@ describe("NotificationSurface", () => {
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/notifications", expect.any(Object));
     expect(await screen.findByText("Reservasi diterima")).toBeInTheDocument();
     expect(screen.getByText("Belum dibaca")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Buka Reservasi diterima" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Buka notifikasi Reservasi diterima" })).toHaveAttribute(
       "href",
       "/student/reservations/reservation-1",
     );
+    expect(screen.getByRole("link", { name: "Lihat semua notifikasi" })).toHaveAttribute(
+      "href",
+      "/student/notifications",
+    );
+    expect(screen.queryByText("Buka Reservasi diterima")).not.toBeInTheDocument();
   });
 
   it("marks an unread notification read and refreshes the visible state", async () => {
@@ -77,6 +83,37 @@ describe("NotificationSurface", () => {
       expect.objectContaining({ method: "POST" }),
     );
     expect(await screen.findByText("Sudah dibaca")).toBeInTheDocument();
+  });
+
+  it("marks an unread notification read when the user opens it from the notification row", async () => {
+    const readNotification = {
+      ...unreadNotification,
+      read_at: "2026-05-01T00:00:00Z",
+    };
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse({ unread_count: 1 }))
+      .mockResolvedValueOnce(jsonResponse([unreadNotification]))
+      .mockResolvedValueOnce(jsonResponse(readNotification))
+      .mockResolvedValueOnce(jsonResponse({ unread_count: 0 }))
+      .mockResolvedValueOnce(jsonResponse([readNotification]));
+
+    renderWithProviders(
+      <Routes>
+        <Route element={<NotificationSurface role="student" />} path="/" />
+        <Route element={<p>Reservation detail route</p>} path="/student/reservations/:reservationId" />
+      </Routes>,
+      { initialEntries: ["/"] },
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Notifikasi" }));
+    await userEvent.click(await screen.findByRole("link", { name: "Buka notifikasi Reservasi diterima" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/notifications/notification-1/read",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(await screen.findByText("Reservation detail route")).toBeInTheDocument();
   });
 
   it("marks all unread notifications read from the header action", async () => {
@@ -144,11 +181,11 @@ describe("NotificationSurface", () => {
     await userEvent.click(screen.getByRole("button", { name: "Notifikasi" }));
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(await screen.findByRole("link", { name: "Buka Review reservasi" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Buka notifikasi Review reservasi" })).toHaveAttribute(
       "href",
       "/staff/reservations/reservation-2",
     );
-    expect(screen.getByRole("link", { name: "Buka Target lama" })).toHaveAttribute("href", "/staff");
+    expect(screen.getByRole("link", { name: "Buka notifikasi Target lama" })).toHaveAttribute("href", "/staff");
   });
 
   it("shows empty, error, and retry states", async () => {

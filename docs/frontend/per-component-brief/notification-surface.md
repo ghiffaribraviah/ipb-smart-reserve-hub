@@ -41,6 +41,7 @@ Display recent system/reservation notifications from the header notification act
 - Shows an unread badge on the bell trigger before opening the popover.
 - Supports marking notifications read when opened or through an explicit action.
 - Supports marking all unread notifications read from the popover header.
+- Exposes a `Lihat semua notifikasi` route into the full notification history page.
 - Links route to the relevant reservation, facility, or admin surface.
 
 ## Accessibility

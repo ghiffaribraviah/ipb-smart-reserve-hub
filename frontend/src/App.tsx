@@ -55,6 +55,11 @@ import { DataDisplayComponentsPage } from "./pages/__reference__/DataDisplayComp
 import { UploadCalendarStatesPage } from "./pages/__reference__/UploadCalendarStatesPage";
 import { UiPrimitivesPage } from "./pages/__reference__/UiPrimitivesPage";
 import { ReservationWorkflowComponentsPage } from "./pages/__reference__/ReservationWorkflowComponentsPage";
+import {
+  StaffNotificationsPage,
+  StudentNotificationsPage,
+  SuperAdminNotificationsPage,
+} from "./pages/notifications/NotificationPages";
 
 export function App() {
   return (
@@ -63,10 +68,12 @@ export function App() {
       <Route element={<LoginPage />} path="/login" />
       <Route element={<RegisterPage />} path="/register" />
       <Route element={<RequireRole allow={["student"]}><StudentHomePage /></RequireRole>} path="/student" />
+      <Route element={<RequireRole allow={["student"]}><StudentNotificationsPage /></RequireRole>} path="/student/notifications" />
       <Route element={<RequireRole allow={["student"]}><StudentProfilePage /></RequireRole>} path="/student/profile" />
       <Route element={<RequireRole allow={["student"]}><StudentFacilityCatalogPage /></RequireRole>} path="/student/facilities" />
       <Route element={<RequireRole allow={["student"]}><StudentReservationListPage /></RequireRole>} path="/student/reservations" />
       <Route element={<RequireRole allow={["staff"]}><StaffHomePage /></RequireRole>} path="/staff" />
+      <Route element={<RequireRole allow={["staff"]}><StaffNotificationsPage /></RequireRole>} path="/staff/notifications" />
       <Route element={<RequireRole allow={["staff"]}><StaffProfilePage /></RequireRole>} path="/staff/profile" />
       <Route element={<RequireRole allow={["staff"]}><StaffReservationListPage /></RequireRole>} path="/staff/reservations" />
       <Route
@@ -81,6 +88,7 @@ export function App() {
         path="/staff/facilities/:facilityId/schedule"
       />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminDashboardPage /></RequireRole>} path="/super-admin" />
+      <Route element={<RequireRole allow={["super_admin"]}><SuperAdminNotificationsPage /></RequireRole>} path="/super-admin/notifications" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminProfilePage /></RequireRole>} path="/super-admin/profile" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminUsersPage /></RequireRole>} path="/super-admin/users" />
       <Route element={<RequireRole allow={["super_admin"]}><SuperAdminFacilitiesPage /></RequireRole>} path="/super-admin/facilities" />

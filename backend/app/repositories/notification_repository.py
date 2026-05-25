@@ -10,7 +10,10 @@ class NotificationRepository(Protocol):
     def add(self, notification: Notification) -> Notification:
         raise NotImplementedError
 
-    def list_for_user(self, user_id: str) -> list[Notification]:
+    def list_for_user(self, user_id: str, *, limit: int | None = None, offset: int = 0) -> list[Notification]:
+        raise NotImplementedError
+
+    def list_unread_for_user(self, user_id: str) -> list[Notification]:
         raise NotImplementedError
 
     def get_for_user(self, notification_id: str, user_id: str) -> Notification | None:
@@ -29,11 +32,23 @@ class SqlAlchemyNotificationRepository:
         self._session.flush()
         return notification
 
-    def list_for_user(self, user_id: str) -> list[Notification]:
+    def list_for_user(self, user_id: str, *, limit: int | None = None, offset: int = 0) -> list[Notification]:
+        query = (
+            select(Notification)
+            .where(Notification.recipient_id == user_id)
+            .order_by(Notification.created_at.desc(), Notification.id.desc())
+        )
+        if offset > 0:
+            query = query.offset(offset)
+        if limit is not None:
+            query = query.limit(limit)
+        return list(self._session.scalars(query))
+
+    def list_unread_for_user(self, user_id: str) -> list[Notification]:
         return list(
             self._session.scalars(
                 select(Notification)
-                .where(Notification.recipient_id == user_id)
+                .where(Notification.recipient_id == user_id, Notification.read_at.is_(None))
                 .order_by(Notification.created_at.desc(), Notification.id.desc())
             )
         )

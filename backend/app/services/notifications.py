@@ -31,6 +31,8 @@ class UserNotification:
 
 
 class NotificationModule:
+    INBOX_LIMIT = 20
+
     def __init__(
         self,
         *,
@@ -40,14 +42,19 @@ class NotificationModule:
         self._notification_repository = notification_repository
         self._clock = clock
 
-    def list_notifications(self, user: UserAccount) -> list[UserNotification]:
+    def list_notifications(self, user: UserAccount, *, limit: int | None = None, offset: int = 0) -> list[UserNotification]:
+        resolved_limit = self.INBOX_LIMIT if limit is None else limit
         return [
             _to_user_notification(notification, user)
-            for notification in self._notification_repository.list_for_user(user.id)
+            for notification in self._notification_repository.list_for_user(
+                user.id,
+                limit=resolved_limit,
+                offset=offset,
+            )
         ]
 
     def unread_count(self, user: UserAccount) -> int:
-        return sum(1 for notification in self._notification_repository.list_for_user(user.id) if notification.read_at is None)
+        return len(self._notification_repository.list_unread_for_user(user.id))
 
     def mark_read(self, user: UserAccount, notification_id: str) -> UserNotification:
         notification = self._notification_repository.get_for_user(notification_id, user.id)
@@ -58,12 +65,11 @@ class NotificationModule:
         return _to_user_notification(notification, user)
 
     def mark_all_read(self, user: UserAccount) -> list[UserNotification]:
-        notifications = self._notification_repository.list_for_user(user.id)
+        notifications = self._notification_repository.list_unread_for_user(user.id)
         now = _as_utc(self._clock())
         for notification in notifications:
-            if notification.read_at is None:
-                notification.read_at = now
-        return [_to_user_notification(notification, user) for notification in notifications]
+            notification.read_at = now
+        return self.list_notifications(user)
 
     def reservation_submitted(self, reservation: Reservation) -> None:
         self._create_student_notification(

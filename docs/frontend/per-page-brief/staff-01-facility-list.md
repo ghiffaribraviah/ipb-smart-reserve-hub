@@ -47,13 +47,13 @@
 
 - Deterministic fixture requirements: several assigned facilities with active/inactive states.
 - Real entities: FacilityManagementProfile.
-- Fixture media: none unless reference shows thumbnails.
+- Fixture media: backend facility cover images when available, with deterministic fallback treatment for facilities without active images.
 - Contract normalization: do not present maintenance status, amenities, ratings, or last-change metadata as staff-managed backend fields on this page. Use active/inactive state, category, capacity, and schedule/edit actions.
 
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /staff/facilities`.
-- Page-needed fields: `id`, `name`, `location`, `capacity`, `category`, `price_summary`, `open_hours_summary`, `is_active`.
+- Page-needed fields: `id`, `name`, `location`, `capacity`, `category`, `price_summary`, `open_hours_summary`, active `images`, `is_active`.
 - Auth/session assumptions: staff assigned facility access only.
 - Source files: `backend/app/api/routes/facility_management_routes.py`, `backend/app/schemas/facility_management_schemas.py`.
 
@@ -62,8 +62,8 @@
 - Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: staff facility list.
-- Contract needed: list assigned facilities for staff account.
-- Evidence: `GET /staff/facilities` exists and returns `list[FacilityManagementProfileResponse]`.
+- Contract needed: list assigned facilities for staff account, including active facility media for cover thumbnails.
+- Evidence: `GET /staff/facilities` exists and returns `list[FacilityManagementProfileResponse]`; the response includes active `images`.
 - Source issue/PRD: `docs/issues/ISSUE-0016-staff-facility-management-and-assignment-scope.md`.
 
 ## Shared Components

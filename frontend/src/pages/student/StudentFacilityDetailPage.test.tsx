@@ -96,7 +96,7 @@ function mockDetailFetch({
     }
 
     if (url.startsWith("http://localhost:8000/facilities/facility-uuid-1/calendar?")) {
-      if (url.includes("start=2026-07-01T00%3A00%3A00.000Z")) {
+      if (url.includes("start=2026-07-01T00%3A00%3A00%2B07%3A00")) {
         return jsonResponse(julyCalendarResponse);
       }
       return jsonResponse(calendar);
@@ -125,6 +125,10 @@ describe("StudentFacilityDetailPage", () => {
     renderDetail();
 
     expect(await screen.findByRole("heading", { name: "Auditorium Backend" })).toBeVisible();
+    expect(screen.getAllByRole("img", { name: "Auditorium utama" })[0]).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/auditorium.jpg",
+    );
     expect(screen.getByText((_, element) => element?.textContent === "4.9 (124 ulasan)")).toBeVisible();
     expect(screen.getByText("Kampus Timur")).toBeVisible();
     expect(screen.getByText("Auditorium utama untuk kegiatan akademik besar.")).toBeVisible();
@@ -137,14 +141,16 @@ describe("StudentFacilityDetailPage", () => {
     expect(await screen.findByText("Belum ada jadwal terblokir pada tanggal ini.")).toBeVisible();
     const calendarHeading = screen.getByRole("heading", { name: "Kalender Publik" });
     const reviewsHeading = screen.getByRole("heading", { name: "Ulasan Peminjam" });
-    expect(calendarHeading.compareDocumentPosition(reviewsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const reserveLink = screen.getByRole("link", { name: "Reservasi Sekarang" });
+    expect(calendarHeading.compareDocumentPosition(reserveLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(reserveLink.compareDocumentPosition(reviewsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByLabelText("Kalender publik Juni 2026")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Pilih 1 Juni 2026" }));
-    expect(await screen.findByText("02:00 - 04:00")).toBeVisible();
+    expect(await screen.findByText("09:00 - 11:00")).toBeVisible();
     expect(screen.getByRole("button", { name: "Pilih 1 Juni 2026" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("Waktu sudah dipesan")).toBeVisible();
     expect(screen.queryByText("BEM KM IPB")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Reservasi Sekarang" })).toHaveAttribute(
+    expect(reserveLink).toHaveAttribute(
       "href",
       "/student/facilities/facility-uuid-1/reserve/time",
     );
@@ -170,12 +176,12 @@ describe("StudentFacilityDetailPage", () => {
     expect(await screen.findByText("Juli 2026")).toBeVisible();
     expect(screen.getByLabelText("Kalender publik Juli 2026")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Pilih 15 Juli 2026" }));
-    expect(await screen.findByText("03:00 - 06:00")).toBeVisible();
+    expect(await screen.findByText("10:00 - 13:00")).toBeVisible();
     expect(screen.getByRole("button", { name: "Pilih 15 Juli 2026" })).toHaveAttribute("aria-pressed", "true");
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("start=2026-07-01T00%3A00%3A00.000Z"),
+        expect.stringContaining("start=2026-07-01T00%3A00%3A00%2B07%3A00"),
         expect.any(Object),
       );
     });

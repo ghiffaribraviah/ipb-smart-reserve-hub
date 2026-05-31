@@ -51,7 +51,7 @@ type StaffReservationDetailResponse = {
     notes: string | null;
     security_personnel: boolean;
   };
-  facility: { id: string; name: string };
+  facility: { cover_image_url: string | null; id: string; name: string };
   id: string;
   organization_unit: { id: string; name: string };
   participant_count: number;
@@ -195,8 +195,8 @@ function DocumentRow({
   status,
 }: {
   file: StaffFileMetadata;
-  onPreview: () => void;
-  onDownload: () => void;
+  onPreview: () => Promise<unknown>;
+  onDownload: () => Promise<unknown>;
   status: string;
 }) {
   const uploadedAt = file.uploaded_at ?? file.generated_at;
@@ -250,10 +250,28 @@ function DocumentRow({
   );
 }
 
-function SummaryImage() {
+function SummaryImage({
+  coverImageUrl,
+  facilityName,
+}: {
+  coverImageUrl: string | null;
+  facilityName: string;
+}) {
+  if (coverImageUrl) {
+    return (
+      <div className="h-40 overflow-hidden bg-[#e5e7eb]">
+        <img
+          alt={`Foto ${facilityName}`}
+          className="h-full w-full object-cover"
+          src={coverImageUrl}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-40 items-center justify-center bg-gradient-to-br from-[#4a2511] via-[#7c4a24] to-[#f59e0b] text-lg font-bold text-white">
-      Auditorium
+      {facilityName}
     </div>
   );
 }
@@ -375,7 +393,7 @@ export function StaffReservationDetailPage() {
 
           <aside className="grid w-[380px] shrink-0 gap-6 max-lg:w-full">
             <section className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
-              <SummaryImage />
+              <SummaryImage coverImageUrl={detail.facility.cover_image_url} facilityName={detail.facility.name} />
               <div className="p-6">
                 <h2 className="m-0 text-xl font-bold text-[#111827]">{detail.facility.name}</h2>
                 <p className="m-0 mt-4 flex items-center gap-3 text-sm font-semibold text-[#111827]">

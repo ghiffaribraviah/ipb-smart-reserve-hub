@@ -185,6 +185,10 @@ def test_dev_seed_creates_richer_facility_catalog_demo_data(tmp_path):
                 )
                 >= 5
             )
+        image_urls = session.scalars(select(FacilityImage.url).where(FacilityImage.is_active.is_(True))).all()
+        assert all(url.startswith("https://") for url in image_urls)
+        assert all("cdn.example.test" not in url for url in image_urls)
+        assert len(image_urls) == len(set(image_urls))
 
 
 def test_dev_seed_creates_production_like_reservation_and_review_mix(tmp_path):

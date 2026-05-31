@@ -366,6 +366,7 @@ async def test_assigned_staff_fetches_reservation_detail_with_null_missing_file_
         "facility": {
             "id": facility_id,
             "name": "Auditorium Andi Hakim Nasoetion",
+            "cover_image_url": "https://cdn.example.test/auditorium-cover.jpg",
         },
         "student": {
             "id": detail.json()["student"]["id"],

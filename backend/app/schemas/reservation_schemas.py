@@ -43,6 +43,7 @@ class ReservationSubmissionRequest(BaseModel):
 class ReservationFacilityResponse(BaseModel):
     id: str
     name: str
+    cover_image_url: str | None = None
 
 
 class ReservationOrganizationUnitResponse(BaseModel):
@@ -191,6 +192,10 @@ class StaffReservationFacilityResponse(BaseModel):
     name: str
 
 
+class StaffReservationDetailFacilityResponse(StaffReservationFacilityResponse):
+    cover_image_url: str | None = None
+
+
 class StaffReservationStudentResponse(BaseModel):
     id: str
     full_name: str
@@ -286,7 +291,7 @@ class StaffReservationReviewActionsResponse(BaseModel):
 class StaffReservationDetailResponse(BaseModel):
     id: str
     reservation_code: str
-    facility: StaffReservationFacilityResponse
+    facility: StaffReservationDetailFacilityResponse
     student: StaffReservationStudentResponse
     organization_unit: StaffReservationOrganizationUnitResponse
     activity_title: str

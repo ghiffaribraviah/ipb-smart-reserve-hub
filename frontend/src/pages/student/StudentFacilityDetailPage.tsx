@@ -7,6 +7,7 @@ import { apiRequest } from "../../api/http";
 import { NotificationSurface } from "../../components/NotificationSurface";
 import { StudentHeaderSearch } from "../../components/layout/StudentHeaderSearch";
 import { studentHomeSession } from "../../fixtures/studentHome";
+import { campusDateKey, campusUtcOffset, formatCampusTime } from "../../utils/campusTime";
 
 type FacilityImageResponse = {
   alt_text: string;
@@ -110,9 +111,12 @@ function addUtcMonths(value: Date, amount: number) {
 }
 
 function calendarRange(month: Date) {
+  const year = month.getUTCFullYear();
+  const monthIndex = month.getUTCMonth();
+  const nextMonth = addUtcMonths(month, 1);
   return {
-    end: addUtcMonths(month, 1).toISOString(),
-    start: startOfUtcMonth(month).toISOString(),
+    end: `${nextMonth.getUTCFullYear()}-${String(nextMonth.getUTCMonth() + 1).padStart(2, "0")}-01T00:00:00${campusUtcOffset}`,
+    start: `${year}-${String(monthIndex + 1).padStart(2, "0")}-01T00:00:00${campusUtcOffset}`,
   };
 }
 
@@ -134,6 +138,10 @@ function fullDateLabel(date: Date) {
 }
 
 function dateKey(value: Date | string) {
+  if (typeof value === "string") {
+    return campusDateKey(value);
+  }
+
   const date = typeof value === "string" ? new Date(value) : value;
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
 }
@@ -171,12 +179,7 @@ function formatRating(value: number | null) {
 }
 
 function formatTimeRange(entry: PublicCalendarEntryResponse) {
-  return `${formatUtcTime(entry.starts_at)} - ${formatUtcTime(entry.ends_at)}`;
-}
-
-function formatUtcTime(value: string) {
-  const date = new Date(value);
-  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
+  return `${formatCampusTime(entry.starts_at)} - ${formatCampusTime(entry.ends_at)}`;
 }
 
 function reviewInitials(name: string) {
@@ -263,41 +266,52 @@ function MediaBox({
   className,
   label,
   large = false,
+  url,
 }: {
   className: string;
   label: string;
   large?: boolean;
+  url: string;
 }) {
+  const hasImage = Boolean(url);
+
   return (
     <div
-      aria-label={label}
+      aria-label={hasImage ? undefined : label}
       className={`relative flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#d1fae5] via-[#e7fbd3] to-[#fef3c7] ${className}`}
-      role="img"
+      role={hasImage ? undefined : "img"}
     >
-      <div className="absolute inset-[18px] rounded-[10px] border-[4px] border-[#9fd9b8]/75" />
-      <div className="relative text-center">
-        <p
-          className={`m-0 font-serif font-bold leading-none text-[#1d7667] ${
-            large ? "text-[38px] max-md:text-[22px]" : "text-[24px] max-md:text-[12px]"
-          }`}
-        >
-          IPB SRH
-        </p>
-        <p
-          className={`m-0 mt-2 text-[#374151] ${
-            large ? "text-sm max-md:text-[9px]" : "text-[9px] max-md:text-[5px]"
-          }`}
-        >
-          Deterministic media fixture
-        </p>
-      </div>
+      {hasImage ? <img alt={label} className="h-full w-full object-cover" src={url} /> : null}
+      {!hasImage ? (
+        <>
+          <div className="absolute inset-[18px] rounded-[10px] border-[4px] border-[#9fd9b8]/75" />
+          <div className="relative text-center">
+            <p
+              className={`m-0 font-serif font-bold leading-none text-[#1d7667] ${
+                large ? "text-[38px] max-md:text-[22px]" : "text-[24px] max-md:text-[12px]"
+              }`}
+            >
+              IPB SRH
+            </p>
+            <p
+              className={`m-0 mt-2 text-[#374151] ${
+                large ? "text-sm max-md:text-[9px]" : "text-[9px] max-md:text-[5px]"
+              }`}
+            >
+              Deterministic media fixture
+            </p>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
 
 function Gallery({ detail }: { detail: FacilityDetailResponse }) {
   const images = detail.images.length > 0 ? detail.images : [{ alt_text: `Media fallback ${detail.name}`, is_cover: true, url: "" }];
-  const labels = [0, 1, 2, 3].map((index) => images[index % images.length]?.alt_text ?? `Media fallback ${detail.name}`);
+  const galleryImages = [0, 1, 2, 3].map(
+    (index) => images[index % images.length] ?? { alt_text: `Media fallback ${detail.name}`, is_cover: true, url: "" },
+  );
 
   return (
     <section
@@ -306,23 +320,50 @@ function Gallery({ detail }: { detail: FacilityDetailResponse }) {
     >
       <MediaBox
         className="col-start-1 row-span-2 row-start-1 max-md:col-span-3 max-md:row-span-1"
-        label={labels[0]}
+        label={galleryImages[0].alt_text}
         large
+        url={galleryImages[0].url}
       />
-      <MediaBox className="col-start-2 row-start-1 max-md:col-start-1 max-md:row-start-2" label={labels[1]} />
-      <MediaBox className="col-start-3 row-start-1 max-md:col-start-2 max-md:row-start-2" label={labels[2]} />
+      <MediaBox
+        className="col-start-2 row-start-1 max-md:col-start-1 max-md:row-start-2"
+        label={galleryImages[1].alt_text}
+        url={galleryImages[1].url}
+      />
+      <MediaBox
+        className="col-start-3 row-start-1 max-md:col-start-2 max-md:row-start-2"
+        label={galleryImages[2].alt_text}
+        url={galleryImages[2].url}
+      />
       <MediaBox
         className="col-span-2 col-start-2 row-start-2 max-md:col-span-1 max-md:col-start-3 max-md:row-start-2"
-        label={labels[3]}
+        label={galleryImages[3].alt_text}
         large
+        url={galleryImages[3].url}
       />
     </section>
   );
 }
 
-function ReserveWidget({ detail }: { detail: FacilityDetailResponse }) {
+type PublicCalendarProps = {
+  compact?: boolean;
+  entries: PublicCalendarEntryResponse[];
+  isError: boolean;
+  isLoading: boolean;
+  month: Date;
+  onMonthChange: (month: Date) => void;
+  onSelectDate: (dateKey: string) => void;
+  selectedDateKey: string;
+};
+
+function ReserveWidget({
+  calendar,
+  detail,
+}: {
+  calendar: Omit<PublicCalendarProps, "compact">;
+  detail: FacilityDetailResponse;
+}) {
   return (
-    <aside className="w-[380px] shrink-0 max-lg:order-first max-lg:w-full">
+    <aside className="order-2 w-[380px] shrink-0 max-lg:order-first max-lg:w-full">
       <div className="sticky top-[112px] rounded-2xl border border-[#e5e7eb] bg-white p-8 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.05),0_8px_10px_-6px_rgba(0,0,0,0.01)] max-lg:static max-md:rounded-[14px] max-md:p-6">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
@@ -347,8 +388,9 @@ function ReserveWidget({ detail }: { detail: FacilityDetailResponse }) {
             </div>
           ) : null}
         </div>
+        <PublicCalendar {...calendar} compact />
         <a
-          className="flex w-full items-center justify-center rounded-lg bg-[#0f9d58] px-4 py-4 text-[15px] font-semibold text-white no-underline hover:bg-[#0b7340]"
+          className="mt-6 flex w-full items-center justify-center rounded-lg bg-[#0f9d58] px-4 py-4 text-[15px] font-semibold text-white no-underline hover:bg-[#0b7340]"
           href={`/student/facilities/${detail.id}/reserve/time`}
         >
           Reservasi Sekarang
@@ -404,6 +446,7 @@ function Reviews({ detail }: { detail: FacilityDetailResponse }) {
 }
 
 function PublicCalendar({
+  compact = false,
   entries,
   isError,
   isLoading,
@@ -411,15 +454,7 @@ function PublicCalendar({
   onMonthChange,
   onSelectDate,
   selectedDateKey,
-}: {
-  entries: PublicCalendarEntryResponse[];
-  isError: boolean;
-  isLoading: boolean;
-  month: Date;
-  onMonthChange: (month: Date) => void;
-  onSelectDate: (dateKey: string) => void;
-  selectedDateKey: string;
-}) {
+}: PublicCalendarProps) {
   const days = useMemo(() => calendarDaysForMonth(month, entries), [entries, month]);
   const selectedDateEntries = entries.filter((entry) => dateKey(entry.starts_at) === selectedDateKey);
   const selectedDate = new Date(`${selectedDateKey}T00:00:00.000Z`);
@@ -427,30 +462,36 @@ function PublicCalendar({
   const visibleMonthLabel = monthLabel(month);
 
   return (
-    <section className="mt-10 rounded-2xl border border-[#e5e7eb] bg-white p-6 max-md:rounded-[14px] max-md:p-4">
-      <div className="mb-5 flex items-start justify-between gap-4">
+    <section
+      className={
+        compact
+          ? "border-t border-[#e5e7eb] pt-6"
+          : "mt-10 rounded-2xl border border-[#e5e7eb] bg-white p-6 max-md:rounded-[14px] max-md:p-4"
+      }
+    >
+      <div className={compact ? "mb-4 flex flex-col gap-3" : "mb-5 flex items-start justify-between gap-4"}>
         <div>
           <p className="m-0 mb-1 text-[11px] font-bold uppercase tracking-[0.04em] text-[#6b7280]">
             Kalender Ketersediaan
           </p>
-          <h2 className="m-0 text-xl font-semibold">Kalender Publik</h2>
+          <h2 className={`m-0 font-semibold ${compact ? "text-base" : "text-xl"}`}>Kalender Publik</h2>
         </div>
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#6b7280]">
+        <div className={`flex items-center gap-2 font-semibold text-[#6b7280] ${compact ? "text-xs" : "text-sm"}`}>
           <button
             aria-label="Bulan sebelumnya"
-            className="h-9 w-9 rounded-lg border border-[#e5e7eb] bg-white text-[#111827]"
+            className={`${compact ? "h-8 w-8" : "h-9 w-9"} rounded-lg border border-[#e5e7eb] bg-white text-[#111827]`}
             onClick={() => onMonthChange(addUtcMonths(month, -1))}
             type="button"
           >
             ‹
           </button>
-          <span className="inline-flex min-w-[128px] items-center justify-center gap-2">
-            <CalendarDays aria-hidden="true" size={17} />
+          <span className={`inline-flex items-center justify-center gap-2 ${compact ? "min-w-0 flex-1" : "min-w-[128px]"}`}>
+            <CalendarDays aria-hidden="true" size={compact ? 15 : 17} />
             {visibleMonthLabel}
           </span>
           <button
             aria-label="Bulan berikutnya"
-            className="h-9 w-9 rounded-lg border border-[#e5e7eb] bg-white text-[#111827]"
+            className={`${compact ? "h-8 w-8" : "h-9 w-9"} rounded-lg border border-[#e5e7eb] bg-white text-[#111827]`}
             onClick={() => onMonthChange(addUtcMonths(month, 1))}
             type="button"
           >
@@ -459,9 +500,15 @@ function PublicCalendar({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 max-md:gap-1.5" aria-label={`Kalender publik ${visibleMonthLabel}`}>
+      <div
+        className={`grid grid-cols-7 ${compact ? "gap-1" : "gap-2 max-md:gap-1.5"}`}
+        aria-label={`Kalender publik ${visibleMonthLabel}`}
+      >
         {dayNames.map((day) => (
-          <div className="pb-1 text-center text-[11px] font-bold uppercase text-[#6b7280] max-md:text-[10px]" key={day}>
+          <div
+            className={`pb-1 text-center font-bold uppercase text-[#6b7280] ${compact ? "text-[9px]" : "text-[11px] max-md:text-[10px]"}`}
+            key={day}
+          >
             {day}
           </div>
         ))}
@@ -469,7 +516,9 @@ function PublicCalendar({
           <button
             aria-label={`Pilih ${fullDateLabel(day.date)}`}
             aria-pressed={day.key === selectedDateKey}
-            className={`flex aspect-square min-w-0 flex-col gap-1.5 rounded-lg border p-2 text-left max-md:rounded-md max-md:p-1.5 ${
+            className={`flex aspect-square min-w-0 flex-col rounded-lg border text-left max-md:rounded-md ${
+              compact ? "gap-1 p-1.5" : "gap-1.5 p-2 max-md:p-1.5"
+            } ${
               day.key === selectedDateKey
                 ? "border-[#0f9d58] shadow-[0_0_0_2px_rgba(15,157,88,0.14)]"
                 : day.muted
@@ -485,9 +534,9 @@ function PublicCalendar({
             type="button"
           >
             <span
-              className={`text-[13px] font-bold leading-none max-md:text-xs ${
+              className={`font-bold leading-none ${compact ? "text-[11px]" : "text-[13px] max-md:text-xs"} ${
                 day.key === selectedDateKey
-                  ? "flex h-6 w-6 items-center justify-center rounded-md bg-[#0f9d58] text-white"
+                  ? `flex items-center justify-center rounded-md bg-[#0f9d58] text-white ${compact ? "h-5 w-5" : "h-6 w-6"}`
                   : day.muted
                     ? "text-slate-300"
                     : "text-[#111827]"
@@ -499,7 +548,7 @@ function PublicCalendar({
               <div className="mt-auto flex flex-wrap gap-1">
                 {day.dots.map((dot, dotIndex) => (
                   <span
-                    className={`h-[7px] w-[7px] rounded-full max-md:h-[5px] max-md:w-[5px] ${dotClass[dot]}`}
+                    className={`rounded-full ${compact ? "h-[5px] w-[5px]" : "h-[7px] w-[7px] max-md:h-[5px] max-md:w-[5px]"} ${dotClass[dot]}`}
                     key={`${dot}-${dotIndex}`}
                   />
                 ))}
@@ -510,33 +559,37 @@ function PublicCalendar({
       </div>
 
       <div className="mt-4 border-t border-[#e5e7eb] pt-4">
-        <p className="m-0 mb-3 text-sm font-bold">
+        <p className={`m-0 mb-3 font-bold ${compact ? "text-xs" : "text-sm"}`}>
           Jadwal pada {selectedDateLabel}
         </p>
         {isLoading ? (
-          <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#6b7280]">
+          <div className={`rounded-lg border border-[#e5e7eb] bg-[#f8fafc] text-[#6b7280] ${compact ? "p-3 text-xs" : "p-4 text-sm"}`}>
             Memuat kalender publik...
           </div>
         ) : null}
         {isError ? (
-          <div className="rounded-lg border border-[#fee2e2] bg-[#fef2f2] p-4 text-sm text-[#991b1b]">
+          <div className={`rounded-lg border border-[#fee2e2] bg-[#fef2f2] text-[#991b1b] ${compact ? "p-3 text-xs" : "p-4 text-sm"}`}>
             Kalender belum dapat dimuat.
           </div>
         ) : null}
         {!isLoading && !isError && selectedDateEntries.length === 0 ? (
-          <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm text-[#6b7280]">
+          <div className={`rounded-lg border border-[#e5e7eb] bg-[#f8fafc] text-[#6b7280] ${compact ? "p-3 text-xs" : "p-4 text-sm"}`}>
             Belum ada jadwal terblokir pada tanggal ini.
           </div>
         ) : null}
         {!isLoading && !isError ? selectedDateEntries.map((entry) => (
           <div
-            className="grid grid-cols-[96px_1fr_auto] items-start gap-3 border-t border-dashed border-[#e5e7eb] py-3 first:border-t-0 first:pt-0 max-md:grid-cols-1"
+            className={
+              compact
+                ? "grid grid-cols-1 items-start gap-2 border-t border-dashed border-[#e5e7eb] py-3 first:border-t-0 first:pt-0"
+                : "grid grid-cols-[96px_1fr_auto] items-start gap-3 border-t border-dashed border-[#e5e7eb] py-3 first:border-t-0 first:pt-0 max-md:grid-cols-1"
+            }
             key={`${entry.starts_at}-${entry.ends_at}`}
           >
             <span className="text-xs font-bold">{formatTimeRange(entry)}</span>
             <div>
-              <p className="m-0 text-sm font-bold">Waktu sudah dipesan</p>
-              <p className="m-0 text-sm leading-6 text-[#6b7280]">
+              <p className={`m-0 font-bold ${compact ? "text-xs" : "text-sm"}`}>Waktu sudah dipesan</p>
+              <p className={`m-0 text-[#6b7280] ${compact ? "text-xs leading-5" : "text-sm leading-6"}`}>
                 Detail kegiatan tidak ditampilkan pada kalender publik.
               </p>
             </div>
@@ -667,7 +720,20 @@ export function StudentFacilityDetailPage() {
         <Gallery detail={detail} />
 
         <div className="flex items-start gap-[60px] max-lg:flex-col max-lg:gap-7">
-          <div className="min-w-0 flex-1">
+          <ReserveWidget
+            calendar={{
+              entries: calendarEntries,
+              isError: calendarQuery.isError,
+              isLoading: calendarQuery.isLoading,
+              month: calendarMonth,
+              onMonthChange: handleMonthChange,
+              onSelectDate: setSelectedDateKey,
+              selectedDateKey,
+            }}
+            detail={detail}
+          />
+
+          <div className="order-1 min-w-0 flex-1">
             <section>
               <h2 className="m-0 mb-4 text-xl font-semibold">Tentang Fasilitas</h2>
               <p className="mb-8 max-w-[600px] text-sm leading-[1.6] text-[#6b7280] max-md:mb-6">
@@ -687,19 +753,8 @@ export function StudentFacilityDetailPage() {
               </div>
             </section>
 
-            <PublicCalendar
-              entries={calendarEntries}
-              isError={calendarQuery.isError}
-              isLoading={calendarQuery.isLoading}
-              month={calendarMonth}
-              onMonthChange={handleMonthChange}
-              onSelectDate={setSelectedDateKey}
-              selectedDateKey={selectedDateKey}
-            />
             <Reviews detail={detail} />
           </div>
-
-          <ReserveWidget detail={detail} />
         </div>
       </main>
       <StudentFooter />

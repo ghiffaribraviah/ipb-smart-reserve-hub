@@ -20,6 +20,7 @@ import {
   mapStudentReservationWorkflow,
   type StudentReservationWorkflowProjection,
 } from "../../reservations/studentReservationWorkflow";
+import { formatCampusDate, formatCampusTime } from "../../utils/campusTime";
 
 const navItems = [
   { href: "/student", label: "Beranda" },
@@ -149,20 +150,6 @@ async function submitPaymentReceipt(reservationId: string) {
   );
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function formatTime(value: string) {
-  const date = new Date(value);
-  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
-}
-
 function formatBytes(value: number) {
   if (value >= 1024 * 1024) {
     return `${(value / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
@@ -185,8 +172,8 @@ function summaryRowsFromReservation(reservation: StudentReservationWorkflowProje
   if (!reservation) return summaryRows;
   return [
     { label: "Fasilitas", value: reservation.facility.name },
-    { label: "Tanggal", value: formatDate(reservation.starts_at) },
-    { label: "Waktu", value: `${formatTime(reservation.starts_at)} - ${formatTime(reservation.ends_at)}` },
+    { label: "Tanggal", value: formatCampusDate(reservation.starts_at) },
+    { label: "Waktu", value: `${formatCampusTime(reservation.starts_at)} - ${formatCampusTime(reservation.ends_at)}` },
   ];
 }
 
@@ -921,7 +908,7 @@ function PaymentUploadPage() {
                 badge={<StatusBadge tone="valid">Tersimpan</StatusBadge>}
                 fileName={receipt.filename}
                 metadata={`${contentTypeLabel(receipt.content_type)} · ${formatBytes(receipt.size_bytes)} · Diunggah ${
-                  receipt.uploaded_at ? formatDate(receipt.uploaded_at) : "baru saja"
+                  receipt.uploaded_at ? formatCampusDate(receipt.uploaded_at) : "baru saja"
                 }`}
               />
             ) : null}

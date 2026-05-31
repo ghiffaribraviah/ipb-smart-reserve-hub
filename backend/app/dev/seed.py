@@ -31,6 +31,69 @@ from app.models import (
 DEMO_PASSWORD = "demo12345"
 _seed_letter_serials: dict[tuple[int, str], int] = {}
 
+DEV_FACILITY_IMAGE_URLS_BY_NAME = {
+    "Auditorium Andi Hakim Nasoetion": (
+        "https://www.ipb.ac.id/wp-content/uploads/2026/05/"
+        "fem-ipb-university-hadirkan-wamenkeu-dan-ketua-dewan-komisioner-lps-"
+        "dalam-ministerial-and-top-executive-lecture-series.jpg-770x400.jpeg",
+        "https://www.ipb.ac.id/wp-content/uploads/2026/05/"
+        "ipb-university-dan-kemdiktisaintek-gelar-seleksi-bersama-prime-step-2026-"
+        "untuk-pengembangan-inovasi-dan-startup-.jpg-770x400.jpeg",
+    ),
+    "Ruang Sidang Rektorat": (
+        "https://www.ipb.ac.id/wp-content/uploads/2023/07/"
+        "gedung-startup-center-stp-ipb-university-siap-menerima-tenant-program-inkubasi-bisnis-news.png",
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3608_681c4971-6fed-4387-805d-e8c5b33465ef.jpg",
+    ),
+    "Lapangan Basket Indoor": (
+        "https://cdn.ipb.ac.id/inventori/FotoOrsen_1_16b15580-d654-46a8-9fa1-5378e2fbb7a4.jpg",
+        "https://www.ipb.ac.id/wp-content/uploads/2025/09/DJI_0174-scaled.jpg",
+    ),
+    "Auditorium Fakultas Ekonomi dan Manajemen": (
+        "https://www.ipb.ac.id/wp-content/uploads/2023/11/FEM.jpg",
+        "https://www.ipb.ac.id/wp-content/uploads/2025/06/"
+        "LKST-IPB-University-Fasilitasi-25-Startup-Melalui-Program-Inkubasi-Bisnis-Tahun-2025.jpg",
+    ),
+    "Gedung Kuliah Bersama Auditorium": (
+        "https://www.ipb.ac.id/wp-content/uploads/2025/05/"
+        "LKST-IPB-University-Seleksi-44-Calon-Startup-Program-Inkubasi-Bisnis-Tahun-2025.jpg",
+        "https://www.ipb.ac.id/wp-content/uploads/2024/12/"
+        "LKST-IPB-University-Gelar-Business-Matching-20-Startup-Paparkan-Potensi-Bisnis.jpg",
+    ),
+    "Ruang Kelas CCR 2.03": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3608_031e62b7-50d3-439a-9fce-bcfd6499eff6.jpg",
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3608_888bd492-3ec1-4bbc-ac95-266ba43fbedd.jpg",
+    ),
+    "Ruang Diskusi Perpustakaan LSI": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3611_dff98d69-7739-4fb2-9592-0437eed5d8bb.jpg",
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3611_7c5c71a4-b86b-424e-b07d-786e3f315a47.jpg",
+    ),
+    "Lapangan Futsal Outdoor": (
+        "https://www.ipb.ac.id/wp-content/uploads/2025/09/DJI_0153-scaled.jpg",
+        "https://www.ipb.ac.id/wp-content/uploads/2025/09/DJI_0182-scaled.jpg",
+    ),
+    "Laboratorium Komputer Departemen Ilmu Komputer": (
+        "https://cs.ipb.ac.id/wp-content/uploads/2015/06/IMG_5247-1024x682.jpg",
+        "https://www.ipb.ac.id/wp-content/uploads/2023/11/FMIPA.jpg",
+    ),
+    "Laboratorium Bahasa": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3607_1884829b-d075-475c-98ff-89fd668dc829.jpg",
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3607_acb96d48-57a0-4a99-b358-78dde9d6f717.jpg",
+    ),
+    "Plaza Rektorat": (
+        "https://www.ipb.ac.id/wp-content/uploads/2025/09/Danau-SGDS-770x400.jpg",
+        "https://www.ipb.ac.id/wp-content/uploads/2025/09/DJI_0170-scaled.jpg",
+    ),
+    "Taman Koleksi Kampus": (
+        "https://museum.ipb.ac.id/wp-content/uploads/2023/05/Taman-Inovasi.webp",
+        "https://museum.ipb.ac.id/wp-content/uploads/2023/05/Taman-kehati-Telaga-Inspirasi.jpg",
+    ),
+    "Lapangan Tenis IPB": (
+        "https://www.ipb.ac.id/wp-content/uploads/2026/03/Cuplikan-layar-2026-03-31-141033.png",
+        "https://www.ipb.ac.id/wp-content/uploads/2026/03/Cuplikan-layar-2026-03-31-141053.png",
+    ),
+}
+
 DEMO_USERS = [
     {
         "email": "demo.admin@ipb.ac.id",
@@ -330,11 +393,12 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
         ]
 
         session.flush()
-        for display_index, facility in enumerate(facilities, start=1):
+        for facility in facilities:
+            cover_image_url, detail_image_url = _facility_image_urls(facility)
             _ensure_image(
                 session,
                 facility=facility,
-                url=f"https://cdn.example.test/dev-seed/facility-{display_index}-cover.jpg",
+                url=cover_image_url,
                 alt_text=f"{facility.name} cover",
                 display_order=1,
                 is_cover=True,
@@ -342,11 +406,12 @@ def seed_development_data(*, settings: SettingsModule | None = None, environment
             _ensure_image(
                 session,
                 facility=facility,
-                url=f"https://cdn.example.test/dev-seed/facility-{display_index}-detail.jpg",
+                url=detail_image_url,
                 alt_text=f"{facility.name} detail",
                 display_order=2,
                 is_cover=False,
             )
+            _deactivate_fake_seed_images(session, facility=facility)
             for day_of_week in range(5):
                 _ensure_open_hour(
                     session,
@@ -709,6 +774,21 @@ def _ensure_image(
     image.is_cover = is_cover
     image.is_active = True
     return image
+
+
+def _facility_image_urls(facility: Facility) -> tuple[str, str]:
+    return DEV_FACILITY_IMAGE_URLS_BY_NAME[facility.name]
+
+
+def _deactivate_fake_seed_images(session, *, facility: Facility) -> None:
+    fake_images = session.scalars(
+        select(FacilityImage).where(
+            FacilityImage.facility == facility,
+            FacilityImage.url.like("https://cdn.example.test/dev-seed/%"),
+        )
+    ).all()
+    for image in fake_images:
+        image.is_active = False
 
 
 def _ensure_open_hour(

@@ -52,8 +52,8 @@
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: `GET /staff/facilities`, `GET /facility-categories`, `PATCH /staff/facilities/:facilityId`, image/blackout create endpoints.
-- Page-needed fields: profile fields in `FacilityManagementProfileResponse`, including `category_id`, category label, `open_hours_summary`, and structured `open_hours`; active category option fields from `FacilityCategoryResponse`; patch fields in `FacilityProfileUpdateRequest`, including `category_id` and full structured `open_hours` replacement.
+- Endpoints consumed: `GET /staff/facilities`, `GET /facility-categories`, `PATCH /staff/facilities/:facilityId`, image create, image cover selection, and blackout create endpoints.
+- Page-needed fields: profile fields in `FacilityManagementProfileResponse`, including `category_id`, category label, `open_hours_summary`, structured `open_hours`, and active `images` for the media column; active category option fields from `FacilityCategoryResponse`; patch fields in `FacilityProfileUpdateRequest`, including `category_id` and full structured `open_hours` replacement.
 - Auth/session assumptions: staff assigned facility access only.
 - Source files: `backend/app/api/routes/facility_management_routes.py`, `backend/app/schemas/facility_management_schemas.py`.
 
@@ -62,8 +62,8 @@
 - Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: staff facility edit form.
-- Contract needed: read/update assigned facility profile, expose active category options, replace structured open-hour rows, keep derived `open_hours_summary`, and add operational child records.
-- Evidence: staff facility patch, deactivate, images, open-hours, and blackouts routes exist in `backend/app/api/routes/facility_management_routes.py`; `FacilityManagementProfileResponse` exposes `category_id` and structured `open_hours`; `FacilityProfileUpdateRequest` accepts `category_id` and `open_hours`; `GET /facility-categories` exists in `backend/app/api/routes/facility_routes.py`.
+- Contract needed: read/update assigned facility profile, expose active category options, replace structured open-hour rows, keep derived `open_hours_summary`, show current media, choose one active image as the cover, and add operational child records.
+- Evidence: staff facility patch, deactivate, images, image cover selection, open-hours, and blackouts routes exist in `backend/app/api/routes/facility_management_routes.py`; `FacilityManagementProfileResponse` exposes `category_id`, structured `open_hours`, and `images`; `FacilityProfileUpdateRequest` accepts `category_id` and `open_hours`; `GET /facility-categories` exists in `backend/app/api/routes/facility_routes.py`.
 - Source issue/PRD: `docs/issues/ISSUE-0016-staff-facility-management-and-assignment-scope.md`, `docs/issues/ISSUE-0091-staff-facility-structured-category-and-open-hours-management.md`.
 
 ## Shared Components

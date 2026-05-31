@@ -4,7 +4,7 @@ from typing import Protocol
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import FacilityStaffAssignment, Reservation, ReservationPaymentReceipt, ReservationStatus
+from app.models import Facility, FacilityStaffAssignment, Reservation, ReservationPaymentReceipt, ReservationStatus
 
 
 class StaffReservationOperationsRepository(Protocol):
@@ -125,7 +125,7 @@ class SqlAlchemyStaffReservationOperationsRepository:
             select(Reservation)
             .join(FacilityStaffAssignment, FacilityStaffAssignment.facility_id == Reservation.facility_id)
             .options(
-                joinedload(Reservation.facility),
+                joinedload(Reservation.facility).joinedload(Facility.images),
                 joinedload(Reservation.student),
                 joinedload(Reservation.organization_unit),
                 joinedload(Reservation.approval_letter),

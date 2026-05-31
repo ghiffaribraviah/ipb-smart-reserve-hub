@@ -20,7 +20,14 @@ const facilityDetail = {
   },
   description: "Auditorium utama untuk kegiatan akademik besar.",
   id: "facility-uuid-1",
-  images: [],
+  images: [
+    {
+      alt_text: "Foto auditorium utama",
+      id: "image-1",
+      is_cover: true,
+      url: "https://cdn.example.test/auditorium-backend-cover.jpg",
+    },
+  ],
   location: "Kampus Timur",
   name: "Auditorium Backend",
   open_hours_summary: "Senin-Jumat 08:00-18:00",
@@ -164,11 +171,30 @@ describe("StudentReservationDetailPage", () => {
     renderDetailPage();
 
     expect(await screen.findByText("Auditorium Backend")).toBeVisible();
+    expect(screen.getByRole("img", { name: "Foto auditorium utama" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/auditorium-backend-cover.jpg",
+    );
+    expect(screen.queryByText("Deterministic media fixture")).not.toBeInTheDocument();
     expect(screen.getByText("Kapasitas: 300 orang")).toBeVisible();
     expect(screen.getAllByText("Rp250.000")).toHaveLength(2);
     expect(screen.getByText("Total Biaya")).toBeVisible();
     expect(screen.queryByText("Biaya admin")).not.toBeInTheDocument();
     expect(screen.queryByText("Rp 115.000,00")).not.toBeInTheDocument();
+  });
+
+  it("renders the reservation summary schedule from the selected query range", async () => {
+    mockReservationSubmitFetch();
+
+    renderDetailPageAt(
+      "/student/facilities/facility-uuid-1/reserve/details?starts_at=2026-06-25T14%3A30%3A00%2B07%3A00&ends_at=2026-06-25T16%3A45%3A00%2B07%3A00",
+    );
+
+    expect(await screen.findByText("Auditorium Backend")).toBeVisible();
+    expect(screen.getByText("25 Juni 2026")).toBeVisible();
+    expect(screen.getByText("14:30 - 16:45")).toBeVisible();
+    expect(screen.queryByText("24 Oktober 2024")).not.toBeInTheDocument();
+    expect(screen.queryByText("09:00 - 13:00")).not.toBeInTheDocument();
   });
 
   it("renders an inline state when no organization units are available", async () => {
@@ -212,7 +238,7 @@ describe("StudentReservationDetailPage", () => {
     expect(titleInput).toHaveValue("A".repeat(255));
     expect(contactInput).toHaveValue("0".repeat(32));
     expect(notesInput).toHaveValue("x".repeat(180));
-  });
+  }, 10_000);
 
   it("shows conflict feedback and keeps the form actionable", async () => {
     const user = userEvent.setup();

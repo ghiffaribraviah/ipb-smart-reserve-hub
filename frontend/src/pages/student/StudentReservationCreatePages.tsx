@@ -15,6 +15,7 @@ import { NotificationSurface } from "../../components/NotificationSurface";
 import { StudentHeaderSearch } from "../../components/layout/StudentHeaderSearch";
 import { reservationCreateFixture } from "../../fixtures/studentReservationCreate";
 import { studentHomeSession } from "../../fixtures/studentHome";
+import { campusDateKey, campusUtcOffset, formatCampusDate, formatCampusTime } from "../../utils/campusTime";
 
 type PublicCalendarEntryResponse = {
   ends_at: string;
@@ -37,9 +38,17 @@ type OrganizationUnitResponse = {
   type?: string;
 };
 
+type FacilityImageResponse = {
+  alt_text?: string | null;
+  id?: string;
+  is_cover?: boolean;
+  url: string;
+};
+
 type FacilityReservationSummaryResponse = {
   capacity: number;
   id: string;
+  images?: FacilityImageResponse[];
   name: string;
   price: {
     amount_rupiah: number;
@@ -85,7 +94,6 @@ const monthNames = [
   "Desember",
 ];
 const defaultSelectedDateKey = "2026-06-24";
-const jakartaOffset = "+07:00";
 
 const dotColor = "bg-[#10b981]";
 
@@ -111,24 +119,24 @@ function validDateKey(value: string | null) {
 }
 
 function calendarPath(facilityId: string, year: number, monthIndex: number) {
-  const start = `${dateKey(year, monthIndex, 1)}T00:00:00${jakartaOffset}`;
+  const start = `${dateKey(year, monthIndex, 1)}T00:00:00${campusUtcOffset}`;
   const nextMonth = monthIndex === 11
     ? { monthIndex: 0, year: year + 1 }
     : { monthIndex: monthIndex + 1, year };
-  const end = `${dateKey(nextMonth.year, nextMonth.monthIndex, 1)}T00:00:00${jakartaOffset}`;
+  const end = `${dateKey(nextMonth.year, nextMonth.monthIndex, 1)}T00:00:00${campusUtcOffset}`;
   const params = new URLSearchParams({ end, start });
   return `/facilities/${facilityId}/calendar?${params.toString()}`;
 }
 
 function selectedDateTime(selectedDateKey: string, time: string) {
-  return `${selectedDateKey}T${time}:00${jakartaOffset}`;
+  return `${selectedDateKey}T${time}:00${campusUtcOffset}`;
 }
 
 const RESERVATION_ACTIVITY_TITLE_MAX_LENGTH = 255;
 const RESERVATION_CONTACT_PHONE_MAX_LENGTH = 32;
 const RESERVATION_EXTRA_NOTES_MAX_LENGTH = 180;
 
-function isValidReservationDateTime(value: string | null) {
+function isValidReservationDateTime(value: string | null): value is string {
   if (!value) {
     return false;
   }
@@ -152,18 +160,8 @@ function normalizedReservationRange(searchParams: URLSearchParams) {
   return { startsAt, endsAt };
 }
 
-function formatJakartaTime(value: string) {
-  const date = new Date(value);
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    hour12: false,
-    minute: "2-digit",
-    timeZone: "Asia/Jakarta",
-  }).format(date);
-}
-
 function formatTimeRange(entry: PublicCalendarEntryResponse) {
-  return `${formatJakartaTime(entry.starts_at)} - ${formatJakartaTime(entry.ends_at)}`;
+  return `${formatCampusTime(entry.starts_at)} - ${formatCampusTime(entry.ends_at)}`;
 }
 
 function formatDateLabel(value: string) {
@@ -172,9 +170,7 @@ function formatDateLabel(value: string) {
 }
 
 function localDateKeyFromIso(value: string) {
-  const date = new Date(value);
-  date.setUTCHours(date.getUTCHours() + 7);
-  return date.toISOString().slice(0, 10);
+  return campusDateKey(value);
 }
 
 function durationLabel(startTime: string, endTime: string) {
@@ -623,8 +619,12 @@ function TimeCard({
           <input
             aria-label="Waktu Mulai"
             className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-white px-4 text-[15px]"
+            inputMode="numeric"
+            maxLength={5}
             onChange={(event) => onStartTimeChange(event.target.value)}
-            type="time"
+            pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+            placeholder="09:00"
+            type="text"
             value={startTime}
           />
         </label>
@@ -635,8 +635,12 @@ function TimeCard({
           <input
             aria-label="Waktu Selesai"
             className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-white px-4 text-[15px]"
+            inputMode="numeric"
+            maxLength={5}
             onChange={(event) => onEndTimeChange(event.target.value)}
-            type="time"
+            pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+            placeholder="13:00"
+            type="text"
             value={endTime}
           />
         </label>
@@ -690,7 +694,27 @@ function TimeCard({
   );
 }
 
-function SummaryMedia() {
+function SummaryMedia({
+  altText,
+  facilityName,
+  imageUrl,
+}: {
+  altText?: string;
+  facilityName: string;
+  imageUrl?: string | null;
+}) {
+  if (imageUrl) {
+    return (
+      <div className="relative h-[180px] overflow-hidden bg-[#e5e7eb]">
+        <img
+          alt={altText ?? `Foto ${facilityName}`}
+          className="h-full w-full object-cover"
+          src={imageUrl}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex h-[180px] items-center justify-center bg-gradient-to-br from-[#d1fae5] via-[#e7fbd3] to-[#fef3c7]">
       <div className="absolute inset-[18px] rounded-[10px] border-[4px] border-[#9fd9b8]/75" />
@@ -708,25 +732,49 @@ function formatParticipantCapacity(value: number) {
   return `${new Intl.NumberFormat("id-ID").format(value)} orang`;
 }
 
+function facilityCoverImage(facility?: FacilityReservationSummaryResponse) {
+  const images = facility?.images ?? [];
+  return images.find((image) => image.is_cover) ?? images[0] ?? null;
+}
+
 function ReservationSummary({
   facility,
-  dateLabel = reservationCreateFixture.selectedDate,
-  endTime = reservationCreateFixture.endTime,
-  startTime = reservationCreateFixture.startTime,
+  isError = false,
+  isLoading = false,
+  endsAt,
+  startsAt,
 }: {
   facility?: FacilityReservationSummaryResponse;
-  dateLabel?: string;
-  endTime?: string;
-  startTime?: string;
+  isError?: boolean;
+  isLoading?: boolean;
+  endsAt: string;
+  startsAt: string;
 }) {
-  const facilityName = facility?.name ?? reservationCreateFixture.facilityName;
-  const summaryTitle = facility ? `Reservasi ${facility.name}` : reservationCreateFixture.summaryTitle;
-  const capacityLabel = facility ? formatParticipantCapacity(facility.capacity) : reservationCreateFixture.capacity;
-  const totalCostLabel = facility ? facility.price.summary : reservationCreateFixture.total;
+  const facilityName = facility?.name ?? (isError ? "Ringkasan fasilitas" : "Memuat fasilitas...");
+  const summaryTitle = facility
+    ? `Reservasi ${facility.name}`
+    : isError
+      ? "Ringkasan fasilitas belum dapat dimuat"
+      : "Memuat ringkasan reservasi...";
+  const capacityLabel = facility ? formatParticipantCapacity(facility.capacity) : isError ? "Tidak tersedia" : "Memuat...";
+  const coverImage = facilityCoverImage(facility);
+  const totalCostLabel = facility ? facility.price.summary : isError ? "Tidak tersedia" : "Memuat...";
+  const dateLabel = formatCampusDate(startsAt);
+  const timeLabel = `${formatCampusTime(startsAt)} - ${formatCampusTime(endsAt)}`;
 
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
-      <SummaryMedia />
+      {facility ? (
+        <SummaryMedia
+          altText={coverImage?.alt_text ?? undefined}
+          facilityName={facilityName}
+          imageUrl={coverImage?.url ?? null}
+        />
+      ) : (
+        <div className="flex h-[180px] items-center justify-center bg-[#f8fafc] px-6 text-center text-sm font-semibold text-[#6b7280]">
+          {isLoading ? "Memuat media fasilitas..." : "Media fasilitas belum tersedia."}
+        </div>
+      )}
       <div className="p-6">
         <p className="m-0 mb-1 text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
           {facilityName}
@@ -738,7 +786,7 @@ function ReservationSummary({
         </p>
         <p className="m-0 mb-3 flex gap-3 text-sm text-[#6b7280]">
           <Clock aria-hidden="true" className="text-[#0f9d58]" size={18} />
-          {startTime} - {endTime}
+          {timeLabel}
         </p>
         <p className="m-0 mb-6 flex gap-3 text-sm text-[#6b7280]">
           <Users aria-hidden="true" className="text-[#0f9d58]" size={18} />
@@ -759,6 +807,11 @@ function ReservationSummary({
             </p>
           </div>
         </div>
+        {isError ? (
+          <p className="m-0 mt-4 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs font-semibold text-[#9a3412]">
+            Ringkasan fasilitas belum dapat dimuat dari server.
+          </p>
+        ) : null}
       </div>
     </div>
   );
@@ -1156,7 +1209,13 @@ export function StudentReservationDetailPage() {
         </form>
 
         <aside className="flex w-[400px] flex-col gap-6 max-lg:w-full">
-          <ReservationSummary facility={facilitySummaryQuery.data} />
+          <ReservationSummary
+            endsAt={endsAt}
+            facility={facilitySummaryQuery.data}
+            isError={facilitySummaryQuery.isError}
+            isLoading={facilitySummaryQuery.isLoading}
+            startsAt={startsAt}
+          />
           <PolicyBox />
           <button
             className="flex min-h-[52px] w-full items-center justify-center rounded-lg bg-[#0f9d58] px-6 text-[15px] font-semibold text-white shadow-[0_4px_6px_rgba(15,157,88,0.18)] disabled:cursor-not-allowed disabled:bg-[#d1d5db]"

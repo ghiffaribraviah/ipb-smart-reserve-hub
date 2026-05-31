@@ -24,6 +24,7 @@ class FacilityManagementProfileResponse(BaseModel):
     payment_instructions: str | None
     open_hours_summary: str
     open_hours: list["FacilityOpenHourResponse"] = []
+    images: list["FacilityImageManagementResponse"] = []
     is_active: bool
 
 

@@ -46,14 +46,14 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: organization units, selected facility/time summary, optional extra requirements.
+- Deterministic fixture requirements: organization units, selected facility/time summary with cover image, optional extra requirements.
 - Real entities: Organization Unit, Reservation Submission.
-- Fixture media: facility thumbnail.
+- Facility media: use the selected facility cover image from `GET /facilities/:facilityId` when present; use deterministic fixture media only as a no-image fallback.
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: `GET /organization-units`, `POST /facilities/:facilityId/reservations`.
-- Page-needed fields: organization unit `id`, `name`; request fields from `ReservationSubmissionRequest`; response `StudentReservationResponse.id`, `status`, `document`, `payment`, `extra_requirements`.
+- Endpoints consumed: `GET /facilities/:facilityId`, `GET /organization-units`, `POST /facilities/:facilityId/reservations`.
+- Page-needed fields: facility `id`, `name`, `capacity`, `price`, `images.url`, `images.alt_text`, `images.is_cover`; organization unit `id`, `name`; request fields from `ReservationSubmissionRequest`; response `StudentReservationResponse.id`, `status`, `document`, `payment`, `extra_requirements`.
 - Auth/session assumptions: reservation submission requires student bearer token.
 - Validation notes: backend trims and rejects whitespace-only `activity_title`, `event_description`, and `contact_phone`; backend also enforces `activity_title <= 255`, `contact_phone <= 32`, and `participant_count > 0`.
 - Source files: `backend/app/api/routes/organization_unit_routes.py`, `backend/app/api/routes/reservation_routes.py`, `backend/app/schemas/reservation_schemas.py`.

@@ -5,6 +5,9 @@ import {
   screenshotViewports,
 } from "./utils/visual";
 
+const facilityImageFixture =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 480'%3E%3Crect width='1200' height='480' fill='%23e8f5e9'/%3E%3Cpath d='M0 360 260 150 480 310 760 95 1200 365v115H0z' fill='%230f9d58' opacity='.55'/%3E%3Cpath d='M0 420 220 280 410 375 620 245 1200 430v50H0z' fill='%231d7667' opacity='.25'/%3E%3C/svg%3E";
+
 const baseReservation: Record<string, any> = {
   activity_title: "Simposium Etika AI",
   cancellation_reason: null,
@@ -27,7 +30,7 @@ const baseReservation: Record<string, any> = {
     notes: null,
     security_personnel: false,
   },
-  facility: { id: "facility-1", name: "Grand Auditorium" },
+  facility: { cover_image_url: facilityImageFixture, id: "facility-1", name: "Grand Auditorium" },
   id: "RSV-FIXTURE-010",
   organization_unit: { id: "org-1", name: "Himalkom" },
   participant_count: 80,
@@ -139,6 +142,7 @@ test.describe("student review, cancellation, and profile pages", () => {
       "/student/reservations/RSV-FIXTURE-001",
     );
     await expect(page.getByRole("heading", { name: "Ajukan Pembatalan" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Foto Grand Auditorium" })).toBeVisible();
     await expect(page.getByLabel("Alasan Pembatalan")).toBeVisible();
     await expect(page.getByLabel("Detail Alasan")).toBeVisible();
     await expect(page.getByRole("button", { name: "Kirim Pengajuan" })).toBeVisible();

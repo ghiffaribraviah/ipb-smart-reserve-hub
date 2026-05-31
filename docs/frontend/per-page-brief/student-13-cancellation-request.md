@@ -46,14 +46,14 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: approved reservation summary, cancellation reason options, immediate cancelled-state example.
+- Deterministic fixture requirements: approved reservation summary with facility cover image, cancellation reason options, immediate cancelled-state example.
 - Real entities: StudentReservation detail and cancellation request.
-- Fixture media: deterministic facility thumbnail.
+- Facility media: render `facility.cover_image_url` from the reservation detail projection when present; use deterministic fixture media only as a no-image fallback.
 
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /student/reservations/:reservationId`, `POST /student/reservations/:reservationId/cancellation-request`.
-- Page-needed fields: reservation summary, cancellation eligibility, cancellation status/reason when present.
+- Page-needed fields: reservation summary including `facility.cover_image_url`, cancellation eligibility, cancellation status/reason when present.
 - Auth/session assumptions: student-owned reservation only.
 - Validation notes: cancellation reason still returns `400` for blank/whitespace payloads; frontend must require a real reason group selection before submit.
 - Source files: `backend/app/api/routes/reservation_routes.py`, `backend/app/schemas/reservation_schemas.py`.
@@ -63,8 +63,8 @@
 - Status: `resolved`
 - Domain area: Reservation Workflow
 - Affected UI: cancellation request form and post-submit cancelled detail state.
-- Contract needed: owned reservation detail plus cancellation request endpoint that immediately returns `cancelled` with cancellation projection fields.
-- Evidence: `POST /student/reservations/{reservation_id}/cancellation-request` exists; `backend/tests/test_cancellation_workflow.py` verifies approved cancellation immediately transitions to `cancelled`, preserves required reason handling, records audit, and exposes cancellation reason fields used by list/detail projections.
+- Contract needed: owned reservation detail with facility cover image plus cancellation request endpoint that immediately returns `cancelled` with cancellation projection fields.
+- Evidence: `StudentReservationResponse.facility.cover_image_url` is available for the summary media; `POST /student/reservations/{reservation_id}/cancellation-request` exists; `backend/tests/test_cancellation_workflow.py` verifies approved cancellation immediately transitions to `cancelled`, preserves required reason handling, records audit, and exposes cancellation reason fields used by list/detail projections.
 - Source issue/PRD: `docs/issues/ISSUE-0013-cancellation-workflow.md`, `docs/issues/ISSUE-0089-automatic-student-cancellation-lifecycle.md`.
 
 ## Shared Components

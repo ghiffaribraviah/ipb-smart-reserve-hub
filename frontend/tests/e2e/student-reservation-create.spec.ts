@@ -5,6 +5,9 @@ import {
   screenshotViewports,
 } from "./utils/visual";
 
+const facilityImageFixture =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 480'%3E%3Crect width='1200' height='480' fill='%23e8f5e9'/%3E%3Cpath d='M0 360 260 150 480 310 760 95 1200 365v115H0z' fill='%230f9d58' opacity='.55'/%3E%3Cpath d='M0 420 220 280 410 375 620 245 1200 430v50H0z' fill='%231d7667' opacity='.25'/%3E%3C/svg%3E";
+
 const calendarResponse = [
   {
     ends_at: "2026-06-24T05:00:00Z",
@@ -68,6 +71,29 @@ async function mockReservationTimeApi(page: Page) {
 }
 
 async function mockReservationDetailApi(page: Page) {
+  await page.route("http://localhost:8000/facilities/grand-auditorium", async (route) => {
+    await route.fulfill({
+      json: {
+        capacity: 300,
+        id: "grand-auditorium",
+        images: [
+          {
+            alt_text: "Foto utama Grand Auditorium",
+            id: "image-1",
+            is_cover: true,
+            url: facilityImageFixture,
+          },
+        ],
+        name: "Grand Auditorium",
+        price: {
+          amount_rupiah: 250000,
+          is_free: false,
+          summary: "Rp250.000",
+        },
+      },
+    });
+  });
+
   await page.route("http://localhost:8000/organization-units", async (route) => {
     await route.fulfill({
       json: [
@@ -135,6 +161,7 @@ test.describe("student reservation creation pages", () => {
     await expect(page.getByLabel("Nomor Kontak")).toBeVisible();
     await expect(page.getByLabel("Dukungan AV & mikrofon")).toBeVisible();
     await expect(page.getByLabel("Catatan Tambahan")).toBeVisible();
+    await expect(page.getByRole("img", { name: "Foto utama Grand Auditorium" })).toBeVisible();
     await expect(page.getByText("Total Biaya", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Lanjutkan" })).toBeVisible();
 

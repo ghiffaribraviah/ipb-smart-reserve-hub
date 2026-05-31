@@ -68,13 +68,40 @@ const calendarResponse = [
 ];
 
 async function mockFacilityDetailApi(page: Page) {
-  await page.route("http://localhost:8000/facilities/grand-auditorium", async (route) => {
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8000\/facilities\/grand-auditorium$/, async (route) => {
     await route.fulfill({ json: facilityDetail });
   });
 
-  await page.route("http://localhost:8000/facilities/grand-auditorium/calendar?**", async (route) => {
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8000\/facilities\/grand-auditorium\/calendar\?.*/, async (route) => {
     await route.fulfill({ json: calendarResponse });
   });
+}
+
+async function authenticateStudent(page: Page) {
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8000\/auth\/login$/, async (route) => {
+    await route.fulfill({ json: { access_token: "e2e-student-token" } });
+  });
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8000\/auth\/me$/, async (route) => {
+    await route.fulfill({
+      json: {
+        email: "student@apps.ipb.ac.id",
+        full_name: "Student Aktif",
+        id: "student-1",
+        is_active: true,
+        role: "student",
+      },
+    });
+  });
+
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8000\/notifications\??.*/, async (route) => {
+    await route.fulfill({ json: [] });
+  });
+
+  await page.goto("/login?redirect=/student/facilities/grand-auditorium");
+  await page.getByLabel("Email Kampus").fill("student@apps.ipb.ac.id");
+  await page.getByLabel("Kata Sandi").fill("demo12345");
+  await page.getByRole("button", { name: /Masuk/ }).click();
+  await page.waitForURL("**/student/facilities/grand-auditorium");
 }
 
 test.describe("student facility detail page", () => {
@@ -82,7 +109,7 @@ test.describe("student facility detail page", () => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
     await mockFacilityDetailApi(page);
-    await page.goto("/student/facilities/grand-auditorium");
+    await authenticateStudent(page);
 
     await expect(page.getByRole("link", { name: "Kembali" })).toHaveAttribute(
       "href",
@@ -101,7 +128,9 @@ test.describe("student facility detail page", () => {
     await expect(page.getByRole("heading", { name: "Ulasan Peminjam" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Kalender Publik" })).toBeVisible();
     const calendarBox = await page.getByRole("heading", { name: "Kalender Publik" }).boundingBox();
+    const reserveBox = await page.getByRole("link", { name: "Reservasi Sekarang" }).boundingBox();
     const reviewsBox = await page.getByRole("heading", { name: "Ulasan Peminjam" }).boundingBox();
+    expect(calendarBox?.y).toBeLessThan(reserveBox?.y ?? 0);
     expect(calendarBox?.y).toBeLessThan(reviewsBox?.y ?? 0);
     await page.getByRole("button", { name: "Pilih 19 Mei 2026" }).click();
     await expect(page.getByText("Waktu sudah dipesan").first()).toBeVisible();

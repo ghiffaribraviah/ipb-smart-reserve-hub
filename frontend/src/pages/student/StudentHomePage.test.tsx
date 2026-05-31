@@ -28,7 +28,7 @@ const featuredResponse = {
     {
       capacity: 1200,
       category: "Auditorium / Seminar",
-      cover_image_url: null,
+      cover_image_url: "https://cdn.example.test/grand-auditorium.jpg",
       id: "facility-uuid-1",
       location: "Kampus Timur",
       name: "Grand Auditorium",
@@ -129,6 +129,10 @@ describe("StudentHomePage", () => {
     expect(await screen.findByRole("link", { name: /Grand Auditorium/ })).toHaveAttribute(
       "href",
       "/student/facilities/facility-uuid-1",
+    );
+    expect(screen.getByRole("img", { name: "Foto Grand Auditorium" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/grand-auditorium.jpg",
     );
     expect(screen.getByText("Kapasitas: 1,200")).toBeVisible();
     expect(screen.getByText("Rp100.000 / sesi")).toBeVisible();

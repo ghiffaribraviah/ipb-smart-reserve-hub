@@ -6,6 +6,9 @@ import {
   screenshotViewports,
 } from "./utils/visual";
 
+const facilityImageFixture =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23e8f5e9'/%3E%3Cpath d='M0 280 180 120 320 230 460 80 640 260v100H0z' fill='%230f9d58' opacity='.55'/%3E%3Ctext x='40' y='72' font-family='Arial' font-size='38' fill='%23111827'%3EIPB SRH%3C/text%3E%3C/svg%3E";
+
 const assignedFacilities = [
   {
     capacity: 300,
@@ -15,6 +18,16 @@ const assignedFacilities = [
     contact_phone: "08123456789",
     description: "Auditorium utama untuk seminar besar dan pertemuan fakultas.",
     id: "grand-auditorium",
+    images: [
+      {
+        alt_text: "Cover Grand Auditorium",
+        display_order: 0,
+        id: "image-grand-auditorium",
+        is_active: true,
+        is_cover: true,
+        url: facilityImageFixture,
+      },
+    ],
     is_active: true,
     location: "Kampus Dramaga",
     name: "Grand Auditorium",
@@ -113,12 +126,31 @@ const facilitySchedule = [
 ];
 
 async function mockStaffFacilityEndpoints(page: Page) {
-  await page.route("http://localhost:8000/staff/facilities", async (route) => {
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8000\/auth\/me$/, async (route) => {
+    await route.fulfill({
+      json: {
+        email: "demo.staff@ipb.ac.id",
+        full_name: "Bagus Saputra",
+        id: "staff-e2e",
+        is_active: true,
+        role: "staff",
+      },
+    });
+  });
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8000\/staff\/facilities$/, async (route) => {
     await route.fulfill({ json: assignedFacilities });
   });
-  await page.route("http://localhost:8000/staff/facilities/grand-auditorium/schedule**", async (route) => {
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8000\/staff\/facilities\/grand-auditorium\/schedule.*/, async (route) => {
     await route.fulfill({ json: facilitySchedule });
   });
+}
+
+async function gotoAsStaff(page: Page, path: string) {
+  await page.goto("/login");
+  await page.evaluate(() => {
+    sessionStorage.setItem("ipb-srh-token", "staff-e2e-token");
+  });
+  await page.goto(path);
 }
 
 test.describe("staff facility pages", () => {
@@ -126,13 +158,14 @@ test.describe("staff facility pages", () => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
     await mockStaffFacilityEndpoints(page);
-    await page.goto("/staff/facilities");
+    await gotoAsStaff(page, "/staff/facilities");
 
     await expect(page.getByRole("heading", { name: "Fasilitas Terkelola" })).toBeVisible();
     await expect(page.getByLabel("Filter by facility type")).toHaveValue("");
     await expect(page.getByLabel("Filter by facility status")).toHaveValue("");
     await expect(page.getByText("Menampilkan 4 fasilitas")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Grand Auditorium" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Cover Grand Auditorium" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Agri-Tech Greenhouses" })).toBeVisible();
     await expect(page.locator("span").filter({ hasText: /^Nonaktif$/ })).toBeVisible();
     await expect(page.getByRole("link", { name: "Lihat Jadwal Grand Auditorium" })).toHaveAttribute(
@@ -155,14 +188,17 @@ test.describe("staff facility pages", () => {
     const isMobile = testInfo.project.name.includes("mobile");
     await page.setViewportSize(isMobile ? screenshotViewports.mobile : screenshotViewports.desktop);
     await mockStaffFacilityEndpoints(page);
-    await page.goto("/staff/facilities/grand-auditorium/schedule");
+    await gotoAsStaff(page, "/staff/facilities/grand-auditorium/schedule");
+    await expect(page.getByRole("heading", { name: "Jadwal Fasilitas" })).toBeVisible();
+    await expect(page.getByText("Grand Auditorium")).toBeVisible();
+    await page.getByLabel("Tanggal jadwal terpilih").fill("2024-10-24");
 
     await expect(page.getByRole("link", { name: "Kembali ke Daftar Fasilitas" })).toHaveAttribute(
       "href",
       "/staff/facilities",
     );
-    await expect(page.getByRole("heading", { name: "Jadwal Grand Auditorium" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Oktober 2024" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pilih 24 Oktober 2024: 3 reservasi" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Agenda" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Simposium Etika AI 2024" }).first()).toBeVisible();
     await expect(

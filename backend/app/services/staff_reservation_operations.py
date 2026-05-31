@@ -13,6 +13,11 @@ class StaffReservationParty:
 
 
 @dataclass(frozen=True)
+class StaffReservationDetailFacility(StaffReservationParty):
+    cover_image_url: str | None
+
+
+@dataclass(frozen=True)
 class StaffReservationStudent:
     id: str
     full_name: str
@@ -120,7 +125,7 @@ class StaffReservationReviewActions:
 class StaffReservationDetail:
     id: str
     reservation_code: str
-    facility: StaffReservationParty
+    facility: StaffReservationDetailFacility
     student: StaffReservationStudent
     organization_unit: StaffReservationParty
     activity_title: str
@@ -249,7 +254,11 @@ def _to_detail(reservation: Reservation) -> StaffReservationDetail:
     return StaffReservationDetail(
         id=reservation.id,
         reservation_code=reservation.reservation_code,
-        facility=StaffReservationParty(id=reservation.facility.id, name=reservation.facility.name),
+        facility=StaffReservationDetailFacility(
+            id=reservation.facility.id,
+            name=reservation.facility.name,
+            cover_image_url=_facility_cover_image_url(reservation.facility),
+        ),
         student=StaffReservationStudent(
             id=reservation.student.id,
             full_name=reservation.student.full_name,
@@ -353,6 +362,12 @@ def _payment_receipt_metadata(reservation: Reservation) -> StaffReservationFileM
         size_bytes=reservation.payment_receipt.size_bytes,
         uploaded_at=_optional_utc(reservation.payment_receipt.uploaded_at),
     )
+
+
+def _facility_cover_image_url(facility) -> str | None:
+    active_images = [image for image in getattr(facility, "images", []) if image.is_active]
+    cover_image = next((image for image in active_images if image.is_cover), None) or next(iter(active_images), None)
+    return cover_image.url if cover_image is not None else None
 
 
 def _review_actions(reservation_id: str) -> StaffReservationReviewActions:

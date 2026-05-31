@@ -37,7 +37,11 @@ const baseReservation: StudentReservationWorkflowProjection = {
     notes: null,
     security_personnel: false,
   },
-  facility: { id: "facility-1", name: "Grand Auditorium" },
+  facility: {
+    cover_image_url: "https://cdn.example.test/grand-auditorium-cover.jpg",
+    id: "facility-1",
+    name: "Grand Auditorium",
+  },
   id: "doc-upload",
   organization_unit: { id: "org-1", name: "BEM KM IPB" },
   participant_count: 80,
@@ -104,6 +108,10 @@ describe("StudentReservationListPage", () => {
     renderList();
 
     expect(await screen.findByRole("heading", { name: "Grand Auditorium" })).toBeVisible();
+    expect(screen.getByRole("img", { name: "Foto Grand Auditorium" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/grand-auditorium-cover.jpg",
+    );
     expect(screen.getByText("Menunggu Unggah Dokumen")).toBeVisible();
     expect(screen.getByText("BEM KM IPB")).toBeVisible();
 

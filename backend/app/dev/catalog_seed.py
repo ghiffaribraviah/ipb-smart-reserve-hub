@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import re
 from datetime import time
 
 from sqlalchemy import select
@@ -472,6 +471,89 @@ FACILITY_DEFINITIONS = [
     },
 ]
 
+FACILITY_IMAGE_URLS_BY_NAME = {
+    "Ballroom GSC 1": (
+        "https://www.ipb.ac.id/wp-content/uploads/2023/07/"
+        "gedung-startup-center-stp-ipb-university-siap-menerima-tenant-program-inkubasi-bisnis-news.png"
+    ),
+    "Ballroom GSC 2": (
+        "https://www.ipb.ac.id/wp-content/uploads/2025/06/"
+        "LKST-IPB-University-Fasilitasi-25-Startup-Melalui-Program-Inkubasi-Bisnis-Tahun-2025.jpg"
+    ),
+    "Grand Ballroom GSC": (
+        "https://www.ipb.ac.id/wp-content/uploads/2025/05/"
+        "LKST-IPB-University-Seleksi-44-Calon-Startup-Program-Inkubasi-Bisnis-Tahun-2025.jpg"
+    ),
+    "Breakout Room GSC3.1": (
+        "https://www.ipb.ac.id/wp-content/uploads/2024/12/"
+        "LKST-IPB-University-Gelar-Business-Matching-20-Startup-Paparkan-Potensi-Bisnis.jpg"
+    ),
+    "Ruang Calina 1 dan 2": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_2010_64330239-a0dc-4f53-963c-e9329b43db70.jpg"
+    ),
+    "Ruang Calina 3": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_2010_d2cc9073-2c52-47ac-a726-45b3bda5dcd3.jpg"
+    ),
+    "Ruang Calina 4": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_2010_1b33d0fc-b99a-47eb-a97c-35466bf16359.jpg"
+    ),
+    "Ruang Rapat GSC 04.01": (
+        "https://www.ipb.ac.id/wp-content/uploads/2026/05/"
+        "ipb-university-dan-kemdiktisaintek-gelar-seleksi-bersama-prime-step-2026-"
+        "untuk-pengembangan-inovasi-dan-startup-.jpg-770x400.jpeg"
+    ),
+    "Focus Room 1": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3607_1884829b-d075-475c-98ff-89fd668dc829.jpg"
+    ),
+    "Focus Room 2": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3608_031e62b7-50d3-439a-9fce-bcfd6499eff6.jpg"
+    ),
+    "Ruang Diskusi D1": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3611_dff98d69-7739-4fb2-9592-0437eed5d8bb.jpg"
+    ),
+    "Ruang Diskusi D2": (
+        "https://cdn.ipb.ac.id/inventory/FotoRuangan_3612_939b96f0-d94d-414f-bb42-6c6058346f32.jpeg"
+    ),
+    "Laboratorium Komputer Hall B": "https://cs.ipb.ac.id/wp-content/uploads/2015/06/IMG_5247-1024x682.jpg",
+    "Lab Komputer GPK": "https://www.ipb.ac.id/wp-content/uploads/2023/11/FMIPA.jpg",
+    "Lab Komputer Singkong A": "https://www.ipb.ac.id/wp-content/uploads/2023/11/FEM.jpg",
+    "Lab Komputer Singkong C": "https://www.ipb.ac.id/wp-content/uploads/2023/11/SB-2.jpg",
+    "Lab. Instrumen lantai 4": (
+        "https://www.ipb.ac.id/wp-content/uploads/2023/09/"
+        "departemen-itp-bersama-hsc-ipb-university-gelar-workshop-aplikasi-metabolomik-"
+        "dalam-bidang-pangan-news.jpg"
+    ),
+    "Lab. Biokimia Pangan": "https://www.ipb.ac.id/wp-content/uploads/2023/11/Fateta.jpg",
+    "Laboratorium Fisiologi dan Kesehatan Benih": (
+        "https://www.ipb.ac.id/wp-content/uploads/2023/11/F-Pertanian.jpg"
+    ),
+    "Laboratorium Pengujian": "https://www.ipb.ac.id/wp-content/uploads/2023/11/FEMA.jpg",
+    "Laboratorium Mikrobiologi": "https://www.ipb.ac.id/wp-content/uploads/2023/11/FPIK.jpg",
+    "Laboratorium Kesehatan Organisme Akuatik": "https://www.ipb.ac.id/wp-content/uploads/2023/11/FKH.jpg",
+    "Laboratorium Nutrisi Ikan": "https://www.ipb.ac.id/wp-content/uploads/2023/11/Fahutan.jpg",
+    "Laboratorium AC": "https://www.ipb.ac.id/wp-content/uploads/2023/11/SV-1.jpg",
+    "Laboratorium Terpadu-BMN": "https://www.ipb.ac.id/wp-content/uploads/2023/11/FAPET-1.jpg",
+    "Laboratorium Lapang Agrostologi": (
+        "https://museum.ipb.ac.id/wp-content/uploads/2023/05/Agribussiness-Techno-Park.jpeg"
+    ),
+    "Ruang Analisa Teaching Factory": "https://museum.ipb.ac.id/wp-content/uploads/2023/05/Koin-IPB.jpg",
+    "Persiapan Alat dan Bahan Mikrobiologi": (
+        "https://museum.ipb.ac.id/wp-content/uploads/2023/03/photo_2023-03-15_11-21-31.jpg"
+    ),
+    "Lapangan Sepakbola": "https://cdn.ipb.ac.id/inventori/FotoOrsen_1_16b15580-d654-46a8-9fa1-5378e2fbb7a4.jpg",
+    "Taman Inovasi / Gladiator": "https://museum.ipb.ac.id/wp-content/uploads/2023/05/Taman-Inovasi.webp",
+    "Taman SDGs": "https://www.ipb.ac.id/wp-content/uploads/2025/09/Danau-SGDS-770x400.jpg",
+    "Verifikasi Gate Sistem": "https://www.ipb.ac.id/wp-content/uploads/2026/03/Cuplikan-layar-2026-03-31-140708.png",
+    "Bus Jemputan Pegawai": "https://www.ipb.ac.id/wp-content/uploads/2026/03/Cuplikan-layar-2026-03-31-140825.png",
+    "Bus Keliling Kampus": "https://www.ipb.ac.id/wp-content/uploads/2026/03/Cuplikan-layar-2026-03-31-140849.png",
+    "Bus Keluar Kampus": "https://www.ipb.ac.id/wp-content/uploads/2026/03/Cuplikan-layar-2026-03-31-140908.png",
+    "Mobil Listrik": (
+        "https://www.ipb.ac.id/wp-content/uploads/2023/07/"
+        "yayasan-pupuk-kaltim-hibahkan-dua-unit-mobil-listrik-kepada-ipb-news.jpg"
+    ),
+    "Sepeda Kampus": "https://www.ipb.ac.id/wp-content/uploads/2023/07/Sepeda.jpg",
+}
+
 
 def seed_catalog_data(*, settings: SettingsModule | None = None, environment: str | None = None) -> None:
     seed_environment = environment if environment is not None else os.environ.get("IPB_ENVIRONMENT")
@@ -507,13 +589,12 @@ def seed_catalog_data(*, settings: SettingsModule | None = None, environment: st
                 open_hours_summary=definition["open_hours_summary"],
             )
 
-            facility_slug = _slugify(definition["name"])
             facility.images.clear()
             facility.open_hours.clear()
             session.add(
                 FacilityImage(
                     facility=facility,
-                    url=f"https://cdn.example.test/catalog/{facility_slug}-cover.jpg",
+                    url=_facility_image_url(definition),
                     alt_text=f"{facility.name} cover",
                     display_order=1,
                     is_cover=True,
@@ -533,9 +614,9 @@ def seed_catalog_data(*, settings: SettingsModule | None = None, environment: st
         session.commit()
 
 
-def _slugify(value: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
-    return slug or "facility"
+def _facility_image_url(definition: dict[str, object]) -> str:
+    name = str(definition["name"])
+    return FACILITY_IMAGE_URLS_BY_NAME[name]
 
 
 def _ensure_category(

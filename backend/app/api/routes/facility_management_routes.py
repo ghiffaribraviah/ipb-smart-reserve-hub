@@ -18,12 +18,13 @@ from app.schemas.facility_management_schemas import (
 from app.services.accounts import UserAccount
 from app.services.facility_management import (
     FacilityBlackoutCreation,
-    FacilityImageCreation,
     FacilityCategoryNotFound,
+    FacilityImageCreation,
+    FacilityImageNotFound,
     FacilityManagementModule,
     FacilityNotFound,
-    FacilityOpenHourInvalid,
     FacilityOpenHourCreation,
+    FacilityOpenHourInvalid,
     FacilityProfileUpdate,
     StaffFacilityAccessDenied,
     StaffUserNotFound,
@@ -137,6 +138,23 @@ def register_facility_management_routes(
                 facility_id,
                 FacilityImageCreation(**payload.model_dump()),
             )
+        except StaffFacilityAccessDenied:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Staff tidak ditugaskan ke fasilitas ini.")
+
+    @app.post(
+        "/staff/facilities/{facility_id}/images/{image_id}/cover",
+        response_model=FacilityImageManagementResponse,
+    )
+    async def choose_staff_facility_cover_image(
+        facility_id: str,
+        image_id: str,
+        facility_management: FacilityManagementModule = Depends(get_facility_management),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.manage_assigned_facilities)),
+    ):
+        try:
+            return facility_management.choose_assigned_facility_cover_image(current_user, facility_id, image_id)
+        except (FacilityNotFound, FacilityImageNotFound):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Gambar fasilitas tidak ditemukan.")
         except StaffFacilityAccessDenied:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Staff tidak ditugaskan ke fasilitas ini.")
 

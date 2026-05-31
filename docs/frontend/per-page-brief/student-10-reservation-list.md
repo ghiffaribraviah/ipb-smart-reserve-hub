@@ -48,12 +48,12 @@
 
 - Deterministic fixture requirements: mixed statuses and terminal/history examples.
 - Real entities: StudentReservation list projections.
-- Fixture media: facility thumbnails.
+- Fixture media: backend facility `cover_image_url` when available, with deterministic fallback thumbnails for reservations whose facility has no active media.
 
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /student/reservations`, cancellation endpoints when actions are implemented.
-- Page-needed fields: reservation status, facility, date/time, price, document/payment/rejection projections, cancellation fields, review presence.
+- Page-needed fields: reservation status, facility including `cover_image_url`, date/time, price, document/payment/rejection projections, cancellation fields, review presence.
 - Auth/session assumptions: student-owned list only.
 - Source files: `backend/app/api/routes/reservation_routes.py`, `backend/app/schemas/reservation_schemas.py`.
 
@@ -62,8 +62,8 @@
 - Status: `resolved`
 - Domain area: Reservation Workflow
 - Affected UI: reservation card routing, status badges, card actions.
-- Contract needed: list response includes document/payment/rejection/cancellation/review projections.
-- Evidence: `GET /student/reservations` returns `list[StudentReservationResponse]`; schema includes workflow projections and cancellation/review fields.
+- Contract needed: list response includes document/payment/rejection/cancellation/review projections and the reserved facility cover image URL.
+- Evidence: `GET /student/reservations` returns `list[StudentReservationResponse]`; schema includes workflow projections, cancellation/review fields, and `facility.cover_image_url`.
 - Source issue/PRD: `docs/issues/ISSUE-0027-student-reservation-workflow-projections.md`.
 
 ## Shared Components

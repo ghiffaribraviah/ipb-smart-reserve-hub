@@ -176,6 +176,10 @@ async def test_assigned_staff_manages_facility_images_open_hours_and_blackouts()
                 "is_cover": True,
             },
         )
+        assigned_facilities_after_image = await client.get(
+            "/staff/facilities",
+            headers={"Authorization": f"Bearer {staff_token}"},
+        )
         open_hour = await client.post(
             f"/staff/facilities/{facility_id}/open-hours",
             headers={"Authorization": f"Bearer {staff_token}"},
@@ -201,6 +205,25 @@ async def test_assigned_staff_manages_facility_images_open_hours_and_blackouts()
 
     assert image.status_code == 201
     assert image.json()["is_cover"] is True
+    assert assigned_facilities_after_image.status_code == 200
+    assert assigned_facilities_after_image.json()[0]["images"] == [
+        {
+            "id": image.json()["id"],
+            "url": "https://cdn.example.test/auditorium-new-cover.jpg",
+            "alt_text": "Cover auditorium baru",
+            "display_order": 0,
+            "is_cover": True,
+            "is_active": True,
+        },
+        {
+            "id": assigned_facilities_after_image.json()[0]["images"][1]["id"],
+            "url": "https://cdn.example.test/auditorium-cover.jpg",
+            "alt_text": "Auditorium cover",
+            "display_order": 1,
+            "is_cover": False,
+            "is_active": True,
+        },
+    ]
     assert open_hour.status_code == 201
     assert open_hour.json()["day_of_week"] == 0
     assert blackout.status_code == 201
@@ -210,3 +233,57 @@ async def test_assigned_staff_manages_facility_images_open_hours_and_blackouts()
     assert availability.status_code == 200
     assert availability.json()["available"] is False
     assert "blackout_period" in availability.json()["reasons"]
+
+
+@pytest.mark.anyio
+async def test_assigned_staff_marks_existing_facility_image_as_cover():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    test_data = DataBuilder(app)
+    test_data.create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
+    staff_id = test_data.create_user(email="staff@ipb.ac.id", role=UserRole.staff)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    test_data.add_facility_image(
+        facility_id,
+        url="https://cdn.example.test/auditorium-side.jpg",
+        display_order=2,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        admin_token = await login(client, "admin@ipb.ac.id")
+        staff_token = await login(client, "staff@ipb.ac.id")
+        await client.put(
+            f"/admin/facilities/{facility_id}/staff-assignments/{staff_id}",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assigned_facilities = await client.get(
+            "/staff/facilities",
+            headers={"Authorization": f"Bearer {staff_token}"},
+        )
+        side_image_id = next(
+            image["id"]
+            for image in assigned_facilities.json()[0]["images"]
+            if image["url"] == "https://cdn.example.test/auditorium-side.jpg"
+        )
+
+        chosen_cover = await client.post(
+            f"/staff/facilities/{facility_id}/images/{side_image_id}/cover",
+            headers={"Authorization": f"Bearer {staff_token}"},
+        )
+        assigned_after_cover_change = await client.get(
+            "/staff/facilities",
+            headers={"Authorization": f"Bearer {staff_token}"},
+        )
+        public_detail = await client.get(f"/facilities/{facility_id}")
+
+    assert chosen_cover.status_code == 200
+    assert chosen_cover.json()["id"] == side_image_id
+    assert chosen_cover.json()["is_cover"] is True
+    assert [image["is_cover"] for image in assigned_after_cover_change.json()[0]["images"]].count(True) == 1
+    assert next(
+        image for image in assigned_after_cover_change.json()[0]["images"] if image["url"].endswith("side.jpg")
+    )["is_cover"] is True
+    assert public_detail.json()["images"][0]["url"] == "https://cdn.example.test/auditorium-side.jpg"

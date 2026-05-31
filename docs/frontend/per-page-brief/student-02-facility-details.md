@@ -22,16 +22,16 @@
 
 ## Design Contract
 
-- Layout: Student shell, facility gallery, metadata cards, description/contact/pricing/calendar/review sections.
-- Desktop behavior: asymmetric gallery and side information rhythm from screenshot; public calendar appears in the main content column above reviews so it sits near the sticky price/reservation widget where space permits.
-- Mobile behavior: stacked gallery and cards with wrapped metadata.
+- Layout: Student shell, facility gallery, metadata cards, description/contact/pricing/reservation widget/calendar/review sections.
+- Desktop behavior: asymmetric gallery and side information rhythm from screenshot; public calendar appears as a compact embedded calendar inside the sticky price/reservation widget, above the reservation CTA.
+- Mobile behavior: stacked gallery and cards with wrapped metadata; the compact public calendar stays above the reservation CTA in the stacked reservation widget.
 - Required copy/status labels: preserve `Reservasi Sekarang` and Indonesian metadata labels.
 - Source-of-truth notes: gallery image proportions and card spacing are important.
 
 ## UX Behavior
 
 - Primary actions: reserve facility.
-- Secondary actions: inspect calendar before browsing reviews.
+- Secondary actions: inspect calendar in the reservation widget before starting reservation.
 - Loading state: stable gallery/card skeleton.
 - Empty state: no reviews or no blocked slots should still keep section structure.
 - Error state: not-found or unavailable facility maps to page-level state.
@@ -49,7 +49,7 @@
 
 - Deterministic fixture requirements: facility with multiple images, contact, open-hours, price, review summary, privacy-safe calendar blocks.
 - Real entities: Facility detail, public reviews, calendar entries.
-- Fixture media: local deterministic facility images.
+- Fixture media: backend image URLs when available, with local deterministic fallback imagery for facilities without active images.
 
 ## Backend Integration And Gaps
 
@@ -63,8 +63,8 @@
 - Status: `resolved`
 - Domain area: Facility Catalog
 - Affected UI: detail header, gallery, contact/pricing cards, public calendar.
-- Contract needed: active facility detail plus public blocked-slot calendar.
-- Evidence: detail, calendar, and availability routes exist in `backend/app/api/routes/facility_routes.py`; schemas exist in `backend/app/schemas/facility_schemas.py`.
+- Contract needed: active facility detail with public image URLs plus public blocked-slot calendar.
+- Evidence: detail, calendar, and availability routes exist in `backend/app/api/routes/facility_routes.py`; schemas exist in `backend/app/schemas/facility_schemas.py`; `FacilityDetailResponse.images` supplies active facility media for the gallery.
 - Source issue/PRD: `docs/issues/ISSUE-0002-facility-catalog-and-detail-browsing.md`, `docs/issues/ISSUE-0003-facility-availability-calendar.md`.
 
 ### BG-STUDENT-02-02: Privacy-Safe Public Calendar Blocks
@@ -85,7 +85,7 @@
 ## Acceptance Checks
 
 - Desktop and mobile screenshots match references.
-- Integration checks: not-found maps to stable page error; reserve CTA carries facility ID; public calendar appears above reviews while preserving privacy-safe calendar behavior.
+- Integration checks: not-found maps to stable page error; reserve CTA carries facility ID; compact public calendar appears above the reserve CTA while preserving privacy-safe calendar behavior.
 
 ## Open Questions
 

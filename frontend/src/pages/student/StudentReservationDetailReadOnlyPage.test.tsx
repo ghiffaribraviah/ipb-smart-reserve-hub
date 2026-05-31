@@ -47,7 +47,11 @@ const baseReservation: StudentReservationWorkflowProjection = {
     notes: null,
     security_personnel: false,
   },
-  facility: { id: "facility-1", name: "Grand Auditorium" },
+  facility: {
+    cover_image_url: "https://cdn.example.test/grand-auditorium-cover.jpg",
+    id: "facility-1",
+    name: "Grand Auditorium",
+  },
   id: "reservation-1",
   organization_unit: { id: "org-1", name: "BEM KM IPB" },
   participant_count: 80,
@@ -145,6 +149,11 @@ describe("StudentReservationDetailReadOnlyPage", () => {
     renderDetail();
 
     expect(await screen.findByRole("heading", { name: "Grand Auditorium" })).toBeVisible();
+    expect(screen.getByRole("img", { name: "Foto Grand Auditorium" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/grand-auditorium-cover.jpg",
+    );
+    expect(screen.queryByText("Deterministic media fixture")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ajukan Pembatalan" })).toHaveAttribute(
       "href",
       "/student/reservations/reservation-1/cancellation",

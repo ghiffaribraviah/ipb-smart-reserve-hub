@@ -307,16 +307,17 @@ function CategoryShortcut({ category }: { category: StudentHomeCategory }) {
 }
 
 function FacilityMedia({ facility }: { facility: StudentHomeFacility }) {
+  const hasImage = Boolean(facility.coverImageUrl);
+
   return (
     <div
-      aria-label={`Foto ${facility.name}`}
+      aria-label={hasImage ? undefined : `Foto ${facility.name}`}
       className="relative flex h-[180px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#d1fae5] via-[#efffd6] to-[#fef3c7] text-center max-md:h-[150px]"
-      role="img"
+      role={hasImage ? undefined : "img"}
     >
       {facility.coverImageUrl ? (
         <img
-          alt=""
-          aria-hidden="true"
+          alt={`Foto ${facility.name}`}
           className="absolute inset-0 h-full w-full object-cover"
           src={facility.coverImageUrl}
         />

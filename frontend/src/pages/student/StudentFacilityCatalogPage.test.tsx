@@ -15,7 +15,7 @@ const catalogResponse = {
     {
       capacity: 15,
       category: "Peralatan",
-      cover_image_url: null,
+      cover_image_url: "https://cdn.example.test/multimedia-studio.jpg",
       id: "multimedia-studio-id",
       location: "Gedung Media",
       name: "Multimedia Studio",
@@ -85,6 +85,10 @@ describe("StudentFacilityCatalogPage", () => {
     expect(await screen.findByRole("link", { name: /Multimedia Studio/ })).toHaveAttribute(
       "href",
       "/student/facilities/multimedia-studio-id",
+    );
+    expect(screen.getByRole("img", { name: "Foto Multimedia Studio" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/multimedia-studio.jpg",
     );
     expect(screen.getByLabelText("Pencarian")).toHaveValue("studio");
     await screen.findByRole("option", { name: "Peralatan" });

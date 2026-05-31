@@ -11,6 +11,7 @@ import {
   mapStudentReservationWorkflow,
   type StudentReservationWorkflowProjection,
 } from "../../reservations/studentReservationWorkflow";
+import { formatCampusDate, formatCampusTime } from "../../utils/campusTime";
 
 type ReservationDocument = {
   downloadPath: string;
@@ -30,18 +31,6 @@ type ReviewResponse = {
   is_deleted?: boolean;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "numeric",
-  month: "long",
-  timeZone: "UTC",
-  year: "numeric",
-});
-
-function formatTime(value: string) {
-  const date = new Date(value);
-  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
-}
-
 function formatSize(sizeBytes: number) {
   if (sizeBytes >= 1_000_000) {
     return `${(sizeBytes / 1_000_000).toFixed(1).replace(".", ",")} MB`;
@@ -51,7 +40,7 @@ function formatSize(sizeBytes: number) {
 }
 
 function formatDocumentDate(value?: string | null) {
-  return value ? dateFormatter.format(new Date(value)) : null;
+  return value ? formatCampusDate(value) : null;
 }
 
 function metadataLabel(
@@ -286,7 +275,25 @@ function MediaTile({ className = "" }: { className?: string }) {
   );
 }
 
-function Gallery() {
+function Gallery({
+  coverImageUrl,
+  facilityName,
+}: {
+  coverImageUrl?: string | null;
+  facilityName: string;
+}) {
+  if (coverImageUrl) {
+    return (
+      <div className="mt-8 h-[410px] overflow-hidden rounded-lg bg-[#e5e7eb] max-md:h-[240px]">
+        <img
+          alt={`Foto ${facilityName}`}
+          className="h-full w-full object-cover"
+          src={coverImageUrl}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="mt-8 grid h-[410px] grid-cols-[1fr_1fr] gap-3 max-md:h-auto max-md:grid-cols-1">
       <MediaTile className="h-full max-md:h-[186px] md:row-span-2" />
@@ -534,14 +541,14 @@ function DetailContent({ detail }: { detail: StudentReservationWorkflowProjectio
         </span>
       </div>
 
-      <Gallery />
+      <Gallery coverImageUrl={detail.facility.cover_image_url} facilityName={detail.facility.name} />
 
       <div className="mt-8 grid grid-cols-2 gap-6 max-md:grid-cols-1">
         <InfoCard
           icon="calendar"
           label="Jadwal"
-          title={dateFormatter.format(new Date(detail.starts_at))}
-          value={`${formatTime(detail.starts_at)} - ${formatTime(detail.ends_at)}`}
+          title={formatCampusDate(detail.starts_at)}
+          value={`${formatCampusTime(detail.starts_at)} - ${formatCampusTime(detail.ends_at)}`}
         />
         <InfoCard
           icon="building"

@@ -102,7 +102,7 @@ describe("mapStudentReservationWorkflow", () => {
         secondaryHref: undefined,
         secondaryLabel: undefined,
         statusLabel: "Dokumen Ditolak",
-        tone: "pending",
+        tone: "rejected",
       },
     ],
     [
@@ -252,5 +252,17 @@ describe("mapStudentReservationWorkflow", () => {
     ],
   ])("maps %s", (_, input, expected) => {
     expect(mapStudentReservationWorkflow(input)).toMatchObject(expected);
+  });
+
+  it("formats reservation date and time in the campus timezone", () => {
+    const mapped = mapStudentReservationWorkflow(
+      reservation({
+        ends_at: "2026-06-24T05:00:00Z",
+        starts_at: "2026-06-24T02:00:00Z",
+      }),
+    );
+
+    expect(mapped.date).toBe("24 Juni 2026");
+    expect(mapped.time).toBe("09:00 - 12:00");
   });
 });

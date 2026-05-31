@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from app.models import (
     Facility,
+    FacilityImage,
     OrganizationUnit,
     Reservation,
     ReservationPaymentReceipt,
@@ -55,3 +56,49 @@ def test_student_reservation_workflow_projection_exposes_payment_rejection_state
     assert projection.rejection is not None
     assert projection.rejection.source == "payment"
     assert projection.rejection.reason == "Nominal transfer tidak sesuai."
+
+
+def test_student_reservation_workflow_projection_exposes_facility_cover_image_url():
+    reservation = Reservation(
+        id="reservation-1",
+        facility_id="facility-1",
+        student_id="student-1",
+        organization_unit_id="organization-unit-1",
+        reservation_code="RSV-COVER",
+        activity_title="Seminar Karier",
+        event_description="Seminar persiapan karier.",
+        participant_count=80,
+        contact_phone="08123456789",
+        price_rupiah=0,
+        organization_unit_name="BEM KM IPB",
+        starts_at=datetime(2026, 6, 1, 2, tzinfo=UTC),
+        ends_at=datetime(2026, 6, 1, 4, tzinfo=UTC),
+        status=ReservationStatus.approved,
+    )
+    reservation.facility = Facility(id="facility-1", name="Auditorium Andi Hakim Nasoetion")
+    reservation.facility.images = [
+        FacilityImage(
+            facility_id="facility-1",
+            url="https://cdn.example.test/auditorium-side.jpg",
+            alt_text="Auditorium side",
+            display_order=2,
+            is_cover=False,
+            is_active=True,
+        ),
+        FacilityImage(
+            facility_id="facility-1",
+            url="https://cdn.example.test/auditorium-cover.jpg",
+            alt_text="Auditorium cover",
+            display_order=3,
+            is_cover=True,
+            is_active=True,
+        ),
+    ]
+    reservation.organization_unit = OrganizationUnit(id="organization-unit-1", name="BEM KM IPB")
+
+    projection = StudentReservationWorkflowProjectionModule().project(
+        reservation,
+        effective_status=ReservationStatus.approved,
+    )
+
+    assert projection.facility.cover_image_url == "https://cdn.example.test/auditorium-cover.jpg"

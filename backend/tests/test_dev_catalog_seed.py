@@ -47,6 +47,10 @@ def test_catalog_seed_loads_canonical_facilities_without_wiping_users(tmp_path):
             {facility.name for facility in facilities}
         )
         assert session.scalar(select(func.count()).select_from(FacilityImage)) == len(facilities)
+        image_urls = session.scalars(select(FacilityImage.url).where(FacilityImage.is_active.is_(True))).all()
+        assert all(url.startswith("https://") for url in image_urls)
+        assert all("cdn.example.test" not in url for url in image_urls)
+        assert len(image_urls) == len(set(image_urls))
         assert session.scalar(select(func.count()).select_from(FacilityOpenHour)) == len(facilities) * 5
 
 

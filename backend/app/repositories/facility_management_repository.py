@@ -44,6 +44,9 @@ class FacilityManagementRepository(Protocol):
     def add_image(self, image: FacilityImage) -> FacilityImage:
         raise NotImplementedError
 
+    def get_active_image(self, facility_id: str, image_id: str) -> FacilityImage | None:
+        raise NotImplementedError
+
     def clear_cover_images(self, facility_id: str) -> None:
         raise NotImplementedError
 
@@ -144,9 +147,19 @@ class SqlAlchemyFacilityManagementRepository:
         self._session.flush()
         return image
 
+    def get_active_image(self, facility_id: str, image_id: str) -> FacilityImage | None:
+        return self._session.scalar(
+            select(FacilityImage).where(
+                FacilityImage.facility_id == facility_id,
+                FacilityImage.id == image_id,
+                FacilityImage.is_active.is_(True),
+            )
+        )
+
     def clear_cover_images(self, facility_id: str) -> None:
         for image in self._session.scalars(select(FacilityImage).where(FacilityImage.facility_id == facility_id)):
             image.is_cover = False
+        self._session.flush()
 
     def add_open_hour(self, open_hour: FacilityOpenHour) -> FacilityOpenHour:
         self._session.add(open_hour)

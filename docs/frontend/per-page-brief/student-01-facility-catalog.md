@@ -49,13 +49,13 @@
 
 - Deterministic fixture requirements: mixed categories, ratings, free/paid prices, capacities, and empty-filter state.
 - Real entities: Facility Catalog page and categories.
-- Fixture media: local deterministic facility imagery.
+- Fixture media: backend `cover_image_url` when available, with local deterministic fallback imagery for facilities without active images.
 - Contract normalization: filter labels and query parameters must use Facility Category language (`category`) instead of Organization/Faculty filtering.
 
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /facility-categories`, `GET /facilities`.
-- Page-needed fields: paginated envelope `items`, `page`, `page_size`, `total_items`, `total_pages`; item fields listed in `FacilityCatalogItemResponse`.
+- Page-needed fields: paginated envelope `items`, `page`, `page_size`, `total_items`, `total_pages`; item fields listed in `FacilityCatalogItemResponse`, including `cover_image_url`.
 - Auth/session assumptions: protected UI shell; public discovery data.
 - Source files: `backend/app/api/routes/facility_routes.py`, `backend/app/schemas/facility_schemas.py`.
 
@@ -64,8 +64,8 @@
 - Status: `resolved`
 - Domain area: Facility Catalog
 - Affected UI: catalog filters, result count, pagination, sort controls.
-- Contract needed: `q`, `category`, `min_capacity`, `sort`, `page`, `page_size` query params and stable paginated envelope.
-- Evidence: route query params exist in `backend/app/api/routes/facility_routes.py`; `FacilityCatalogPageResponse` exists in `backend/app/schemas/facility_schemas.py`.
+- Contract needed: `q`, `category`, `min_capacity`, `sort`, `page`, `page_size` query params, stable paginated envelope, and active media cover projection.
+- Evidence: route query params exist in `backend/app/api/routes/facility_routes.py`; `FacilityCatalogPageResponse` exists in `backend/app/schemas/facility_schemas.py`; `FacilityCatalogModule` returns the marked cover image or the first active image as `cover_image_url`.
 - Source issue/PRD: `docs/issues/ISSUE-0024-paginated-facility-catalog-filters-and-sorts.md`.
 
 ## Shared Components

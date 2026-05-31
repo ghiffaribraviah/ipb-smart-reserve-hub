@@ -121,7 +121,7 @@ function StudentFooter() {
   );
 }
 
-function MediaPlaceholder() {
+function MediaPlaceholder({ label }: { label: string }) {
   return (
     <div className="relative flex h-full min-h-[180px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#d1fae5] via-[#e7fbd3] to-[#fef3c7] max-md:min-h-[174px]">
       <div className="absolute inset-x-5 top-5 h-1 rounded-full bg-[#9fd9b8]" />
@@ -132,10 +132,26 @@ function MediaPlaceholder() {
         <p className="m-0 font-serif text-[26px] font-bold leading-none text-[#1d7667]">
           IPB SRH
         </p>
-        <p className="m-0 mt-2 text-[9px] text-[#374151]">Deterministic media fixture</p>
+        <p className="m-0 mt-2 text-[9px] text-[#374151]">{label}</p>
       </div>
     </div>
   );
+}
+
+function ReservationMedia({ item }: { item: StudentReservationWorkflowListItem }) {
+  if (item.coverImageUrl) {
+    return (
+      <div className="relative min-h-[180px] overflow-hidden bg-[#e8f5e9] max-md:min-h-[174px]">
+        <img
+          alt={`Foto ${item.facility}`}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={item.coverImageUrl}
+        />
+      </div>
+    );
+  }
+
+  return <MediaPlaceholder label="Deterministic media fixture" />;
 }
 
 function StatusBadge({ item }: { item: StudentReservationWorkflowListItem }) {
@@ -151,7 +167,7 @@ function StatusBadge({ item }: { item: StudentReservationWorkflowListItem }) {
 function ReservationCard({ item }: { item: StudentReservationWorkflowListItem }) {
   return (
     <article className="grid overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] md:grid-cols-[320px_1fr]">
-      <MediaPlaceholder />
+      <ReservationMedia item={item} />
       <div className="grid min-w-0 gap-5 p-8 max-md:p-7 md:grid-cols-[1fr_auto]">
         <div className="min-w-0">
           <h2 className="m-0 break-words text-lg font-bold leading-tight text-[#111827]">

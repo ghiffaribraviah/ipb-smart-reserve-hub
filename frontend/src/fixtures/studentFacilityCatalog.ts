@@ -2,6 +2,7 @@ export type FacilityCatalogItem = {
   capacity: number;
   category: string;
   categoryLabel: string;
+  coverImageUrl?: string | null;
   description: string;
   href: string;
   name: string;

@@ -94,6 +94,19 @@ describe("StudentReservationTimePage", () => {
     });
   });
 
+  it("uses explicit 24-hour HH:mm time controls", async () => {
+    mockTimeSelectionFetch();
+
+    renderTimePage();
+
+    expect(await screen.findByLabelText("Waktu Mulai")).toHaveAttribute("type", "text");
+    expect(screen.getByLabelText("Waktu Mulai")).toHaveAttribute("placeholder", "09:00");
+    expect(screen.getByLabelText("Waktu Mulai")).toHaveAttribute("pattern", "([01][0-9]|2[0-3]):[0-5][0-9]");
+    expect(screen.getByLabelText("Waktu Selesai")).toHaveAttribute("type", "text");
+    expect(screen.getByLabelText("Waktu Selesai")).toHaveAttribute("placeholder", "13:00");
+    expect(screen.getByLabelText("Waktu Selesai")).toHaveAttribute("pattern", "([01][0-9]|2[0-3]):[0-5][0-9]");
+  });
+
   it("selects a calendar day and validates that selected Jakarta date", async () => {
     const user = userEvent.setup();
     const fetchMock = mockTimeSelectionFetch();

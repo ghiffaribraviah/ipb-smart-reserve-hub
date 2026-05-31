@@ -397,6 +397,7 @@ Common endpoints:
 | `GET` | `/staff/reservations/{reservation_id}` | Staff |
 | `GET` | `/staff/facilities` | Staff |
 | `PATCH` | `/staff/facilities/{facility_id}` | Staff assigned |
+| `POST` | `/staff/facilities/{facility_id}/images/{image_id}/cover` | Staff assigned |
 | `GET` | `/admin/dashboard` | Super Admin |
 | `GET` | `/admin/users` | Super Admin |
 | `POST` | `/admin/users` | Super Admin |
@@ -406,7 +407,7 @@ Common endpoints:
 | `PATCH` | `/admin/settings` | Super Admin |
 | `GET` | `/admin/system-status` | Super Admin |
 
-Staff facility profiles include the assigned facility category ID/label, `open_hours_summary`, and structured `open_hours` rows. Staff facility updates can change editable profile fields, category, active state, payment instructions, and replace structured open-hour rows; invalid open-hour ranges and inactive/missing categories are rejected while assigned-facility access control is preserved.
+Staff facility profiles include the assigned facility category ID/label, `open_hours_summary`, structured `open_hours` rows, and active image records. Staff facility updates can change editable profile fields, category, active state, payment instructions, replace structured open-hour rows, and mark one existing active image as the cover; invalid open-hour ranges and inactive/missing categories are rejected while assigned-facility access control is preserved.
 
 For more detail, inspect route files in `backend/app/api/routes/` and schemas in `backend/app/schemas/`.
 

@@ -17,6 +17,7 @@ class ReservationExtraRequirements:
 class ReservationFacilitySummary:
     id: str
     name: str
+    cover_image_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -102,6 +103,7 @@ class StudentReservationWorkflowProjectionModule:
             facility=ReservationFacilitySummary(
                 id=reservation.facility_id,
                 name=reservation.facility.name,
+                cover_image_url=_facility_cover_image_url(reservation.facility),
             ),
             organization_unit=ReservationOrganizationUnitSummary(
                 id=reservation.organization_unit_id,
@@ -144,6 +146,12 @@ def _to_student_reservation_document_projection(reservation: Reservation) -> Stu
         review_status=_document_review_status(reservation),
         rejection_reason=rejection_reason,
     )
+
+
+def _facility_cover_image_url(facility) -> str | None:
+    active_images = [image for image in getattr(facility, "images", []) if image.is_active]
+    cover_image = next((image for image in active_images if image.is_cover), None) or next(iter(active_images), None)
+    return cover_image.url if cover_image is not None else None
 
 
 def _to_student_reservation_payment_projection(reservation: Reservation) -> StudentReservationPaymentProjection:

@@ -122,6 +122,43 @@ def test_facility_catalog_module_projects_public_catalog_items_through_repositor
     assert catalog_page.items[0].price_summary == "Gratis"
 
 
+def test_facility_catalog_module_uses_first_active_image_when_no_cover_is_marked():
+    facility_catalog = FacilityCatalogModule(
+        facility_catalog_reader=StubFacilityCatalogReader(
+            [
+                FacilityCatalogRecord(
+                    id="facility-1",
+                    name="Auditorium Andi Hakim Nasoetion",
+                    location="Kampus IPB Dramaga",
+                    capacity=120,
+                    category="Auditorium",
+                    category_slug="auditorium",
+                    description="Ruang kegiatan mahasiswa",
+                    contact_name="TU Fasilitas",
+                    contact_phone="0251-8620000",
+                    contact_email=None,
+                    price_rupiah=0,
+                    open_hours_summary="Senin-Jumat 08.00-16.00",
+                    rating_average=None,
+                    review_count=0,
+                    images=[
+                        FacilityCatalogImageRecord(
+                            url="https://cdn.example.test/staff-uploaded-auditorium.jpg",
+                            alt_text="Staff uploaded auditorium",
+                            is_cover=False,
+                            is_active=True,
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+    catalog_page = facility_catalog.list_active_facilities()
+
+    assert catalog_page.items[0].cover_image_url == "https://cdn.example.test/staff-uploaded-auditorium.jpg"
+
+
 def test_facility_catalog_module_sorts_by_public_rating_descending():
     lower_rated = FacilityCatalogRecord(
         id="facility-lower",

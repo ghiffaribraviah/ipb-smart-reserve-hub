@@ -26,7 +26,7 @@
 - Desktop behavior: `1200px` centered content, search in header, horizontal nav.
 - Mobile behavior: compact `64px` header, hamburger, hidden desktop nav/search, stacked sections.
 - Required copy/status labels: preserve `Beranda`, `Fasilitas`, `Reservasi`, and `IPB SRH`; profile access is the avatar, not a fourth nav item.
-- Source-of-truth notes: match green-led student visual tone and deterministic facility image treatment; featured facility cards follow the catalog card hierarchy with title, rating/reviews, location/open-hours summary, capacity, and price.
+- Source-of-truth notes: match green-led student visual tone; featured facility cards render backend `cover_image_url` when present and otherwise use deterministic placeholders. Cards follow the catalog hierarchy with title, rating/reviews, location/open-hours summary, capacity, and price.
 
 ## UX Behavior
 
@@ -63,8 +63,8 @@
 - Status: `resolved`
 - Domain area: Facility Catalog
 - Affected UI: category shortcuts and featured facility cards.
-- Contract needed: public category list and featured facility page/envelope.
-- Evidence: `GET /facility-categories` and `GET /facilities` with `featured`/`limit` query support exist in `backend/app/api/routes/facility_routes.py`; response schemas exist in `backend/app/schemas/facility_schemas.py`.
+- Contract needed: public category list and featured facility page/envelope, including a usable `cover_image_url` for active facility media.
+- Evidence: `GET /facility-categories` and `GET /facilities` with `featured`/`limit` query support exist in `backend/app/api/routes/facility_routes.py`; response schemas exist in `backend/app/schemas/facility_schemas.py`; `FacilityCatalogModule` returns the marked cover image or the first active image as the catalog cover.
 - Source issue/PRD: `docs/issues/ISSUE-0023-public-facility-categories-with-stable-slugs.md`, `docs/issues/ISSUE-0025-featured-facility-catalog-query.md`.
 
 ## Shared Components

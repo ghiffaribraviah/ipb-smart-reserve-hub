@@ -1,3 +1,5 @@
+import { formatCampusDate, formatCampusTime } from "../utils/campusTime";
+
 export type ReservationTone =
   | "approved"
   | "cancelled"
@@ -29,6 +31,7 @@ export type StudentReservationWorkflowProjection = {
     security_personnel: boolean;
   };
   facility: {
+    cover_image_url?: string | null;
     id: string;
     name: string;
   };
@@ -77,6 +80,7 @@ export type StudentReservationWorkflowListItem = {
   date: string;
   detailHref: string;
   facility: string;
+  coverImageUrl: string | null;
   id: string;
   location: string;
   primaryAction: string;
@@ -90,13 +94,6 @@ export type StudentReservationWorkflowListItem = {
   time: string;
   tone: ReservationTone;
 };
-
-const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "numeric",
-  month: "long",
-  timeZone: "UTC",
-  year: "numeric",
-});
 
 function route(reservation: StudentReservationWorkflowProjection, suffix = "") {
   return `/student/reservations/${reservation.id}${suffix}`;
@@ -124,9 +121,10 @@ function baseListItem(
 ): StudentReservationWorkflowListItem {
   return {
     bucket,
-    date: dateFormatter.format(new Date(reservation.starts_at)),
+    date: formatCampusDate(reservation.starts_at),
     detailHref: primaryHref,
     facility: reservation.facility.name,
+    coverImageUrl: reservation.facility.cover_image_url ?? null,
     id: reservation.id,
     location: reservation.organization_unit.name,
     primaryAction,
@@ -137,14 +135,9 @@ function baseListItem(
     secondaryLabel: secondaryAction,
     status: statusLabel,
     statusLabel,
-    time: `${formatTime(reservation.starts_at)} - ${formatTime(reservation.ends_at)}`,
+    time: `${formatCampusTime(reservation.starts_at)} - ${formatCampusTime(reservation.ends_at)}`,
     tone,
   };
-}
-
-function formatTime(value: string) {
-  const date = new Date(value);
-  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
 }
 
 function cancellableBeforeApproval(reservation: StudentReservationWorkflowProjection) {

@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Route, Routes } from "react-router-dom";
@@ -118,6 +118,7 @@ function renderFacilityEdit(entry = "/staff/facilities/grand-auditorium/edit") {
 
 describe("StaffFacilityPages", () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     sessionStorage.clear();
   });
@@ -127,7 +128,22 @@ describe("StaffFacilityPages", () => {
       const url = String(input);
 
       if (url === "http://localhost:8000/staff/facilities") {
-        return jsonResponse(facilitiesResponse);
+        return jsonResponse([
+          {
+            ...facilitiesResponse[0],
+            images: [
+              {
+                alt_text: "Cover Grand Auditorium",
+                display_order: 0,
+                id: "image-cover",
+                is_active: true,
+                is_cover: true,
+                url: "https://cdn.example.test/grand-auditorium-cover.jpg",
+              },
+            ],
+          },
+          facilitiesResponse[1],
+        ]);
       }
 
       return jsonResponse({ detail: `Unhandled ${url}` }, 404);
@@ -136,6 +152,10 @@ describe("StaffFacilityPages", () => {
     renderFacilityList();
 
     expect(await screen.findByRole("heading", { name: "Grand Auditorium" })).toBeVisible();
+    expect(screen.getByRole("img", { name: "Cover Grand Auditorium" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/grand-auditorium-cover.jpg",
+    );
     expect(screen.getByRole("heading", { name: "Agri-Tech Greenhouses" })).toBeVisible();
     expect(screen.getByText((_, element) => element?.textContent === "Menampilkan 2 fasilitas")).toBeVisible();
     expect(screen.getByText("Rp100.000 / jam")).toBeVisible();
@@ -177,8 +197,14 @@ describe("StaffFacilityPages", () => {
   });
 
   it("loads private facility schedule entries with workflow-aware actions", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2024-10-24T00:00:00.000Z"));
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
+
+      if (url === "http://localhost:8000/staff/facilities") {
+        return jsonResponse(facilitiesResponse);
+      }
 
       if (url.startsWith("http://localhost:8000/staff/facilities/grand-auditorium/schedule")) {
         return jsonResponse(scheduleResponse);
@@ -189,8 +215,10 @@ describe("StaffFacilityPages", () => {
 
     renderFacilitySchedule();
 
-    expect(await screen.findByRole("heading", { name: "Jadwal Grand Auditorium" })).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "Jadwal Fasilitas" })).toBeVisible();
+    expect(screen.getByText("Grand Auditorium")).toBeVisible();
     expect((await screen.findAllByText("Simposium Etika AI 2024"))[0]).toBeVisible();
+    expect(screen.getByRole("button", { name: "Pilih 24 Oktober 2024: 2 reservasi" })).toBeVisible();
     expect(screen.getAllByText("Departemen Ilmu Komputer")[0]).toBeVisible();
     expect(screen.getAllByText("Menunggu Verifikasi Dokumen")[0]).toBeVisible();
     expect(screen.getAllByRole("link", { name: "Tinjau Pengajuan BEM Mahasiswa" })[0]).toHaveAttribute(
@@ -208,7 +236,50 @@ describe("StaffFacilityPages", () => {
     });
   });
 
+  it("lets staff select a calendar date and page between schedule months", async () => {
+    const user = userEvent.setup();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2024-10-24T00:00:00.000Z"));
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/staff/facilities") {
+        return jsonResponse(facilitiesResponse);
+      }
+
+      if (url.startsWith("http://localhost:8000/staff/facilities/grand-auditorium/schedule")) {
+        return jsonResponse(scheduleResponse);
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderFacilitySchedule();
+
+    await user.click(await screen.findByRole("button", { name: "Pilih 25 Oktober 2024: 0 reservasi" }));
+    const agenda = screen.getByLabelText("Agenda tanggal terpilih");
+    expect(screen.getByLabelText("Tanggal jadwal terpilih")).toHaveValue("2024-10-25");
+    expect(within(agenda).getByText("25 Oktober 2024")).toBeVisible();
+    expect(await within(agenda).findByText("Tidak ada reservasi pada tanggal ini.")).toBeVisible();
+    expect(within(agenda).queryByText("Simposium Etika AI 2024")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Bulan berikutnya" }));
+    expect(screen.getByLabelText("Tanggal jadwal terpilih")).toHaveValue("2024-11-25");
+    expect(screen.getByRole("heading", { name: "November 2024" })).toBeVisible();
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^http:\/\/localhost:8000\/staff\/facilities\/grand-auditorium\/schedule\?start=2024-11-01T00%3A00%3A00%2B07%3A00&end=2024-11-30T23%3A59%3A59%2B07%3A00$/,
+        ),
+        expect.any(Object),
+      );
+    });
+  });
+
   it("shows schedule empty and access-denied states", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2024-10-24T00:00:00.000Z"));
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
 
@@ -242,6 +313,28 @@ describe("StaffFacilityPages", () => {
 
     renderFacilitySchedule("/staff/facilities/private-room/schedule");
     expect(await screen.findByText("Jadwal fasilitas tidak ditemukan atau tidak dapat diakses.")).toBeVisible();
+  });
+
+  it("does not render fixture month or reservation dots when the backend schedule is empty", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-06-12T00:00:00.000Z"));
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+
+      if (url.startsWith("http://localhost:8000/staff/facilities/empty-room/schedule")) {
+        return jsonResponse([]);
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderFacilitySchedule("/staff/facilities/empty-room/schedule");
+
+    expect(await screen.findByText("Tidak ada reservasi pada rentang jadwal ini.")).toBeVisible();
+    expect(screen.getByLabelText("Tanggal jadwal terpilih")).toHaveValue("2026-06-12");
+    expect(screen.getByRole("heading", { name: "Juni 2026" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Oktober 2024" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pilih 24 Juni 2026: 0 reservasi" })).toBeVisible();
   });
 
   it("loads the assigned facility edit form and saves supported profile fields", async () => {
@@ -330,6 +423,68 @@ describe("StaffFacilityPages", () => {
     });
   });
 
+  it("renders edit open-hour controls as 24-hour HH:mm fields", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/staff/facilities") {
+        return jsonResponse(facilitiesResponse);
+      }
+
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse(categoriesResponse);
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderFacilityEdit();
+
+    const opensAt = await screen.findByLabelText("Jam buka mulai 1");
+    const closesAt = screen.getByLabelText("Jam buka selesai 1");
+
+    expect(opensAt).toHaveAttribute("type", "text");
+    expect(opensAt).toHaveAttribute("inputmode", "numeric");
+    expect(opensAt).toHaveAttribute("pattern", "(?:[01][0-9]|2[0-3]):[0-5][0-9]");
+    expect(opensAt).toHaveValue("08:00");
+    expect(closesAt).toHaveAttribute("type", "text");
+    expect(closesAt).toHaveAttribute("inputmode", "numeric");
+    expect(closesAt).toHaveAttribute("pattern", "(?:[01][0-9]|2[0-3]):[0-5][0-9]");
+    expect(closesAt).toHaveValue("18:00");
+  });
+
+  it("renders blackout controls as date fields and 24-hour time selectors", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/staff/facilities") {
+        return jsonResponse(facilitiesResponse);
+      }
+
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse(categoriesResponse);
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderFacilityEdit();
+
+    const startsDate = await screen.findByLabelText("Tanggal blackout mulai");
+    const startsTime = screen.getByLabelText("Jam blackout mulai");
+    const endsDate = screen.getByLabelText("Tanggal blackout selesai");
+    const endsTime = screen.getByLabelText("Jam blackout selesai");
+
+    expect(startsDate).toHaveAttribute("type", "date");
+    expect(startsDate).toHaveValue("2026-06-01");
+    expect(startsTime).toHaveValue("03:00");
+    expect(startsTime).toHaveDisplayValue("03:00");
+    expect(endsDate).toHaveAttribute("type", "date");
+    expect(endsDate).toHaveValue("2026-06-01");
+    expect(endsTime).toHaveValue("04:00");
+    expect(endsTime).toHaveDisplayValue("04:00");
+  });
+
   it("maps client and API validation errors to visible edit feedback", async () => {
     const user = userEvent.setup();
     vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
@@ -413,13 +568,86 @@ describe("StaffFacilityPages", () => {
     expect(screen.getByText("Nonaktif")).toBeVisible();
   });
 
-  it("submits supported image and blackout creation payloads", async () => {
+  it("reactivates an inactive assigned facility from the edit page", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
       const url = String(input);
 
       if (url === "http://localhost:8000/staff/facilities" && !init?.method) {
         return jsonResponse(facilitiesResponse);
+      }
+
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse(categoriesResponse);
+      }
+
+      if (url === "http://localhost:8000/staff/facilities/agri-tech-greenhouses" && init?.method === "PATCH") {
+        expect(init.body).toBe(JSON.stringify({ is_active: true }));
+        return jsonResponse({ ...facilitiesResponse[1], is_active: true });
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderFacilityEdit("/staff/facilities/agri-tech-greenhouses/edit");
+
+    expect(await screen.findByText("Nonaktif")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Nonaktifkan" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Aktifkan" }));
+
+    expect(await screen.findByText("Fasilitas diaktifkan.")).toBeVisible();
+    expect(screen.getByText("Aktif")).toBeVisible();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8000/staff/facilities/agri-tech-greenhouses",
+        expect.objectContaining({ method: "PATCH" }),
+      );
+    });
+  });
+
+  it("submits supported image and blackout creation payloads", async () => {
+    const user = userEvent.setup();
+    let facilitiesGetCount = 0;
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/staff/facilities" && !init?.method) {
+        facilitiesGetCount += 1;
+        return jsonResponse([
+          {
+            ...facilitiesResponse[0],
+            images:
+              facilitiesGetCount === 1
+                ? [
+                    {
+                      alt_text: "Existing auditorium view",
+                      display_order: 1,
+                      id: "image-existing",
+                      is_active: true,
+                      is_cover: true,
+                      url: "https://cdn.example.test/existing-auditorium.jpg",
+                    },
+                  ]
+                : [
+                    {
+                      alt_text: "Cover auditorium",
+                      display_order: 0,
+                      id: "image-1",
+                      is_active: true,
+                      is_cover: false,
+                      url: "https://cdn.example.test/auditorium.jpg",
+                    },
+                    {
+                      alt_text: "Existing auditorium view",
+                      display_order: 1,
+                      id: "image-existing",
+                      is_active: true,
+                      is_cover: true,
+                      url: "https://cdn.example.test/existing-auditorium.jpg",
+                    },
+                  ],
+          },
+        ]);
       }
 
       if (url === "http://localhost:8000/facility-categories") {
@@ -454,10 +682,18 @@ describe("StaffFacilityPages", () => {
 
     renderFacilityEdit();
 
+    expect(await screen.findByRole("img", { name: "Existing auditorium view" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/existing-auditorium.jpg",
+    );
     await user.type(await screen.findByLabelText("URL Gambar"), "https://cdn.example.test/auditorium.jpg");
     await user.type(screen.getByLabelText("Teks Alternatif"), "Cover auditorium");
     await user.click(screen.getByRole("button", { name: "Tambah Gambar" }));
     expect(await screen.findByText("Gambar fasilitas ditambahkan.")).toBeVisible();
+    expect(await screen.findByRole("img", { name: "Cover auditorium" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/auditorium.jpg",
+    );
 
     await user.type(screen.getByLabelText("Alasan blackout"), "Maintenance");
     await user.click(screen.getByRole("button", { name: "Tambah Blackout" }));
@@ -473,5 +709,93 @@ describe("StaffFacilityPages", () => {
         expect.objectContaining({ method: "POST" }),
       );
     });
+  });
+
+  it("lets staff choose an existing facility image as the cover", async () => {
+    const user = userEvent.setup();
+    let facilitiesGetCount = 0;
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/staff/facilities" && !init?.method) {
+        facilitiesGetCount += 1;
+        return jsonResponse([
+          {
+            ...facilitiesResponse[0],
+            images:
+              facilitiesGetCount === 1
+                ? [
+                    {
+                      alt_text: "Cover auditorium",
+                      display_order: 0,
+                      id: "image-cover",
+                      is_active: true,
+                      is_cover: true,
+                      url: "https://cdn.example.test/auditorium-cover.jpg",
+                    },
+                    {
+                      alt_text: "Tampak samping auditorium",
+                      display_order: 1,
+                      id: "image-side",
+                      is_active: true,
+                      is_cover: false,
+                      url: "https://cdn.example.test/auditorium-side.jpg",
+                    },
+                  ]
+                : [
+                    {
+                      alt_text: "Cover auditorium",
+                      display_order: 0,
+                      id: "image-cover",
+                      is_active: true,
+                      is_cover: false,
+                      url: "https://cdn.example.test/auditorium-cover.jpg",
+                    },
+                    {
+                      alt_text: "Tampak samping auditorium",
+                      display_order: 1,
+                      id: "image-side",
+                      is_active: true,
+                      is_cover: true,
+                      url: "https://cdn.example.test/auditorium-side.jpg",
+                    },
+                  ],
+          },
+        ]);
+      }
+
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse(categoriesResponse);
+      }
+
+      if (
+        url === "http://localhost:8000/staff/facilities/grand-auditorium/images/image-side/cover" &&
+        init?.method === "POST"
+      ) {
+        return jsonResponse({
+          alt_text: "Tampak samping auditorium",
+          display_order: 1,
+          id: "image-side",
+          is_active: true,
+          is_cover: true,
+          url: "https://cdn.example.test/auditorium-side.jpg",
+        });
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderFacilityEdit();
+
+    await user.click(await screen.findByRole("button", { name: "Pilih Tampak samping auditorium sebagai cover" }));
+
+    expect(await screen.findByText("Cover fasilitas diperbarui.")).toBeVisible();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8000/staff/facilities/grand-auditorium/images/image-side/cover",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+    expect(screen.getByText("Cover", { selector: "span" })).toBeVisible();
   });
 });

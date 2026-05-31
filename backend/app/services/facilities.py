@@ -168,7 +168,10 @@ class FacilityCatalogModule:
         if facility is None:
             raise FacilityNotFound
 
-        active_images = [image for image in facility.images if image.is_active]
+        active_images = sorted(
+            [image for image in facility.images if image.is_active],
+            key=lambda image: not image.is_cover,
+        )
         review_projection = self._public_facility_reviews.project(facility.reviews)
         return FacilityPublicDetail(
             id=facility.id,
@@ -237,7 +240,11 @@ class FacilityCatalogModule:
         ]
 
     def _catalog_item(self, facility: FacilityCatalogRecord) -> FacilityCatalogItem:
-        cover_image = next((image for image in facility.images if image.is_active and image.is_cover), None)
+        active_images = [image for image in facility.images if image.is_active]
+        cover_image = next((image for image in active_images if image.is_cover), None) or next(
+            iter(active_images),
+            None,
+        )
         review_projection = self._public_facility_reviews.project(facility.reviews)
         return FacilityCatalogItem(
             id=facility.id,

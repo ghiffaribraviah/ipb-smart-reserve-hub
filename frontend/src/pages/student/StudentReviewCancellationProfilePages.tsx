@@ -13,24 +13,13 @@ import {
   mapStudentReservationWorkflow,
   type StudentReservationWorkflowProjection,
 } from "../../reservations/studentReservationWorkflow";
+import { formatCampusDate, formatCampusTime } from "../../utils/campusTime";
 
 const navItems = [
   { href: "/student", label: "Beranda" },
   { href: "/student/facilities", label: "Fasilitas" },
   { href: "/student/reservations", label: "Reservasi" },
 ];
-
-const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "numeric",
-  month: "long",
-  timeZone: "UTC",
-  year: "numeric",
-});
-
-function formatTime(value: string) {
-  const date = new Date(value);
-  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
-}
 
 function reservationDetailHref(reservationId: string) {
   return `/student/reservations/${reservationId}`;
@@ -149,7 +138,25 @@ function PageShell({ children }: { children: ReactNode }) {
   );
 }
 
-function SummaryMedia() {
+function SummaryMedia({
+  coverImageUrl,
+  facilityName,
+}: {
+  coverImageUrl?: string | null;
+  facilityName: string;
+}) {
+  if (coverImageUrl) {
+    return (
+      <div className="relative h-[190px] overflow-hidden rounded-t-xl bg-[#e5e7eb]">
+        <img
+          alt={`Foto ${facilityName}`}
+          className="h-full w-full object-cover"
+          src={coverImageUrl}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex h-[190px] items-center justify-center overflow-hidden rounded-t-xl bg-gradient-to-br from-[#d1fae5] via-[#e7fbd3] to-[#fef3c7]">
       <div className="absolute inset-[18px] rounded-[10px] border-[4px] border-[#9fd9b8]/75" />
@@ -174,7 +181,10 @@ function ReservationSummaryCard({
 
   return (
     <aside className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
-      <SummaryMedia />
+      <SummaryMedia
+        coverImageUrl={reservation.facility.cover_image_url}
+        facilityName={reservation.facility.name}
+      />
       <div className="p-6">
         <p className="m-0 mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
           Ringkasan Reservasi
@@ -183,11 +193,11 @@ function ReservationSummaryCard({
         <div className="mt-6 grid gap-4 text-sm">
           <p className="m-0 flex items-center gap-3 text-[#6b7280]">
             <CalendarDays aria-hidden="true" className="text-[#0f9d58]" size={18} />
-            {dateFormatter.format(new Date(reservation.starts_at))}
+            {formatCampusDate(reservation.starts_at)}
           </p>
           <p className="m-0 flex items-center gap-3 text-[#6b7280]">
             <Clock aria-hidden="true" className="text-[#0f9d58]" size={18} />
-            {formatTime(reservation.starts_at)} - {formatTime(reservation.ends_at)}
+            {formatCampusTime(reservation.starts_at)} - {formatCampusTime(reservation.ends_at)}
           </p>
         </div>
         {includeStatus ? (

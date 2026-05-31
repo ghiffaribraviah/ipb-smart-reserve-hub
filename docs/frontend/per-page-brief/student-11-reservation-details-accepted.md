@@ -47,14 +47,14 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: approved reservation with generated letter, signed letter, optional payment receipt.
+- Deterministic fixture requirements: approved reservation with generated letter, signed letter, optional payment receipt, and facility cover image.
 - Real entities: StudentReservation detail and private file downloads.
-- Fixture media: facility gallery.
+- Facility media: render `facility.cover_image_url` from the reservation detail projection when present; use deterministic fixture media only as a no-image fallback.
 
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /student/reservations/:reservationId`, private file download endpoints, cancellation request endpoint.
-- Page-needed fields: detail fields, document/payment metadata, cancellation fields, review presence.
+- Page-needed fields: detail fields, `facility.cover_image_url`, document/payment metadata, cancellation fields, review presence.
 - Auth/session assumptions: student-owned reservation/files only.
 - Source files: `backend/app/api/routes/reservation_routes.py`, `backend/app/api/routes/approval_letter_routes.py`, `backend/app/api/routes/payment_routes.py`.
 
@@ -63,8 +63,8 @@
 - Status: `resolved`
 - Domain area: Reservation Workflow
 - Affected UI: approved detail documents and cancellation action.
-- Contract needed: detail projection plus student-owned download endpoints for generated/signed letter and receipt.
-- Evidence: detail route and student-owned private file download routes exist in route files; metadata exists in `StudentReservationResponse`.
+- Contract needed: detail projection with facility cover image plus student-owned download endpoints for generated/signed letter and receipt.
+- Evidence: detail route and student-owned private file download routes exist in route files; metadata and `facility.cover_image_url` exist in `StudentReservationResponse`.
 - Source issue/PRD: `docs/issues/ISSUE-0028-student-owned-private-file-downloads.md`, `docs/issues/ISSUE-0013-cancellation-workflow.md`.
 
 ## Shared Components

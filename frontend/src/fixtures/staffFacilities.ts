@@ -5,6 +5,8 @@ export type StaffFacility = {
   categoryLabel: string;
   description: string;
   editHref: string;
+  coverImageAlt?: string;
+  coverImageUrl?: string | null;
   id: string;
   imageLabel: string;
   imageTone: "amber" | "blue" | "green" | "red";

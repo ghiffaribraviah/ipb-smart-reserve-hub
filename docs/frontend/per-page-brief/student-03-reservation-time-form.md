@@ -36,6 +36,7 @@
 - Empty state: no available slots uses non-blocking extrapolated state.
 - Error state: invalid range/reason shown near selection controls.
 - Disabled state: continue disabled until valid start/end are selected.
+- Timezone/display rule: calendar blocks and reservation summaries are rendered in campus time (`Asia/Jakarta`), and time entry uses explicit 24-hour `HH:mm` fields rather than browser-native AM/PM controls.
 
 ## Accessibility
 

@@ -48,7 +48,11 @@ const detailResponse = {
     notes: "Butuh dua mikrofon.",
     security_personnel: false,
   },
-  facility: { id: "facility-1", name: "Auditorium Andi Hakim Nasoetion" },
+  facility: {
+    cover_image_url: "https://cdn.example.test/auditorium-detail-cover.jpg",
+    id: "facility-1",
+    name: "Auditorium Andi Hakim Nasoetion",
+  },
   id: "reservation-1",
   organization_unit: { id: "org-1", name: "BEM KM IPB" },
   participant_count: 80,
@@ -154,6 +158,10 @@ describe("StaffReservationDetailDecisionPages", () => {
     expect(await screen.findByRole("heading", { name: "Student Reservasi" })).toBeVisible();
     expect(screen.getByText("BEM KM IPB")).toBeVisible();
     expect(screen.getByText("Auditorium Andi Hakim Nasoetion")).toBeVisible();
+    expect(screen.getByRole("img", { name: "Foto Auditorium Andi Hakim Nasoetion" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.test/auditorium-detail-cover.jpg",
+    );
     expect(screen.getByText("Seminar Detail")).toBeVisible();
     expect(screen.getByText("Dukungan AV, Catatan: Butuh dua mikrofon.")).toBeVisible();
     expect(screen.getByText("surat-persetujuan.pdf")).toBeVisible();

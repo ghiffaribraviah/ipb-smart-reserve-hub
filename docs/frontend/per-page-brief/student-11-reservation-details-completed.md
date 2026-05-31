@@ -45,14 +45,14 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: completed reservation with no review and completed reservation with existing review for integration tests.
+- Deterministic fixture requirements: completed reservation with no review, completed reservation with existing review for integration tests, and facility cover image.
 - Real entities: StudentReservation detail and Review.
-- Fixture media: facility gallery.
+- Facility media: render `facility.cover_image_url` from the reservation detail projection when present; use deterministic fixture media only as a no-image fallback.
 
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /student/reservations/:reservationId`, private file downloads, `POST /student/reservations/:reservationId/review`.
-- Page-needed fields: `status=completed`, `review`, document/payment metadata.
+- Page-needed fields: `status=completed`, `review`, `facility.cover_image_url`, document/payment metadata.
 - Auth/session assumptions: student-owned reservation only.
 - Source files: `backend/app/api/routes/reservation_routes.py`, `backend/app/api/routes/review_routes.py`, `backend/app/schemas/reservation_schemas.py`.
 
@@ -61,8 +61,8 @@
 - Status: `resolved`
 - Domain area: Reservation Workflow
 - Affected UI: completed detail and inline review section.
-- Contract needed: completed status and review projection enough to show/hide inline `Tulis Ulasan`.
-- Evidence: `StudentReservationResponse` includes `status` and `review`; `POST /student/reservations/{reservation_id}/review` exists.
+- Contract needed: completed status, facility cover image, and review projection enough to show/hide inline `Tulis Ulasan`.
+- Evidence: `StudentReservationResponse` includes `status`, `review`, and `facility.cover_image_url`; `POST /student/reservations/{reservation_id}/review` exists.
 - Source issue/PRD: `docs/issues/ISSUE-0014-reviews-and-ratings.md`.
 
 ## Shared Components

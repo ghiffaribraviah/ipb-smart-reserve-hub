@@ -137,6 +137,7 @@ function mapCatalogItem(item: FacilityCatalogItemResponse): FacilityCatalogItem 
     capacity: item.capacity,
     category: item.category,
     categoryLabel: item.category,
+    coverImageUrl: item.cover_image_url,
     description: `${item.location} · ${item.open_hours_summary}`,
     href: `/student/facilities/${item.id}`,
     name: item.name,
@@ -218,24 +219,37 @@ async function fetchCatalog(params: {
 }
 
 function FacilityMedia({ item }: { item: FacilityCatalogItem }) {
+  const hasImage = Boolean(item.coverImageUrl);
+
   return (
     <div
-      aria-label={`Foto ${item.name}`}
-      className="relative flex h-[180px] items-center justify-center bg-gradient-to-br from-[#d1fae5] via-[#efffd6] to-[#fef3c7] max-md:h-[190px]"
-      role="img"
+      aria-label={hasImage ? undefined : `Foto ${item.name}`}
+      className="relative flex h-[180px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#d1fae5] via-[#efffd6] to-[#fef3c7] max-md:h-[190px]"
+      role={hasImage ? undefined : "img"}
     >
+      {item.coverImageUrl ? (
+        <img
+          alt={`Foto ${item.name}`}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={item.coverImageUrl}
+        />
+      ) : null}
       <span className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-[#111827] shadow-[0_2px_4px_rgba(0,0,0,0.12)]">
         {item.categoryLabel}
       </span>
-      <div className="absolute inset-[18px] rounded-[10px] border-4 border-[#9fd9b8]/70" />
-      <div className="relative text-center">
-        <p className="m-0 font-serif text-[26px] font-bold leading-none text-[#1d7667]">
-          IPB SRH
-        </p>
-        <p className="m-0 mt-2 text-[9px] font-bold tracking-normal text-[#1f2937]">
-          Deterministic media fixture
-        </p>
-      </div>
+      {!item.coverImageUrl ? (
+        <>
+          <div className="absolute inset-[18px] rounded-[10px] border-4 border-[#9fd9b8]/70" />
+          <div className="relative text-center">
+            <p className="m-0 font-serif text-[26px] font-bold leading-none text-[#1d7667]">
+              IPB SRH
+            </p>
+            <p className="m-0 mt-2 text-[9px] font-bold tracking-normal text-[#1f2937]">
+              Deterministic media fixture
+            </p>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

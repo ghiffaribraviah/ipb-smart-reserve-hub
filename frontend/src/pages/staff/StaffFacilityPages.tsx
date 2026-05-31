@@ -14,12 +14,9 @@ import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { ApiError, apiRequest } from "../../api/http";
-import {
-  calendarDays,
-  type StaffFacility,
-  type StaffScheduleEntry,
-} from "../../fixtures/staffFacilities";
+import { type StaffFacility, type StaffScheduleEntry } from "../../fixtures/staffFacilities";
 import { mapStaffReservationStatus } from "../../reservations/staffReservationOperations";
+import { campusDateKey } from "../../utils/campusTime";
 import { cn } from "../../utils/cn";
 
 type FacilityManagementProfileResponse = {
@@ -31,6 +28,7 @@ type FacilityManagementProfileResponse = {
   contact_phone: string;
   description: string;
   id: string;
+  images?: FacilityImageManagementResponse[];
   is_active: boolean;
   location: string;
   name: string;
@@ -39,6 +37,15 @@ type FacilityManagementProfileResponse = {
   payment_instructions: string | null;
   price_rupiah: number;
   price_summary: string;
+};
+
+type FacilityImageManagementResponse = {
+  alt_text: string;
+  display_order: number;
+  id: string;
+  is_active: boolean;
+  is_cover: boolean;
+  url: string;
 };
 
 type FacilityCategoryResponse = {
@@ -88,6 +95,15 @@ type FacilityEditForm = {
   price_rupiah: string;
 };
 
+const time24HourPattern = "(?:[01][0-9]|2[0-3]):[0-5][0-9]";
+const time24HourRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+const dateInputPattern = /^\d{4}-\d{2}-\d{2}$/;
+const blackoutTimeOptions = Array.from({ length: 96 }, (_, index) => {
+  const hours = String(Math.floor(index / 4)).padStart(2, "0");
+  const minutes = String((index % 4) * 15).padStart(2, "0");
+  return `${hours}:${minutes}`;
+});
+
 type ApiJsonValue = string | number | boolean | null | ApiJsonObject | ApiJsonValue[];
 type ApiJsonObject = { [key: string]: ApiJsonValue };
 import { StaffShell } from "./StaffReservationOperationsPages";
@@ -103,6 +119,17 @@ const scheduleAvatarClasses = {
   amber: "bg-[#b45309] text-white",
   dark: "bg-[#064e3b] text-white",
   slate: "bg-[#475569] text-white",
+};
+
+type ScheduleCalendarDot = "green" | "amber";
+
+type ScheduleCalendarDay = {
+  dateKey: string;
+  day: number;
+  dots: ScheduleCalendarDot[];
+  muted: boolean;
+  reservationCount: number;
+  selected: boolean;
 };
 
 function fetchStaffFacilities() {
@@ -126,8 +153,16 @@ function deactivateStaffFacility(facilityId: string) {
   });
 }
 
+function activateStaffFacility(facilityId: string) {
+  return updateStaffFacility(facilityId, { is_active: true });
+}
+
 function createStaffFacilityImage(facilityId: string, body: ApiJsonObject) {
   return apiRequest<unknown>(`/staff/facilities/${facilityId}/images`, { body, method: "POST" });
+}
+
+function chooseStaffFacilityCoverImage(facilityId: string, imageId: string) {
+  return apiRequest<unknown>(`/staff/facilities/${facilityId}/images/${imageId}/cover`, { method: "POST" });
 }
 
 function createStaffFacilityBlackout(facilityId: string, body: ApiJsonObject) {
@@ -210,10 +245,72 @@ function formatScheduleMonth(value: string) {
   }).format(new Date(`${value.slice(0, 7)}-01T00:00:00+07:00`));
 }
 
+function dateKeyFromUtcParts(year: number, monthIndex: number, day: number) {
+  const date = new Date(Date.UTC(year, monthIndex, day, 12));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    date.getUTCDate(),
+  ).padStart(2, "0")}`;
+}
+
+function calendarDayNumber(dateKey: string) {
+  return Number(dateKey.slice(8, 10));
+}
+
+function scheduleDotForStatus(status: string): ScheduleCalendarDot {
+  return mapStaffReservationStatus(status).tone === "warning" ? "amber" : "green";
+}
+
+function buildScheduleCalendarDays(
+  selectedDate: string,
+  entries: StaffFacilityScheduleEntryResponse[],
+): ScheduleCalendarDay[] {
+  const [year, month] = selectedDate.split("-").map(Number);
+  const monthIndex = month - 1;
+  const firstWeekday = new Date(Date.UTC(year, monthIndex, 1, 12)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(year, month, 0, 12)).getUTCDate();
+  const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+  const dotsByDate = new Map<string, ScheduleCalendarDot[]>();
+
+  entries.forEach((entry) => {
+    const entryDate = campusDateKey(entry.starts_at);
+    const dots = dotsByDate.get(entryDate) ?? [];
+    dots.push(scheduleDotForStatus(entry.status));
+    dotsByDate.set(entryDate, dots);
+  });
+
+  return Array.from({ length: totalCells }, (_, index) => {
+    const dayOffset = index - firstWeekday + 1;
+    const dateKey = dateKeyFromUtcParts(year, monthIndex, dayOffset);
+    const dots = dotsByDate.get(dateKey) ?? [];
+
+    return {
+      dateKey,
+      day: calendarDayNumber(dateKey),
+      dots: dots.slice(0, 3),
+      muted: dateKey.slice(0, 7) !== selectedDate.slice(0, 7),
+      reservationCount: dots.length,
+      selected: dateKey === selectedDate,
+    };
+  });
+}
+
+function shiftScheduleMonth(value: string, monthDelta: number) {
+  const [year, month, day] = value.split("-").map(Number);
+  const targetFirstDay = new Date(Date.UTC(year, month - 1 + monthDelta, 1, 12));
+  const targetYear = targetFirstDay.getUTCFullYear();
+  const targetMonthIndex = targetFirstDay.getUTCMonth();
+  const targetLastDay = new Date(Date.UTC(targetYear, targetMonthIndex + 1, 0, 12)).getUTCDate();
+
+  return dateKeyFromUtcParts(targetYear, targetMonthIndex, Math.min(day, targetLastDay));
+}
+
 function mapStaffFacility(facility: FacilityManagementProfileResponse): StaffFacility {
+  const coverImage = sortedActiveImages(facility)[0] ?? null;
   return {
     capacity: facility.capacity,
     categoryLabel: facility.category,
+    coverImageAlt: coverImage?.alt_text,
+    coverImageUrl: coverImage?.url ?? null,
     description: `${facility.description} ${facility.location}.`.trim(),
     editHref: `/staff/facilities/${facility.id}/edit`,
     id: facility.id,
@@ -244,6 +341,17 @@ function facilityToEditForm(facility: FacilityManagementProfileResponse): Facili
     payment_instructions: facility.payment_instructions ?? "",
     price_rupiah: String(facility.price_rupiah),
   };
+}
+
+function sortedActiveImages(facility: FacilityManagementProfileResponse) {
+  return [...(facility.images ?? [])]
+    .filter((image) => image.is_active)
+    .sort(
+      (left, right) =>
+        Number(right.is_cover) - Number(left.is_cover) ||
+        left.display_order - right.display_order ||
+        left.alt_text.localeCompare(right.alt_text),
+    );
 }
 
 function apiErrorMessage(error: unknown, fallback: string) {
@@ -323,12 +431,22 @@ function FacilityCard({ facility }: { facility: StaffFacility }) {
     <article className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
       <div
         className={cn(
-          "relative flex h-[180px] items-center justify-center bg-gradient-to-br text-white",
-          imageToneClasses[facility.imageTone],
+          "relative flex h-[180px] items-center justify-center overflow-hidden bg-gradient-to-br text-white",
+          !facility.coverImageUrl ? imageToneClasses[facility.imageTone] : "bg-[#e8f5e9]",
         )}
       >
+        {facility.coverImageUrl ? (
+          <img
+            alt={facility.coverImageAlt || `Foto ${facility.name}`}
+            className="absolute inset-0 h-full w-full object-cover"
+            src={facility.coverImageUrl}
+          />
+        ) : null}
+        {facility.coverImageUrl ? <div className="absolute inset-0 bg-black/10" /> : null}
         <FacilityStatus facility={facility} />
-        <span className="text-xl font-bold tracking-wide">{facility.imageLabel}</span>
+        {!facility.coverImageUrl ? (
+          <span className="text-xl font-bold tracking-wide">{facility.imageLabel}</span>
+        ) : null}
       </div>
       <div className="flex flex-1 flex-col p-5">
         <p className="m-0 text-xs font-bold uppercase tracking-[0.05em] text-[#0f9d58]">
@@ -504,10 +622,19 @@ function AgendaItem({ entry }: { entry: StaffScheduleEntry }) {
   );
 }
 
-function CalendarGrid() {
+function CalendarGrid({
+  onSelectDate,
+  scheduleEntries,
+  selectedDate,
+}: {
+  onSelectDate: (date: string) => void;
+  scheduleEntries: StaffFacilityScheduleEntryResponse[];
+  selectedDate: string;
+}) {
   const weekDays = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  const days = buildScheduleCalendarDays(selectedDate, scheduleEntries);
   return (
-    <div className="min-w-0">
+    <div aria-label={`Kalender fasilitas ${formatScheduleMonth(selectedDate)}`} className="min-w-0">
       <div className="grid grid-cols-7 gap-2 max-md:gap-1.5">
         {weekDays.map((day) => (
           <span
@@ -517,17 +644,21 @@ function CalendarGrid() {
             {day}
           </span>
         ))}
-        {calendarDays.map((day, index) => (
-          <div
+        {days.map((day) => (
+          <button
+            aria-label={`Pilih ${formatScheduleDate(day.dateKey)}: ${day.reservationCount} reservasi`}
+            aria-pressed={day.selected}
             className={cn(
-              "flex min-h-[60px] flex-col justify-between rounded-[10px] border border-[#e5e7eb] bg-white p-2 text-sm font-bold text-[#111827] max-md:min-h-10 max-md:p-1.5 max-md:text-xs",
-              "muted" in day && day.muted && "border-[#f3f4f6] bg-[#f9fafb] text-[#9ca3af]",
-              "selected" in day && day.selected && "border-[#0f9d58] bg-[#e8f5e9] text-[#064e3b]",
+              "flex min-h-[60px] cursor-pointer flex-col justify-between rounded-[10px] border border-[#e5e7eb] bg-white p-2 text-left text-sm font-bold text-[#111827] transition-colors hover:border-[#0f9d58] max-md:min-h-10 max-md:p-1.5 max-md:text-xs",
+              day.muted && "border-[#f3f4f6] bg-[#f9fafb] text-[#9ca3af]",
+              day.selected && "border-[#0f9d58] bg-[#e8f5e9] text-[#064e3b]",
             )}
-            key={`${day.day}-${index}`}
+            key={day.dateKey}
+            onClick={() => onSelectDate(day.dateKey)}
+            type="button"
           >
             <span>{day.day}</span>
-            {"dots" in day ? (
+            {day.dots.length > 0 ? (
               <span className="flex flex-wrap gap-1">
                 {day.dots.map((dot, dotIndex) => (
                   <span
@@ -540,7 +671,7 @@ function CalendarGrid() {
                 ))}
               </span>
             ) : null}
-          </div>
+          </button>
         ))}
       </div>
       <div className="mt-[18px] flex flex-wrap gap-3 text-xs text-[#6b7280]">
@@ -594,16 +725,30 @@ function ScheduleRow({ entry }: { entry: StaffScheduleEntry }) {
 
 export function StaffFacilitySchedulePage() {
   const { facilityId = "" } = useParams();
-  const [selectedDate, setSelectedDate] = useState("2024-10-24");
-  const facilityName = titleFromId(facilityId);
+  const [selectedDate, setSelectedDate] = useState(() => campusDateKey(new Date()));
+  const facilitiesQuery = useQuery({
+    queryFn: fetchStaffFacilities,
+    queryKey: ["staff", "facilities"],
+  });
+  const assignedFacility = facilitiesQuery.data?.find((facility) => facility.id === facilityId) ?? null;
+  const facilityName = assignedFacility?.name ?? titleFromId(facilityId);
   const scheduleQuery = useQuery({
     enabled: facilityId.length > 0,
     queryFn: () => fetchStaffFacilitySchedule(facilityId, selectedDate),
     queryKey: ["staff", "facilities", facilityId, "schedule", scheduleRange(selectedDate)],
   });
-  const scheduleEntries = scheduleQuery.data?.map(mapScheduleEntry) ?? [];
+  const monthScheduleEntries = scheduleQuery.data ?? [];
+  const scheduleEntries = monthScheduleEntries.map(mapScheduleEntry);
+  const agendaEntries = monthScheduleEntries
+    .filter((entry) => campusDateKey(entry.starts_at) === selectedDate)
+    .map(mapScheduleEntry);
   const scheduleAccessDenied =
     scheduleQuery.error instanceof ApiError && [403, 404].includes(scheduleQuery.error.status);
+  const setValidSelectedDate = (value: string) => {
+    if (dateInputPattern.test(value)) {
+      setSelectedDate(value);
+    }
+  };
 
   return (
     <StaffShell active="facilities">
@@ -619,16 +764,19 @@ export function StaffFacilitySchedulePage() {
         <section className="flex items-end justify-between gap-5 max-md:flex-col max-md:items-stretch">
           <div className="max-w-[620px]">
             <h1 className="m-0 text-[32px] font-bold leading-tight max-md:text-[28px]">
-              Jadwal {facilityName}
+              Jadwal Fasilitas
             </h1>
+            {facilityName ? (
+              <p className="m-0 mt-2 text-base font-bold text-[#111827]">{facilityName}</p>
+            ) : null}
             <p className="m-0 mt-3 text-sm leading-6 text-[#6b7280]">
-              Kelola agenda harian, reservasi disetujui, dan pengajuan yang masih menunggu untuk
-              fasilitas ini.
+              Kelola agenda harian, reservasi disetujui, dan pengajuan yang masih menunggu.
             </p>
           </div>
           <div className="flex items-center gap-4 max-md:w-full max-md:gap-3">
             <button
               className="min-h-11 rounded-lg border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#111827] max-md:flex-1"
+              onClick={() => setSelectedDate(campusDateKey(new Date()))}
               type="button"
             >
               Hari Ini
@@ -636,7 +784,7 @@ export function StaffFacilitySchedulePage() {
             <input
               aria-label="Tanggal jadwal terpilih"
               className="min-h-11 rounded-lg border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] outline-none max-md:min-w-0 max-md:flex-[2]"
-              onChange={(event) => setSelectedDate(event.target.value)}
+              onChange={(event) => setValidSelectedDate(event.target.value)}
               type="date"
               value={selectedDate}
             />
@@ -644,7 +792,10 @@ export function StaffFacilitySchedulePage() {
         </section>
 
         <section className="mt-8 grid grid-cols-2 gap-6 max-lg:grid-cols-1">
-          <article className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-4">
+          <article
+            aria-label="Kalender jadwal fasilitas"
+            className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-4"
+          >
             <div className="mb-5 flex items-center justify-between gap-4">
               <div>
                 <p className="m-0 text-xs font-bold uppercase tracking-[0.05em] text-[#6b7280]">
@@ -656,25 +807,34 @@ export function StaffFacilitySchedulePage() {
               </div>
               <div className="flex gap-2">
                 <button
-                  aria-label="Previous month"
+                  aria-label="Bulan sebelumnya"
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-[#6b7280]"
+                  onClick={() => setSelectedDate((current) => shiftScheduleMonth(current, -1))}
                   type="button"
                 >
                   <ChevronLeft aria-hidden="true" size={18} />
                 </button>
                 <button
-                  aria-label="Next month"
+                  aria-label="Bulan berikutnya"
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-[#6b7280]"
+                  onClick={() => setSelectedDate((current) => shiftScheduleMonth(current, 1))}
                   type="button"
                 >
                   <ChevronRight aria-hidden="true" size={18} />
                 </button>
               </div>
             </div>
-            <CalendarGrid />
+            <CalendarGrid
+              onSelectDate={setSelectedDate}
+              selectedDate={selectedDate}
+              scheduleEntries={monthScheduleEntries}
+            />
           </article>
 
-          <article className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-4">
+          <article
+            aria-label="Agenda tanggal terpilih"
+            className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-4"
+          >
             <div className="mb-5 border-b border-[#e5e7eb] pb-4">
               <h2 className="m-0 text-lg font-bold text-[#111827]">Agenda</h2>
               <p className="m-0 mt-1 text-[13px] text-[#6b7280]">{formatScheduleDate(selectedDate)}</p>
@@ -689,10 +849,13 @@ export function StaffFacilitySchedulePage() {
               {scheduleAccessDenied ? (
                 <QueryStateMessage>Jadwal fasilitas tidak ditemukan atau tidak dapat diakses.</QueryStateMessage>
               ) : null}
-              {scheduleQuery.isSuccess && scheduleEntries.length === 0 ? (
+              {scheduleQuery.isSuccess && monthScheduleEntries.length === 0 ? (
                 <QueryStateMessage>Tidak ada reservasi pada rentang jadwal ini.</QueryStateMessage>
               ) : null}
-              {scheduleEntries.map((entry) => (
+              {scheduleQuery.isSuccess && monthScheduleEntries.length > 0 && agendaEntries.length === 0 ? (
+                <QueryStateMessage>Tidak ada reservasi pada tanggal ini.</QueryStateMessage>
+              ) : null}
+              {agendaEntries.map((entry) => (
                 <AgendaItem entry={entry} key={entry.id} />
               ))}
             </div>
@@ -775,6 +938,7 @@ export function StaffFacilityEditPage() {
     queryKey: ["facility-categories"],
   });
   const facility = facilitiesQuery.data?.find((item) => item.id === facilityId) ?? null;
+  const images = facility ? sortedActiveImages(facility) : [];
   const accessDenied =
     facilitiesQuery.error instanceof ApiError && [403, 404].includes(facilitiesQuery.error.status);
   const emptyForm: FacilityEditForm = {
@@ -798,9 +962,11 @@ export function StaffFacilityEditPage() {
   const [message, setMessage] = useState("");
   const [imageForm, setImageForm] = useState({ alt_text: "", url: "" });
   const [blackoutForm, setBlackoutForm] = useState({
-    ends_at: "2026-06-01T04:00",
+    ends_date: "2026-06-01",
+    ends_time: "04:00",
     reason: "",
-    starts_at: "2026-06-01T03:00",
+    starts_date: "2026-06-01",
+    starts_time: "03:00",
   });
 
   const invalidateFacilities = async () => {
@@ -825,6 +991,9 @@ export function StaffFacilityEditPage() {
       }
 
       const openHours = form.open_hours.map((openHour) => {
+        if (!time24HourRegex.test(openHour.opens_at) || !time24HourRegex.test(openHour.closes_at)) {
+          throw new Error("Jam buka harus memakai format 24 jam HH:mm.");
+        }
         if (openHour.closes_at <= openHour.opens_at) {
           throw new Error("Jam tutup harus setelah jam buka.");
         }
@@ -876,32 +1045,74 @@ export function StaffFacilityEditPage() {
     },
   });
 
+  const activateMutation = useMutation({
+    mutationFn: () => activateStaffFacility(facilityId),
+    onError: (error) => {
+      setMessage("");
+      setFormError(apiErrorMessage(error, "Fasilitas belum dapat diaktifkan."));
+    },
+    onSuccess: async (updated) => {
+      setFormEdits(facilityToEditForm(updated));
+      setFormError("");
+      setMessage("Fasilitas diaktifkan.");
+      await invalidateFacilities();
+    },
+  });
+
   const imageMutation = useMutation({
     mutationFn: () =>
       createStaffFacilityImage(facilityId, {
         alt_text: imageForm.alt_text.trim(),
         display_order: 0,
-        is_cover: false,
+        is_cover: images.length === 0,
         url: imageForm.url.trim(),
       }),
     onError: (error) => {
       setMessage("");
       setFormError(apiErrorMessage(error, "Gambar fasilitas belum dapat ditambahkan."));
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setFormError("");
       setImageForm({ alt_text: "", url: "" });
       setMessage("Gambar fasilitas ditambahkan.");
+      await invalidateFacilities();
+    },
+  });
+
+  const coverImageMutation = useMutation({
+    mutationFn: (imageId: string) => chooseStaffFacilityCoverImage(facilityId, imageId),
+    onError: (error) => {
+      setMessage("");
+      setFormError(apiErrorMessage(error, "Cover fasilitas belum dapat diperbarui."));
+    },
+    onSuccess: async () => {
+      setFormError("");
+      setMessage("Cover fasilitas diperbarui.");
+      await invalidateFacilities();
     },
   });
 
   const blackoutMutation = useMutation({
-    mutationFn: () =>
-      createStaffFacilityBlackout(facilityId, {
-        ends_at: `${blackoutForm.ends_at}:00+07:00`,
+    mutationFn: () => {
+      if (!dateInputPattern.test(blackoutForm.starts_date) || !dateInputPattern.test(blackoutForm.ends_date)) {
+        throw new Error("Tanggal blackout wajib diisi.");
+      }
+      if (!time24HourRegex.test(blackoutForm.starts_time) || !time24HourRegex.test(blackoutForm.ends_time)) {
+        throw new Error("Jam blackout harus memakai format 24 jam HH:mm.");
+      }
+      const startsAt = `${blackoutForm.starts_date}T${blackoutForm.starts_time}`;
+      const endsAt = `${blackoutForm.ends_date}T${blackoutForm.ends_time}`;
+
+      if (endsAt <= startsAt) {
+        throw new Error("Blackout selesai harus setelah mulai.");
+      }
+
+      return createStaffFacilityBlackout(facilityId, {
+        ends_at: `${endsAt}:00+07:00`,
         reason: blackoutForm.reason.trim(),
-        starts_at: `${blackoutForm.starts_at}:00+07:00`,
-      }),
+        starts_at: `${startsAt}:00+07:00`,
+      });
+    },
     onError: (error) => {
       setMessage("");
       setFormError(apiErrorMessage(error, "Blackout fasilitas belum dapat ditambahkan."));
@@ -916,7 +1127,9 @@ export function StaffFacilityEditPage() {
   const busy =
     saveMutation.isPending ||
     deactivateMutation.isPending ||
+    activateMutation.isPending ||
     imageMutation.isPending ||
+    coverImageMutation.isPending ||
     blackoutMutation.isPending;
 
   const updateField = (field: keyof FacilityEditForm, value: string | boolean) => {
@@ -1158,8 +1371,11 @@ export function StaffFacilityEditPage() {
                           aria-label={`Jam buka mulai ${rowNumber}`}
                           className="h-10 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm"
                           disabled={busy}
+                          inputMode="numeric"
                           onChange={(event) => updateOpenHour(index, { opens_at: event.target.value })}
-                          type="time"
+                          pattern={time24HourPattern}
+                          placeholder="08:00"
+                          type="text"
                           value={openHour.opens_at}
                         />
                       </label>
@@ -1169,8 +1385,11 @@ export function StaffFacilityEditPage() {
                           aria-label={`Jam buka selesai ${rowNumber}`}
                           className="h-10 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm"
                           disabled={busy}
+                          inputMode="numeric"
                           onChange={(event) => updateOpenHour(index, { closes_at: event.target.value })}
-                          type="time"
+                          pattern={time24HourPattern}
+                          placeholder="16:00"
+                          type="text"
                           value={openHour.closes_at}
                         />
                       </label>
@@ -1221,14 +1440,25 @@ export function StaffFacilityEditPage() {
                   <Save aria-hidden="true" size={18} />
                   Simpan Perubahan
                 </button>
-                <button
-                  disabled={busy || !form.is_active}
-                  className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#fee2e2] px-6 text-sm font-bold text-[#dc2626]"
-                  onClick={() => deactivateMutation.mutate()}
-                  type="button"
-                >
-                  Nonaktifkan
-                </button>
+                {form.is_active ? (
+                  <button
+                    disabled={busy}
+                    className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#fee2e2] px-6 text-sm font-bold text-[#dc2626]"
+                    onClick={() => deactivateMutation.mutate()}
+                    type="button"
+                  >
+                    Nonaktifkan
+                  </button>
+                ) : (
+                  <button
+                    disabled={busy}
+                    className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#e8f5e9] px-6 text-sm font-bold text-[#0f9d58]"
+                    onClick={() => activateMutation.mutate()}
+                    type="button"
+                  >
+                    Aktifkan
+                  </button>
+                )}
                 <p className="m-0 flex items-start gap-2 text-xs leading-5 text-[#6b7280] max-md:col-span-2 max-md:rounded-lg max-md:border max-md:border-[#fed7aa] max-md:bg-[#fff7ed] max-md:p-3">
                   <AlertTriangle aria-hidden="true" className="mt-0.5 shrink-0 text-[#dc2626]" size={16} />
                   Perubahan akan langsung tampil di dashboard setelah disimpan.
@@ -1243,6 +1473,46 @@ export function StaffFacilityEditPage() {
             </div>
             <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3 text-xs leading-5 text-[#6b7280]">
               Media yang ada dikelola oleh backend. Tambahkan gambar baru dengan URL dan teks alternatif.
+            </div>
+            <div className="mt-4 grid gap-3">
+              {images.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-[#cbd5e1] bg-[#f8fafc] px-4 py-5 text-center text-sm font-semibold text-[#6b7280]">
+                  Belum ada gambar fasilitas.
+                </div>
+              ) : null}
+              {images.map((image) => (
+                <figure
+                  className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f8fafc]"
+                  key={image.id}
+                >
+                  <img
+                    alt={image.alt_text}
+                    className="h-32 w-full object-cover"
+                    src={image.url}
+                  />
+                  <figcaption className="grid gap-2 px-3 py-2 text-xs text-[#6b7280]">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="min-w-0 break-words font-semibold text-[#111827]">{image.alt_text}</span>
+                      {image.is_cover ? (
+                        <span className="shrink-0 rounded-full bg-[#e8f5e9] px-2 py-1 font-bold text-[#0b7340]">
+                          Cover
+                        </span>
+                      ) : null}
+                    </div>
+                    {!image.is_cover ? (
+                      <button
+                        aria-label={`Pilih ${image.alt_text} sebagai cover`}
+                        className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#d1fae5] bg-white px-3 text-xs font-bold text-[#0f9d58]"
+                        disabled={busy}
+                        onClick={() => coverImageMutation.mutate(image.id)}
+                        type="button"
+                      >
+                        Pilih sebagai cover
+                      </button>
+                    ) : null}
+                  </figcaption>
+                </figure>
+              ))}
             </div>
             <div className="mt-4 grid gap-3">
               <Field id="facility-image-url" label="URL Gambar">
@@ -1272,42 +1542,95 @@ export function StaffFacilityEditPage() {
               </button>
             </div>
 
-            <div className="mt-5 grid gap-3 border-t border-[#e5e7eb] pt-5 text-sm">
-              <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
-                <p className="m-0 mb-3 font-bold text-[#111827]">Tambah Blackout</p>
-                <div className="grid gap-2">
-                  <input
-                    aria-label="Blackout mulai"
-                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
-                    onChange={(event) => setBlackoutForm((current) => ({ ...current, starts_at: event.target.value }))}
-                    type="datetime-local"
-                    value={blackoutForm.starts_at}
-                  />
-                  <input
-                    aria-label="Blackout selesai"
-                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
-                    onChange={(event) => setBlackoutForm((current) => ({ ...current, ends_at: event.target.value }))}
-                    type="datetime-local"
-                    value={blackoutForm.ends_at}
-                  />
+            <section className="mt-5 border-t border-[#e5e7eb] pt-5 text-sm">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e8f5e9] text-[#0f9d58]">
+                  <CalendarDays aria-hidden="true" size={18} />
+                </span>
+                <h3 className="m-0 text-sm font-bold text-[#111827]">Tambah Blackout</h3>
+              </div>
+              <div className="grid gap-3">
+                <fieldset className="grid gap-2 rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
+                  <legend className="px-1 text-[13px] font-semibold text-[#111827]">Mulai</legend>
+                  <div className="grid grid-cols-[1.35fr_0.85fr] gap-2 max-[360px]:grid-cols-1">
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#6b7280]">
+                      Tanggal
+                      <input
+                        aria-label="Tanggal blackout mulai"
+                        className="h-11 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] outline-none focus:border-[#0f9d58]"
+                        onChange={(event) => setBlackoutForm((current) => ({ ...current, starts_date: event.target.value }))}
+                        type="date"
+                        value={blackoutForm.starts_date}
+                      />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#6b7280]">
+                      Jam
+                      <select
+                        aria-label="Jam blackout mulai"
+                        className="h-11 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#0f9d58]"
+                        onChange={(event) => setBlackoutForm((current) => ({ ...current, starts_time: event.target.value }))}
+                        value={blackoutForm.starts_time}
+                      >
+                        {blackoutTimeOptions.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </fieldset>
+                <fieldset className="grid gap-2 rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3">
+                  <legend className="px-1 text-[13px] font-semibold text-[#111827]">Selesai</legend>
+                  <div className="grid grid-cols-[1.35fr_0.85fr] gap-2 max-[360px]:grid-cols-1">
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#6b7280]">
+                      Tanggal
+                      <input
+                        aria-label="Tanggal blackout selesai"
+                        className="h-11 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] outline-none focus:border-[#0f9d58]"
+                        onChange={(event) => setBlackoutForm((current) => ({ ...current, ends_date: event.target.value }))}
+                        type="date"
+                        value={blackoutForm.ends_date}
+                      />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-[#6b7280]">
+                      Jam
+                      <select
+                        aria-label="Jam blackout selesai"
+                        className="h-11 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#0f9d58]"
+                        onChange={(event) => setBlackoutForm((current) => ({ ...current, ends_time: event.target.value }))}
+                        value={blackoutForm.ends_time}
+                      >
+                        {blackoutTimeOptions.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </fieldset>
+                <label className="grid gap-2 text-[13px] font-semibold text-[#111827]">
+                  Alasan
                   <input
                     aria-label="Alasan blackout"
-                    className="h-10 rounded-md border border-[#e5e7eb] bg-white px-2 text-xs"
+                    className="h-11 rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-3 text-sm text-[#111827] outline-none focus:border-[#0f9d58] focus:bg-white"
                     onChange={(event) => setBlackoutForm((current) => ({ ...current, reason: event.target.value }))}
                     placeholder="Maintenance"
                     value={blackoutForm.reason}
                   />
-                </div>
-                <button
-                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#0f9d58] px-4 text-sm font-bold text-white"
-                  disabled={busy || !blackoutForm.reason.trim()}
-                  onClick={() => blackoutMutation.mutate()}
-                  type="button"
-                >
-                  Tambah Blackout
-                </button>
+                </label>
               </div>
-            </div>
+              <button
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#0f9d58] px-4 text-sm font-bold text-white disabled:bg-[#9ca3af]"
+                disabled={busy || !blackoutForm.reason.trim()}
+                onClick={() => blackoutMutation.mutate()}
+                type="button"
+              >
+                <Plus aria-hidden="true" size={16} />
+                Tambah Blackout
+              </button>
+            </section>
           </aside>
         </form>
         ) : null}

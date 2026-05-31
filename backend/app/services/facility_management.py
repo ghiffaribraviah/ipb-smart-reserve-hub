@@ -37,6 +37,10 @@ class StaffFacilityAccessDenied(FacilityManagementError):
     pass
 
 
+class FacilityImageNotFound(FacilityManagementError):
+    pass
+
+
 @dataclass(frozen=True)
 class StaffAssignment:
     facility_id: str
@@ -60,6 +64,7 @@ class FacilityManagementProfile:
     payment_instructions: str | None
     open_hours_summary: str
     open_hours: list["FacilityOpenHourProfile"]
+    images: list["FacilityImageProfile"]
     is_active: bool
 
 
@@ -271,6 +276,20 @@ class FacilityManagementModule:
         )
         return _to_image_profile(image)
 
+    def choose_assigned_facility_cover_image(
+        self,
+        staff: UserAccount,
+        facility_id: str,
+        image_id: str,
+    ) -> FacilityImageProfile:
+        self._require_assigned_facility(staff, facility_id)
+        image = self._facility_management_repository.get_active_image(facility_id, image_id)
+        if image is None:
+            raise FacilityImageNotFound
+        self._facility_management_repository.clear_cover_images(facility_id)
+        image.is_cover = True
+        return _to_image_profile(image)
+
     def add_assigned_facility_open_hour(
         self,
         staff: UserAccount,
@@ -331,6 +350,7 @@ def _to_facility_profile(facility: Facility) -> FacilityManagementProfile:
         payment_instructions=facility.payment_instructions,
         open_hours_summary=facility.open_hours_summary,
         open_hours=[_to_open_hour_profile(open_hour) for open_hour in facility.open_hours],
+        images=[_to_image_profile(image) for image in facility.images],
         is_active=facility.is_active,
     )
 

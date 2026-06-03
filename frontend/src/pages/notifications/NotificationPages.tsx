@@ -19,6 +19,7 @@ import {
 } from "../../notifications/notificationCenter";
 import { StaffShell } from "../staff/StaffReservationOperationsPages";
 import { SuperAdminShell } from "../super-admin/SuperAdminDashboardUsersPages";
+import logo from "../../assets/logo.png";
 
 const PAGE_SIZE = 20;
 

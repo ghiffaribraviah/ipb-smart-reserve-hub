@@ -8,7 +8,7 @@ import { NotificationSurface } from "../../components/NotificationSurface";
 import { StudentHeaderSearch } from "../../components/layout/StudentHeaderSearch";
 import { studentHomeSession } from "../../fixtures/studentHome";
 import { campusDateKey, campusUtcOffset, formatCampusTime } from "../../utils/campusTime";
-
+import logo from "../../assets/logo.png";
 type FacilityImageResponse = {
   alt_text: string;
   is_cover: boolean;
@@ -258,15 +258,14 @@ function StudentHeader() {
           </button>
           <a
             aria-label="IPB Smart Reserve Hub"
-            className="whitespace-nowrap font-serif text-2xl font-bold leading-none text-[#1d7667] no-underline max-md:text-[22px]"
+            className="flex shrink-0 items-center no-underline"
             href="/student"
           >
-            <span className="hidden md:inline">
-              IPB
-              <br />
-              SRH
-            </span>
-            <span className="md:hidden">IPB SRH</span>
+            <img
+              src={logo}
+              alt="IPB Smart Reserve Hub"
+              className="h-10 w-auto max-md:h-9"
+            />
           </a>
           <StudentHeaderSearch />
         </div>
@@ -652,9 +651,17 @@ function StudentFooter() {
     <footer className="mt-10 flex justify-center border-t border-[#e5e7eb] bg-white py-[22px]">
       <div className="flex w-[1200px] max-w-[95%] items-center justify-between gap-6 max-md:flex-col max-md:gap-3.5 max-md:text-center">
         <div className="flex min-w-0 items-center gap-4 max-md:flex-col max-md:gap-2">
-          <p className="m-0 whitespace-nowrap font-serif text-[30px] font-bold leading-none text-[#4da38b]">
-            IPB SRH
-          </p>
+          <a
+            aria-label="IPB Smart Reserve Hub"
+            className="flex shrink-0 items-center no-underline"
+            href="/student"
+          >
+            <img
+              src={logo}
+              alt="IPB Smart Reserve Hub"
+              className="h-10 w-auto max-md:h-9"
+            />
+          </a>
           <p className="m-0 text-[13px] leading-5 text-[#6b7280]">
             © 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.
           </p>

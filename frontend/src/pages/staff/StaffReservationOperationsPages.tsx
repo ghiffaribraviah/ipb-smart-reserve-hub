@@ -28,6 +28,7 @@ import {
   type StaffReservationOperationResponse,
 } from "../../reservations/staffReservationOperations";
 import { cn } from "../../utils/cn";
+import logo from "../../assets/logo.png";
 
 const navItems = [
   { href: "/staff", icon: Home, key: "home", label: "Beranda" },
@@ -110,18 +111,17 @@ export function StaffShell({
             >
               <Menu aria-hidden="true" size={24} />
             </button>
-            <a
-              aria-label="IPB Smart Reserve Hub"
-              className="whitespace-nowrap font-serif text-2xl font-bold leading-none text-[#1d7667] no-underline max-md:text-[22px]"
-              href="/staff"
-            >
-              <span className="hidden md:inline">
-                IPB
-                <br />
-                SRH
-              </span>
-              <span className="md:hidden">IPB SRH</span>
-            </a>
+          <a
+            aria-label="IPB Smart Reserve Hub"
+            className="flex shrink-0 items-center no-underline"
+            href="/student"
+          >
+            <img
+              src={logo}
+              alt="IPB Smart Reserve Hub"
+              className="h-10 w-auto max-md:h-9"
+            />
+          </a>
           </div>
 
           <div className="flex items-center gap-[22px] max-md:gap-3.5">

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import authBg from "../../assets/auth-bg.png";
 
 type AuthLayoutProps = {
   children: ReactNode;
@@ -38,17 +39,36 @@ export function AuthLayout({ children, maxWidth = "420px" }: AuthLayoutProps) {
           </div>
         </footer>
       </section>
-      <section
-        aria-label="Ilustrasi kampus IPB"
-        className="hidden flex-1 items-center justify-center bg-[linear-gradient(135deg,rgba(6,78,59,0.22),rgba(217,180,93,0.24)),linear-gradient(135deg,#b7dcc7,#f6e7a5)] md:flex"
-      >
-        <div className="text-center">
-          <div className="font-serif text-[82px] font-extrabold leading-none text-[#1d7667]">
-            IPB SRH
-          </div>
-          <p className="mt-9 text-[36px] text-slate-600">Deterministic media fixture</p>
-        </div>
-      </section>
+<section
+  aria-label="Ilustrasi kampus IPB"
+  className="relative hidden flex-1 overflow-hidden md:flex"
+>
+  {/* Background image */}
+  <div
+    className="absolute inset-0 bg-cover bg-center"
+    style={{
+      backgroundImage: `url(${authBg})`,
+    }}
+  />
+
+  {/* Dark overlay */}
+  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/20" />
+
+  {/* Bottom-right text */}
+  <div className="absolute bottom-12 right-12 z-10 max-w-[500px] text-right">
+    <h2 className="font-serif text-7xl font-bold leading-[0.95] text-white">
+      Smart
+      <br />
+      Reserve
+      <br />
+      Hub
+    </h2>
+
+    <p className="mt-5 text-sm leading-6 text-white/80">
+      Platform terintegrasi untuk reservasi fasilitas kampus IPB University.
+    </p>
+  </div>
+</section>
     </main>
   );
 }

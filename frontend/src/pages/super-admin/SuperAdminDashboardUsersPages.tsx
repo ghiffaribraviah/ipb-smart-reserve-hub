@@ -22,6 +22,7 @@ import {
   superAdminNav,
 } from "../../fixtures/superAdminDashboardUsers";
 import { cn } from "../../utils/cn";
+import logo from "../../assets/logo.png";
 
 type SuperAdminActive = (typeof superAdminNav)[number]["key"];
 
@@ -430,15 +431,14 @@ export function SuperAdminShell({
             </button>
             <a
               aria-label="IPB Smart Reserve Hub"
-              className="whitespace-nowrap font-serif text-2xl font-bold leading-none text-[#1d7667] no-underline max-md:text-[22px]"
-              href="/super-admin"
+              className="flex shrink-0 items-center no-underline"
+              href="/student"
             >
-              <span className="hidden md:inline">
-                IPB
-                <br />
-                SRH
-              </span>
-              <span className="md:hidden">IPB SRH</span>
+              <img
+                src={logo}
+                alt="IPB Smart Reserve Hub"
+                className="h-10 w-auto max-md:h-9"
+              />
             </a>
           </div>
 

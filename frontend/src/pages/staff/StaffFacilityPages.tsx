@@ -18,6 +18,7 @@ import { type StaffFacility, type StaffScheduleEntry } from "../../fixtures/staf
 import { mapStaffReservationStatus } from "../../reservations/staffReservationOperations";
 import { campusDateKey, formatCampusDate, formatCampusTime } from "../../utils/campusTime";
 import { cn } from "../../utils/cn";
+import logo from "../../assets/logo.png";
 
 type FacilityManagementProfileResponse = {
   capacity: number;

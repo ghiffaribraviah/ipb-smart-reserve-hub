@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useAuth, type UserRole } from "../../auth/session";
 import { StaffShell } from "../staff/StaffReservationOperationsPages";
 import { SuperAdminShell } from "../super-admin/SuperAdminDashboardUsersPages";
+import logo from "../../assets/logo.png";
 
 function displayValue(value: string | number | null | undefined) {
   return value === null || value === undefined || value === "" ? "Belum tersedia" : String(value);

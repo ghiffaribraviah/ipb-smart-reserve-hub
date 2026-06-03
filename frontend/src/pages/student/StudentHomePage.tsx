@@ -18,6 +18,8 @@ import { StudentHeaderSearch } from "../../components/layout/StudentHeaderSearch
 import {
   studentHomeSession,
 } from "../../fixtures/studentHome";
+import logo from "../../assets/logo.png";
+import heroBg from "../../assets/hero-bg.png";
 
 type FacilityCategoryResponse = {
   facility_count: number;
@@ -156,15 +158,14 @@ function StudentHeader() {
           </button>
           <a
             aria-label="IPB Smart Reserve Hub"
-            className="whitespace-nowrap font-serif text-2xl font-bold leading-none text-[#1d7667] no-underline max-md:text-[22px]"
+            className="flex shrink-0 items-center no-underline"
             href="/student"
           >
-            <span className="hidden md:inline">
-              IPB
-              <br />
-              SRH
-            </span>
-            <span className="md:hidden">IPB SRH</span>
+            <img
+              src={logo}
+              alt="IPB Smart Reserve Hub"
+              className="h-10 w-auto max-md:h-9"
+            />
           </a>
           <StudentHeaderSearch />
         </div>
@@ -239,14 +240,14 @@ function HeroSearch() {
 function StudentHero() {
   return (
     <section className="relative mt-[72px] flex h-[400px] flex-col items-center justify-center overflow-visible bg-[#12372f] px-5 text-center text-white max-md:mt-16 max-md:h-auto max-md:justify-start max-md:px-5 max-md:pb-8 max-md:pt-[34px]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,rgba(254,243,199,0.24),transparent_32%),linear-gradient(135deg,rgba(15,118,103,0.96),rgba(38,44,25,0.86)_48%,rgba(15,23,42,0.88))]" />
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: `url(${heroBg})`,
+        }}
+      />
+      <div className="absolute inset-0 bg-black/65" />
       <div className="absolute inset-0 flex select-none items-center justify-center opacity-[0.11]">
-        <div className="font-serif text-[88px] font-bold leading-none tracking-normal max-md:text-[48px]">
-          IPB SRH
-          <p className="m-0 mt-2 font-sans text-sm font-semibold uppercase tracking-[0.12em]">
-            Deterministic media fixture
-          </p>
-        </div>
       </div>
       <div className="relative z-10">
         <p className="m-0 mb-2 text-base font-medium tracking-[0.06em] max-md:text-xs">
@@ -511,9 +512,17 @@ function StudentFooter() {
     <footer className="flex justify-center border-t border-[#e5e7eb] bg-white py-[22px]">
       <div className="flex w-[1200px] max-w-[95%] items-center justify-between gap-6 max-md:flex-col max-md:gap-3.5 max-md:text-center">
         <div className="flex min-w-0 items-center gap-4 max-md:flex-col max-md:gap-2">
-          <p className="m-0 whitespace-nowrap font-serif text-[30px] font-bold leading-none text-[#4da38b]">
-            IPB SRH
-          </p>
+          <a
+            aria-label="IPB Smart Reserve Hub"
+            className="flex shrink-0 items-center no-underline"
+            href="/student"
+          >
+            <img
+              src={logo}
+              alt="IPB Smart Reserve Hub"
+              className="h-10 w-auto max-md:h-9"
+            />
+          </a>
           <p className="m-0 text-[13px] leading-5 text-[#6b7280]">
             © 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.
           </p>

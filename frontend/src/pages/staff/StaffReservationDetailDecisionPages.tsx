@@ -9,6 +9,7 @@ import {
 } from "../../fixtures/staffReservationDetail";
 import { formatStaffDate, mapStaffReservationStatus } from "../../reservations/staffReservationOperations";
 import { StaffShell } from "./StaffReservationOperationsPages";
+import logo from "../../assets/logo.png";
 
 type StaffFileMetadata = {
   content_type: string;

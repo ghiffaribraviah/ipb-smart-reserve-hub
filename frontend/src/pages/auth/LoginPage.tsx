@@ -5,6 +5,7 @@ import { ApiError } from "../../api/http";
 import { getRoleLanding, getSafeRedirectTarget, useAuth } from "../../auth/session";
 import { AuthField } from "../../components/auth/AuthField";
 import { AuthLayout } from "../../components/auth/AuthLayout";
+import logo from "../../assets/logo.png";
 
 export function LoginPage() {
   const [searchParams] = useSearchParams();
@@ -36,11 +37,11 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <div className="mb-12 text-center max-md:mb-6 max-md:border-b max-md:border-[#E2E8F0] max-md:pb-5">
-        <h1 className="mb-2 font-serif text-5xl font-extrabold leading-[1.1] tracking-[1px] text-[#0A9361]">
-          IPB
-          <br />
-          SRH
-        </h1>
+        <img
+          src={logo}
+          alt="IPB Smart Reserve Hub"
+          className="mx-auto mb-2 h-24 w-auto"
+        />
         <div className="text-xl font-semibold text-[#2D3748]">IPB Smart Reserve Hub</div>
       </div>
 

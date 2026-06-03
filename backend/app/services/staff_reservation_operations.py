@@ -73,6 +73,16 @@ class StaffReservationFileMetadata:
 
 
 @dataclass(frozen=True)
+class StaffReservationSignedFileMetadata:
+    id: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    uploaded_at: datetime
+    download_url: str
+
+
+@dataclass(frozen=True)
 class StaffReservationExtraRequirements:
     av_support: bool
     logistics_coordination: bool
@@ -84,7 +94,8 @@ class StaffReservationExtraRequirements:
 @dataclass(frozen=True)
 class StaffReservationDetailDocument:
     approval_letter: StaffReservationFileMetadata | None
-    signed_approval_letter: StaffReservationFileMetadata | None
+    signed_approval_letter: StaffReservationSignedFileMetadata | None
+    signed_approval_letters: list[StaffReservationSignedFileMetadata]
     review_status: str
     rejection_reason: str | None
     due_at: datetime | None
@@ -286,6 +297,7 @@ def _to_detail(reservation: Reservation) -> StaffReservationDetail:
         document=StaffReservationDetailDocument(
             approval_letter=_approval_letter_metadata(reservation),
             signed_approval_letter=_signed_approval_letter_metadata(reservation),
+            signed_approval_letters=_signed_approval_letter_history(reservation),
             review_status=_document_projection(reservation).review_status,
             rejection_reason=reservation.rejection_reason
             if reservation.rejection_source == ReservationRejectionSource.document
@@ -342,14 +354,31 @@ def _approval_letter_metadata(reservation: Reservation) -> StaffReservationFileM
     )
 
 
-def _signed_approval_letter_metadata(reservation: Reservation) -> StaffReservationFileMetadata | None:
+def _signed_approval_letter_metadata(reservation: Reservation) -> StaffReservationSignedFileMetadata | None:
     if reservation.signed_approval_letter is None:
         return None
-    return StaffReservationFileMetadata(
-        filename=reservation.signed_approval_letter.filename,
-        content_type=reservation.signed_approval_letter.content_type,
-        size_bytes=reservation.signed_approval_letter.size_bytes,
-        uploaded_at=_optional_utc(reservation.signed_approval_letter.uploaded_at),
+    return _signed_file_metadata(reservation.id, reservation.signed_approval_letter)
+
+
+def _signed_approval_letter_history(reservation: Reservation) -> list[StaffReservationSignedFileMetadata]:
+    return [
+        _signed_file_metadata(reservation.id, letter)
+        for letter in sorted(
+            reservation.signed_approval_letters,
+            key=lambda item: (item.uploaded_at, item.version),
+            reverse=True,
+        )
+    ]
+
+
+def _signed_file_metadata(reservation_id: str, letter) -> StaffReservationSignedFileMetadata:
+    return StaffReservationSignedFileMetadata(
+        id=letter.id,
+        filename=letter.filename,
+        content_type=letter.content_type,
+        size_bytes=letter.size_bytes,
+        uploaded_at=_as_utc(letter.uploaded_at),
+        download_url=f"/staff/reservations/{reservation_id}/signed-approval-letters/{letter.id}/download",
     )
 
 

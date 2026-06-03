@@ -18,10 +18,12 @@ import logo from "../../assets/logo.png";
 
 type StaffFileMetadata = {
   content_type: string;
+  download_url?: string;
   filename: string;
-  generated_at: string | null;
+  generated_at?: string | null;
+  id?: string;
   size_bytes: number;
-  uploaded_at: string | null;
+  uploaded_at?: string | null;
 };
 
 type StaffReviewActionUrls = {
@@ -47,6 +49,7 @@ type StaffReservationDetailResponse = {
     rejection_reason: string | null;
     review_status: string;
     signed_approval_letter: StaffFileMetadata | null;
+    signed_approval_letters?: StaffFileMetadata[];
   };
   ends_at: string;
   event_description: string;
@@ -313,6 +316,12 @@ export function StaffReservationDetailPage() {
   const canReviewActiveTarget = detail ? hasPendingReview(detail, activeTarget) : false;
   const status = detail ? mapStaffReservationDisplayStatus(detail) : { label: "Memuat", tone: "neutral" as const };
   const documentFile = detail?.document.signed_approval_letter ?? null;
+  const documentFiles =
+    detail?.document.signed_approval_letters && detail.document.signed_approval_letters.length > 0
+      ? detail.document.signed_approval_letters
+      : documentFile
+        ? [documentFile]
+        : [];
   const paymentFile = detail?.payment.receipt ?? null;
 
   return (
@@ -375,13 +384,20 @@ export function StaffReservationDetailPage() {
 
             <DetailCard title="Verifikasi Dokumen">
               <div className="grid gap-4">
-                {documentFile && detail.review_actions.document.download_url ? (
-                  <DocumentRow
-                    file={documentFile}
-                    onPreview={() => apiPreview(detail.review_actions.document.download_url as string)}
-                    onDownload={() => apiDownload(detail.review_actions.document.download_url as string)}
-                    status={mapStaffReviewStageStatus("document", detail.document.review_status).label}
-                  />
+                {documentFiles.length > 0 ? (
+                  documentFiles.map((file) => {
+                    const downloadUrl = file.download_url ?? detail.review_actions.document.download_url;
+
+                    return downloadUrl ? (
+                      <DocumentRow
+                        file={file}
+                        key={file.id ?? `${file.filename}-${file.uploaded_at ?? ""}`}
+                        onPreview={() => apiPreview(downloadUrl)}
+                        onDownload={() => apiDownload(downloadUrl)}
+                        status={mapStaffReviewStageStatus("document", detail.document.review_status).label}
+                      />
+                    ) : null;
+                  })
                 ) : (
                   <p className="m-0 text-sm font-semibold text-[#6b7280]">
                     Dokumen bertanda tangan belum tersedia.

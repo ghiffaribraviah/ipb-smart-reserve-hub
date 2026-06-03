@@ -261,9 +261,19 @@ class StaffApprovalLetterFileMetadataResponse(StaffReservationFileMetadataRespon
     letter_number: str
 
 
+class StaffSignedApprovalLetterFileMetadataResponse(BaseModel):
+    id: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    uploaded_at: datetime
+    download_url: str
+
+
 class StaffReservationDetailDocumentResponse(BaseModel):
     approval_letter: StaffApprovalLetterFileMetadataResponse | None
-    signed_approval_letter: StaffReservationFileMetadataResponse | None
+    signed_approval_letter: StaffSignedApprovalLetterFileMetadataResponse | None
+    signed_approval_letters: list[StaffSignedApprovalLetterFileMetadataResponse] = Field(default_factory=list)
     review_status: str
     rejection_reason: str | None = None
     due_at: datetime | None = None

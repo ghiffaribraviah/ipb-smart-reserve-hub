@@ -395,6 +395,7 @@ async def test_assigned_staff_fetches_reservation_detail_with_null_missing_file_
         "document": {
             "approval_letter": None,
             "signed_approval_letter": None,
+            "signed_approval_letters": [],
             "review_status": "pending_review",
             "rejection_reason": None,
             "due_at": "2026-05-03T00:00:00Z",

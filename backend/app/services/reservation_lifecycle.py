@@ -36,6 +36,8 @@ class FacilityReservationLifecycleModule:
     def record_signed_document_uploaded(self, reservation: Reservation) -> None:
         uploaded_at = _as_utc(self._clock())
         reservation.status = ReservationStatus.pending_document_review
+        reservation.rejection_reason = None
+        reservation.rejection_source = None
         reservation.document_verification_due_at = uploaded_at + timedelta(
             hours=self._booking_settings.document_verification_due_hours
         )

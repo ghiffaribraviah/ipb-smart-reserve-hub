@@ -59,6 +59,25 @@ async def _upload_signed_approval_letter(client: AsyncClient, *, token: str, res
     )
 
 
+async def _upload_signed_approval_letter_named(
+    client: AsyncClient,
+    *,
+    token: str,
+    reservation_id: str,
+    filename: str,
+    content: bytes,
+) -> None:
+    await client.get(
+        f"/student/reservations/{reservation_id}/approval-letter",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    await client.post(
+        f"/student/reservations/{reservation_id}/signed-approval-letter",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": (filename, content, "application/pdf")},
+    )
+
+
 async def _submit_signed_approval_letter(client: AsyncClient, *, token: str, reservation_id: str) -> None:
     await client.post(
         f"/student/reservations/{reservation_id}/signed-approval-letter/submit",
@@ -912,6 +931,87 @@ async def test_assigned_staff_downloads_uploaded_signed_approval_letter_for_revi
     assert download.headers["content-type"] == "application/pdf"
     assert download.headers["content-disposition"] == 'attachment; filename="signed-letter.pdf"'
     assert download.content == b"%PDF-1.4 signed letter"
+
+
+@pytest.mark.anyio
+async def test_staff_detail_exposes_and_downloads_all_signed_approval_letter_uploads_after_reupload():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 5, 1, 3, 0, tzinfo=UTC),
+    )
+    test_data = DataBuilder(app)
+    test_data.create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
+    staff_id = test_data.create_user(email="staff@ipb.ac.id", role=UserRole.staff)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion", price_rupiah=0)
+    test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="08:00", closes_at="16:00")
+    organization_unit_id = test_data.create_organization_unit(name="BEM KM IPB")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        admin_token = await _login(client, email="admin@ipb.ac.id")
+        staff_token = await _login(client, email="staff@ipb.ac.id")
+        student_token = await _register_and_login(
+            client,
+            email="budi@apps.ipb.ac.id",
+            full_name="Budi Santoso",
+            nim="G64190001",
+            phone="08123456789",
+        )
+        await client.put(
+            f"/admin/facilities/{facility_id}/staff-assignments/{staff_id}",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        reservation = await _create_reservation(
+            client,
+            token=student_token,
+            facility_id=facility_id,
+            organization_unit_id=organization_unit_id,
+        )
+        await _upload_signed_approval_letter_named(
+            client,
+            token=student_token,
+            reservation_id=reservation["id"],
+            filename="signed-letter-old.pdf",
+            content=b"%PDF-1.4 old signed letter",
+        )
+        await _submit_signed_approval_letter(client, token=student_token, reservation_id=reservation["id"])
+        await client.post(
+            f"/staff/reservations/{reservation['id']}/document-review/reject",
+            headers={"Authorization": f"Bearer {staff_token}"},
+            json={"reason": "Tanda tangan belum jelas."},
+        )
+        await _upload_signed_approval_letter_named(
+            client,
+            token=student_token,
+            reservation_id=reservation["id"],
+            filename="signed-letter-new.pdf",
+            content=b"%PDF-1.4 new signed letter",
+        )
+        await _submit_signed_approval_letter(client, token=student_token, reservation_id=reservation["id"])
+
+        detail = await client.get(
+            f"/staff/reservations/{reservation['id']}",
+            headers={"Authorization": f"Bearer {staff_token}"},
+        )
+        old_file = next(
+            item for item in detail.json()["document"]["signed_approval_letters"] if item["filename"] == "signed-letter-old.pdf"
+        )
+        old_download = await client.get(
+            old_file["download_url"],
+            headers={"Authorization": f"Bearer {staff_token}"},
+        )
+
+    assert detail.status_code == 200
+    document = detail.json()["document"]
+    assert document["signed_approval_letter"]["filename"] == "signed-letter-new.pdf"
+    assert [item["filename"] for item in document["signed_approval_letters"]] == [
+        "signed-letter-new.pdf",
+        "signed-letter-old.pdf",
+    ]
+    assert all(item["download_url"] for item in document["signed_approval_letters"])
+    assert old_download.status_code == 200
+    assert old_download.headers["content-disposition"] == 'attachment; filename="signed-letter-old.pdf"'
+    assert old_download.content == b"%PDF-1.4 old signed letter"
 
 
 @pytest.mark.anyio

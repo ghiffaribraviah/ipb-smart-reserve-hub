@@ -33,11 +33,30 @@ const detailResponse = {
     review_status: "pending_review",
     signed_approval_letter: {
       content_type: "application/pdf",
+      download_url: "/staff/reservations/reservation-1/signed-approval-letters/file-new/download",
       filename: "surat-persetujuan.pdf",
-      generated_at: null,
+      id: "file-new",
       size_bytes: 2048,
       uploaded_at: "2026-05-01T00:00:00Z",
     },
+    signed_approval_letters: [
+      {
+        content_type: "application/pdf",
+        download_url: "/staff/reservations/reservation-1/signed-approval-letters/file-new/download",
+        filename: "surat-persetujuan.pdf",
+        id: "file-new",
+        size_bytes: 2048,
+        uploaded_at: "2026-05-01T00:00:00Z",
+      },
+      {
+        content_type: "application/pdf",
+        download_url: "/staff/reservations/reservation-1/signed-approval-letters/file-old/download",
+        filename: "surat-persetujuan-lama.pdf",
+        id: "file-old",
+        size_bytes: 1536,
+        uploaded_at: "2026-04-30T00:00:00Z",
+      },
+    ],
   },
   ends_at: "2026-06-01T04:00:00Z",
   event_description: "Private event description",
@@ -126,11 +145,26 @@ describe("StaffReservationDetailDecisionPages", () => {
         return jsonResponse(detailResponse);
       }
 
-      if (url === "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letter/download") {
+      if (
+        url === "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letter/download" ||
+        url === "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letters/file-new/download"
+      ) {
         return Promise.resolve(
           new Response("pdf-bytes", {
             headers: {
               "Content-Disposition": 'attachment; filename="surat-persetujuan.pdf"',
+              "Content-Type": "application/pdf",
+            },
+            status: 200,
+          }),
+        );
+      }
+
+      if (url === "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letters/file-old/download") {
+        return Promise.resolve(
+          new Response("old-pdf-bytes", {
+            headers: {
+              "Content-Disposition": 'attachment; filename="surat-persetujuan-lama.pdf"',
               "Content-Type": "application/pdf",
             },
             status: 200,
@@ -165,15 +199,21 @@ describe("StaffReservationDetailDecisionPages", () => {
     expect(screen.getByText("Seminar Detail")).toBeVisible();
     expect(screen.getByText("Dukungan AV, Catatan: Butuh dua mikrofon.")).toBeVisible();
     expect(screen.getByText("surat-persetujuan.pdf")).toBeVisible();
+    expect(screen.getByText("surat-persetujuan-lama.pdf")).toBeVisible();
     expect(screen.getByText("bukti-pembayaran.png")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Lihat Dokumen surat-persetujuan.pdf" }));
     await user.click(screen.getByRole("button", { name: "Unduh Dokumen surat-persetujuan.pdf" }));
+    await user.click(screen.getByRole("button", { name: "Unduh Dokumen surat-persetujuan-lama.pdf" }));
     await user.click(screen.getByRole("button", { name: "Unduh Dokumen bukti-pembayaran.png" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letter/download",
+        "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letters/file-new/download",
+        expect.any(Object),
+      );
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letters/file-old/download",
         expect.any(Object),
       );
       expect(fetchMock).toHaveBeenCalledWith(
@@ -227,7 +267,10 @@ describe("StaffReservationDetailDecisionPages", () => {
         return jsonResponse(detailResponse);
       }
 
-      if (url === "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letter/download") {
+      if (
+        url === "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letter/download" ||
+        url === "http://localhost:8000/staff/reservations/reservation-1/signed-approval-letters/file-new/download"
+      ) {
         return jsonResponse({ detail: "Dokumen belum dikirim untuk verifikasi." }, 409);
       }
 

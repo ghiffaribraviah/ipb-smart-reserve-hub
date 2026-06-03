@@ -270,6 +270,7 @@ class HttpRuntimeModule:
         engine = self.session_factory.kw["bind"]
         Base.metadata.create_all(bind=engine)
         _ensure_reservation_organization_unit_nullable(engine)
+        _ensure_signed_approval_letter_versions(engine)
 
     def account_routes(self) -> AccountRouteDependencies:
         return AccountRouteDependencies(
@@ -699,6 +700,65 @@ def _rebuild_sqlite_reservations_table(engine) -> None:
             )
         connection.execute(text("DROP TABLE reservations"))
         connection.execute(text(f'ALTER TABLE "{temp_table.name}" RENAME TO reservations'))
+
+
+def _ensure_signed_approval_letter_versions(engine) -> None:
+    inspector = inspect(engine)
+    table_name = "reservation_signed_approval_letters"
+    if table_name not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns(table_name)}
+    has_version = "version" in columns
+    has_legacy_reservation_unique = any(
+        set(constraint.get("column_names") or []) == {"reservation_id"}
+        for constraint in inspector.get_unique_constraints(table_name)
+    )
+    if has_version and not has_legacy_reservation_unique:
+        return
+
+    if engine.dialect.name == "sqlite":
+        _rebuild_sqlite_signed_approval_letters_table(engine, existing_columns=columns)
+        return
+
+    with engine.begin() as connection:
+        if not has_version:
+            connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN version INTEGER NOT NULL DEFAULT 1"))
+
+
+def _rebuild_sqlite_signed_approval_letters_table(engine, *, existing_columns: set[str]) -> None:
+    temp_metadata = MetaData()
+    source_table_name = "reservation_signed_approval_letters"
+    temp_table_name = "_reservation_signed_approval_letters_versions"
+    for table in Base.metadata.tables.values():
+        table.to_metadata(temp_metadata, name=temp_table_name if table.name == source_table_name else None)
+    source_table = Base.metadata.tables[source_table_name]
+    temp_table = temp_metadata.tables[temp_table_name]
+    target_columns = [column.name for column in source_table.columns]
+    copied_columns = [column for column in target_columns if column in existing_columns]
+    version_expression = "version" if "version" in existing_columns else "1 AS version"
+    select_columns = ", ".join(
+        version_expression if column == "version" else f'"{column}"'
+        for column in target_columns
+        if column in existing_columns or column == "version"
+    )
+    insert_columns = ", ".join(
+        f'"{column}"'
+        for column in target_columns
+        if column in existing_columns or column == "version"
+    )
+
+    with engine.begin() as connection:
+        temp_table.create(connection)
+        if copied_columns:
+            connection.execute(
+                text(
+                    f'INSERT INTO "{temp_table.name}" ({insert_columns}) '
+                    f"SELECT {select_columns} FROM {source_table_name}"
+                )
+            )
+        connection.execute(text(f"DROP TABLE {source_table_name}"))
+        connection.execute(text(f'ALTER TABLE "{temp_table.name}" RENAME TO {source_table_name}'))
 
 
 def _assign_openapi_tags(app: FastAPI) -> None:

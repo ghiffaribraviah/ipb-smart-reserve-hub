@@ -256,7 +256,7 @@ class Reservation(Base):
         back_populates="reservation",
         cascade="all, delete-orphan",
     )
-    signed_approval_letter: Mapped["ReservationSignedApprovalLetter | None"] = relationship(
+    signed_approval_letters: Mapped[list["ReservationSignedApprovalLetter"]] = relationship(
         back_populates="reservation",
         cascade="all, delete-orphan",
     )
@@ -268,6 +268,22 @@ class Reservation(Base):
         back_populates="reservation",
         cascade="all, delete-orphan",
     )
+
+    @property
+    def signed_approval_letter(self) -> "ReservationSignedApprovalLetter | None":
+        if not self.signed_approval_letters:
+            return None
+        return max(
+            enumerate(self.signed_approval_letters),
+            key=lambda indexed_letter: (indexed_letter[1].uploaded_at, indexed_letter[1].version, indexed_letter[0]),
+        )[1]
+
+    @signed_approval_letter.setter
+    def signed_approval_letter(self, value: "ReservationSignedApprovalLetter | None") -> None:
+        if value is None:
+            self.signed_approval_letters.clear()
+            return
+        self.signed_approval_letters.append(value)
 
 
 class FacilityReview(Base):
@@ -327,7 +343,6 @@ class ReservationSignedApprovalLetter(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     reservation_id: Mapped[str] = mapped_column(
         ForeignKey("reservations.id"),
-        unique=True,
         nullable=False,
     )
     storage_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
@@ -335,8 +350,9 @@ class ReservationSignedApprovalLetter(Base):
     content_type: Mapped[str] = mapped_column(String(64), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
-    reservation: Mapped[Reservation] = relationship(back_populates="signed_approval_letter")
+    reservation: Mapped[Reservation] = relationship(back_populates="signed_approval_letters")
 
 
 class ReservationPaymentReceipt(Base):

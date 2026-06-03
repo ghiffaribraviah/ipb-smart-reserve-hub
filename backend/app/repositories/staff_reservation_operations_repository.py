@@ -121,7 +121,7 @@ class SqlAlchemyStaffReservationOperationsRepository:
         )
 
     def get_assigned_reservation(self, staff_id: str, reservation_id: str) -> Reservation | None:
-        return self._session.scalar(
+        return self._session.execute(
             select(Reservation)
             .join(FacilityStaffAssignment, FacilityStaffAssignment.facility_id == Reservation.facility_id)
             .options(
@@ -129,14 +129,14 @@ class SqlAlchemyStaffReservationOperationsRepository:
                 joinedload(Reservation.student),
                 joinedload(Reservation.organization_unit),
                 joinedload(Reservation.approval_letter),
-                joinedload(Reservation.signed_approval_letter),
+                joinedload(Reservation.signed_approval_letters),
                 joinedload(Reservation.payment_receipt),
             )
             .where(
                 Reservation.id == reservation_id,
                 FacilityStaffAssignment.staff_id == staff_id,
             )
-        )
+        ).unique().scalar_one_or_none()
 
     def list_assigned_facility_schedule(
         self,

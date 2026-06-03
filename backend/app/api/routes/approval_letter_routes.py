@@ -200,6 +200,33 @@ def register_approval_letter_routes(
             )
         return attachment_response(download)
 
+    @app.get("/staff/reservations/{reservation_id}/signed-approval-letters/{signed_letter_id}/download")
+    async def download_staff_signed_approval_letter_version(
+        reservation_id: str,
+        signed_letter_id: str,
+        approval_letters: ApprovalLetterModule = Depends(get_approval_letters),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.manage_assigned_facilities)),
+    ):
+        try:
+            download = approval_letters.download_staff_signed_approval_letter_version(
+                current_user,
+                reservation_id,
+                signed_letter_id,
+            )
+        except ReservationNotFound:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservasi tidak ditemukan.")
+        except StaffDocumentReviewAccessDenied:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Staff tidak ditugaskan ke fasilitas reservasi ini.",
+            )
+        except ApprovalLetterNotGenerated:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Surat bertanda tangan tidak ditemukan.",
+            )
+        return attachment_response(download)
+
     @app.post(
         "/staff/reservations/{reservation_id}/document-review/reject",
         response_model=StaffDocumentReviewResponse,

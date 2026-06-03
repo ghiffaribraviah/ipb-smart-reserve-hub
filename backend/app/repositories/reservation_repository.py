@@ -111,7 +111,7 @@ class SqlAlchemyReservationRepository:
                     joinedload(Reservation.organization_unit),
                     joinedload(Reservation.review),
                     joinedload(Reservation.approval_letter),
-                    joinedload(Reservation.signed_approval_letter),
+                    joinedload(Reservation.signed_approval_letters),
                     joinedload(Reservation.payment_receipt),
                 )
                 .where(Reservation.student_id == student_id)
@@ -127,26 +127,26 @@ class SqlAlchemyReservationRepository:
                 joinedload(Reservation.organization_unit),
                 joinedload(Reservation.review),
                 joinedload(Reservation.approval_letter),
-                joinedload(Reservation.signed_approval_letter),
+                joinedload(Reservation.signed_approval_letters),
                 joinedload(Reservation.payment_receipt),
             )
             .where(Reservation.id == reservation_id, Reservation.student_id == student_id)
         ).unique().scalar_one_or_none()
 
     def get_for_assigned_staff_review(self, reservation_id: str, staff_id: str) -> Reservation | None:
-        return self._session.scalar(
+        return self._session.execute(
             select(Reservation)
             .join(FacilityStaffAssignment, FacilityStaffAssignment.facility_id == Reservation.facility_id)
-            .options(joinedload(Reservation.facility), joinedload(Reservation.signed_approval_letter))
+            .options(joinedload(Reservation.facility), joinedload(Reservation.signed_approval_letters))
             .where(
                 Reservation.id == reservation_id,
                 FacilityStaffAssignment.staff_id == staff_id,
             )
-        )
+        ).unique().scalar_one_or_none()
 
     def get_by_id_for_review(self, reservation_id: str) -> Reservation | None:
-        return self._session.scalar(
+        return self._session.execute(
             select(Reservation)
-            .options(joinedload(Reservation.facility), joinedload(Reservation.signed_approval_letter))
+            .options(joinedload(Reservation.facility), joinedload(Reservation.signed_approval_letters))
             .where(Reservation.id == reservation_id)
-        )
+        ).unique().scalar_one_or_none()

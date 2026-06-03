@@ -54,7 +54,7 @@
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /staff/reservations/:reservationId`; existing approve/reject/download endpoints for document/payment. Cancellation review endpoints are legacy and not surfaced as integrated UI actions.
-- Page-needed fields: reservation detail, student/org/facility including `facility.cover_image_url`, submitted files, payment receipt, cancellation reason when present, workflow status and reasons.
+- Page-needed fields: reservation detail, student/org/facility including `facility.cover_image_url`, submitted files, signed document history via `document.signed_approval_letters[]` with per-file `download_url`, latest signed document via `document.signed_approval_letter`, payment receipt, cancellation reason when present, workflow status and reasons.
 - Auth/session assumptions: staff assigned facility access only.
 - Source files: `backend/app/api/routes/approval_letter_routes.py`, `backend/app/api/routes/payment_routes.py`, `backend/app/api/routes/reservation_routes.py`.
 
@@ -63,8 +63,8 @@
 - Status: `resolved`
 - Domain area: Staff Operations
 - Affected UI: staff reservation detail and decision panel.
-- Contract implemented: assigned-staff reservation detail endpoint that pairs with existing review mutation endpoints and exposes the assigned facility cover image for the detail sidebar.
-- Evidence: `backend/app/api/routes/staff_reservation_operation_routes.py` registers `GET /staff/reservations/{reservation_id}`; `backend/tests/test_staff_reservation_operations.py` verifies assigned detail access, facility `cover_image_url`, null missing file metadata, payment receipt metadata, unassigned denial, and non-staff denial.
+- Contract implemented: assigned-staff reservation detail endpoint that pairs with existing review mutation endpoints, exposes the assigned facility cover image for the detail sidebar, and returns all student-uploaded signed approval letter versions for staff review/download.
+- Evidence: `backend/app/api/routes/staff_reservation_operation_routes.py` registers `GET /staff/reservations/{reservation_id}`; `backend/app/api/routes/approval_letter_routes.py` registers per-version staff signed-letter downloads; `backend/tests/test_staff_reservation_operations.py` verifies assigned detail access, facility `cover_image_url`, null missing file metadata, payment receipt metadata, unassigned denial, and non-staff denial; `backend/tests/test_approval_letter_workflow.py` verifies staff detail exposes and downloads older signed approval letter uploads after student re-upload.
 - Source issue/PRD: `docs/issues/ISSUE-0009-signed-letter-upload-and-staff-document-review.md`, `docs/issues/ISSUE-0010-paid-facility-receipt-upload-and-payment-review.md`, `docs/issues/ISSUE-0013-cancellation-workflow.md`.
 
 ## Shared Components

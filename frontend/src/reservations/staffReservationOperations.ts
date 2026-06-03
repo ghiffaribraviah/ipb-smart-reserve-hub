@@ -21,7 +21,7 @@ export type StaffReservationOperationResponse = {
   };
   id: string;
   organization_unit: {
-    id: string;
+    id: string | null;
     name: string;
   };
   payment: {

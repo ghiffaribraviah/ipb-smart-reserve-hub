@@ -8,7 +8,7 @@ from app.services.accounts import UserAccount
 
 @dataclass(frozen=True)
 class StaffReservationParty:
-    id: str
+    id: str | None
     name: str
 
 
@@ -234,8 +234,8 @@ def _to_operation_item(reservation: Reservation) -> StaffReservationOperationIte
             email=reservation.student.email,
         ),
         organization_unit=StaffReservationParty(
-            id=reservation.organization_unit.id,
-            name=reservation.organization_unit.name,
+            id=reservation.organization_unit_id,
+            name=_organization_unit_name(reservation),
         ),
         activity_title=reservation.activity_title,
         starts_at=_as_utc(reservation.starts_at),
@@ -265,8 +265,8 @@ def _to_detail(reservation: Reservation) -> StaffReservationDetail:
             email=reservation.student.email,
         ),
         organization_unit=StaffReservationParty(
-            id=reservation.organization_unit.id,
-            name=reservation.organization_unit.name,
+            id=reservation.organization_unit_id,
+            name=_organization_unit_name(reservation),
         ),
         activity_title=reservation.activity_title,
         event_description=reservation.event_description,
@@ -318,8 +318,8 @@ def _to_schedule_entry(reservation: Reservation) -> StaffFacilityScheduleEntry:
         reservation_code=reservation.reservation_code,
         activity_title=reservation.activity_title,
         organization_unit=StaffReservationParty(
-            id=reservation.organization_unit.id,
-            name=reservation.organization_unit.name,
+            id=reservation.organization_unit_id,
+            name=_organization_unit_name(reservation),
         ),
         starts_at=_as_utc(reservation.starts_at),
         ends_at=_as_utc(reservation.ends_at),
@@ -368,6 +368,14 @@ def _facility_cover_image_url(facility) -> str | None:
     active_images = [image for image in getattr(facility, "images", []) if image.is_active]
     cover_image = next((image for image in active_images if image.is_cover), None) or next(iter(active_images), None)
     return cover_image.url if cover_image is not None else None
+
+
+def _organization_unit_name(reservation: Reservation) -> str:
+    if reservation.organization_unit_name:
+        return reservation.organization_unit_name
+    if reservation.organization_unit is not None:
+        return reservation.organization_unit.name
+    return ""
 
 
 def _review_actions(reservation_id: str) -> StaffReservationReviewActions:

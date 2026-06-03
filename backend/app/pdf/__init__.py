@@ -75,7 +75,7 @@ class ApprovalLetterPdfGenerator:
             "",
             f"Kode reservasi: {reservation.reservation_code}",
             f"Nama kegiatan: {reservation.activity_title}",
-            f"Organisasi pemohon: {reservation.organization_unit_name or reservation.organization_unit.name}",
+            f"Organisasi pemohon: {_organization_unit_name(reservation)}",
             f"Penanggung jawab: {reservation.student.full_name}",
             f"NIM/NIP: {reservation.student.nim or '-'}",
             f"Kontak aktif: {reservation.student.email} / {reservation.contact_phone or reservation.student.phone or '-'}",
@@ -105,7 +105,7 @@ class ApprovalLetterPdfGenerator:
             "GENERATED_DATE": _format_indonesian_date(generated_at),
             "RESERVATION_CODE": reservation.reservation_code,
             "ACTIVITY_TITLE": reservation.activity_title,
-            "ORGANIZATION_UNIT": reservation.organization_unit_name or reservation.organization_unit.name,
+            "ORGANIZATION_UNIT": _organization_unit_name(reservation),
             "RESPONSIBLE_PERSON": reservation.student.full_name,
             "IDENTITY_NUMBER": reservation.student.nim or "-",
             "ACTIVE_CONTACT": f"{reservation.student.email} / {reservation.contact_phone or reservation.student.phone or '-'}",
@@ -138,6 +138,14 @@ def _extra_requirements_text(reservation: Reservation) -> str:
     if not labels:
         return "Tidak ada"
     return ", ".join(labels)
+
+
+def _organization_unit_name(reservation: Reservation) -> str:
+    if reservation.organization_unit_name:
+        return reservation.organization_unit_name
+    if reservation.organization_unit is not None:
+        return reservation.organization_unit.name
+    return ""
 
 
 def _format_indonesian_date(value: datetime) -> str:

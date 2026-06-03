@@ -37,7 +37,7 @@ export type StudentReservationWorkflowProjection = {
   };
   id: string;
   organization_unit: {
-    id: string;
+    id: string | null;
     name: string;
   };
   participant_count: number;

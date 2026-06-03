@@ -12,7 +12,7 @@ type StaffOperationItem = {
   ends_at: string;
   facility: { id: string; name: string };
   id: string;
-  organization_unit: { id: string; name: string };
+  organization_unit: { id: string | null; name: string };
   payment: { due_at: string | null; required: boolean; review_status: string };
   reservation_code: string;
   review_status: string;

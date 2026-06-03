@@ -31,13 +31,6 @@ type TimeSelectionResponse = {
   }[];
 };
 
-type OrganizationUnitResponse = {
-  code?: string | null;
-  id: string;
-  name: string;
-  type?: string;
-};
-
 type FacilityImageResponse = {
   alt_text?: string | null;
   id?: string;
@@ -62,7 +55,7 @@ type StudentReservationResponse = {
 };
 
 type ReservationFormErrors = Partial<Record<
-  "activityTitle" | "contactPhone" | "eventDescription" | "extraNotes" | "organizationUnitId" | "participantCount",
+  "activityTitle" | "contactPhone" | "eventDescription" | "extraNotes" | "organizationUnitName" | "participantCount",
   string
 >>;
 
@@ -263,10 +256,6 @@ async function validateTimeSelection({
   });
 }
 
-async function fetchOrganizationUnits() {
-  return apiRequest<OrganizationUnitResponse[]>("/organization-units");
-}
-
 async function fetchFacilityReservationSummary(facilityId: string) {
   return apiRequest<FacilityReservationSummaryResponse>(`/facilities/${facilityId}`);
 }
@@ -281,7 +270,7 @@ async function submitReservation({
   facilityId,
   logisticsCoordination,
   notes,
-  organizationUnitId,
+  organizationUnitName,
   participantCount,
   securityPersonnel,
   startsAt,
@@ -295,7 +284,7 @@ async function submitReservation({
   facilityId: string;
   logisticsCoordination: boolean;
   notes: string;
-  organizationUnitId: string;
+  organizationUnitName: string;
   participantCount: number;
   securityPersonnel: boolean;
   startsAt: string;
@@ -313,7 +302,7 @@ async function submitReservation({
         notes: notes.trim() ? notes.trim() : null,
         security_personnel: securityPersonnel,
       },
-      organization_unit_id: organizationUnitId,
+      organization_unit_name: organizationUnitName,
       participant_count: participantCount,
       starts_at: startsAt,
     },
@@ -991,7 +980,7 @@ export function StudentReservationDetailPage() {
   const { startsAt, endsAt } = useMemo(() => normalizedReservationRange(searchParams), [searchParams]);
   const [activityTitle, setActivityTitle] = useState("");
   const [participantCount, setParticipantCount] = useState("");
-  const [organizationUnitId, setOrganizationUnitId] = useState("");
+  const [organizationUnitName, setOrganizationUnitName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [eventDescription, setEventDescription] = useState("");
   const [avSupport, setAvSupport] = useState(false);
@@ -1002,17 +991,11 @@ export function StudentReservationDetailPage() {
   const [errors, setErrors] = useState<ReservationFormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
-  const organizationUnitsQuery = useQuery({
-    queryFn: fetchOrganizationUnits,
-    queryKey: ["organization-units"],
-  });
   const facilitySummaryQuery = useQuery({
     enabled: facilityId.length > 0,
     queryFn: () => fetchFacilityReservationSummary(facilityId),
     queryKey: ["facility-reservation-summary", facilityId],
   });
-  const organizationUnits = organizationUnitsQuery.data ?? [];
-  const organizationsUnavailable = organizationUnitsQuery.isSuccess && organizationUnits.length === 0;
   const submitMutation = useMutation({
     mutationFn: () => submitReservation({
       activityTitle: activityTitle.trim(),
@@ -1024,7 +1007,7 @@ export function StudentReservationDetailPage() {
       facilityId,
       logisticsCoordination,
       notes: extraNotes,
-      organizationUnitId,
+      organizationUnitName: organizationUnitName.trim(),
       participantCount: Number(participantCount),
       securityPersonnel,
       startsAt,
@@ -1047,7 +1030,7 @@ export function StudentReservationDetailPage() {
     if (!participantCount || Number(participantCount) <= 0) {
       nextErrors.participantCount = "Jumlah peserta harus lebih dari 0.";
     }
-    if (!organizationUnitId) nextErrors.organizationUnitId = "Organisasi wajib dipilih.";
+    if (!organizationUnitName.trim()) nextErrors.organizationUnitName = "Organisasi wajib diisi.";
     if (!contactPhone.trim()) nextErrors.contactPhone = "Nomor kontak wajib diisi.";
     if (contactPhone.trim().length > RESERVATION_CONTACT_PHONE_MAX_LENGTH) {
       nextErrors.contactPhone = "Nomor kontak maksimal 32 karakter.";
@@ -1063,7 +1046,7 @@ export function StudentReservationDetailPage() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError(null);
-    if (!validateForm() || organizationsUnavailable) return;
+    if (!validateForm()) return;
     submitMutation.mutate();
   }
 
@@ -1083,11 +1066,6 @@ export function StudentReservationDetailPage() {
           {formError ? (
             <div className="mb-5 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm font-semibold text-[#991b1b]">
               {formError}
-            </div>
-          ) : null}
-          {organizationsUnavailable ? (
-            <div className="mb-5 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-sm font-semibold text-[#9a3412]">
-              Belum ada unit organisasi aktif.
             </div>
           ) : null}
           <div className="grid grid-cols-2 gap-6 max-md:grid-cols-1">
@@ -1123,18 +1101,15 @@ export function StudentReservationDetailPage() {
               <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
                 Organisasi
               </span>
-              <select
+              <input
                 aria-label="Organisasi"
                 className="h-[52px] w-full rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-4 text-sm"
-                onChange={(event) => setOrganizationUnitId(event.target.value)}
-                value={organizationUnitId}
-              >
-                <option value="">Pilih organisasi</option>
-                {organizationUnits.map((unit) => (
-                  <option key={unit.id} value={unit.id}>{unit.name}</option>
-                ))}
-              </select>
-              {errors.organizationUnitId ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.organizationUnitId}</span> : null}
+                maxLength={RESERVATION_ACTIVITY_TITLE_MAX_LENGTH}
+                onChange={(event) => setOrganizationUnitName(event.target.value)}
+                placeholder="Masukkan nama organisasi"
+                value={organizationUnitName}
+              />
+              {errors.organizationUnitName ? <span className="mt-1 block text-xs font-semibold text-[#991b1b]">{errors.organizationUnitName}</span> : null}
             </label>
             <label className="col-span-2 max-md:col-span-1">
               <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
@@ -1219,7 +1194,7 @@ export function StudentReservationDetailPage() {
           <PolicyBox />
           <button
             className="flex min-h-[52px] w-full items-center justify-center rounded-lg bg-[#0f9d58] px-6 text-[15px] font-semibold text-white shadow-[0_4px_6px_rgba(15,157,88,0.18)] disabled:cursor-not-allowed disabled:bg-[#d1d5db]"
-            disabled={submitMutation.isPending || organizationsUnavailable}
+            disabled={submitMutation.isPending}
             onClick={() => formRef.current?.requestSubmit()}
             type="button"
           >

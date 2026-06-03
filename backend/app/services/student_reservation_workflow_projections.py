@@ -22,7 +22,7 @@ class ReservationFacilitySummary:
 
 @dataclass(frozen=True)
 class ReservationOrganizationUnitSummary:
-    id: str
+    id: str | None
     name: str
 
 
@@ -107,7 +107,7 @@ class StudentReservationWorkflowProjectionModule:
             ),
             organization_unit=ReservationOrganizationUnitSummary(
                 id=reservation.organization_unit_id,
-                name=reservation.organization_unit_name or reservation.organization_unit.name,
+                name=_organization_unit_name(reservation),
             ),
             activity_title=reservation.activity_title,
             event_description=reservation.event_description,
@@ -152,6 +152,14 @@ def _facility_cover_image_url(facility) -> str | None:
     active_images = [image for image in getattr(facility, "images", []) if image.is_active]
     cover_image = next((image for image in active_images if image.is_cover), None) or next(iter(active_images), None)
     return cover_image.url if cover_image is not None else None
+
+
+def _organization_unit_name(reservation: Reservation) -> str:
+    if reservation.organization_unit_name:
+        return reservation.organization_unit_name
+    if reservation.organization_unit is not None:
+        return reservation.organization_unit.name
+    return ""
 
 
 def _to_student_reservation_payment_projection(reservation: Reservation) -> StudentReservationPaymentProjection:

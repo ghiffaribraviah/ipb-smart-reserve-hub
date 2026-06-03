@@ -53,6 +53,7 @@ def register_reservation_routes(
                     activity_title=payload.activity_title,
                     event_description=payload.event_description,
                     participant_count=payload.participant_count,
+                    organization_unit_name=payload.organization_unit_name or "",
                     organization_unit_id=payload.organization_unit_id,
                     contact_phone=payload.contact_phone,
                     starts_at=payload.starts_at,

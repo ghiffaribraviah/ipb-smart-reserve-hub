@@ -190,7 +190,7 @@ class SqlAlchemyFacilityCatalogReader:
             FacilityCalendarReservationRecord(
                 facility_name=reservation.facility.name,
                 activity_title=reservation.activity_title,
-                organization_unit=reservation.organization_unit_name or reservation.organization_unit.name,
+                organization_unit=_organization_unit_name(reservation),
                 starts_at=reservation.starts_at,
                 ends_at=reservation.ends_at,
             )
@@ -234,6 +234,14 @@ class SqlAlchemyFacilityCatalogReader:
                 for review in facility.reviews
             ],
         )
+
+
+def _organization_unit_name(reservation: Reservation) -> str:
+    if reservation.organization_unit_name:
+        return reservation.organization_unit_name
+    if reservation.organization_unit is not None:
+        return reservation.organization_unit.name
+    return ""
 
 
 def apply_facility_catalog_query(

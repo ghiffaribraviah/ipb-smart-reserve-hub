@@ -68,7 +68,7 @@ type StaffFacilityScheduleEntryResponse = {
   detail_url: string;
   ends_at: string;
   organization_unit: {
-    id: string;
+    id: string | null;
     name: string;
   };
   reservation_code: string;

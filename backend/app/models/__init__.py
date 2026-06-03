@@ -219,7 +219,7 @@ class Reservation(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     facility_id: Mapped[str] = mapped_column(ForeignKey("facilities.id"), nullable=False)
     student_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
-    organization_unit_id: Mapped[str] = mapped_column(ForeignKey("organization_units.id"), nullable=False)
+    organization_unit_id: Mapped[str | None] = mapped_column(ForeignKey("organization_units.id"), nullable=True)
     reservation_code: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
     activity_title: Mapped[str] = mapped_column(String(255), nullable=False)
     event_description: Mapped[str] = mapped_column(Text, nullable=False)
@@ -250,7 +250,7 @@ class Reservation(Base):
     )
 
     facility: Mapped[Facility] = relationship(back_populates="reservations")
-    organization_unit: Mapped[OrganizationUnit] = relationship(back_populates="reservations")
+    organization_unit: Mapped[OrganizationUnit | None] = relationship(back_populates="reservations")
     student: Mapped[User] = relationship()
     approval_letter: Mapped["ReservationApprovalLetter | None"] = relationship(
         back_populates="reservation",

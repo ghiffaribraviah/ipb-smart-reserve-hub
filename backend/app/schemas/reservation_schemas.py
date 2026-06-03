@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 
 ReservationTitle = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 ReservationText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 ReservationContactPhone = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=32)]
+ReservationOrganizationName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 
 
 class ReservationExtraRequirementsRequest(BaseModel):
@@ -33,11 +34,18 @@ class ReservationSubmissionRequest(BaseModel):
     activity_title: ReservationTitle
     event_description: ReservationText
     participant_count: int = Field(gt=0)
-    organization_unit_id: str
+    organization_unit_name: ReservationOrganizationName | None = None
+    organization_unit_id: str | None = None
     contact_phone: ReservationContactPhone
     starts_at: datetime
     ends_at: datetime
     extra_requirements: ReservationExtraRequirementsRequest = ReservationExtraRequirementsRequest()
+
+    @model_validator(mode="after")
+    def require_organization_identity(self):
+        if self.organization_unit_name is None and self.organization_unit_id is None:
+            raise ValueError("Organization name is required")
+        return self
 
 
 class ReservationFacilityResponse(BaseModel):
@@ -47,7 +55,7 @@ class ReservationFacilityResponse(BaseModel):
 
 
 class ReservationOrganizationUnitResponse(BaseModel):
-    id: str
+    id: str | None
     name: str
 
 
@@ -203,7 +211,7 @@ class StaffReservationStudentResponse(BaseModel):
 
 
 class StaffReservationOrganizationUnitResponse(BaseModel):
-    id: str
+    id: str | None
     name: str
 
 

@@ -53,7 +53,7 @@ type StaffReservationDetailResponse = {
   };
   facility: { cover_image_url: string | null; id: string; name: string };
   id: string;
-  organization_unit: { id: string; name: string };
+  organization_unit: { id: string | null; name: string };
   participant_count: number;
   payment: {
     due_at: string | null;

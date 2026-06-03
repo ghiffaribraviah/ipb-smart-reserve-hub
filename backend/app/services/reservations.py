@@ -102,10 +102,11 @@ class ReservationSubmission:
     activity_title: str
     event_description: str
     participant_count: int
-    organization_unit_id: str
     contact_phone: str
     starts_at: datetime
     ends_at: datetime
+    organization_unit_name: str = ""
+    organization_unit_id: str | None = None
     extra_requirements: ReservationExtraRequirements = ReservationExtraRequirements()
 
 
@@ -151,11 +152,14 @@ class ReservationModule:
         if facility is None:
             raise FacilityNotFound
 
-        organization_unit = self._reservation_repository.get_active_organization_unit(
-            submission.organization_unit_id
-        )
-        if organization_unit is None:
-            raise OrganizationUnitNotFound
+        organization_unit_id = submission.organization_unit_id
+        organization_unit_name = submission.organization_unit_name.strip()
+        uses_free_form_organization = bool(organization_unit_name)
+        if not organization_unit_name and organization_unit_id is not None:
+            organization_unit = self._reservation_repository.get_active_organization_unit(organization_unit_id)
+            if organization_unit is None:
+                raise OrganizationUnitNotFound
+            organization_unit_name = organization_unit.name
 
         if submission.participant_count > facility.capacity:
             raise ParticipantCountExceedsFacilityCapacity
@@ -182,14 +186,14 @@ class ReservationModule:
         reservation = Reservation(
             facility_id=facility.id,
             student_id=student.id,
-            organization_unit_id=organization_unit.id,
+            organization_unit_id=None if uses_free_form_organization else organization_unit_id,
             reservation_code=_new_reservation_code(),
             activity_title=submission.activity_title,
             event_description=submission.event_description,
             participant_count=submission.participant_count,
             contact_phone=submission.contact_phone,
             price_rupiah=facility.price_rupiah,
-            organization_unit_name=organization_unit.name,
+            organization_unit_name=organization_unit_name,
             extra_requirement_av_support=submission.extra_requirements.av_support,
             extra_requirement_logistics_coordination=submission.extra_requirements.logistics_coordination,
             extra_requirement_extra_cleaning=submission.extra_requirements.extra_cleaning,

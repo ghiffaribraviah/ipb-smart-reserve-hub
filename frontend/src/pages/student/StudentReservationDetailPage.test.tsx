@@ -5,11 +5,6 @@ import { Route, Routes } from "react-router-dom";
 import { renderWithProviders } from "../../test/render";
 import { StudentReservationDetailPage } from "./StudentReservationCreatePages";
 
-const organizationUnits = [
-  { code: "BEM-KM", id: "org-1", name: "BEM KM IPB", type: "student_organization" },
-  { code: "HIMALKOM", id: "org-2", name: "Himalkom", type: "student_organization" },
-];
-
 const facilityDetail = {
   capacity: 300,
   category: "Auditorium",
@@ -84,12 +79,10 @@ function renderDetailPageAt(initialEntry: string) {
 
 function mockReservationSubmitFetch({
   facility = facilityDetail,
-  organizations = organizationUnits,
   submit = reservationResponse,
   submitStatus = 201,
 }: {
   facility?: unknown;
-  organizations?: unknown;
   submit?: unknown;
   submitStatus?: number;
 } = {}) {
@@ -98,10 +91,6 @@ function mockReservationSubmitFetch({
 
     if (url === "http://localhost:8000/facilities/facility-uuid-1") {
       return jsonResponse(facility);
-    }
-
-    if (url === "http://localhost:8000/organization-units") {
-      return jsonResponse(organizations);
     }
 
     if (url === "http://localhost:8000/facilities/facility-uuid-1/reservations") {
@@ -115,7 +104,7 @@ function mockReservationSubmitFetch({
 async function fillValidForm(user = userEvent.setup()) {
   await user.type(await screen.findByLabelText("Nama Kegiatan"), "Simposium Etika AI");
   await user.type(screen.getByLabelText("Estimasi Jumlah Peserta"), "80");
-  await user.selectOptions(screen.getByLabelText("Organisasi"), "org-1");
+  await user.type(screen.getByLabelText("Organisasi"), "Himpunan Mahasiswa Ilmu Komputer");
   await user.type(screen.getByLabelText("Nomor Kontak"), "08123456789");
   await user.type(screen.getByLabelText("Deskripsi Kegiatan"), "Diskusi akademik lintas fakultas.");
   await user.click(screen.getByLabelText("Dukungan AV & mikrofon"));
@@ -130,7 +119,7 @@ describe("StudentReservationDetailPage", () => {
     sessionStorage.clear();
   });
 
-  it("loads organization units and submits reservation details to the backend", async () => {
+  it("submits typed reservation organization details to the backend", async () => {
     const fetchMock = mockReservationSubmitFetch();
     const user = userEvent.setup();
 
@@ -139,6 +128,7 @@ describe("StudentReservationDetailPage", () => {
     await user.click(screen.getByRole("button", { name: "Lanjutkan" }));
 
     expect(await screen.findByRole("heading", { name: "Approval Letter" })).toBeVisible();
+    expect(fetchMock.mock.calls.map(([input]) => String(input))).not.toContain("http://localhost:8000/organization-units");
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
         "http://localhost:8000/facilities/facility-uuid-1/reservations",
@@ -155,7 +145,7 @@ describe("StudentReservationDetailPage", () => {
               notes: "Butuh dua mikrofon nirkabel.",
               security_personnel: false,
             },
-            organization_unit_id: "org-1",
+            organization_unit_name: "Himpunan Mahasiswa Ilmu Komputer",
             participant_count: 80,
             starts_at: "2026-06-24T09:00:00.000Z",
           }),
@@ -195,15 +185,6 @@ describe("StudentReservationDetailPage", () => {
     expect(screen.getByText("14:30 - 16:45")).toBeVisible();
     expect(screen.queryByText("24 Oktober 2024")).not.toBeInTheDocument();
     expect(screen.queryByText("09:00 - 13:00")).not.toBeInTheDocument();
-  });
-
-  it("renders an inline state when no organization units are available", async () => {
-    mockReservationSubmitFetch({ organizations: [] });
-
-    renderDetailPage();
-
-    expect(await screen.findByText("Belum ada unit organisasi aktif.")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Lanjutkan" })).toBeDisabled();
   });
 
   it("validates required fields and participant count", async () => {
@@ -280,7 +261,7 @@ describe("StudentReservationDetailPage", () => {
               notes: "Butuh dua mikrofon nirkabel.",
               security_personnel: false,
             },
-            organization_unit_id: "org-1",
+            organization_unit_name: "Himpunan Mahasiswa Ilmu Komputer",
             participant_count: 80,
             starts_at: "2026-06-24T09:00:00+07:00",
           }),
@@ -317,7 +298,7 @@ describe("StudentReservationDetailPage", () => {
               notes: "Butuh dua mikrofon nirkabel.",
               security_personnel: false,
             },
-            organization_unit_id: "org-1",
+            organization_unit_name: "Himpunan Mahasiswa Ilmu Komputer",
             participant_count: 80,
             starts_at: "2026-06-24T09:00:00+07:00",
           }),
@@ -333,10 +314,6 @@ describe("StudentReservationDetailPage", () => {
 
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
-
-      if (url === "http://localhost:8000/organization-units") {
-        return jsonResponse(organizationUnits);
-      }
 
       if (url === "http://localhost:8000/facilities/facility-uuid-1/reservations") {
         return new Promise((resolve) => {

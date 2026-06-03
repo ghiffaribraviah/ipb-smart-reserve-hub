@@ -33,7 +33,7 @@
 - Primary actions: submit reservation from the right summary/policy area.
 - Secondary actions: back to time selection.
 - Loading state: submit button disabled while creating hold.
-- Empty state: organization unit list unavailable uses inline error.
+- Empty state: no organization lookup empty state; organization is entered as free-form required text.
 - Error state: validation and conflict errors map to form-level feedback.
 - Disabled state: submit disabled until required fields pass frontend validation.
 
@@ -46,25 +46,25 @@
 
 ## Data And Fixture Contract
 
-- Deterministic fixture requirements: organization units, selected facility/time summary with cover image, optional extra requirements.
-- Real entities: Organization Unit, Reservation Submission.
+- Deterministic fixture requirements: selected facility/time summary with cover image, optional extra requirements.
+- Real entities: free-form reservation organization name, Reservation Submission.
 - Facility media: use the selected facility cover image from `GET /facilities/:facilityId` when present; use deterministic fixture media only as a no-image fallback.
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: `GET /facilities/:facilityId`, `GET /organization-units`, `POST /facilities/:facilityId/reservations`.
-- Page-needed fields: facility `id`, `name`, `capacity`, `price`, `images.url`, `images.alt_text`, `images.is_cover`; organization unit `id`, `name`; request fields from `ReservationSubmissionRequest`; response `StudentReservationResponse.id`, `status`, `document`, `payment`, `extra_requirements`.
+- Endpoints consumed: `GET /facilities/:facilityId`, `POST /facilities/:facilityId/reservations`.
+- Page-needed fields: facility `id`, `name`, `capacity`, `price`, `images.url`, `images.alt_text`, `images.is_cover`; free-form `organization_unit_name`; request fields from `ReservationSubmissionRequest`; response `StudentReservationResponse.id`, `status`, `organization_unit.name`, `document`, `payment`, `extra_requirements`.
 - Auth/session assumptions: reservation submission requires student bearer token.
-- Validation notes: backend trims and rejects whitespace-only `activity_title`, `event_description`, and `contact_phone`; backend also enforces `activity_title <= 255`, `contact_phone <= 32`, and `participant_count > 0`.
-- Source files: `backend/app/api/routes/organization_unit_routes.py`, `backend/app/api/routes/reservation_routes.py`, `backend/app/schemas/reservation_schemas.py`.
+- Validation notes: backend trims and rejects whitespace-only `activity_title`, `organization_unit_name`, `event_description`, and `contact_phone`; backend also enforces `activity_title <= 255`, `organization_unit_name <= 255`, `contact_phone <= 32`, and `participant_count > 0`.
+- Source files: `backend/app/api/routes/reservation_routes.py`, `backend/app/schemas/reservation_schemas.py`.
 
-### BG-STUDENT-04-01: Reservation Submission Extra Requirements
+### BG-STUDENT-04-01: Reservation Submission Free-Form Organization And Extra Requirements
 
 - Status: `resolved`
 - Domain area: Reservation Workflow
 - Affected UI: detail form, extra requirement checkboxes, confirmation routing.
-- Contract needed: create reservation with structured `extra_requirements` and return saved projection.
-- Evidence: `ReservationSubmissionRequest` includes `extra_requirements` plus trimmed required-text validation and model-aligned title/contact length guards; `POST /facilities/{facility_id}/reservations` exists and returns `StudentReservationResponse`.
+- Contract needed: create reservation with free-form `organization_unit_name`, structured `extra_requirements`, and return saved projection.
+- Evidence: `ReservationSubmissionRequest` accepts `organization_unit_name`, includes `extra_requirements`, trims required text, and has model-aligned organization/title/contact length guards; `POST /facilities/{facility_id}/reservations` exists and returns `StudentReservationResponse`.
 - Source issue/PRD: `docs/issues/ISSUE-0007-reservation-details-submission-and-conflict-protected-hold.md`, `docs/issues/ISSUE-0026-reservation-extra-requirements.md`.
 
 ## Shared Components

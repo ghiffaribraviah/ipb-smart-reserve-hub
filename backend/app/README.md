@@ -402,6 +402,7 @@ Common endpoints:
 | `GET` | `/admin/users` | Super Admin |
 | `POST` | `/admin/users` | Super Admin |
 | `GET` | `/admin/facilities/governance` | Super Admin |
+| `POST` | `/admin/facilities` | Super Admin |
 | `GET` | `/admin/reports/aggregate` | Super Admin |
 | `GET` | `/admin/settings` | Super Admin |
 | `PATCH` | `/admin/settings` | Super Admin |

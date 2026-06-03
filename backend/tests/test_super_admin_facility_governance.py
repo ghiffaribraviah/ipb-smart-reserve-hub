@@ -83,6 +83,48 @@ async def test_super_admin_lists_facility_governance_with_assignment_coverage_an
 
 
 @pytest.mark.anyio
+async def test_super_admin_creates_facility_and_it_appears_in_governance():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    test_data.create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
+    category_id = test_data.create_facility_category(name="Ruang Rapat", slug="ruang-rapat")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        admin_token = await _login(client, email="admin@ipb.ac.id")
+
+        created = await client.post(
+            "/admin/facilities",
+            json={
+                "name": "Ruang Sidang Baru",
+                "category_id": category_id,
+                "location": "Gedung Rektorat",
+                "capacity": 80,
+                "description": "Ruang rapat lintas unit.",
+                "contact_name": "TU Rektorat",
+                "contact_phone": "0251-8621111",
+                "contact_email": "tu.rektorat@ipb.ac.id",
+                "price_rupiah": 0,
+                "payment_instructions": None,
+                "open_hours_summary": "Senin-Jumat 08.00-16.00",
+                "is_active": True,
+            },
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        governance = await client.get(
+            "/admin/facilities/governance",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+
+    assert created.status_code == 201
+    assert created.json()["name"] == "Ruang Sidang Baru"
+    assert created.json()["category"] == "Ruang Rapat"
+    rows = {row["name"]: row for row in governance.json()}
+    assert rows["Ruang Sidang Baru"]["assignment_coverage"] == "needs_staff"
+    assert rows["Ruang Sidang Baru"]["issue_flags"] == ["needs_staff"]
+
+
+@pytest.mark.anyio
 async def test_student_and_staff_cannot_access_super_admin_facility_governance():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
     DataBuilder(app).create_user(email="staff@ipb.ac.id", role=UserRole.staff)

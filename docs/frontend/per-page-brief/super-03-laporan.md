@@ -31,7 +31,7 @@
 
 ## UX Behavior
 
-- Primary actions: moderate review. Export report remains deferred unless a backend export contract is added.
+- Primary actions: moderate review and export the currently loaded report data as CSV.
 - Secondary actions: date range, trend granularity (`Mingguan`, `Bulanan`, `Tahunan`), and a full audit log page that can progressively load more rows when the list is long.
 - Loading state: KPI/chart/log skeletons.
 - Empty state: no audit rows or no moderation items.
@@ -64,8 +64,8 @@
 - Status: `resolved`
 - Domain area: Super Admin
 - Affected UI: report KPI cards and reservation trend chart.
-- Contract implemented: aggregate report metrics with date-range Reservation KPIs, status counts, trend data, and paid Reservation totals. Report export remains out of scope.
-- Evidence: `backend/app/api/routes/super_admin_report_routes.py` registers `GET /admin/reports/aggregate`; `backend/tests/test_super_admin_reports.py` verifies date filtering, status counts, trend data, paid totals, and non-admin denial; `backend/tests/test_http_application.py` verifies audit/review routes remain and no export route exists.
+- Contract implemented: aggregate report metrics with date-range Reservation KPIs, status counts, trend data, and paid Reservation totals.
+- Evidence: `backend/app/api/routes/super_admin_report_routes.py` registers `GET /admin/reports/aggregate`; `backend/tests/test_super_admin_reports.py` verifies date filtering, status counts, trend data, paid totals, and non-admin denial; `backend/tests/test_http_application.py` verifies audit/review routes remain.
 - Source issue/PRD: `docs/issues/ISSUE-0015-super-admin-review-moderation-and-audit-logs.md`.
 
 ### BG-SUPER-03-02: Super Admin Audit And Review Moderation
@@ -79,11 +79,11 @@
 
 ### BG-SUPER-03-03: Report Export Action
 
-- Status: `deferred`
+- Status: `resolved`
 - Domain area: Super Admin
 - Affected UI: report page header export action.
-- Contract needed: report export endpoint, file format, date-range input, authorization, and download/progress behavior.
-- Evidence: aggregate report routes are implemented, but tests verify no export route exists. The frontend marks export as deferred.
+- Contract implemented: client-side CSV export from the loaded report aggregate, audit preview, and moderation rows for the selected date range.
+- Evidence: `frontend/src/pages/super-admin/SuperAdminDashboardUsersPages.test.tsx` verifies `Ekspor Laporan` downloads CSV from loaded report data.
 - Source issue/PRD: `docs/issues/ISSUE-0063-contract-audit-and-fixture-normalization.md`.
 
 ## Shared Components

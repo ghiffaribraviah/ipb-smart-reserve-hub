@@ -135,6 +135,13 @@ async function mockFacilityGovernance(page: Page) {
   await page.route("http://localhost:8000/admin/facilities/governance", async (route) => {
     await route.fulfill({ json: facilityGovernance });
   });
+  await page.route("http://localhost:8000/facility-categories", async (route) => {
+    await route.fulfill({
+      json: [
+        { facility_count: 1, icon_hint: "presentation", id: "category-1", name: "Auditorium", slug: "auditorium" },
+      ],
+    });
+  });
 }
 
 async function mockReports(page: Page) {
@@ -170,16 +177,16 @@ test.describe("super admin facilities and reports pages", () => {
     await expect(page.getByText("Grand Auditorium").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Lab Arsip").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Butuh Staff").filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Arsipkan Grand Auditorium" })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
-    await expect(page.getByRole("heading", { name: "Penugasan Terbaru" })).toBeVisible();
-    await expect(page.getByLabel("Pilih staff untuk Lab Arsip")).toBeVisible();
     await expect(page.getByText(/Ditugaskan: Staff Fasilitas/).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText(/Staff Nonaktif/).filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Impor Data ditunda" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Tambah Fasilitas ditunda" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Ekspor CSV" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tambah Fasilitas" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Kelola staff Lab Arsip" }).click();
+    await expect(page.getByRole("heading", { name: "Kelola Staff Fasilitas" })).toBeVisible();
+    await expect(page.getByLabel("Pilih staff untuk Lab Arsip")).toBeVisible();
+    await page.getByRole("button", { name: "Tutup" }).click();
+    await expect(page.getByRole("heading", { name: "Kelola Staff Fasilitas" })).toBeHidden();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);
@@ -228,7 +235,7 @@ test.describe("super admin facilities and reports pages", () => {
     await expect(page.getByText("Review kasar").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Disembunyikan").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Rentang Waktu")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Ekspor Laporan ditunda" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Ekspor Laporan" })).toBeVisible();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);

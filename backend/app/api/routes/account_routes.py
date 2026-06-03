@@ -16,7 +16,7 @@ from app.services.accounts import (
     LoginCredentials,
     ManagedUserReferenced,
     ManagedUserNotFound,
-    StudentMustSelfRegister,
+    StudentIdentityRequired,
     StudentRegistration,
     UserAccount,
     UserAccountModule,
@@ -113,12 +113,14 @@ def register_account_routes(
                     full_name=payload.full_name,
                     role=payload.role,
                     is_active=payload.is_active,
+                    nim=payload.nim,
+                    phone=payload.phone,
                 )
             )
-        except StudentMustSelfRegister:
+        except StudentIdentityRequired:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Akun mahasiswa dibuat melalui registrasi mandiri.",
+                detail="NIM dan nomor telepon wajib diisi untuk akun mahasiswa.",
             )
         except EmailAlreadyRegistered:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email sudah terdaftar.")

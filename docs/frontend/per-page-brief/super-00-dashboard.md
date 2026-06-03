@@ -25,12 +25,12 @@
 - Layout: Super Admin shell with fixed header, four KPI cards, governance table/cards, and a visually distinct activity log.
 - Desktop behavior: KPI grid, admin governance plus activity in two columns, then facility governance.
 - Mobile behavior: stacked KPI cards, governance table converted to cards, compact activity list.
-- Required copy/status labels: preserve `Dashboard`, `Pengguna`, `Fasilitas`, `Laporan`, `Sistem`, `Ekspor Laporan`, `Tambah Admin`.
+- Required copy/status labels: preserve `Dashboard`, `Pengguna`, `Fasilitas`, `Laporan`, `Sistem`, `Ekspor Laporan`, `Tambah Pengguna`.
 - Source-of-truth notes: use logo green Super Admin accent for primary actions/profile affordance.
 
 ## UX Behavior
 
-- Primary actions: add admin remains deferred. Export report remains a deferred action unless a backend export contract is added.
+- Primary actions: export the loaded dashboard summary as CSV and route account creation to the unified Pengguna page.
 - Secondary actions: navigate dashboard sections.
 - Loading state: KPI/table/activity skeletons.
 - Empty state: no admins or no activity.
@@ -68,11 +68,11 @@
 
 ### BG-SUPER-00-02: Dashboard Export Action
 
-- Status: `deferred`
+- Status: `resolved`
 - Domain area: Super Admin
 - Affected UI: dashboard header export action.
-- Contract needed: report export request/response, file type, authorization, and async progress behavior.
-- Evidence: no export route is part of the verified dashboard read model; the frontend marks the action as deferred.
+- Contract implemented: client-side CSV export from the loaded `GET /admin/dashboard` read model. Account creation uses the unified `/super-admin/users` create-user form instead of a redundant dashboard-only add-admin action.
+- Evidence: `frontend/src/pages/super-admin/SuperAdminDashboardUsersPages.test.tsx` verifies dashboard CSV export and the `Tambah Pengguna` link to `/super-admin/users`.
 - Source issue/PRD: `docs/issues/ISSUE-0063-contract-audit-and-fixture-normalization.md`.
 
 ## Shared Components

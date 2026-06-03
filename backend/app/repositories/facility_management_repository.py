@@ -26,6 +26,9 @@ class FacilityManagementRepository(Protocol):
     def get_active_category(self, category_id: str) -> FacilityCategory | None:
         raise NotImplementedError
 
+    def add_facility(self, facility: Facility) -> Facility:
+        raise NotImplementedError
+
     def add_staff_assignment(self, facility_id: str, staff_id: str) -> FacilityStaffAssignment:
         raise NotImplementedError
 
@@ -84,6 +87,11 @@ class SqlAlchemyFacilityManagementRepository:
                 FacilityCategory.is_active.is_(True),
             )
         )
+
+    def add_facility(self, facility: Facility) -> Facility:
+        self._session.add(facility)
+        self._session.flush()
+        return facility
 
     def add_staff_assignment(self, facility_id: str, staff_id: str) -> FacilityStaffAssignment:
         assignment = self._session.scalar(

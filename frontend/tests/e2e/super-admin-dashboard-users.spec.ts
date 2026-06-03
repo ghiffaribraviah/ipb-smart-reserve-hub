@@ -146,10 +146,10 @@ test.describe("super admin dashboard and users pages", () => {
     await expect(page.getByText("admin@ipb.ac.id menambahkan penugasan staff")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Tata Kelola Fasilitas" })).toBeVisible();
     await expect(page.getByText("Grand Auditorium").nth(isMobile ? 1 : 0)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Ekspor Laporan ditunda" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Tambah Admin ditunda" })).toHaveAttribute(
-      "aria-disabled",
-      "true",
+    await expect(page.getByRole("button", { name: "Ekspor Laporan" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Tambah Pengguna" })).toHaveAttribute(
+      "href",
+      "/super-admin/users",
     );
 
     if (isMobile) {
@@ -184,8 +184,8 @@ test.describe("super admin dashboard and users pages", () => {
     await expect(page.getByText("Student Aktif").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Ilmu Komputer").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText("Staff Fasilitas").filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Ubah status Student Aktif" }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Ekspor CSV ditunda" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Kelola akun Student Aktif" }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Ekspor CSV" })).toBeVisible();
 
     if (isMobile) {
       await expectNoHorizontalOverflow(page);

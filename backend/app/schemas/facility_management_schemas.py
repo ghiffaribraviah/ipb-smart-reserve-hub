@@ -65,6 +65,21 @@ class FacilityProfileUpdateRequest(BaseModel):
     is_active: bool | None = None
 
 
+class FacilityCreateRequest(BaseModel):
+    name: str = Field(min_length=1)
+    location: str = Field(min_length=1)
+    capacity: int = Field(ge=1)
+    category_id: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    contact_name: str = Field(min_length=1)
+    contact_phone: str = Field(min_length=1)
+    contact_email: str | None = None
+    price_rupiah: int = Field(default=0, ge=0)
+    payment_instructions: str | None = None
+    open_hours_summary: str = Field(min_length=1)
+    is_active: bool = True
+
+
 class FacilityImageCreateRequest(BaseModel):
     url: str = Field(min_length=1)
     alt_text: str = Field(min_length=1)

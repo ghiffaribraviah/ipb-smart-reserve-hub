@@ -116,6 +116,42 @@ async def test_super_admin_deactivates_and_reactivates_user_accounts_and_session
 
 
 @pytest.mark.anyio
+async def test_super_admin_creates_student_user_with_required_identity_fields():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    test_data.create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        admin_token = await _login(client, email="admin@ipb.ac.id")
+
+        created = await client.post(
+            "/admin/users",
+            json={
+                "email": "student.created@apps.ipb.ac.id",
+                "password": "secret123",
+                "full_name": "Student Created",
+                "role": "student",
+                "nim": "G64190002",
+                "phone": "08123456780",
+                "is_active": True,
+            },
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        login = await client.post(
+            "/auth/login",
+            json={"email": "student.created@apps.ipb.ac.id", "password": "secret123"},
+        )
+
+    assert created.status_code == 201
+    assert created.json()["role"] == "student"
+    assert created.json()["nim"] == "G64190002"
+    assert created.json()["phone"] == "08123456780"
+    assert created.json()["academic_profile"] is not None
+    assert login.status_code == 200
+
+
+@pytest.mark.anyio
 async def test_student_and_staff_cannot_access_super_admin_user_management_endpoints():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
     test_data = DataBuilder(app)

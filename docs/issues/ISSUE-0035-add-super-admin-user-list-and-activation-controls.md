@@ -60,7 +60,7 @@ Scope:
 - Add `GET /admin/users` with pagination and filters for role, active status, and search over identity fields.
 - Return identity, role, active status, and available profile hints already owned by account projection (`nim`, `phone`, academic profile for students; null where unavailable).
 - Add `POST /admin/users/{user_id}/deactivate` and `POST /admin/users/{user_id}/activate`.
-- Preserve existing `POST /admin/users` behavior and do not add any role mutation endpoint.
+- Preserve existing `POST /admin/users` behavior for staff/Super Admin, allow Super Admin-created student accounts with required NIM/phone, and do not add any role mutation endpoint.
 - Ensure inactive users cannot login/refresh and deactivated current tokens fail `/auth/me` through existing active-user resolution.
 - Enforce Super Admin-only access.
 - Update `BG-SUPER-01-01` when implemented.
@@ -78,7 +78,7 @@ Evidence to record when closing:
 
 2026-05-13: Implemented and verified Super Admin user list and activation controls.
 
-- Code evidence: `backend/app/api/routes/account_routes.py` adds `GET /admin/users`, `POST /admin/users/{user_id}/deactivate`, and `POST /admin/users/{user_id}/activate`; `backend/app/services/accounts.py` owns pagination and status mutation behavior; `backend/app/repositories/user_repository.py` applies role, active-status, and identity search filters.
+- Code evidence: `backend/app/api/routes/account_routes.py` adds `GET /admin/users`, `POST /admin/users`, `POST /admin/users/{user_id}/deactivate`, and `POST /admin/users/{user_id}/activate`; `backend/app/services/accounts.py` owns pagination, Super Admin-created student identity fields, and status mutation behavior; `backend/app/repositories/user_repository.py` applies role, active-status, and identity search filters.
 - API behavior evidence: `backend/tests/test_super_admin_user_management.py` verifies paginated/filterable listing, student profile fields, activation/deactivation, inactive login/refresh rejection, deactivated token `/auth/me` rejection, and student/staff denial.
 - Scope evidence: `backend/tests/test_http_application.py` verifies no `/admin/users/{user_id}/role` route exists.
 - Documentation evidence: `docs/frontend/per-page-brief/super-01-pengguna.md`, `docs/frontend/backend-gaps.md`, and `README.md` document the implemented user-management contract.

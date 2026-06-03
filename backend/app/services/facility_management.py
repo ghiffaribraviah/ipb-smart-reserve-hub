@@ -109,6 +109,22 @@ class FacilityProfileUpdate:
 
 
 @dataclass(frozen=True)
+class FacilityCreation:
+    name: str
+    location: str
+    capacity: int
+    category_id: str
+    description: str
+    contact_name: str
+    contact_phone: str
+    contact_email: str | None
+    price_rupiah: int
+    payment_instructions: str | None
+    open_hours_summary: str
+    is_active: bool = True
+
+
+@dataclass(frozen=True)
 class FacilityImageCreation:
     url: str
     alt_text: str
@@ -207,6 +223,37 @@ class FacilityManagementModule:
             _to_facility_governance(facility)
             for facility in self._facility_management_repository.list_all_facilities_for_governance()
         ]
+
+    def create_facility(self, creation: FacilityCreation, *, actor: UserAccount | None = None) -> FacilityManagementProfile:
+        category = self._facility_management_repository.get_active_category(creation.category_id)
+        if category is None:
+            raise FacilityCategoryNotFound
+
+        facility = Facility(
+            category=category,
+            name=creation.name,
+            location=creation.location,
+            capacity=creation.capacity,
+            description=creation.description,
+            contact_name=creation.contact_name,
+            contact_phone=creation.contact_phone,
+            contact_email=creation.contact_email,
+            price_rupiah=creation.price_rupiah,
+            payment_instructions=creation.payment_instructions,
+            open_hours_summary=creation.open_hours_summary,
+            rating_average=None,
+            review_count=0,
+            is_active=creation.is_active,
+        )
+        created = self._facility_management_repository.add_facility(facility)
+        self._audit_recorder.record(
+            actor=actor,
+            action_type="facility.created",
+            target_type="facility",
+            target_id=created.id,
+            facility_id=created.id,
+        )
+        return _to_facility_profile(created)
 
     def update_assigned_facility(
         self,

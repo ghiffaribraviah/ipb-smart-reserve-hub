@@ -30,6 +30,8 @@ class AdminManagedUserCreation:
     full_name: str
     role: UserRole
     is_active: bool = True
+    nim: str | None = None
+    phone: str | None = None
 
 
 @dataclass(frozen=True)
@@ -126,7 +128,7 @@ class EmailAlreadyRegistered(UserAccountError):
     pass
 
 
-class StudentMustSelfRegister(UserAccountError):
+class StudentIdentityRequired(UserAccountError):
     pass
 
 
@@ -183,8 +185,10 @@ class UserAccountModule:
         return self._to_user_account(self._add_user(user))
 
     def create_admin_managed_user(self, creation: AdminManagedUserCreation) -> UserAccount:
-        if creation.role == UserRole.student:
-            raise StudentMustSelfRegister
+        nim = creation.nim.strip() if creation.nim else None
+        phone = creation.phone.strip() if creation.phone else None
+        if creation.role == UserRole.student and (not nim or not phone):
+            raise StudentIdentityRequired
 
         user = User(
             email=self._normalize_email(creation.email),
@@ -192,6 +196,8 @@ class UserAccountModule:
             full_name=creation.full_name,
             role=creation.role,
             is_active=creation.is_active,
+            nim=nim if creation.role == UserRole.student else None,
+            phone=phone if creation.role == UserRole.student else None,
         )
         return self._to_user_account(self._add_user(user))
 

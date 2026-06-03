@@ -59,7 +59,7 @@ test.describe("super admin system page", () => {
     await expect(page.getByLabel("Domain email mahasiswa")).toHaveValue("apps.ipb.ac.id");
     await expect(page.getByLabel("Minimum lead time jam")).toHaveValue("336");
     await expect(page.getByLabel("Batas unggah surat jam")).toHaveValue("24");
-    await expect(page.getByRole("button", { name: "Lihat Riwayat ditunda" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Unduh Snapshot" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Simpan Pengaturan" })).toBeDisabled();
 
     if (isMobile) {

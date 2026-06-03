@@ -21,6 +21,21 @@ function jsonResponse(body: unknown, status = 200) {
   );
 }
 
+function mockCsvDownload() {
+  if (!URL.createObjectURL) {
+    Object.defineProperty(URL, "createObjectURL", { configurable: true, value: vi.fn() });
+  }
+  if (!URL.revokeObjectURL) {
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+  }
+  const createObjectUrl = vi
+    .spyOn(URL, "createObjectURL")
+    .mockReturnValue("blob:super-admin-export");
+  const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+  return { click, createObjectUrl, revokeObjectUrl };
+}
+
 const dashboardResponse = {
   administrators: [
     {
@@ -458,7 +473,9 @@ describe("SuperAdminDashboardPage", () => {
     expect((await screen.findAllByText("Admin IPB"))[0]).toBeVisible();
   });
 
-  it("marks unsupported dashboard actions as deferred", async () => {
+  it("exports dashboard data and routes admin creation through the users page", async () => {
+    const user = userEvent.setup();
+    const csv = mockCsvDownload();
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
 
@@ -471,11 +488,10 @@ describe("SuperAdminDashboardPage", () => {
 
     renderDashboard();
 
-    expect(await screen.findByRole("button", { name: "Ekspor Laporan ditunda" })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
-    expect(screen.getByRole("button", { name: "Tambah Admin ditunda" })).toHaveAttribute("aria-disabled", "true");
+    await user.click(await screen.findByRole("button", { name: "Ekspor Laporan" }));
+    expect(csv.createObjectUrl).toHaveBeenCalledOnce();
+    expect(csv.click).toHaveBeenCalledOnce();
+    expect(screen.getByRole("link", { name: "Tambah Pengguna" })).toHaveAttribute("href", "/super-admin/users");
   });
 
   it("renders the super admin shell as a sidebar layout without a footer", async () => {
@@ -537,7 +553,7 @@ describe("SuperAdminDashboardPage", () => {
     });
   });
 
-  it("creates supported admin-managed users and handles API errors", async () => {
+  it("creates users for every role including student identity fields and handles API errors", async () => {
     const user = userEvent.setup();
     let createCalls = 0;
     vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
@@ -549,17 +565,17 @@ describe("SuperAdminDashboardPage", () => {
 
       if (url === "http://localhost:8000/admin/users" && init?.method === "POST") {
         createCalls += 1;
-        expect(init.body).toBe(
-          JSON.stringify({
-            email: "new-staff@ipb.ac.id",
-            full_name: "Staff Baru",
-            is_active: true,
-            password: "secret123",
-            role: "staff",
-          }),
-        );
+        expect(JSON.parse(String(init.body))).toEqual({
+          email: "new-student@apps.ipb.ac.id",
+          full_name: "Student Baru",
+          is_active: true,
+          nim: "G64190002",
+          password: "secret123",
+          phone: "08123456780",
+          role: "student",
+        });
         return createCalls === 1
-          ? jsonResponse({ id: "new-staff" }, 201)
+          ? jsonResponse({ id: "new-student" }, 201)
           : jsonResponse({ detail: "Email sudah terdaftar." }, 409);
       }
 
@@ -568,15 +584,21 @@ describe("SuperAdminDashboardPage", () => {
 
     renderUsers();
 
-    await user.type(await screen.findByLabelText("Email pengguna baru"), "new-staff@ipb.ac.id");
-    await user.type(screen.getByLabelText("Nama pengguna baru"), "Staff Baru");
+    await user.selectOptions(await screen.findByLabelText("Role pengguna baru"), "student");
+    await user.type(screen.getByLabelText("Email pengguna baru"), "new-student@apps.ipb.ac.id");
+    await user.type(screen.getByLabelText("Nama pengguna baru"), "Student Baru");
     await user.type(screen.getByLabelText("Password pengguna baru"), "secret123");
+    await user.type(screen.getByLabelText("NIM pengguna baru"), "G64190002");
+    await user.type(screen.getByLabelText("Telepon pengguna baru"), "08123456780");
     await user.click(screen.getByRole("button", { name: "Buat Pengguna" }));
     expect(await screen.findByText("Pengguna baru dibuat.")).toBeVisible();
 
-    await user.type(screen.getByLabelText("Email pengguna baru"), "new-staff@ipb.ac.id");
-    await user.type(screen.getByLabelText("Nama pengguna baru"), "Staff Baru");
+    await user.selectOptions(screen.getByLabelText("Role pengguna baru"), "student");
+    await user.type(screen.getByLabelText("Email pengguna baru"), "new-student@apps.ipb.ac.id");
+    await user.type(screen.getByLabelText("Nama pengguna baru"), "Student Baru");
     await user.type(screen.getByLabelText("Password pengguna baru"), "secret123");
+    await user.type(screen.getByLabelText("NIM pengguna baru"), "G64190002");
+    await user.type(screen.getByLabelText("Telepon pengguna baru"), "08123456780");
     await user.click(screen.getByRole("button", { name: "Buat Pengguna" }));
     expect(await screen.findByText("Email sudah terdaftar.")).toBeVisible();
   });
@@ -689,11 +711,18 @@ describe("SuperAdminDashboardPage", () => {
   });
 
   it("loads facility governance rows with counts, active state, and issue flags", async () => {
+    const user = userEvent.setup();
+    const csv = mockCsvDownload();
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
 
       if (url === "http://localhost:8000/admin/facilities/governance") {
         return jsonResponse(facilityGovernanceResponse);
+      }
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse([
+          { facility_count: 1, icon_hint: "presentation", id: "category-1", name: "Auditorium", slug: "auditorium" },
+        ]);
       }
       if (url === "http://localhost:8000/admin/users?role=staff&is_active=true&page=1&page_size=100") {
         return jsonResponse({ ...usersResponse, items: [usersResponse.items[1]], total: 1 });
@@ -715,7 +744,9 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("Nonaktif")[0]).toBeVisible();
     expect(screen.getAllByRole("button", { name: "Kelola staff Grand Auditorium" })[0]).toBeEnabled();
     expect(screen.getAllByRole("button", { name: "Kelola staff Lab Arsip" })[0]).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Impor Data ditunda" })).toHaveAttribute("aria-disabled", "true");
+    await user.click(screen.getByRole("button", { name: "Ekspor CSV" }));
+    expect(csv.createObjectUrl).toHaveBeenCalledOnce();
+    expect(csv.click).toHaveBeenCalledOnce();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -723,6 +754,65 @@ describe("SuperAdminDashboardPage", () => {
         expect.any(Object),
       );
     });
+  });
+
+  it("creates a facility from the super admin facilities page", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/admin/facilities/governance" && !init?.method) {
+        return jsonResponse(facilityGovernanceResponse);
+      }
+      if (url === "http://localhost:8000/facility-categories") {
+        return jsonResponse([
+          { facility_count: 1, icon_hint: "presentation", id: "category-1", name: "Auditorium", slug: "auditorium" },
+        ]);
+      }
+      if (url === "http://localhost:8000/admin/users?role=staff&is_active=true&page=1&page_size=100") {
+        return jsonResponse({ ...usersResponse, items: [usersResponse.items[1]], total: 1 });
+      }
+      if (url === "http://localhost:8000/admin/facilities" && init?.method === "POST") {
+        expect(init.body).toBe(
+          JSON.stringify({
+            capacity: 80,
+            category_id: "category-1",
+            contact_email: "tu.rektorat@ipb.ac.id",
+            contact_name: "TU Rektorat",
+            contact_phone: "0251-8621111",
+            description: "Ruang rapat lintas unit",
+            is_active: true,
+            location: "Gedung Rektorat",
+            name: "Ruang Sidang Baru",
+            open_hours_summary: "Senin-Jumat 08.00-16.00",
+            payment_instructions: null,
+            price_rupiah: 0,
+          }),
+        );
+        return jsonResponse({ id: "facility-new", name: "Ruang Sidang Baru" }, 201);
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderFacilities();
+
+    await user.click(await screen.findByRole("button", { name: "Tambah Fasilitas" }));
+    await user.type(screen.getByLabelText("Nama fasilitas"), "Ruang Sidang Baru");
+    await user.type(screen.getByLabelText("Lokasi fasilitas"), "Gedung Rektorat");
+    await user.type(screen.getByLabelText("Deskripsi fasilitas"), "Ruang rapat lintas unit");
+    await user.type(screen.getByLabelText("Nama kontak"), "TU Rektorat");
+    await user.type(screen.getByLabelText("Telepon kontak"), "0251-8621111");
+    await user.type(screen.getByLabelText("Email kontak"), "tu.rektorat@ipb.ac.id");
+    await user.clear(screen.getByLabelText("Kapasitas fasilitas"));
+    await user.type(screen.getByLabelText("Kapasitas fasilitas"), "80");
+    await user.click(screen.getByRole("button", { name: "Simpan Fasilitas" }));
+
+    expect(await screen.findByText("Fasilitas baru dibuat.")).toBeVisible();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/admin/facilities",
+      expect.objectContaining({ method: "POST" }),
+    );
   });
 
   it("assigns and unassigns staff with backend facility and staff IDs", async () => {
@@ -811,6 +901,7 @@ describe("SuperAdminDashboardPage", () => {
 
   it("loads report aggregates, audit logs, reviews, and sends date range params", async () => {
     const user = userEvent.setup();
+    const csv = mockCsvDownload();
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
 
@@ -851,7 +942,9 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("Ruang bersih dan nyaman.")[0]).toBeVisible();
     expect(screen.getAllByText("Review kasar")[0]).toBeVisible();
     expect(screen.getAllByText("Disembunyikan")[0]).toBeVisible();
-    expect(screen.getByRole("button", { name: "Ekspor Laporan ditunda" })).toHaveAttribute("aria-disabled", "true");
+    await user.click(screen.getByRole("button", { name: "Ekspor Laporan" }));
+    expect(csv.createObjectUrl).toHaveBeenCalledOnce();
+    expect(csv.click).toHaveBeenCalledOnce();
 
     await user.clear(screen.getByLabelText("Tanggal mulai laporan"));
     await user.type(screen.getByLabelText("Tanggal mulai laporan"), "2026-05-03");
@@ -999,6 +1092,7 @@ describe("SuperAdminDashboardPage", () => {
 
   it("loads system status and booking settings, then saves a full settings payload", async () => {
     const user = userEvent.setup();
+    const csv = mockCsvDownload();
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
       const url = String(input);
 
@@ -1028,7 +1122,9 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("Degraded")[0]).toBeVisible();
     expect(screen.getByLabelText("Minimum lead time jam")).toHaveValue(336);
     expect(screen.getByLabelText("Domain email mahasiswa")).toHaveValue("apps.ipb.ac.id");
-    expect(screen.getByRole("button", { name: "Lihat Riwayat ditunda" })).toHaveAttribute("aria-disabled", "true");
+    await user.click(screen.getByRole("button", { name: "Unduh Snapshot" }));
+    expect(csv.createObjectUrl).toHaveBeenCalledOnce();
+    expect(csv.click).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: "Simpan Pengaturan" })).toBeDisabled();
 
     await user.clear(screen.getByLabelText("Minimum lead time jam"));

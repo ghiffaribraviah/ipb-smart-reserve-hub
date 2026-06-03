@@ -17,7 +17,7 @@
 ## Purpose
 
 - User job: browse and manage student, staff, and Super Admin accounts.
-- Entry points: Super Admin shell `Pengguna` nav, dashboard `Tambah Admin`.
+- Entry points: Super Admin shell `Pengguna` nav, dashboard `Tambah Pengguna`.
 - Exit points: create user, edit data user, reset password, activate/deactivate user, delete user.
 
 ## Design Contract
@@ -30,8 +30,8 @@
 
 ## UX Behavior
 
-- Primary actions: add user through the inline create-user form and open `Kelola akun` modal per row/card.
-- Secondary actions: export, filter, update status, reset password, and delete eligible accounts.
+- Primary actions: add student, staff, or Super Admin users through the inline create-user form and open `Kelola akun` modal per row/card.
+- Secondary actions: client-side CSV export, filter, update status, reset password, and delete eligible accounts.
 - Loading state: KPI/table skeletons.
 - Empty state: no matching users.
 - Error state: retry user list.
@@ -61,8 +61,8 @@
 - Status: `resolved`
 - Domain area: Super Admin
 - Affected UI: user list, filters, KPI counts, `Kelola akun` modal, create/edit/reset/delete actions.
-- Contract implemented: paginated/filterable user list plus create, update basic profile, reset password, delete eligible accounts, and activate/deactivate user status mutation endpoints. Role mutation remains out of scope.
-- Evidence: `backend/app/api/routes/account_routes.py` registers `GET /admin/users`, `POST /admin/users`, `PATCH /admin/users/{user_id}`, `POST /admin/users/{user_id}/reset-password`, `DELETE /admin/users/{user_id}`, `POST /admin/users/{user_id}/deactivate`, and `POST /admin/users/{user_id}/activate`; `backend/tests/test_super_admin_user_management.py` verifies filters, pagination, profile fields, activation/deactivation, profile update, password reset, delete guards for referenced users, active-session enforcement, and non-admin denial.
+- Contract implemented: paginated/filterable user list plus create for student, staff, and Super Admin accounts, update basic profile, reset password, delete eligible accounts, and activate/deactivate user status mutation endpoints. Role mutation remains out of scope.
+- Evidence: `backend/app/api/routes/account_routes.py` registers `GET /admin/users`, `POST /admin/users`, `PATCH /admin/users/{user_id}`, `POST /admin/users/{user_id}/reset-password`, `DELETE /admin/users/{user_id}`, `POST /admin/users/{user_id}/deactivate`, and `POST /admin/users/{user_id}/activate`; `backend/tests/test_super_admin_user_management.py` verifies filters, pagination, profile fields, Super Admin student creation with NIM/phone, activation/deactivation, profile update, password reset, delete guards for referenced users, active-session enforcement, and non-admin denial. `frontend/src/pages/super-admin/SuperAdminDashboardUsersPages.test.tsx` verifies create-user payloads for student identity fields and CSV export.
 - Source issue/PRD: `docs/issues/ISSUE-0001-project-foundation-auth-and-role-shell.md`.
 
 ## Shared Components

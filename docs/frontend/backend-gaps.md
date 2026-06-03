@@ -87,11 +87,11 @@ Gap statuses:
 | Gap ID | Page Brief | Status | Label |
 | --- | --- | --- | --- |
 | [BG-SUPER-00-01](per-page-brief/super-00-dashboard.md#bg-super-00-01-super-admin-dashboard-read-model) | `super-00-dashboard.md` | resolved | Super Admin dashboard read model |
-| [BG-SUPER-00-02](per-page-brief/super-00-dashboard.md#bg-super-00-02-dashboard-export-action) | `super-00-dashboard.md` | deferred | Dashboard export action |
+| [BG-SUPER-00-02](per-page-brief/super-00-dashboard.md#bg-super-00-02-dashboard-export-action) | `super-00-dashboard.md` | resolved | Dashboard export action |
 | [BG-SUPER-01-01](per-page-brief/super-01-pengguna.md#bg-super-01-01-super-admin-user-management-read-model) | `super-01-pengguna.md` | resolved | Super Admin user management read model |
 | [BG-SUPER-02-01](per-page-brief/super-02-fasilitas.md#bg-super-02-01-super-admin-facility-governance-read-model) | `super-02-fasilitas.md` | resolved | Super Admin facility governance read model |
-| [BG-SUPER-02-02](per-page-brief/super-02-fasilitas.md#bg-super-02-02-facility-create-and-import-actions) | `super-02-fasilitas.md` | deferred | Facility create and import actions |
+| [BG-SUPER-02-02](per-page-brief/super-02-fasilitas.md#bg-super-02-02-facility-create-and-export-actions) | `super-02-fasilitas.md` | resolved | Facility create and export actions |
 | [BG-SUPER-03-01](per-page-brief/super-03-laporan.md#bg-super-03-01-super-admin-report-aggregates) | `super-03-laporan.md` | resolved | Super Admin report aggregates |
 | [BG-SUPER-03-02](per-page-brief/super-03-laporan.md#bg-super-03-02-super-admin-audit-and-review-moderation) | `super-03-laporan.md` | resolved | Super Admin audit and review moderation |
-| [BG-SUPER-03-03](per-page-brief/super-03-laporan.md#bg-super-03-03-report-export-action) | `super-03-laporan.md` | deferred | Report export action |
+| [BG-SUPER-03-03](per-page-brief/super-03-laporan.md#bg-super-03-03-report-export-action) | `super-03-laporan.md` | resolved | Report export action |
 | [BG-SUPER-04-01](per-page-brief/super-04-sistem.md#bg-super-04-01-super-admin-system-status-and-settings) | `super-04-sistem.md` | resolved | Super Admin system status and settings |

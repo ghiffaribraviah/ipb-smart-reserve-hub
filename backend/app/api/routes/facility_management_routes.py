@@ -6,6 +6,7 @@ from app.core.access_policy import AccessPolicyAction
 from app.schemas.facility_management_schemas import (
     FacilityBlackoutCreateRequest,
     FacilityBlackoutResponse,
+    FacilityCreateRequest,
     FacilityGovernanceResponse,
     FacilityImageCreateRequest,
     FacilityImageManagementResponse,
@@ -19,6 +20,7 @@ from app.services.accounts import UserAccount
 from app.services.facility_management import (
     FacilityBlackoutCreation,
     FacilityCategoryNotFound,
+    FacilityCreation,
     FacilityImageCreation,
     FacilityImageNotFound,
     FacilityManagementModule,
@@ -43,6 +45,24 @@ def register_facility_management_routes(
         _: UserAccount = Depends(require_access(AccessPolicyAction.manage_facility_staff_assignments)),
     ):
         return facility_management.list_facility_governance()
+
+    @app.post(
+        "/admin/facilities",
+        status_code=status.HTTP_201_CREATED,
+        response_model=FacilityManagementProfileResponse,
+    )
+    async def create_facility(
+        payload: FacilityCreateRequest,
+        facility_management: FacilityManagementModule = Depends(get_facility_management),
+        current_user: UserAccount = Depends(require_access(AccessPolicyAction.manage_facility_staff_assignments)),
+    ):
+        try:
+            return facility_management.create_facility(
+                FacilityCreation(**payload.model_dump()),
+                actor=current_user,
+            )
+        except FacilityCategoryNotFound:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Kategori fasilitas tidak ditemukan.")
 
     @app.put(
         "/admin/facilities/{facility_id}/staff-assignments/{staff_id}",

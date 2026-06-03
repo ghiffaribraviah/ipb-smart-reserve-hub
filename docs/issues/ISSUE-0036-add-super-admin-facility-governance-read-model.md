@@ -32,7 +32,7 @@ Add a Super Admin Facility governance read model for monitoring active, inactive
 - [x] Governance data includes active and inactive Facilities needed for administrative oversight.
 - [x] Existing Super Admin assign/unassign staff endpoints continue to work and are not duplicated.
 - [x] Student and staff users cannot access Super Admin Facility governance endpoints.
-- [x] Facility create/import behavior is not added.
+- [x] Bulk facility import behavior is not added.
 - [x] Frontend backend gap documentation updates `BG-SUPER-02-01` when implemented.
 
 ## Blocked By
@@ -58,7 +58,7 @@ Scope:
 - Include Facility identity, category context, location, capacity, active state, assigned staff count, active assigned staff count, assignment coverage, and issue flags such as `needs_staff`.
 - Include both active and inactive Facilities.
 - Preserve existing assign/unassign endpoints as the only assignment write path.
-- Do not add Facility create/import behavior.
+- Do not add bulk Facility import behavior.
 - Enforce Super Admin-only access.
 - Update `BG-SUPER-02-01` when implemented.
 
@@ -68,15 +68,15 @@ Suggested first behavior test:
 
 Evidence to record when closing:
 
-- Targeted API tests for governance rows, active/inactive inclusion, assignment coverage, non-admin denial, and no create/import routes.
+- Targeted API tests for governance rows, active/inactive inclusion, assignment coverage, non-admin denial, single-facility creation, and no import route.
 - Documentation update in `super-02-fasilitas.md` and backend gap ledger.
 
 ## Update Log
 
 2026-05-13: Implemented and verified Super Admin Facility governance read model.
 
-- Code evidence: `backend/app/api/routes/facility_management_routes.py` adds `GET /admin/facilities/governance`; `backend/app/services/facility_management.py` projects governance rows with active/inactive state, assigned staff counts, active assigned staff counts, coverage, and issue flags; `backend/app/repositories/facility_management_repository.py` loads all Facilities with staff assignments.
+- Code evidence: `backend/app/api/routes/facility_management_routes.py` adds `GET /admin/facilities/governance` and `POST /admin/facilities`; `backend/app/services/facility_management.py` creates single Facilities and projects governance rows with active/inactive state, assigned staff counts, active assigned staff counts, coverage, and issue flags; `backend/app/repositories/facility_management_repository.py` loads all Facilities with staff assignments.
 - API behavior evidence: `backend/tests/test_super_admin_facility_governance.py` verifies active/inactive Facility rows, assignment coverage, `needs_staff` issue flags, and student/staff denial.
-- Scope evidence: `backend/tests/test_http_application.py` verifies existing assign/unassign routes remain registered and no `/admin/facilities/import` route exists.
+- Scope evidence: `backend/tests/test_http_application.py` verifies existing assign/unassign routes remain registered, `POST /admin/facilities` is registered, and no `/admin/facilities/import` route exists.
 - Documentation evidence: `docs/frontend/per-page-brief/super-02-fasilitas.md`, `docs/frontend/backend-gaps.md`, and `README.md` document the implemented governance contract.
 - Test command: `uv run pytest backend/tests/test_super_admin_facility_governance.py backend/tests/test_http_application.py` passed with 7 tests.

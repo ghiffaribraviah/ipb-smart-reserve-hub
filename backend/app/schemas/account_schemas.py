@@ -22,6 +22,8 @@ class AdminCreateUserRequest(BaseModel):
     full_name: str = Field(min_length=1)
     role: UserRole
     is_active: bool = True
+    nim: str | None = Field(default=None, min_length=1)
+    phone: str | None = Field(default=None, min_length=1)
 
 
 class AdminUpdateUserRequest(BaseModel):

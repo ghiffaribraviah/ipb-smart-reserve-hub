@@ -31,7 +31,7 @@
 ## UX Behavior
 
 - Primary actions: save settings.
-- Secondary actions: view history.
+- Secondary actions: download a CSV snapshot of current status and booking settings.
 - Loading state: status/settings skeletons.
 - Empty state: missing status details display quiet unavailable values.
 - Error state: retry status or settings panel.
@@ -76,8 +76,8 @@
 ## Acceptance Checks
 
 - Desktop and mobile screenshots match references.
-- Integration checks: invalid settings show visible errors and successful save preserves current values.
+- Integration checks: invalid settings show visible errors, successful save preserves current values, and status/settings snapshot download works once both panels are loaded.
 
 ## Open Questions
 
-- Settings history route is not currently defined.
+- None.

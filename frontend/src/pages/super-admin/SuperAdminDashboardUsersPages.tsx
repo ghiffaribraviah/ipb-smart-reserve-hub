@@ -77,6 +77,29 @@ type SuperAdminFacilityGovernanceResponse = {
   name: string;
 };
 
+type FacilityCategoryResponse = {
+  facility_count: number;
+  icon_hint: string | null;
+  id: string;
+  name: string;
+  slug: string;
+};
+
+type FacilityCreatePayload = {
+  capacity: number;
+  category_id: string;
+  contact_email: string | null;
+  contact_name: string;
+  contact_phone: string;
+  description: string;
+  is_active: boolean;
+  location: string;
+  name: string;
+  open_hours_summary: string;
+  payment_instructions: string | null;
+  price_rupiah: number;
+};
+
 type SuperAdminAuditLogResponse = {
   action_type: string;
   actor_email: string | null;
@@ -92,6 +115,14 @@ function fetchSuperAdminDashboard() {
 
 function fetchFacilityGovernance() {
   return apiRequest<SuperAdminFacilityGovernanceResponse[]>("/admin/facilities/governance");
+}
+
+function fetchFacilityCategories() {
+  return apiRequest<FacilityCategoryResponse[]>("/facility-categories");
+}
+
+function createFacility(body: FacilityCreatePayload) {
+  return apiRequest<SuperAdminFacilityGovernanceResponse>("/admin/facilities", { body, method: "POST" });
 }
 
 function assignFacilityStaff(facilityId: string, staffId: string) {
@@ -309,7 +340,15 @@ function fetchActiveStaffUsers() {
   return fetchAdminUsers({ isActive: "true", page: 1, pageSize: 100, role: "staff", search: "" });
 }
 
-function createAdminUser(body: { email: string; full_name: string; is_active: boolean; password: string; role: string }) {
+function createAdminUser(body: {
+  email: string;
+  full_name: string;
+  is_active: boolean;
+  nim?: string;
+  password: string;
+  phone?: string;
+  role: string;
+}) {
   return apiRequest<AdminUserResponse>("/admin/users", { body, method: "POST" });
 }
 
@@ -555,10 +594,12 @@ function PageHeader({
 function SuperButton({
   children,
   deferred,
+  onClick,
   primary,
 }: {
   children: ReactNode;
   deferred?: boolean;
+  onClick?: () => void;
   primary?: boolean;
 }) {
   return (
@@ -573,6 +614,7 @@ function SuperButton({
           : "border-[#e5e7eb] bg-white text-[#111827]",
       )}
       disabled={deferred}
+      onClick={onClick}
       type="button"
     >
       {children}
@@ -844,6 +886,26 @@ function errorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function downloadCsv(filename: string, rows: Array<Record<string, string | number | boolean | null | undefined>>) {
+  if (rows.length === 0) {
+    return false;
+  }
+  const headers = Object.keys(rows[0]);
+  const escapeCell = (value: string | number | boolean | null | undefined) => {
+    const text = value === null || value === undefined ? "" : String(value);
+    return `"${text.replaceAll('"', '""')}"`;
+  };
+  const csv = [headers.join(","), ...rows.map((row) => headers.map((header) => escapeCell(row[header])).join(","))]
+    .join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+  return true;
+}
+
 function DashboardStateMessage({
   actionLabel,
   children,
@@ -913,11 +975,36 @@ export function SuperAdminSystemPage() {
           title="Sistem"
         >
           <button
-            aria-disabled="true"
-            className="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f8fafc] px-5 text-sm font-bold text-[#6b7280]"
+            className="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-[#e5e7eb] bg-white px-5 text-sm font-bold text-[#111827]"
+            onClick={() => {
+              const settings = settingsQuery.data;
+              const systemStatus = statusQuery.data;
+              if (!settings || !systemStatus) {
+                setFormError("Status dan pengaturan harus termuat sebelum snapshot diunduh.");
+                return;
+              }
+              downloadCsv("super-admin-system-snapshot.csv", [
+                {
+                  allowed_student_email_domains: settings.allowed_student_email_domains.join(";"),
+                  backend: systemStatus.backend.status,
+                  database: systemStatus.database.status,
+                  document_upload_due_hours: settings.document_upload_due_hours,
+                  document_verification_due_hours: settings.document_verification_due_hours,
+                  final_approval_cutoff_hours: settings.final_approval_cutoff_hours,
+                  max_booking_advance_hours: settings.max_booking_advance_hours,
+                  min_booking_lead_hours: settings.min_booking_lead_hours,
+                  payment_upload_due_hours: settings.payment_upload_due_hours,
+                  payment_verification_due_hours: settings.payment_verification_due_hours,
+                  storage: systemStatus.storage.status,
+                  worker: systemStatus.worker.status,
+                },
+              ]);
+              setFormError("");
+              setMessage("Snapshot sistem diunduh.");
+            }}
             type="button"
           >
-            Lihat Riwayat ditunda
+            Unduh Snapshot
           </button>
         </PageHeader>
 
@@ -1208,6 +1295,7 @@ function PaginationControls({
 
 export function SuperAdminFacilitiesPage() {
   const queryClient = useQueryClient();
+  const [createFacilityOpen, setCreateFacilityOpen] = useState(false);
   const [facilityPage, setFacilityPage] = useState(1);
   const [facilityPageSize, setFacilityPageSize] = useState(5);
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
@@ -1217,6 +1305,10 @@ export function SuperAdminFacilitiesPage() {
   const governanceQuery = useQuery({
     queryFn: fetchFacilityGovernance,
     queryKey: ["super-admin", "facility-governance"],
+  });
+  const categoriesQuery = useQuery({
+    queryFn: fetchFacilityCategories,
+    queryKey: ["facility-categories"],
   });
   const staffUsersQuery = useQuery({
     queryFn: fetchActiveStaffUsers,
@@ -1260,6 +1352,19 @@ export function SuperAdminFacilitiesPage() {
       await queryClient.invalidateQueries({ queryKey: ["super-admin", "facility-governance"] });
     },
   });
+  const createFacilityMutation = useMutation({
+    mutationFn: createFacility,
+    onError: (error) => {
+      setMessage("");
+      setFormError(errorMessage(error, "Fasilitas belum dapat dibuat."));
+    },
+    onSuccess: async () => {
+      setCreateFacilityOpen(false);
+      setFormError("");
+      setMessage("Fasilitas baru dibuat.");
+      await queryClient.invalidateQueries({ queryKey: ["super-admin", "facility-governance"] });
+    },
+  });
 
   return (
     <SuperAdminShell active="facilities">
@@ -1268,10 +1373,30 @@ export function SuperAdminFacilitiesPage() {
           description="Pantau fasilitas lintas unit, status publikasi, dan penugasan staff pengelola."
           title="Fasilitas"
         >
-          <SuperButton deferred>Impor Data ditunda</SuperButton>
-          <SuperButton deferred>
+          <SuperButton
+            onClick={() => {
+              const exported = downloadCsv(
+                "super-admin-fasilitas.csv",
+                facilities.map((facility) => ({
+                  active_assigned_staff_count: facility.active_assigned_staff_count,
+                  assigned_staff_count: facility.assigned_staff_count,
+                  assignment_coverage: coverageLabel(facility.assignment_coverage),
+                  capacity: facility.capacity,
+                  category: facility.category,
+                  is_active: facility.is_active,
+                  location: facility.location,
+                  name: facility.name,
+                })),
+              );
+              setFormError(exported ? "" : "Tidak ada data fasilitas untuk diekspor.");
+              setMessage(exported ? "CSV fasilitas diunduh." : "");
+            }}
+          >
+            Ekspor CSV
+          </SuperButton>
+          <SuperButton primary onClick={() => setCreateFacilityOpen(true)}>
             <Plus aria-hidden="true" size={15} />
-            Tambah Fasilitas ditunda
+            Tambah Fasilitas
           </SuperButton>
         </PageHeader>
 
@@ -1458,8 +1583,183 @@ export function SuperAdminFacilitiesPage() {
             staffOptions={staffOptions}
           />
         ) : null}
+        {createFacilityOpen ? (
+          <CreateFacilityModal
+            categories={categoriesQuery.data ?? []}
+            isSaving={createFacilityMutation.isPending}
+            onClose={() => setCreateFacilityOpen(false)}
+            onSave={(payload) => createFacilityMutation.mutate(payload)}
+          />
+        ) : null}
       </main>
     </SuperAdminShell>
+  );
+}
+
+function CreateFacilityModal({
+  categories,
+  isSaving,
+  onClose,
+  onSave,
+}: {
+  categories: FacilityCategoryResponse[];
+  isSaving: boolean;
+  onClose: () => void;
+  onSave: (payload: FacilityCreatePayload) => void;
+}) {
+  const [form, setForm] = useState({
+    capacity: 40,
+    categoryId: categories[0]?.id ?? "",
+    contactEmail: "",
+    contactName: "",
+    contactPhone: "",
+    description: "",
+    location: "",
+    name: "",
+    openHoursSummary: "Senin-Jumat 08.00-16.00",
+    paymentInstructions: "",
+    priceRupiah: 0,
+  });
+  const categoryId = form.categoryId || categories[0]?.id || "";
+  const invalid =
+    !form.name.trim() ||
+    !form.location.trim() ||
+    !form.description.trim() ||
+    !form.contactName.trim() ||
+    !form.contactPhone.trim() ||
+    !form.openHoursSummary.trim() ||
+    !categoryId ||
+    form.capacity < 1 ||
+    form.priceRupiah < 0;
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/40 px-4" onClick={onClose}>
+      <section
+        aria-label="Tambah fasilitas"
+        className="max-h-[90vh] w-full max-w-[760px] overflow-y-auto rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-[0_24px_48px_rgba(15,23,42,0.18)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-[#e5e7eb] pb-4">
+          <div>
+            <h2 className="m-0 text-xl font-bold text-[#111827]">Tambah Fasilitas</h2>
+            <p className="m-0 mt-2 text-sm text-[#6b7280]">Buat fasilitas baru lalu kelola staff dari daftar fasilitas.</p>
+          </div>
+          <button className={tableActionButtonClass("secondary")} onClick={onClose} type="button">
+            Tutup
+          </button>
+        </div>
+        <form
+          className="mt-5 grid gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSave({
+              capacity: form.capacity,
+              category_id: categoryId,
+              contact_email: form.contactEmail.trim() || null,
+              contact_name: form.contactName.trim(),
+              contact_phone: form.contactPhone.trim(),
+              description: form.description.trim(),
+              is_active: true,
+              location: form.location.trim(),
+              name: form.name.trim(),
+              open_hours_summary: form.openHoursSummary.trim(),
+              payment_instructions: form.paymentInstructions.trim() || null,
+              price_rupiah: form.priceRupiah,
+            });
+          }}
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextField label="Nama fasilitas" onChange={(name) => setForm((current) => ({ ...current, name }))} value={form.name} />
+            <TextField label="Lokasi fasilitas" onChange={(location) => setForm((current) => ({ ...current, location }))} value={form.location} />
+            <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+              Kategori
+              <select
+                aria-label="Kategori fasilitas"
+                className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+                onChange={(event) => setForm((current) => ({ ...current, categoryId: event.target.value }))}
+                value={categoryId}
+              >
+                <option value="">Pilih kategori</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+              Kapasitas
+              <input
+                aria-label="Kapasitas fasilitas"
+                className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+                min="1"
+                onChange={(event) => setForm((current) => ({ ...current, capacity: Number(event.target.value) }))}
+                type="number"
+                value={form.capacity}
+              />
+            </label>
+          </div>
+          <TextField label="Deskripsi fasilitas" onChange={(description) => setForm((current) => ({ ...current, description }))} value={form.description} />
+          <div className="grid gap-4 md:grid-cols-3">
+            <TextField label="Nama kontak" onChange={(contactName) => setForm((current) => ({ ...current, contactName }))} value={form.contactName} />
+            <TextField label="Telepon kontak" onChange={(contactPhone) => setForm((current) => ({ ...current, contactPhone }))} value={form.contactPhone} />
+            <TextField label="Email kontak" onChange={(contactEmail) => setForm((current) => ({ ...current, contactEmail }))} type="email" value={form.contactEmail} />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextField label="Ringkasan jam buka" onChange={(openHoursSummary) => setForm((current) => ({ ...current, openHoursSummary }))} value={form.openHoursSummary} />
+            <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+              Harga rupiah
+              <input
+                aria-label="Harga rupiah fasilitas"
+                className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+                min="0"
+                onChange={(event) => setForm((current) => ({ ...current, priceRupiah: Number(event.target.value) }))}
+                type="number"
+                value={form.priceRupiah}
+              />
+            </label>
+          </div>
+          <TextField label="Instruksi pembayaran" onChange={(paymentInstructions) => setForm((current) => ({ ...current, paymentInstructions }))} value={form.paymentInstructions} />
+          <div className="flex flex-wrap justify-end gap-3">
+            <button className={tableActionButtonClass("secondary")} disabled={isSaving} onClick={onClose} type="button">
+              Batal
+            </button>
+            <button
+              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0f9d58] px-4 text-sm font-bold text-white disabled:opacity-60"
+              disabled={invalid || isSaving}
+              type="submit"
+            >
+              Simpan Fasilitas
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+function TextField({
+  label,
+  onChange,
+  type = "text",
+  value,
+}: {
+  label: string;
+  onChange: (value: string) => void;
+  type?: string;
+  value: string;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+      {label}
+      <input
+        aria-label={label}
+        className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm text-[#111827]"
+        onChange={(event) => onChange(event.target.value)}
+        type={type}
+        value={value}
+      />
+    </label>
   );
 }
 
@@ -1839,7 +2139,35 @@ export function SuperAdminReportsPage() {
           <span className="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-[#e5e7eb] bg-white px-5 text-sm font-bold text-[#111827] max-md:min-h-11 max-md:w-full max-md:px-3 max-md:text-[13px]">
             Rentang Waktu
           </span>
-          <SuperButton deferred>Ekspor Laporan ditunda</SuperButton>
+          <SuperButton
+            onClick={() => {
+              const rows = [
+                ...(aggregate
+                  ? [
+                      { item: "total_reservations", section: "kpi", value: aggregate.kpis.total_reservations },
+                      { item: "approved_reservations", section: "kpi", value: aggregate.kpis.approved_reservations },
+                      { item: "completed_reservations", section: "kpi", value: aggregate.kpis.completed_reservations },
+                      { item: "paid_total", section: "kpi", value: aggregate.kpis.paid_reservation_total_rupiah },
+                    ]
+                  : []),
+                ...auditLogs.map((log) => ({
+                  item: `${log.actor_email ?? "Sistem"} - ${auditActionLabel(log.action_type)}`,
+                  section: "audit",
+                  value: log.created_at,
+                })),
+                ...reviews.map((review) => ({
+                  item: `${review.student_name} - ${review.facility_name}`,
+                  section: "review",
+                  value: review.comment ?? "",
+                })),
+              ];
+              const exported = downloadCsv("super-admin-laporan.csv", rows);
+              setFormError(exported ? "" : "Tidak ada data laporan untuk diekspor.");
+              setMessage(exported ? "CSV laporan diunduh." : "");
+            }}
+          >
+            Ekspor Laporan
+          </SuperButton>
         </PageHeader>
 
         <ReportRangeControls mode={trendMode} range={range} setMode={setTrendMode} setRange={setRange} />
@@ -2192,11 +2520,66 @@ export function SuperAdminDashboardPage() {
           description="Pantau kesehatan sistem, pengguna, fasilitas, dan aktivitas administratif lintas platform."
           title="Dashboard Super Admin"
         >
-          <SuperButton deferred>Ekspor Laporan ditunda</SuperButton>
-          <SuperButton deferred>
-            <Plus aria-hidden="true" size={15} />
-            Tambah Admin ditunda
+          <SuperButton
+            onClick={() => {
+              if (!dashboard) return;
+              const exported = downloadCsv(
+                "super-admin-dashboard.csv",
+                [
+                  {
+                    email: "",
+                    full_name: "Ringkasan KPI",
+                    is_active: "",
+                    metric: "total_users",
+                    role: "",
+                    value: dashboard.kpis.total_users,
+                  },
+                  {
+                    email: "",
+                    full_name: "Ringkasan KPI",
+                    is_active: "",
+                    metric: "active_facilities",
+                    role: "",
+                    value: dashboard.kpis.active_facilities,
+                  },
+                  {
+                    email: "",
+                    full_name: "Ringkasan KPI",
+                    is_active: "",
+                    metric: "total_reservations",
+                    role: "",
+                    value: dashboard.kpis.total_reservations,
+                  },
+                  {
+                    email: "",
+                    full_name: "Ringkasan KPI",
+                    is_active: "",
+                    metric: "system_health",
+                    role: "",
+                    value: dashboard.kpis.system_health,
+                  },
+                  ...administrators.map((admin) => ({
+                    email: admin.email,
+                    full_name: admin.full_name,
+                    is_active: admin.is_active,
+                    metric: "administrator",
+                    role: admin.role,
+                    value: "",
+                  })),
+                ],
+              );
+              if (!exported) return;
+            }}
+          >
+            Ekspor Laporan
           </SuperButton>
+          <a
+            className="inline-flex min-h-[38px] items-center justify-center gap-2 rounded-lg border border-[#0f9d58] bg-[#0f9d58] px-5 text-sm font-bold text-white no-underline max-md:min-h-11 max-md:w-full max-md:gap-1.5 max-md:px-3 max-md:text-[13px]"
+            href="/super-admin/users"
+          >
+            <Plus aria-hidden="true" size={15} />
+            Tambah Pengguna
+          </a>
         </PageHeader>
 
         {dashboardQuery.isLoading ? <DashboardStateMessage>Memuat dashboard super admin...</DashboardStateMessage> : null}
@@ -2378,7 +2761,9 @@ export function SuperAdminUsersPage() {
   const [createForm, setCreateForm] = useState({
     email: "",
     fullName: "",
+    nim: "",
     password: "",
+    phone: "",
     role: "staff",
   });
   const [message, setMessage] = useState("");
@@ -2403,6 +2788,9 @@ export function SuperAdminUsersPage() {
         email: createForm.email.trim(),
         full_name: createForm.fullName.trim(),
         is_active: true,
+        ...(createForm.role === "student"
+          ? { nim: createForm.nim.trim(), phone: createForm.phone.trim() }
+          : {}),
         password: createForm.password,
         role: createForm.role,
       }),
@@ -2411,7 +2799,7 @@ export function SuperAdminUsersPage() {
       setFormError(errorMessage(error, "Pengguna belum dapat dibuat."));
     },
     onSuccess: async () => {
-      setCreateForm({ email: "", fullName: "", password: "", role: "staff" });
+      setCreateForm({ email: "", fullName: "", nim: "", password: "", phone: "", role: "staff" });
       setFormError("");
       setMessage("Pengguna baru dibuat.");
       await queryClient.invalidateQueries({ queryKey: ["super-admin", "users"] });
@@ -2483,7 +2871,26 @@ export function SuperAdminUsersPage() {
           description="Kelola akun mahasiswa, staff fasilitas, dan Super Admin dengan status akses yang jelas."
           title="Pengguna"
         >
-          <SuperButton deferred>Ekspor CSV ditunda</SuperButton>
+          <SuperButton
+            onClick={() => {
+              const exported = downloadCsv(
+                "super-admin-pengguna.csv",
+                users.map((user) => ({
+                  email: user.email,
+                  full_name: user.full_name,
+                  is_active: user.is_active,
+                  nim: user.nim,
+                  phone: user.phone,
+                  role: user.role,
+                  unit: userProfileText(user),
+                })),
+              );
+              setFormError(exported ? "" : "Tidak ada pengguna untuk diekspor.");
+              setMessage(exported ? "CSV pengguna diunduh." : "");
+            }}
+          >
+            Ekspor CSV
+          </SuperButton>
         </PageHeader>
 
         <section className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-md:grid-cols-1 max-md:gap-5">
@@ -2533,12 +2940,37 @@ export function SuperAdminUsersPage() {
             onChange={(event) => setCreateForm((current) => ({ ...current, role: event.target.value }))}
             value={createForm.role}
           >
+            <option value="student">Mahasiswa</option>
             <option value="staff">Staff</option>
             <option value="super_admin">Super Admin</option>
           </select>
+          {createForm.role === "student" ? (
+            <>
+              <input
+                aria-label="NIM pengguna baru"
+                className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm"
+                onChange={(event) => setCreateForm((current) => ({ ...current, nim: event.target.value }))}
+                placeholder="NIM"
+                value={createForm.nim}
+              />
+              <input
+                aria-label="Telepon pengguna baru"
+                className="min-h-11 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm"
+                onChange={(event) => setCreateForm((current) => ({ ...current, phone: event.target.value }))}
+                placeholder="Nomor telepon"
+                value={createForm.phone}
+              />
+            </>
+          ) : null}
           <button
             className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0f9d58] px-5 text-sm font-bold text-white disabled:opacity-60"
-            disabled={busy || !createForm.email || !createForm.fullName || !createForm.password}
+            disabled={
+              busy ||
+              !createForm.email ||
+              !createForm.fullName ||
+              !createForm.password ||
+              (createForm.role === "student" && (!createForm.nim || !createForm.phone))
+            }
             type="submit"
           >
             Buat Pengguna

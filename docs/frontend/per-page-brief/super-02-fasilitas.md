@@ -30,8 +30,8 @@
 
 ## UX Behavior
 
-- Primary actions: view facility governance and manage staff assignment per facility. Add facility remains deferred unless a backend creation contract is added.
-- Secondary actions: paginate, inspect assigned staff, and manage assignment. Import remains deferred unless a backend import contract is added.
+- Primary actions: view facility governance, add a single facility, and manage staff assignment per facility.
+- Secondary actions: client-side CSV export, paginate, inspect assigned staff, and manage assignment. Bulk import remains out of scope until a file-format contract is defined.
 - Loading state: KPI/list/assignment skeletons.
 - Empty state: no facilities or no assignment issues.
 - Error state: retry panels.
@@ -51,7 +51,7 @@
 
 ## Backend Integration And Gaps
 
-- Endpoints consumed: `GET /admin/facilities/governance` plus existing assignment mutation endpoints.
+- Endpoints consumed: `GET /admin/facilities/governance`, `POST /admin/facilities`, `GET /facility-categories`, plus existing assignment mutation endpoints.
 - Page-needed fields: facility identity, location/unit, capacity, active state, assigned staff count, assignment issue flags.
 - Auth/session assumptions: super-admin bearer token.
 - Source files: `backend/app/api/routes/facility_management_routes.py`.
@@ -61,17 +61,17 @@
 - Status: `resolved`
 - Domain area: Super Admin
 - Affected UI: facility governance list, KPI cards, paginated table/card list, and assignment modal.
-- Contract implemented: Super Admin Facility governance list with active/inactive Facilities, assignment coverage, active assigned staff counts, and issue flags. Facility create/import remains out of scope.
-- Evidence: `backend/app/api/routes/facility_management_routes.py` registers `GET /admin/facilities/governance`; `backend/tests/test_super_admin_facility_governance.py` verifies active/inactive governance rows, assignment counts, issue flags, and non-admin denial; `backend/tests/test_http_application.py` verifies assignment mutation routes remain and no import route exists.
+- Contract implemented: Super Admin Facility governance list with active/inactive Facilities, assignment coverage, active assigned staff counts, and issue flags.
+- Evidence: `backend/app/api/routes/facility_management_routes.py` registers `GET /admin/facilities/governance`; `backend/tests/test_super_admin_facility_governance.py` verifies active/inactive governance rows, assignment counts, issue flags, and non-admin denial; `backend/tests/test_http_application.py` verifies assignment mutation routes remain.
 - Source issue/PRD: `docs/issues/ISSUE-0016-staff-facility-management-and-assignment-scope.md`.
 
-### BG-SUPER-02-02: Facility Create And Import Actions
+### BG-SUPER-02-02: Facility Create And Export Actions
 
-- Status: `deferred`
+- Status: `resolved`
 - Domain area: Super Admin
 - Affected UI: facility page header actions.
-- Contract needed: facility create/import request schemas, validation behavior, assignment defaults, and result/error projections.
-- Evidence: verified governance endpoint is read-only for facility inventory; tests confirm no import route exists. The frontend marks create/import as deferred.
+- Contract implemented: single-facility create request with category, identity, contact, capacity, pricing, open-hours summary, validation behavior, and governance refresh. Bulk import remains outside this resolved gap; the page provides client-side CSV export of the current governance list.
+- Evidence: `backend/app/api/routes/facility_management_routes.py` registers `POST /admin/facilities`; `backend/tests/test_super_admin_facility_governance.py` verifies Super Admin create behavior and governance projection; `frontend/src/pages/super-admin/SuperAdminDashboardUsersPages.test.tsx` verifies create-facility submission and CSV export.
 - Source issue/PRD: `docs/issues/ISSUE-0063-contract-audit-and-fixture-normalization.md`.
 
 ## Shared Components

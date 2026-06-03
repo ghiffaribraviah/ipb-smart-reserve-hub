@@ -19,8 +19,11 @@ def register_audit_log_routes(
     @app.get("/admin/audit-logs", response_model=list[AuditLogResponse])
     async def list_admin_audit_logs(
         actor_id: str | None = None,
+        actor_email: str | None = None,
         action_type: str | None = None,
         target_type: str | None = None,
+        target_search: str | None = None,
+        status_code: int | None = None,
         facility_id: str | None = None,
         student_id: str | None = None,
         reservation_id: str | None = None,
@@ -33,8 +36,11 @@ def register_audit_log_routes(
         return audit_logs.list_logs(
             AuditLogFilters(
                 actor_id=actor_id,
+                actor_email=actor_email,
                 action_type=action_type,
                 target_type=target_type,
+                target_search=target_search,
+                status_code=status_code,
                 facility_id=facility_id,
                 student_id=student_id,
                 reservation_id=reservation_id,

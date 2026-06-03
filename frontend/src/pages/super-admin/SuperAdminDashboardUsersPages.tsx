@@ -243,6 +243,29 @@ function fetchAdminAuditLogs(range?: ReportDateRange, limit?: number) {
   return apiRequest<AdminAuditLogResponse[]>(auditLogsPath(range, limit));
 }
 
+type AuditLogFilters = {
+  actorEmail: string;
+  from: string;
+  statusCode: string;
+  targetSearch: string;
+  to: string;
+};
+
+function fullAuditLogsPath(filters: AuditLogFilters, limit: number) {
+  const params = new URLSearchParams();
+  if (filters.actorEmail.trim()) params.set("actor_email", filters.actorEmail.trim());
+  if (filters.targetSearch.trim()) params.set("target_search", filters.targetSearch.trim());
+  if (filters.statusCode !== "all") params.set("status_code", filters.statusCode);
+  if (filters.from) params.set("created_from", `${filters.from}T00:00:00.000Z`);
+  if (filters.to) params.set("created_to", `${filters.to}T23:59:59.999Z`);
+  params.set("limit", String(limit));
+  return `/admin/audit-logs?${params.toString()}`;
+}
+
+function fetchFullAdminAuditLogs(filters: AuditLogFilters, limit: number) {
+  return apiRequest<AdminAuditLogResponse[]>(fullAuditLogsPath(filters, limit));
+}
+
 function fetchAdminReviews() {
   return apiRequest<AdminReviewResponse[]>("/admin/reviews");
 }
@@ -2525,9 +2548,16 @@ export function SuperAdminReportsPage() {
 
 export function SuperAdminAuditLogsPage() {
   const [auditLimit, setAuditLimit] = useState(20);
+  const [filters, setFilters] = useState<AuditLogFilters>({
+    actorEmail: "",
+    from: "",
+    statusCode: "all",
+    targetSearch: "",
+    to: "",
+  });
   const auditQuery = useQuery({
-    queryFn: () => fetchAdminAuditLogs(undefined, auditLimit),
-    queryKey: ["super-admin", "reports", "audit", "all", auditLimit],
+    queryFn: () => fetchFullAdminAuditLogs(filters, auditLimit),
+    queryKey: ["super-admin", "reports", "audit", "all", filters, auditLimit],
   });
   const auditLogs = auditQuery.data ?? [];
   const hasMoreAuditLogs = auditLogs.length === auditLimit;
@@ -2555,7 +2585,88 @@ export function SuperAdminAuditLogsPage() {
           </DashboardStateMessage>
         ) : null}
 
-        <section className="grid grid-cols-3 gap-5 max-lg:grid-cols-1">
+        <section className="mt-7 rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-5">
+          <div className="grid grid-cols-5 gap-4 max-lg:grid-cols-2 max-md:grid-cols-1">
+            <label className="grid gap-2 text-sm font-bold text-[#374151]">
+              Aktor
+              <input
+                className="min-h-11 rounded-lg border border-[#d1d5db] px-3 text-sm font-medium text-[#111827]"
+                onChange={(event) => {
+                  setAuditLimit(20);
+                  setFilters((current) => ({ ...current, actorEmail: event.target.value }));
+                }}
+                placeholder="admin@ipb.ac.id"
+                value={filters.actorEmail}
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-bold text-[#374151]">
+              Target
+              <input
+                className="min-h-11 rounded-lg border border-[#d1d5db] px-3 text-sm font-medium text-[#111827]"
+                onChange={(event) => {
+                  setAuditLimit(20);
+                  setFilters((current) => ({ ...current, targetSearch: event.target.value }));
+                }}
+                placeholder="/admin/system-status"
+                value={filters.targetSearch}
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-bold text-[#374151]">
+              Status
+              <select
+                className="min-h-11 rounded-lg border border-[#d1d5db] px-3 text-sm font-medium text-[#111827]"
+                onChange={(event) => {
+                  setAuditLimit(20);
+                  setFilters((current) => ({ ...current, statusCode: event.target.value }));
+                }}
+                value={filters.statusCode}
+              >
+                <option value="all">Semua</option>
+                <option value="200">200</option>
+                <option value="201">201</option>
+                <option value="204">204</option>
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-bold text-[#374151]">
+              Dari
+              <input
+                className="min-h-11 rounded-lg border border-[#d1d5db] px-3 text-sm font-medium text-[#111827]"
+                onChange={(event) => {
+                  setAuditLimit(20);
+                  setFilters((current) => ({ ...current, from: event.target.value }));
+                }}
+                type="date"
+                value={filters.from}
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-bold text-[#374151]">
+              Sampai
+              <input
+                className="min-h-11 rounded-lg border border-[#d1d5db] px-3 text-sm font-medium text-[#111827]"
+                onChange={(event) => {
+                  setAuditLimit(20);
+                  setFilters((current) => ({ ...current, to: event.target.value }));
+                }}
+                type="date"
+                value={filters.to}
+              />
+            </label>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#111827]"
+              onClick={() => {
+                setAuditLimit(20);
+                setFilters({ actorEmail: "", from: "", statusCode: "all", targetSearch: "", to: "" });
+              }}
+              type="button"
+            >
+              Reset Filter
+            </button>
+          </div>
+        </section>
+
+        <section className="mt-7 grid grid-cols-3 gap-5 max-lg:grid-cols-1">
           <PlainKpiCard label="Total Log" value={String(auditLogs.length)} />
           <PlainKpiCard
             label="Top Endpoint"

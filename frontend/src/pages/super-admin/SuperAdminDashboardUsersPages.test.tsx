@@ -1108,6 +1108,33 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("Login berhasil")[0]).toBeVisible();
   });
 
+  it("filters dedicated audit logs by actor, target, status, and date range", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url.startsWith("http://localhost:8000/admin/audit-logs")) {
+        return jsonResponse(auditLogRequestResponse);
+      }
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderReports("/super-admin/reports/logs");
+
+    await screen.findByRole("heading", { name: "Log Audit" });
+    await user.type(screen.getByLabelText("Aktor"), "admin@ipb.ac.id");
+    await user.type(screen.getByLabelText("Target"), "/admin/system-status");
+    await user.selectOptions(screen.getByLabelText("Status"), "200");
+    await user.type(screen.getByLabelText("Dari"), "2026-05-12");
+    await user.type(screen.getByLabelText("Sampai"), "2026-05-12");
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8000/admin/audit-logs?actor_email=admin%40ipb.ac.id&target_search=%2Fadmin%2Fsystem-status&status_code=200&created_from=2026-05-12T00%3A00%3A00.000Z&created_to=2026-05-12T23%3A59%3A59.999Z&limit=20",
+        expect.any(Object),
+      );
+    });
+  });
+
   it("deletes, restores, and permanently removes moderated reviews", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {

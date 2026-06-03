@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Protocol
 
 from sqlalchemy import select
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models import AuditLog
@@ -11,8 +12,11 @@ from app.models import AuditLog
 @dataclass(frozen=True)
 class AuditLogFilters:
     actor_id: str | None = None
+    actor_email: str | None = None
     action_type: str | None = None
     target_type: str | None = None
+    target_search: str | None = None
+    status_code: int | None = None
     facility_id: str | None = None
     student_id: str | None = None
     reservation_id: str | None = None
@@ -42,10 +46,21 @@ class SqlAlchemyAuditLogRepository:
         statement = select(AuditLog)
         if filters.actor_id is not None:
             statement = statement.where(AuditLog.actor_id == filters.actor_id)
+        if filters.actor_email is not None:
+            statement = statement.where(AuditLog.actor_email.ilike(f"%{filters.actor_email}%"))
         if filters.action_type is not None:
             statement = statement.where(AuditLog.action_type == filters.action_type)
         if filters.target_type is not None:
             statement = statement.where(AuditLog.target_type == filters.target_type)
+        if filters.target_search is not None:
+            statement = statement.where(
+                or_(
+                    AuditLog.target_id.ilike(f"%{filters.target_search}%"),
+                    AuditLog.target_type.ilike(f"%{filters.target_search}%"),
+                )
+            )
+        if filters.status_code is not None:
+            statement = statement.where(AuditLog.action_type == f"request.{filters.status_code}")
         if filters.facility_id is not None:
             statement = statement.where(AuditLog.facility_id == filters.facility_id)
         if filters.student_id is not None:

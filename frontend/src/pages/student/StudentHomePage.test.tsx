@@ -149,17 +149,19 @@ describe("StudentHomePage", () => {
     });
   });
 
-  it("does not allow negative capacity in the hero search", async () => {
-    const user = userEvent.setup();
+  it("uses the hero search as a direct catalog entry point", async () => {
     mockDiscoveryFetch();
 
     renderWithProviders(<StudentHomePage />, { initialEntries: ["/student"] });
 
-    const capacityInput = await screen.findByPlaceholderText("Kapasitas");
-    expect(capacityInput).toHaveAttribute("min", "0");
-
-    await user.type(capacityInput, "-1");
-    expect(capacityInput).toHaveValue(0);
+    const heroInput = await screen.findByPlaceholderText("Nama Ruangan");
+    const heroForm = heroInput.closest("form");
+    expect(heroInput).toHaveAttribute("name", "q");
+    expect(heroForm).toHaveAttribute("action", "/student/facilities");
+    expect(screen.getByRole("button", { name: "Cari" })).toHaveAttribute("type", "submit");
+    expect(screen.getByRole("link", { name: "Jelajah Katalog" })).toHaveAttribute("href", "/student/facilities");
+    expect(screen.queryByPlaceholderText("Kapasitas")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Filter" })).not.toBeInTheDocument();
   });
 
   it("navigates from the header search to the facilities catalog", async () => {

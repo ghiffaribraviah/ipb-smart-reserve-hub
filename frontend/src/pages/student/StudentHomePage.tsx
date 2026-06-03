@@ -1,7 +1,6 @@
 import {
   Activity,
   Building2,
-  ChevronDown,
   House,
   Megaphone,
   Menu,
@@ -146,7 +145,7 @@ async function fetchFeaturedFacilities() {
 function StudentHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex h-[72px] justify-center border-b border-[#e5e7eb] bg-white max-md:h-16">
-      <div className="flex h-full w-[1200px] max-w-[95%] items-center justify-between gap-[22px] max-md:max-w-full max-md:px-3.5">
+      <div className="grid h-full w-[1200px] max-w-[95%] grid-cols-[1fr_auto_1fr] items-center gap-[22px] max-md:flex max-md:max-w-full max-md:justify-between max-md:px-3.5">
         <div className="flex min-w-0 items-center gap-[22px] max-md:gap-3.5">
           <button
             aria-label="Buka navigasi mahasiswa"
@@ -172,7 +171,7 @@ function StudentHeader() {
 
         <nav
           aria-label="Navigasi mahasiswa"
-          className="flex items-center gap-10 max-md:hidden"
+          className="flex items-center justify-center gap-10 max-md:hidden"
         >
           {navItems.map((item) => (
             <a
@@ -190,7 +189,7 @@ function StudentHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-[22px] max-md:gap-3.5">
+        <div className="flex items-center justify-end gap-[22px] max-md:gap-3.5">
           <NotificationSurface className="text-slate-500" role="student" />
           <a
             aria-label={`Profil ${studentHomeSession.name}`}
@@ -209,7 +208,7 @@ function HeroSearch() {
   return (
     <form
       action="/student/facilities"
-      className="absolute bottom-[-40px] z-10 grid w-[900px] max-w-[95%] grid-cols-[1fr_1fr_1fr_auto] gap-4 rounded-xl bg-white p-4 shadow-[0_10px_25px_rgba(0,0,0,0.1)] max-lg:bottom-[-100px] max-lg:grid-cols-1 max-md:static max-md:mt-6 max-md:w-[calc(100%-32px)] max-md:max-w-[358px] max-md:gap-2.5 max-md:p-3"
+      className="absolute bottom-[-40px] z-10 grid w-[760px] max-w-[95%] grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl bg-white p-4 shadow-[0_10px_25px_rgba(0,0,0,0.1)] max-md:static max-md:mt-6 max-md:w-[calc(100%-32px)] max-md:max-w-[358px] max-md:grid-cols-1 max-md:gap-2.5 max-md:p-3"
     >
       <label className="flex min-h-12 min-w-0 items-center rounded-lg border border-[#e5e7eb] bg-white px-4 max-md:min-h-11 max-md:px-3">
         <Search aria-hidden="true" className="shrink-0 text-[#9ca3af]" size={18} />
@@ -221,39 +220,18 @@ function HeroSearch() {
           type="text"
         />
       </label>
-      <label className="flex min-h-12 min-w-0 items-center rounded-lg border border-[#e5e7eb] bg-white px-4 max-md:min-h-11 max-md:px-3">
-        <span className="sr-only">Pilih fakultas</span>
-        <select
-          className="min-w-0 flex-1 border-0 bg-transparent px-2 py-3 text-sm text-[#111827] outline-none max-md:py-2.5 max-md:text-[13px]"
-          name="faculty"
-        >
-          <option value="">Semua Fakultas</option>
-          <option value="faperta">Pertanian</option>
-          <option value="fkh">Kedokteran Hewan</option>
-        </select>
-      </label>
-      <label className="flex min-h-12 min-w-0 items-center rounded-lg border border-[#e5e7eb] bg-white px-4 max-md:min-h-11 max-md:px-3">
-        <Users aria-hidden="true" className="shrink-0 text-[#9ca3af]" size={18} />
-        <span className="sr-only">Kapasitas</span>
-        <input
-          className="min-w-0 flex-1 border-0 bg-transparent px-2 py-3 text-sm text-[#111827] outline-none max-md:py-2.5 max-md:text-[13px]"
-          min="0"
-          name="capacity"
-          onChange={(event) => {
-            if (Number(event.target.value) < 0) {
-              event.target.value = "0";
-            }
-          }}
-          placeholder="Kapasitas"
-          type="number"
-        />
-      </label>
       <button
         className="min-h-12 rounded-lg bg-[#10b981] px-8 text-[15px] font-semibold text-white hover:bg-[#059669] max-md:min-h-10 max-md:w-full"
         type="submit"
       >
         Cari
       </button>
+      <a
+        className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-5 text-sm font-bold text-[#111827] no-underline hover:border-[#10b981] hover:text-[#0f9d58] max-md:min-h-10"
+        href="/student/facilities"
+      >
+        Jelajah Katalog
+      </a>
     </form>
   );
 }
@@ -287,12 +265,18 @@ function StudentHero() {
   );
 }
 
-function CategoryShortcut({ category }: { category: StudentHomeCategory }) {
+function CategoryShortcut({
+  category,
+  className = "",
+}: {
+  category: StudentHomeCategory;
+  className?: string;
+}) {
   const Icon = category.icon;
 
   return (
     <a
-      className="flex min-w-0 flex-col items-center text-center text-[#111827] no-underline outline-none focus-visible:ring-2 focus-visible:ring-[#10b981] focus-visible:ring-offset-4"
+      className={`flex min-w-0 flex-col items-center text-center text-[#111827] no-underline outline-none focus-visible:ring-2 focus-visible:ring-[#10b981] focus-visible:ring-offset-4 ${className}`}
       href={category.href}
     >
       <span className="mb-4 flex h-16 w-16 items-center justify-center text-[#111827] max-md:mb-2.5 max-md:h-[52px] max-md:w-[52px]">
@@ -469,8 +453,16 @@ function CategorySection({
 
   return (
     <div className="grid min-h-[154px] grid-cols-5 gap-6 max-lg:grid-cols-3 max-lg:gap-8 max-md:grid-cols-2 max-md:gap-x-[18px] max-md:gap-y-6">
-      {categories.map((category) => (
-        <CategoryShortcut category={category} key={category.slug} />
+      {categories.map((category, index) => (
+        <CategoryShortcut
+          category={category}
+          className={
+            categories.length % 2 === 1 && index === categories.length - 1
+              ? "max-md:col-span-2 max-md:justify-self-center"
+              : ""
+          }
+          key={category.slug}
+        />
       ))}
     </div>
   );
@@ -582,12 +574,6 @@ export function StudentHomePage() {
             >
               Lihat semua fasilitas
             </a>
-            <button
-              className="flex items-center gap-2 text-sm font-semibold text-[#6b7280] max-md:col-start-2 max-md:row-span-2 max-md:row-start-1 max-md:self-center max-md:text-xs"
-              type="button"
-            >
-              Filter <ChevronDown aria-hidden="true" size={14} />
-            </button>
           </div>
 
           <FeaturedSection

@@ -131,7 +131,12 @@ test.describe("student home page", () => {
     );
     await expect(page.getByText("Kapasitas: 1,200")).toBeVisible();
     await expect(page.getByText("Rp 100k / sesi")).toBeVisible();
-    await expect(page.getByPlaceholder("Kapasitas")).toHaveAttribute("min", "0");
+    await expect(page.getByPlaceholder("Kapasitas")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Filter" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Jelajah Katalog" })).toHaveAttribute(
+      "href",
+      "/student/facilities",
+    );
     await expect(page.getByRole("link", { name: /Grand Auditorium/ })).toContainText("(128 ulasan)");
     await expect(page.getByRole("contentinfo")).toContainText(
       "© 2026 IPB Smart Reserve Hub. Hak cipta dilindungi.",

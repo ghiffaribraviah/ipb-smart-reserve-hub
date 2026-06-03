@@ -53,7 +53,7 @@ List staff-visible reservations and verification actions.
 - Desktop: dense table.
 - Mobile: cards, no horizontal scroll.
 - Home and list tables use the same column language: `Pemohon`, `Fasilitas`, `Jadwal`, `Status`, and `Aksi`.
-- Long status labels wrap.
+- Staff status labels stay single-line. Primary row actions are large icon-only link buttons with `title` and accessible labels for detail/review navigation; mobile cards place them on full-width rows to avoid clipping or horizontal overflow.
 
 ## Implementation Notes
 

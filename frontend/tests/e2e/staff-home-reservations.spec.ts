@@ -83,6 +83,7 @@ const queueResponse = [
     ...baseOperation,
     activity_title: "Observasi Studi Perilaku",
     due_at: "2024-10-19T02:00:00Z",
+    document: { due_at: "2024-10-19T02:00:00Z", review_status: "pending_review" },
     facility: { id: "neuro", name: "Neuroscience Center" },
     id: "RSV-STF-006",
     organization_unit: { id: "org-6", name: "Peneliti Pascadoktoral" },
@@ -118,6 +119,35 @@ const listResponse = queueResponse.map((item, index) => ({
 }));
 
 async function mockStaffOperationsApi(page: Page) {
+  await page.route("http://localhost:8000/auth/me", async (route) => {
+    await route.fulfill({
+      json: {
+        email: "staff@apps.ipb.ac.id",
+        full_name: "Staf Fasilitas",
+        id: "staff-1",
+        is_active: true,
+        role: "staff",
+      },
+    });
+  });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("ipb-srh-token", "e2e-staff-token");
+  });
+  await page.route("http://localhost:8000/notifications", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+  await page.route("http://localhost:8000/notifications?**", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+  await page.route("http://localhost:8000/notifications/unread-count", async (route) => {
+    await route.fulfill({ json: { unread_count: 0 } });
+  });
+  await page.route("http://localhost:8000/notifications/*/read", async (route) => {
+    await route.fulfill({ json: { id: "notification-1", read_at: "2026-05-26T00:00:00Z" } });
+  });
+  await page.route("http://localhost:8000/notifications/read-all", async (route) => {
+    await route.fulfill({ json: [] });
+  });
   await page.route("http://localhost:8000/staff/reservations/verification-queue", async (route) => {
     await route.fulfill({ json: queueResponse });
   });
@@ -162,7 +192,7 @@ test.describe("staff operations pages", () => {
     await expect(page.getByText("Menampilkan 6 hasil")).toBeVisible();
     await expect(page.getByText("Johnathan Doe")).toBeVisible();
     await expect(page.getByText("Disetujui", { exact: true }).nth(1)).toBeVisible();
-    await expect(page.getByRole("table").getByText("Menunggu Pembayaran")).toBeVisible();
+    await expect(page.getByRole("table").getByText("Menunggu Verifikasi Pembayaran")).toBeVisible();
     await expect(page.getByRole("table").getByText("Menunggu Verifikasi Dokumen")).toBeVisible();
     await expect(page.getByRole("link", { name: "Lihat Detail Johnathan Doe" })).toHaveAttribute(
       "href",

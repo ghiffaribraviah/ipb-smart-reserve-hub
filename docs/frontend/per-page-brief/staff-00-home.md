@@ -26,6 +26,8 @@
 - Desktop behavior: dense operational list/table/card layout.
 - Mobile behavior: table-like data converts to readable cards.
 - Required copy/status labels: preserve reference use of `Reservasi`, `Fasilitas`, `Verifikasi`.
+- Status semantics: actionable document and payment verification work uses explicit amber labels (`Menunggu Verifikasi Dokumen`, `Menunggu Verifikasi Pembayaran`) shared with the reservation list and detail pages.
+- Status labels stay on one line; primary review actions use large icon-only link buttons with accessible `Tinjau Pengajuan {applicant}` labels and mobile cards allocate full-row space for those controls to avoid clipping or horizontal overflow.
 - Source-of-truth notes: reference says Admin visually, but internal docs/routes use staff.
 
 ## UX Behavior

@@ -1,4 +1,4 @@
-export type StaffBadgeTone = "danger" | "neutral" | "success" | "warning";
+export type StaffBadgeTone = "danger" | "info" | "neutral" | "success" | "warning";
 
 export type StaffVerificationItem = {
   actionLabel: string;

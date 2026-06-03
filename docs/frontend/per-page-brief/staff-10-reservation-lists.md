@@ -26,6 +26,8 @@
 - Desktop behavior: dense table with action column.
 - Mobile behavior: cards with status/action controls.
 - Required copy/status labels: preserve Indonesian status and action labels.
+- Status semantics: staff-action verification states show explicit stage labels (`Menunggu Verifikasi Dokumen`, `Menunggu Verifikasi Pembayaran`) in amber; viable student-action waiting states (`Menunggu Unggah Dokumen`, `Menunggu Pembayaran`) are blue.
+- Status labels remain single-line in the dense desktop table and mobile cards; action cells use large icon-only link buttons with accessible `Lihat Detail {applicant}` or `Tinjau Pengajuan {applicant}` labels, and mobile cards give status/action controls their own row to prevent clipping.
 - Source-of-truth notes: mobile card conversion must avoid table horizontal scroll.
 
 ## UX Behavior

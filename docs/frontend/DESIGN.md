@@ -61,7 +61,7 @@ Use these shared tokens unless a reference page has a documented exception:
 - Super Admin uses logo-derived green `#0f9d58` for primary actions, active navigation, profile affordance, and operational links.
 - Icons are line-based and inherit their parent text/action color; icon containers may use pale semantic fills, but the icon itself should stay simple and one-color.
 - Warning/cancellation-request actions may use amber text/borders, such as `#92400e` on `#fffbeb` with `#fde68a`.
-- Neutral waiting/review states may use gray pills; payment-waiting states may use amber pills; approved/completed states use green pills; rejected/declined states use red pills.
+- Staff document/payment verification states use amber pills. Staff student-action waiting states that are still viable, such as `Menunggu Unggah Dokumen` and `Menunggu Pembayaran`, use blue pills. Approved/completed states use green pills; rejected/expired/cancelled states use red pills; neutral administrative states use gray pills.
 
 Avoid introducing new dominant palettes. A page should not read as a separate product unless it is intentionally a separate role surface.
 

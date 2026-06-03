@@ -71,6 +71,15 @@ const paymentQueueItem: StaffOperationItem = {
   workflow_type: "payment_review",
 };
 
+const paymentUploadListItem: StaffOperationItem = {
+  ...paymentQueueItem,
+  due_at: null,
+  id: "payment-upload-reservation",
+  payment: { due_at: null, required: true, review_status: "awaiting_upload" },
+  reservation_code: "RSV-BAYAR-UPLOAD",
+  workflow_type: "reservation",
+};
+
 const approvedListItem: StaffOperationItem = {
   ...queueItem,
   activity_title: "Seminar Approved",
@@ -153,10 +162,14 @@ describe("StaffReservationOperationsPages", () => {
     expect(screen.queryByText("Seminar Approved")).not.toBeInTheDocument();
     expect(screen.queryByText("Kegiatan Dibatalkan")).not.toBeInTheDocument();
     expect(screen.getByText("2", { selector: "p" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Tinjau Pengajuan Siti Aminah" })).toHaveAttribute(
+    const reviewAction = screen.getByRole("link", { name: "Tinjau Pengajuan Siti Aminah" });
+    expect(reviewAction).toHaveAttribute(
       "href",
       "/staff/reservations/reservation-1",
     );
+    expect(reviewAction).toHaveAttribute("title", "Tinjau Pengajuan");
+    expect(reviewAction).toHaveClass("h-12", "w-12", "bg-[#0f9d58]");
+    expect(screen.queryByText("Tinjau Pengajuan", { selector: "a" })).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -201,10 +214,14 @@ describe("StaffReservationOperationsPages", () => {
 
     expect(await screen.findByText("Seminar Approved")).toBeVisible();
     expect(screen.getByText("Disetujui", { selector: "span" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Lihat Detail Siti Aminah" })).toHaveAttribute(
+    const detailAction = screen.getByRole("link", { name: "Lihat Detail Siti Aminah" });
+    expect(detailAction).toHaveAttribute(
       "href",
       "/staff/reservations/approved-reservation",
     );
+    expect(detailAction).toHaveAttribute("title", "Lihat Detail");
+    expect(detailAction).toHaveClass("h-12", "w-12", "border-[#0f9d58]");
+    expect(screen.queryByText("Lihat Detail", { selector: "a" })).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText("Filter fasilitas"), "facility-1");
     await user.selectOptions(screen.getByLabelText("Filter status"), "approved");
@@ -216,6 +233,46 @@ describe("StaffReservationOperationsPages", () => {
         expect.any(Object),
       );
     });
+  });
+
+  it("shows stage-specific staff statuses on the list with distinct colors", async () => {
+    mockStaffFetch({ list: [paymentQueueItem, paymentUploadListItem] });
+
+    renderStaffList();
+
+    const paymentReview = await screen.findByText("Menunggu Verifikasi Pembayaran", { selector: "span" });
+    const paymentUpload = screen.getByText("Menunggu Pembayaran", { selector: "span" });
+
+    expect(paymentReview.parentElement).toHaveClass("bg-[#fef3c7]", "text-[#92400e]");
+    expect(paymentUpload.parentElement).toHaveClass("bg-[#dbeafe]", "text-[#1d4ed8]");
+  });
+
+  it("renders cancelled staff reservation statuses as destructive red", async () => {
+    mockStaffFetch({ list: [cancelledQueueItem] });
+
+    renderStaffList();
+
+    const cancelled = await screen.findByText("Dibatalkan", { selector: "span" });
+
+    expect(cancelled.parentElement).toHaveClass("bg-[#fee2e2]", "text-[#991b1b]");
+  });
+
+  it("keeps dense staff status badges and review actions on one line", async () => {
+    mockStaffFetch({ list: [paymentQueueItem], queue: [queueItem] });
+
+    renderStaffHome();
+
+    expect(await screen.findByText("Menunggu Verifikasi Dokumen", { selector: "span" })).toHaveClass(
+      "whitespace-nowrap",
+    );
+    expect(screen.getByRole("link", { name: "Tinjau Pengajuan Siti Aminah" })).toHaveClass("h-12", "w-12");
+
+    renderStaffList();
+
+    expect(await screen.findByText("Menunggu Verifikasi Pembayaran", { selector: "span" })).toHaveClass(
+      "whitespace-nowrap",
+    );
+    expect(screen.getByRole("link", { name: "Tinjau Pengajuan Budi Santoso" })).toHaveClass("h-12", "w-12");
   });
 
   it("renders stable empty states for queue and list data", async () => {

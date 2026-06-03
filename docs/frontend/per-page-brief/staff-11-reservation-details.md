@@ -26,6 +26,7 @@
 - Desktop behavior: dense operational sections with clear action hierarchy.
 - Mobile behavior: stacked cards; shared document rows move status/actions below metadata.
 - Required copy/status labels: preserve verification action labels and rejection reason patterns.
+- Status semantics: `Status Saat Ini` shows the whole reservation's staff-facing status using the same mapper as staff home/list/schedule. Stage-level `pending_review` values must keep their context (`Menunggu Verifikasi Dokumen` or `Menunggu Verifikasi Pembayaran`) instead of the generic `Menunggu Peninjauan`.
 - Source-of-truth notes: document rows use shared `doc-row` anatomy; decision actions must be visually distinct without heavy destructive styling except true rejection.
 
 ## UX Behavior

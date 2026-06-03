@@ -7,7 +7,12 @@ import {
   staffDecisionDialogFixture,
   staffReservationDetailFixture,
 } from "../../fixtures/staffReservationDetail";
-import { formatStaffDate, mapStaffReservationStatus } from "../../reservations/staffReservationOperations";
+import type { StaffBadgeTone } from "../../fixtures/staffReservationOperations";
+import {
+  formatStaffDate,
+  mapStaffReservationDisplayStatus,
+  mapStaffReviewStageStatus,
+} from "../../reservations/staffReservationOperations";
 import { StaffShell } from "./StaffReservationOperationsPages";
 import logo from "../../assets/logo.png";
 
@@ -150,9 +155,17 @@ function targetLabel(target: StaffReviewTarget) {
   return target === "document" ? "Dokumen" : target === "payment" ? "Pembayaran" : "Pembatalan";
 }
 
-function StaffDetailStatus({ label }: { label: string }) {
+const detailBadgeClasses: Record<StaffBadgeTone, string> = {
+  danger: "bg-[#fee2e2] text-[#991b1b]",
+  info: "bg-[#dbeafe] text-[#1d4ed8]",
+  neutral: "bg-[#f3f4f6] text-[#4b5563]",
+  success: "bg-[#d1fae5] text-[#065f46]",
+  warning: "bg-[#fef3c7] text-[#92400e]",
+};
+
+function StaffDetailStatus({ label, tone }: { label: string; tone: StaffBadgeTone }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fef3c7] px-3 py-1.5 text-[13px] font-bold text-[#92400e]">
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-bold ${detailBadgeClasses[tone]}`}>
       <Clock aria-hidden="true" size={14} />
       {label}
     </span>
@@ -298,13 +311,7 @@ export function StaffReservationDetailPage() {
   const activeTarget = detail ? activeReviewTarget(detail) : "document";
   const activeLabel = targetLabel(activeTarget);
   const canReviewActiveTarget = detail ? hasPendingReview(detail, activeTarget) : false;
-  const status = detail ? mapStaffReservationStatus(
-    activeTarget === "document"
-      ? detail.document.review_status
-      : activeTarget === "payment"
-        ? detail.payment.review_status
-        : detail.cancellation.review_status,
-  ) : { label: "Memuat", tone: "neutral" as const };
+  const status = detail ? mapStaffReservationDisplayStatus(detail) : { label: "Memuat", tone: "neutral" as const };
   const documentFile = detail?.document.signed_approval_letter ?? null;
   const paymentFile = detail?.payment.receipt ?? null;
 
@@ -373,7 +380,7 @@ export function StaffReservationDetailPage() {
                     file={documentFile}
                     onPreview={() => apiPreview(detail.review_actions.document.download_url as string)}
                     onDownload={() => apiDownload(detail.review_actions.document.download_url as string)}
-                    status={mapStaffReservationStatus(detail.document.review_status).label}
+                    status={mapStaffReviewStageStatus("document", detail.document.review_status).label}
                   />
                 ) : (
                   <p className="m-0 text-sm font-semibold text-[#6b7280]">
@@ -385,7 +392,7 @@ export function StaffReservationDetailPage() {
                     file={paymentFile}
                     onPreview={() => apiPreview(detail.review_actions.payment.download_url as string)}
                     onDownload={() => apiDownload(detail.review_actions.payment.download_url as string)}
-                    status={mapStaffReservationStatus(detail.payment.review_status).label}
+                    status={mapStaffReviewStageStatus("payment", detail.payment.review_status).label}
                   />
                 ) : null}
               </div>
@@ -409,7 +416,7 @@ export function StaffReservationDetailPage() {
                   <p className="m-0 mb-2 text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
                     Status Saat Ini
                   </p>
-                  <StaffDetailStatus label={status.label} />
+                  <StaffDetailStatus label={status.label} tone={status.tone} />
                 </div>
               </div>
             </section>

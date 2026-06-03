@@ -185,6 +185,39 @@ describe("StaffReservationDetailDecisionPages", () => {
     expect(openMock).toHaveBeenCalledWith("blob:http://localhost/staff-preview", "_blank", "noopener,noreferrer");
   });
 
+  it("uses the whole reservation staff status for the detail headline", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/staff/reservations/reservation-1") {
+        return jsonResponse({
+          ...detailResponse,
+          document: {
+            ...detailResponse.document,
+            review_status: "approved",
+          },
+          payment: {
+            ...detailResponse.payment,
+            required: true,
+            review_status: "pending_review",
+          },
+          price_rupiah: 500000,
+          status: "pending_payment",
+        });
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderDetail();
+
+    const statusRegion = await screen.findByText("Status Saat Ini");
+    const statusBox = statusRegion.parentElement as HTMLElement;
+
+    expect(within(statusBox).getByText("Menunggu Verifikasi Pembayaran")).toBeVisible();
+    expect(within(statusBox).queryByText("Menunggu Peninjauan")).not.toBeInTheDocument();
+  });
+
   it("shows inline file action errors when preview or download fails", async () => {
     const user = userEvent.setup();
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {

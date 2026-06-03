@@ -25,9 +25,10 @@ Display explicit lifecycle and account statuses without relying on color alone.
 ## Variants
 
 - Green success/approved/completed/active.
-- Amber waiting/payment/cancellation.
-- Red rejected/declined/inactive.
-- Gray neutral/waiting review.
+- Amber staff verification work, including document review, payment review, and overdue verification.
+- Blue viable student-action waiting states, including document upload and payment upload.
+- Red rejected/declined/expired/cancelled/inactive.
+- Gray neutral/administrative states.
 
 ## Behavior
 
@@ -51,6 +52,7 @@ Display explicit lifecycle and account statuses without relying on color alone.
 ## Implementation Notes
 
 - Map backend lifecycle plus page projections to Indonesian labels at the presentation boundary.
+- Staff reservation pages use one shared presentation mapper so list, queue, schedule, and detail headline labels stay consistent. Raw `pending_review` must be rendered with stage context, for example `Menunggu Verifikasi Dokumen` or `Menunggu Verifikasi Pembayaran`, not the generic `Menunggu Peninjauan`.
 
 ## Acceptance Checks
 

@@ -2,7 +2,9 @@ import {
   Check,
   Building2,
   ChevronRight,
+  ClipboardCheck,
   Clock,
+  Eye,
   FileText,
   Filter,
   Home,
@@ -38,6 +40,7 @@ const navItems = [
 
 const badgeClasses: Record<StaffBadgeTone, string> = {
   danger: "bg-[#fee2e2] text-[#991b1b]",
+  info: "bg-[#dbeafe] text-[#1d4ed8]",
   neutral: "bg-[#f3f4f6] text-[#4b5563]",
   success: "bg-[#d1fae5] text-[#065f46]",
   warning: "bg-[#fef3c7] text-[#92400e]",
@@ -293,13 +296,42 @@ function StaffStatusBadge({ label, tone }: { label: string; tone: StaffBadgeTone
   return (
     <span
       className={cn(
-        "inline-flex max-w-[190px] items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold leading-4 max-md:max-w-[150px] max-md:px-2 max-md:py-1 max-md:text-[11px]",
+        "inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold leading-4 max-md:px-2.5 max-md:text-[11px]",
         badgeClasses[tone],
       )}
     >
       <Icon aria-hidden="true" className="shrink-0" size={13} />
-      <span className="min-w-0 whitespace-normal break-words">{label}</span>
+      <span className="whitespace-nowrap">{label}</span>
     </span>
+  );
+}
+
+function StaffReservationActionLink({
+  applicant,
+  href,
+  label,
+}: {
+  applicant: string;
+  href: string;
+  label: string;
+}) {
+  const isReviewAction = label === "Tinjau Pengajuan";
+  const Icon = isReviewAction ? ClipboardCheck : Eye;
+
+  return (
+    <a
+      aria-label={`${label} ${applicant}`}
+      className={cn(
+        "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border text-center no-underline shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f9d58]",
+        isReviewAction
+          ? "border-[#0f9d58] bg-[#0f9d58] text-white hover:bg-[#0b7340]"
+          : "border-[#0f9d58] bg-white text-[#0f9d58] hover:bg-[#e8f5e9]",
+      )}
+      href={href}
+      title={label}
+    >
+      <Icon aria-hidden="true" size={22} strokeWidth={2.4} />
+    </a>
   );
 }
 
@@ -307,22 +339,19 @@ function VerificationActionButtons({ item }: { item: StaffVerificationItem }) {
   const detailHref = `/staff/reservations/${item.id}`;
 
   return (
-    <div className="max-md:border-t max-md:border-[#e5e7eb] max-md:pt-4">
-      <a
-        aria-label={`${item.actionLabel} ${item.applicant}`}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center text-[13px] font-bold text-[#0f9d58] no-underline md:min-h-0 md:w-auto md:border-0 md:bg-transparent md:p-0"
+    <div className="flex justify-start max-md:border-t max-md:border-[#e5e7eb] max-md:pt-4 md:justify-center">
+      <StaffReservationActionLink
+        applicant={item.applicant}
         href={detailHref}
-        title={item.actionLabel}
-      >
-        {item.actionLabel}
-      </a>
+        label={item.actionLabel}
+      />
     </div>
   );
 }
 
 function VerificationRow({ item }: { item: StaffVerificationItem }) {
   return (
-    <tr className="max-md:grid max-md:grid-cols-[1fr_auto] max-md:gap-4 max-md:rounded-xl max-md:border max-md:border-[#e5e7eb] max-md:bg-white max-md:p-4 max-md:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
+    <tr className="max-md:grid max-md:grid-cols-1 max-md:gap-4 max-md:rounded-xl max-md:border max-md:border-[#e5e7eb] max-md:bg-white max-md:p-4 max-md:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
       <td className="border-b border-[#e5e7eb] px-8 py-5 align-middle max-md:col-start-1 max-md:row-start-1 max-md:border-0 max-md:p-0">
         <div className="flex min-w-0 items-center gap-4 max-md:gap-3">
           <StaffAvatar avatar={item.avatar} tone={item.avatarTone} />
@@ -332,16 +361,16 @@ function VerificationRow({ item }: { item: StaffVerificationItem }) {
           </div>
         </div>
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-1 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Fasilitas']">
+      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-1 max-md:row-start-3 max-md:border-0 max-md:p-0 max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Fasilitas']">
         {item.facility}
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-2 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:text-right max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Jadwal']">
+      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-1 max-md:row-start-4 max-md:border-0 max-md:p-0 max-md:text-left max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Jadwal']">
         {item.date}
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 align-middle max-md:col-start-2 max-md:row-start-1 max-md:border-0 max-md:p-0 max-md:text-right">
+      <td className="border-b border-[#e5e7eb] px-4 py-5 align-middle max-md:col-start-1 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:text-left">
         <StaffStatusBadge label={item.status} tone={item.tone} />
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 align-middle max-md:col-span-2 max-md:row-start-3 max-md:border-0 max-md:p-0">
+      <td className="border-b border-[#e5e7eb] px-4 py-5 align-middle max-md:col-start-1 max-md:row-start-5 max-md:border-0 max-md:p-0">
         <VerificationActionButtons item={item} />
       </td>
     </tr>
@@ -350,7 +379,7 @@ function VerificationRow({ item }: { item: StaffVerificationItem }) {
 
 function ReservationRow({ item }: { item: StaffReservationListItem }) {
   return (
-    <tr className="max-md:grid max-md:grid-cols-[1fr_auto] max-md:gap-4 max-md:rounded-xl max-md:border max-md:border-[#e5e7eb] max-md:bg-white max-md:p-4 max-md:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
+    <tr className="max-md:grid max-md:grid-cols-1 max-md:gap-4 max-md:rounded-xl max-md:border max-md:border-[#e5e7eb] max-md:bg-white max-md:p-4 max-md:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
       <td className="border-b border-[#e5e7eb] px-8 py-5 align-middle max-md:col-start-1 max-md:row-start-1 max-md:border-0 max-md:p-0">
         <div className="flex min-w-0 items-center gap-4 max-md:gap-3">
           <StaffAvatar avatar={item.avatar} tone={item.avatarTone} />
@@ -360,25 +389,25 @@ function ReservationRow({ item }: { item: StaffReservationListItem }) {
           </div>
         </div>
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-1 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Fasilitas']">
+      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-1 max-md:row-start-3 max-md:border-0 max-md:p-0 max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Fasilitas']">
         {item.facility}
         <span className="mt-1 block text-xs font-normal text-[#6b7280]">{item.activity}</span>
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-2 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:text-right max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Jadwal']">
+      <td className="border-b border-[#e5e7eb] px-8 py-5 text-sm font-semibold text-[#111827] max-md:col-start-1 max-md:row-start-4 max-md:border-0 max-md:p-0 max-md:text-left max-md:before:block max-md:before:text-[10px] max-md:before:font-bold max-md:before:uppercase max-md:before:tracking-[0.08em] max-md:before:text-[#6b7280] max-md:before:content-['Jadwal']">
         {item.date}
         <span className="mt-1 block text-xs font-normal text-[#6b7280]">{item.time}</span>
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 align-middle max-md:col-start-2 max-md:row-start-1 max-md:border-0 max-md:p-0 max-md:text-right">
+      <td className="border-b border-[#e5e7eb] px-4 py-5 align-middle max-md:col-start-1 max-md:row-start-2 max-md:border-0 max-md:p-0 max-md:text-left">
         <StaffStatusBadge label={item.status} tone={item.tone} />
       </td>
-      <td className="border-b border-[#e5e7eb] px-8 py-5 align-middle max-md:col-span-2 max-md:row-start-3 max-md:border-0 max-md:p-0 max-md:border-t max-md:border-[#e5e7eb] max-md:pt-4">
-        <a
-          aria-label={`${item.actionLabel} ${item.applicant}`}
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center text-[13px] font-bold text-[#0f9d58] no-underline md:min-h-0 md:w-auto md:border-0 md:bg-transparent md:p-0"
-          href={item.detailHref}
-        >
-          {item.actionLabel}
-        </a>
+      <td className="border-b border-[#e5e7eb] px-4 py-5 align-middle max-md:col-start-1 max-md:row-start-5 max-md:border-0 max-md:p-0 max-md:border-t max-md:border-[#e5e7eb] max-md:pt-4">
+        <div className="flex justify-start md:justify-center">
+          <StaffReservationActionLink
+            applicant={item.applicant}
+            href={item.detailHref}
+            label={item.actionLabel}
+          />
+        </div>
       </td>
     </tr>
   );
@@ -438,19 +467,19 @@ export function StaffHomePage() {
           <table className="w-full border-collapse text-left max-md:block">
             <thead className="bg-[#f9fafb] max-md:hidden">
               <tr>
-                <th className="w-[24%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[22%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Pemohon
                 </th>
-                <th className="w-[28%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[27%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Fasilitas
                 </th>
-                <th className="w-[18%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[16%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Jadwal
                 </th>
-                <th className="w-[17%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[21%] border-b border-[#e5e7eb] px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Status
                 </th>
-                <th className="w-[13%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[14%] border-b border-[#e5e7eb] px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Aksi
                 </th>
               </tr>
@@ -620,19 +649,19 @@ export function StaffReservationListPage() {
           <table className="w-full border-collapse text-left max-md:block">
             <thead className="bg-[#f9fafb] max-md:hidden">
               <tr>
-                <th className="w-[24%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[22%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Pemohon
                 </th>
-                <th className="w-[28%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[27%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Fasilitas
                 </th>
-                <th className="w-[18%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[16%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Jadwal
                 </th>
-                <th className="w-[17%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[21%] border-b border-[#e5e7eb] px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Status
                 </th>
-                <th className="w-[13%] border-b border-[#e5e7eb] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
+                <th className="w-[14%] border-b border-[#e5e7eb] px-4 py-4 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6b7280]">
                   Aksi
                 </th>
               </tr>

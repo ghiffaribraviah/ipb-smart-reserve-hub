@@ -143,7 +143,7 @@ test.describe("staff reservation detail and decision surfaces", () => {
     await expect(page.getByRole("heading", { name: "Verifikasi Dokumen" })).toBeVisible();
     await expect(page.getByText("surat-dekan.pdf")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Grand Auditorium" })).toBeVisible();
-    await expect(page.getByText("Menunggu Peninjauan").first()).toBeVisible();
+    await expect(page.getByText("Menunggu Verifikasi Dokumen").first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Setujui Dokumen" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Tolak Pengajuan" })).toHaveAttribute(
       "href",

@@ -44,6 +44,12 @@ class FacilityImageResponse(BaseModel):
     is_cover: bool
 
 
+class FacilityOpenHourResponse(BaseModel):
+    day_of_week: int
+    opens_at: str
+    closes_at: str
+
+
 class FacilityPriceResponse(BaseModel):
     is_free: bool
     amount_rupiah: int
@@ -74,6 +80,7 @@ class FacilityDetailResponse(BaseModel):
     images: list[FacilityImageResponse]
     price: FacilityPriceResponse
     open_hours_summary: str
+    open_hours: list[FacilityOpenHourResponse] = []
     review_summary: FacilityReviewSummaryResponse
     reviews: list[FacilityPublicReviewResponse]
 

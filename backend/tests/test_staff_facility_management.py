@@ -64,8 +64,12 @@ async def test_super_admin_assigns_staff_and_staff_manages_only_assigned_facilit
                 "payment_instructions": "Transfer ke rekening resmi IPB.",
                 "category_id": seminar_category_id,
                 "open_hours": [
-                    {"day_of_week": 0, "opens_at": "08:00", "closes_at": "16:00"},
-                    {"day_of_week": 2, "opens_at": "10:00", "closes_at": "18:30"},
+                    {"day_of_week": 0, "opens_at": "09:00", "closes_at": "16:00"},
+                    {"day_of_week": 1, "opens_at": "09:00", "closes_at": "16:00"},
+                    {"day_of_week": 2, "opens_at": "09:00", "closes_at": "16:00"},
+                    {"day_of_week": 3, "opens_at": "09:00", "closes_at": "16:00"},
+                    {"day_of_week": 4, "opens_at": "09:00", "closes_at": "16:00"},
+                    {"day_of_week": 5, "opens_at": "09:00", "closes_at": "15:00"},
                 ],
                 "is_active": True,
             },
@@ -127,10 +131,14 @@ async def test_super_admin_assigns_staff_and_staff_manages_only_assigned_facilit
     assert updated.json()["category_id"] == seminar_category_id
     assert updated.json()["category"] == "Seminar"
     assert updated.json()["open_hours"] == [
-        {"id": updated.json()["open_hours"][0]["id"], "day_of_week": 0, "opens_at": "08:00", "closes_at": "16:00"},
-        {"id": updated.json()["open_hours"][1]["id"], "day_of_week": 2, "opens_at": "10:00", "closes_at": "18:30"},
+        {"id": updated.json()["open_hours"][0]["id"], "day_of_week": 0, "opens_at": "09:00", "closes_at": "16:00"},
+        {"id": updated.json()["open_hours"][1]["id"], "day_of_week": 1, "opens_at": "09:00", "closes_at": "16:00"},
+        {"id": updated.json()["open_hours"][2]["id"], "day_of_week": 2, "opens_at": "09:00", "closes_at": "16:00"},
+        {"id": updated.json()["open_hours"][3]["id"], "day_of_week": 3, "opens_at": "09:00", "closes_at": "16:00"},
+        {"id": updated.json()["open_hours"][4]["id"], "day_of_week": 4, "opens_at": "09:00", "closes_at": "16:00"},
+        {"id": updated.json()["open_hours"][5]["id"], "day_of_week": 5, "opens_at": "09:00", "closes_at": "15:00"},
     ]
-    assert updated.json()["open_hours_summary"] == "Senin 08:00-16:00; Rabu 10:00-18:30"
+    assert updated.json()["open_hours_summary"] == "Senin-Jumat 09:00-16:00; Sabtu 09:00-15:00; Minggu tutup"
     assert updated.json()["price_rupiah"] == 250000
     assert updated.json()["payment_instructions"] == "Transfer ke rekening resmi IPB."
     assert invalid_open_hours.status_code == 400

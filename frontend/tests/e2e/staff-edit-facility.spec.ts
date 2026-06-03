@@ -125,14 +125,14 @@ test.describe("staff edit facility page", () => {
     await expect(page.getByLabel("Nomor Kontak")).toHaveValue("081200000000");
     await expect(page.getByLabel("Email Kontak")).toHaveValue("auditorium@apps.ipb.ac.id");
     await expect(page.getByRole("heading", { name: "Jadwal Operasional" })).toBeVisible();
-    await expect(page.getByText("Ringkasan saat ini: Senin-Jumat, 08:00 - 18:00")).toBeVisible();
-    await expect(page.getByLabel("Hari buka 1")).toHaveValue("0");
+    await expect(page.getByText("Ringkasan otomatis: Senin-Selasa 08:00-18:00; Rabu-Minggu tutup")).toBeVisible();
     await expect(page.getByLabel("Jam buka mulai 1")).toHaveValue("08:00");
     await expect(page.getByLabel("Jam buka selesai 1")).toHaveValue("18:00");
     await expect(page.getByLabel("Jam buka mulai 1")).toHaveAttribute("type", "text");
     await expect(page.getByLabel("Jam buka selesai 1")).toHaveAttribute("type", "text");
-    await expect(page.getByRole("button", { name: "Tambah Baris Jam Buka" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Hapus Jam Buka 1" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tambah Jadwal Hari" })).toBeVisible();
+    await expect(page.getByLabel("Tutup Minggu")).toBeChecked();
+    await expect(page.getByRole("button", { name: /Hapus Jam Buka/ })).toHaveCount(0);
     await expect(page.getByLabel("Instruksi Pembayaran")).toHaveValue("Transfer ke rekening resmi IPB.");
     await expect(page.getByRole("heading", { name: "Galeri Media" })).toBeVisible();
     await expect(page.getByRole("img", { name: "Cover auditorium" })).toBeVisible();

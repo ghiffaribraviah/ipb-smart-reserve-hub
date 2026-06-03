@@ -61,6 +61,13 @@ class FacilityPublicImage:
 
 
 @dataclass(frozen=True)
+class FacilityOpenHour:
+    day_of_week: int
+    opens_at: str
+    closes_at: str
+
+
+@dataclass(frozen=True)
 class FacilityPrice:
     is_free: bool
     amount_rupiah: int
@@ -94,6 +101,7 @@ class FacilityPublicDetail:
     images: list[FacilityPublicImage]
     price: FacilityPrice
     open_hours_summary: str
+    open_hours: list[FacilityOpenHour]
     review_summary: FacilityReviewSummary
     reviews: list[FacilityPublicReview]
 
@@ -199,6 +207,14 @@ class FacilityCatalogModule:
                 summary=summarize_price(facility.price_rupiah),
             ),
             open_hours_summary=facility.open_hours_summary,
+            open_hours=[
+                FacilityOpenHour(
+                    day_of_week=open_hour.day_of_week,
+                    opens_at=open_hour.opens_at.isoformat(timespec="minutes"),
+                    closes_at=open_hour.closes_at.isoformat(timespec="minutes"),
+                )
+                for open_hour in facility.open_hours
+            ],
             review_summary=FacilityReviewSummary(
                 rating_average=review_projection.summary.rating_average,
                 review_count=review_projection.summary.review_count,

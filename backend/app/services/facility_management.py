@@ -512,11 +512,37 @@ _DAY_NAMES = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 
 def _summarize_open_hours(open_hours: list[FacilityOpenHour]) -> str:
     if not open_hours:
-        return "Belum ada jam buka"
-    return "; ".join(
-        f"{_DAY_NAMES[open_hour.day_of_week]} {open_hour.opens_at.isoformat(timespec='minutes')}-{open_hour.closes_at.isoformat(timespec='minutes')}"
+        return "Senin-Minggu tutup"
+
+    first_open_hour_by_day = {
+        open_hour.day_of_week: open_hour
         for open_hour in sorted(open_hours, key=lambda item: (item.day_of_week, item.opens_at))
+    }
+    segments: list[tuple[int, int, str | None]] = []
+
+    for day_index in range(7):
+        open_hour = first_open_hour_by_day.get(day_index)
+        range_label = (
+            f"{open_hour.opens_at.isoformat(timespec='minutes')}-{open_hour.closes_at.isoformat(timespec='minutes')}"
+            if open_hour
+            else None
+        )
+        if segments and segments[-1][2] == range_label:
+            start, _, previous_label = segments[-1]
+            segments[-1] = (start, day_index, previous_label)
+        else:
+            segments.append((day_index, day_index, range_label))
+
+    return "; ".join(
+        f"{_format_day_range(start, end)} {range_label or 'tutup'}"
+        for start, end, range_label in segments
     )
+
+
+def _format_day_range(start: int, end: int) -> str:
+    if start == end:
+        return _DAY_NAMES[start]
+    return f"{_DAY_NAMES[start]}-{_DAY_NAMES[end]}"
 
 
 def _as_utc(value: datetime) -> datetime:

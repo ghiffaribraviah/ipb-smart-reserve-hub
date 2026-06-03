@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, time
 from typing import Literal, Protocol
 
 from sqlalchemy import func, select
@@ -21,6 +21,13 @@ class FacilityCatalogImageRecord:
 
 
 @dataclass(frozen=True)
+class FacilityOpenHourRecord:
+    day_of_week: int
+    opens_at: time
+    closes_at: time
+
+
+@dataclass(frozen=True)
 class FacilityCatalogRecord:
     id: str
     name: str
@@ -37,6 +44,7 @@ class FacilityCatalogRecord:
     rating_average: float | None
     review_count: int
     images: list[FacilityCatalogImageRecord]
+    open_hours: list[FacilityOpenHourRecord] = field(default_factory=list)
     reviews: list["FacilityReviewRecord"] = field(default_factory=list)
 
 
@@ -146,6 +154,7 @@ class SqlAlchemyFacilityCatalogReader:
             .options(
                 joinedload(Facility.category),
                 joinedload(Facility.images),
+                joinedload(Facility.open_hours),
                 joinedload(Facility.reviews).joinedload(FacilityReview.student),
             )
             .where(Facility.is_active.is_(True))
@@ -160,6 +169,7 @@ class SqlAlchemyFacilityCatalogReader:
             .options(
                 joinedload(Facility.category),
                 joinedload(Facility.images),
+                joinedload(Facility.open_hours),
                 joinedload(Facility.reviews).joinedload(FacilityReview.student),
             )
             .where(Facility.id == facility_id, Facility.is_active.is_(True))
@@ -211,6 +221,14 @@ class SqlAlchemyFacilityCatalogReader:
             contact_email=facility.contact_email,
             price_rupiah=facility.price_rupiah,
             open_hours_summary=facility.open_hours_summary,
+            open_hours=[
+                FacilityOpenHourRecord(
+                    day_of_week=open_hour.day_of_week,
+                    opens_at=open_hour.opens_at,
+                    closes_at=open_hour.closes_at,
+                )
+                for open_hour in sorted(facility.open_hours, key=lambda item: (item.day_of_week, item.opens_at))
+            ],
             rating_average=None,
             review_count=0,
             images=[

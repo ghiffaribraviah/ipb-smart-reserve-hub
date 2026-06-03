@@ -28,6 +28,7 @@ type FacilityDetailResponse = {
   images: FacilityImageResponse[];
   location: string;
   name: string;
+  open_hours?: FacilityOpenHourResponse[];
   open_hours_summary: string;
   price: {
     amount_rupiah: number;
@@ -47,6 +48,12 @@ type FacilityDetailResponse = {
   }[];
 };
 
+type FacilityOpenHourResponse = {
+  closes_at: string;
+  day_of_week: number;
+  opens_at: string;
+};
+
 type PublicCalendarEntryResponse = {
   ends_at: string;
   starts_at: string;
@@ -58,6 +65,8 @@ type DetailFeature = {
   label: string;
   value: string;
 };
+
+const operationalDayNames = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 
 const navItems = [
   { href: "/student", label: "Beranda" },
@@ -182,6 +191,41 @@ function formatTimeRange(entry: PublicCalendarEntryResponse) {
   return `${formatCampusTime(entry.starts_at)} - ${formatCampusTime(entry.ends_at)}`;
 }
 
+function formatOperatingTime(value: string) {
+  return value.replace(":", ".");
+}
+
+function currentCampusDayIndex() {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta",
+    weekday: "short",
+  }).format(new Date());
+  return { Fri: 4, Mon: 0, Sat: 5, Sun: 6, Thu: 3, Tue: 1, Wed: 2 }[weekday] ?? 0;
+}
+
+function operatingHoursForToday(openHours: FacilityOpenHourResponse[]) {
+  const today = currentCampusDayIndex();
+  const openHour = openHours.find((item) => item.day_of_week === today);
+
+  if (!openHour) {
+    return "Hari ini: tutup";
+  }
+
+  return `Hari ini: ${formatOperatingTime(openHour.opens_at)}–${formatOperatingTime(openHour.closes_at)}`;
+}
+
+function fullOperatingSchedule(openHours: FacilityOpenHourResponse[]) {
+  return operationalDayNames.map((dayName, dayIndex) => {
+    const openHour = openHours.find((item) => item.day_of_week === dayIndex);
+    return {
+      dayName,
+      label: openHour
+        ? `${formatOperatingTime(openHour.opens_at)}–${formatOperatingTime(openHour.closes_at)}`
+        : "Tutup",
+    };
+  });
+}
+
 function reviewInitials(name: string) {
   return name
     .split(" ")
@@ -191,11 +235,11 @@ function reviewInitials(name: string) {
     .join("");
 }
 
-function detailFeatures(detail: FacilityDetailResponse): DetailFeature[] {
+function detailFeatures(detail: FacilityDetailResponse, operatingHoursLabel: string): DetailFeature[] {
   return [
     { icon: Users, label: "Kapasitas", value: formatCapacity(detail.capacity) },
     { icon: Building2, label: "Kategori", value: detail.category },
-    { icon: Clock, label: "Jam Buka", value: detail.open_hours_summary },
+    { icon: Clock, label: "Jam Buka", value: operatingHoursLabel },
     { icon: Phone, label: "Kontak", value: detail.contact.phone },
   ];
 }
@@ -633,6 +677,7 @@ function StudentFooter() {
 export function StudentFacilityDetailPage() {
   const { facilityId = "" } = useParams();
   const [calendarMonth, setCalendarMonth] = useState(() => startOfUtcMonth(new Date()));
+  const [isFullScheduleOpen, setIsFullScheduleOpen] = useState(false);
   const [selectedDateKey, setSelectedDateKey] = useState(() => dateKey(new Date()));
   const detailQuery = useQuery({
     enabled: facilityId.length > 0,
@@ -683,6 +728,11 @@ export function StudentFacilityDetailPage() {
 
   const detail = detailQuery.data;
   const calendarEntries = calendarQuery.data ?? [];
+  const detailOpenHours = detail.open_hours ?? [];
+  const todayOperatingHours = detailOpenHours.length > 0
+    ? operatingHoursForToday(detailOpenHours)
+    : detail.open_hours_summary;
+  const fullSchedule = fullOperatingSchedule(detailOpenHours);
 
   function handleMonthChange(nextMonth: Date) {
     const normalizedMonth = startOfUtcMonth(nextMonth);
@@ -740,7 +790,7 @@ export function StudentFacilityDetailPage() {
                 {detail.description}
               </p>
               <div className="mb-12 grid grid-cols-4 gap-4 max-md:mb-9 max-md:grid-cols-2 max-md:gap-3">
-                {detailFeatures(detail).map(({ icon: Icon, label, value }) => (
+                {detailFeatures(detail, todayOperatingHours).map(({ icon: Icon, label, value }) => (
                   <div
                     className="flex min-h-[108px] flex-col items-center justify-center rounded-xl border border-[#e5e7eb] bg-white px-3 py-5 text-center"
                     key={label}
@@ -751,6 +801,33 @@ export function StudentFacilityDetailPage() {
                   </div>
                 ))}
               </div>
+              {detailOpenHours.length > 0 ? (
+                <section className="mb-12 rounded-xl bg-[#f8fafc] p-5 max-md:mb-9">
+                  <div className="flex items-center justify-between gap-4 max-md:items-start">
+                    <div>
+                      <h3 className="m-0 text-sm font-bold text-[#111827]">Jam operasional</h3>
+                      <p className="m-0 mt-1 text-sm text-[#6b7280]">{todayOperatingHours}</p>
+                    </div>
+                    <button
+                      className="shrink-0 rounded-lg border border-[#d1fae5] bg-white px-3 py-2 text-xs font-bold text-[#0f9d58]"
+                      onClick={() => setIsFullScheduleOpen((current) => !current)}
+                      type="button"
+                    >
+                      {isFullScheduleOpen ? "Tutup jadwal" : "Lihat jadwal lengkap"}
+                    </button>
+                  </div>
+                  {isFullScheduleOpen ? (
+                    <dl className="mt-4 grid grid-cols-2 gap-2 max-md:grid-cols-1">
+                      {fullSchedule.map((item) => (
+                        <div className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm" key={item.dayName}>
+                          <dt className="font-semibold text-[#111827]">{item.dayName}</dt>
+                          <dd className="m-0 text-[#6b7280]">{item.label}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                </section>
+              ) : null}
             </section>
 
             <Reviews detail={detail} />

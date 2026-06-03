@@ -363,8 +363,8 @@ describe("StaffFacilityPages", () => {
             location: "Kampus Dramaga",
             name: "Grand Auditorium Baru",
             open_hours: [
-              { closes_at: "18:00", day_of_week: 0, opens_at: "08:00" },
-              { closes_at: "18:00", day_of_week: 1, opens_at: "08:00" },
+              { closes_at: "17:00", day_of_week: 0, opens_at: "09:00" },
+              { closes_at: "17:00", day_of_week: 1, opens_at: "09:00" },
               { closes_at: "17:00", day_of_week: 2, opens_at: "09:00" },
             ],
             payment_instructions: null,
@@ -378,10 +378,11 @@ describe("StaffFacilityPages", () => {
           category_id: "category-classroom",
           name: "Grand Auditorium Baru",
           open_hours: [
-            ...facilitiesResponse[0].open_hours,
+            { id: "open-hour-1", day_of_week: 0, opens_at: "09:00", closes_at: "17:00" },
+            { id: "open-hour-2", day_of_week: 1, opens_at: "09:00", closes_at: "17:00" },
             { id: "open-hour-4", day_of_week: 2, opens_at: "09:00", closes_at: "17:00" },
           ],
-          open_hours_summary: "Senin 08:00-18:00; Selasa 08:00-18:00; Rabu 09:00-17:00",
+          open_hours_summary: "Senin-Rabu 09:00-17:00; Kamis-Minggu tutup",
         });
       }
 
@@ -397,10 +398,17 @@ describe("StaffFacilityPages", () => {
     await user.selectOptions(screen.getByLabelText("Kategori Fasilitas"), "category-classroom");
     await user.clear(screen.getByLabelText("Kapasitas (Orang)"));
     await user.type(screen.getByLabelText("Kapasitas (Orang)"), "350");
-    await user.click(screen.getByRole("button", { name: "Tambah Baris Jam Buka" }));
-    await user.click(screen.getByRole("button", { name: "Hapus Jam Buka 3" }));
-    await user.click(screen.getByRole("button", { name: "Tambah Baris Jam Buka" }));
-    await user.selectOptions(screen.getByLabelText("Hari buka 3"), "2");
+    expect(screen.getByLabelText("Tutup Minggu")).toBeChecked();
+    expect(screen.queryByRole("button", { name: /Hapus Jam Buka/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Tambah Jadwal Hari" }));
+    await user.clear(screen.getByLabelText("Jam buka mulai 1"));
+    await user.type(screen.getByLabelText("Jam buka mulai 1"), "09:00");
+    await user.clear(screen.getByLabelText("Jam buka selesai 1"));
+    await user.type(screen.getByLabelText("Jam buka selesai 1"), "17:00");
+    await user.clear(screen.getByLabelText("Jam buka mulai 2"));
+    await user.type(screen.getByLabelText("Jam buka mulai 2"), "09:00");
+    await user.clear(screen.getByLabelText("Jam buka selesai 2"));
+    await user.type(screen.getByLabelText("Jam buka selesai 2"), "17:00");
     await user.clear(screen.getByLabelText("Jam buka mulai 3"));
     await user.type(screen.getByLabelText("Jam buka mulai 3"), "09:00");
     await user.clear(screen.getByLabelText("Jam buka selesai 3"));
@@ -412,7 +420,7 @@ describe("StaffFacilityPages", () => {
     expect(screen.getByLabelText("Kategori Fasilitas")).toHaveValue("category-classroom");
     expect(
       screen.getAllByText((_, element) =>
-        Boolean(element?.textContent?.includes("Senin 08:00-18:00; Selasa 08:00-18:00; Rabu 09:00-17:00")),
+        Boolean(element?.textContent?.includes("Senin-Rabu 09:00-17:00; Kamis-Minggu tutup")),
       )[0],
     ).toBeVisible();
     await waitFor(() => {

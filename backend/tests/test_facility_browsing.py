@@ -488,6 +488,7 @@ async def test_students_view_facility_detail_public_information():
     app = create_app(database_url="sqlite+pysqlite:///:memory:")
     test_data = DataBuilder(app)
     facility_id = test_data.create_facility(name="Gedung Graha Widya Wisuda")
+    test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="08:00", closes_at="16:00")
     test_data.add_facility_image(
         facility_id,
         url="https://cdn.example.test/gww-stage.jpg",
@@ -529,6 +530,13 @@ async def test_students_view_facility_detail_public_information():
             "summary": "Gratis",
         },
         "open_hours_summary": "Senin-Jumat 08.00-16.00",
+        "open_hours": [
+            {
+                "day_of_week": 0,
+                "opens_at": "08:00",
+                "closes_at": "16:00",
+            }
+        ],
         "review_summary": {
             "rating_average": None,
             "review_count": 0,
@@ -651,6 +659,27 @@ async def test_students_check_facility_availability_against_open_hours():
     assert inside_hours.json() == {"available": True, "reasons": []}
     assert outside_hours.status_code == 200
     assert outside_hours.json() == {"available": False, "reasons": ["outside_open_hours"]}
+
+
+@pytest.mark.anyio
+async def test_students_check_facility_availability_rejects_closed_days():
+    app = create_app(database_url="sqlite+pysqlite:///:memory:")
+    test_data = DataBuilder(app)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="09:00", closes_at="16:00")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        closed_day = await client.get(
+            f"/facilities/{facility_id}/availability",
+            params={
+                "start": "2026-06-07T03:00:00+00:00",
+                "end": "2026-06-07T04:00:00+00:00",
+            },
+        )
+
+    assert closed_day.status_code == 200
+    assert closed_day.json() == {"available": False, "reasons": ["outside_open_hours"]}
 
 
 @pytest.mark.anyio

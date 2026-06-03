@@ -54,7 +54,7 @@
 ## Backend Integration And Gaps
 
 - Endpoints consumed: `GET /facilities/:facilityId`, `GET /facilities/:facilityId/calendar`, optionally `GET /facilities/:facilityId/availability`.
-- Page-needed fields: `FacilityDetailResponse`, review summary/reviews, image list, contact, price, open-hours summary, and privacy-safe calendar entries containing only `starts_at`, `ends_at`, and generic `status: reserved`.
+- Page-needed fields: `FacilityDetailResponse`, review summary/reviews, image list, contact, price, structured `open_hours` for today's hours and full schedule display, open-hours summary fallback, and privacy-safe calendar entries containing only `starts_at`, `ends_at`, and generic `status: reserved`.
 - Auth/session assumptions: protected student route; public facility endpoints.
 - Source files: `backend/app/api/routes/facility_routes.py`, `backend/app/schemas/facility_schemas.py`.
 
@@ -63,8 +63,8 @@
 - Status: `resolved`
 - Domain area: Facility Catalog
 - Affected UI: detail header, gallery, contact/pricing cards, public calendar.
-- Contract needed: active facility detail with public image URLs plus public blocked-slot calendar.
-- Evidence: detail, calendar, and availability routes exist in `backend/app/api/routes/facility_routes.py`; schemas exist in `backend/app/schemas/facility_schemas.py`; `FacilityDetailResponse.images` supplies active facility media for the gallery.
+- Contract needed: active facility detail with public image URLs, structured operating hours, plus public blocked-slot calendar.
+- Evidence: detail, calendar, and availability routes exist in `backend/app/api/routes/facility_routes.py`; schemas exist in `backend/app/schemas/facility_schemas.py`; `FacilityDetailResponse.images` supplies active facility media for the gallery and `FacilityDetailResponse.open_hours` supplies staff-managed operating hours.
 - Source issue/PRD: `docs/issues/ISSUE-0002-facility-catalog-and-detail-browsing.md`, `docs/issues/ISSUE-0003-facility-availability-calendar.md`.
 
 ### BG-STUDENT-02-02: Privacy-Safe Public Calendar Blocks

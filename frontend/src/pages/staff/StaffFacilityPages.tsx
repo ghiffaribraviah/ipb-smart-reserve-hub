@@ -64,6 +64,10 @@ type FacilityOpenHourResponse = {
   opens_at: string;
 };
 
+type OpenHourFormRow = FacilityOpenHourResponse & {
+  is_closed: boolean;
+};
+
 type FacilityBlackoutResponse = {
   ends_at: string;
   id: string;
@@ -97,7 +101,7 @@ type FacilityEditForm = {
   is_active: boolean;
   location: string;
   name: string;
-  open_hours: FacilityOpenHourResponse[];
+  open_hours: OpenHourFormRow[];
   open_hours_summary: string;
   payment_instructions: string;
   price_rupiah: string;
@@ -106,6 +110,7 @@ type FacilityEditForm = {
 const time24HourPattern = "(?:[01][0-9]|2[0-3]):[0-5][0-9]";
 const time24HourRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const dateInputPattern = /^\d{4}-\d{2}-\d{2}$/;
+const operationalDayNames = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 const blackoutTimeOptions = Array.from({ length: 96 }, (_, index) => {
   const hours = String(Math.floor(index / 4)).padStart(2, "0");
   const minutes = String((index % 4) * 15).padStart(2, "0");
@@ -266,6 +271,45 @@ function formatBlackoutRange(blackout: FacilityBlackoutResponse) {
   return `${startsDate}, ${startsTime} - ${endsDate}, ${endsTime}`;
 }
 
+function operationalRowsFromOpenHours(openHours: FacilityOpenHourResponse[] = []): OpenHourFormRow[] {
+  const firstOpenHourByDay = new Map<number, FacilityOpenHourResponse>();
+  for (const openHour of [...openHours].sort((left, right) => left.opens_at.localeCompare(right.opens_at))) {
+    if (!firstOpenHourByDay.has(openHour.day_of_week)) {
+      firstOpenHourByDay.set(openHour.day_of_week, openHour);
+    }
+  }
+
+  return operationalDayNames.map((_, dayIndex) => {
+    const openHour = firstOpenHourByDay.get(dayIndex);
+    return openHour
+      ? { ...openHour, is_closed: false }
+      : { day_of_week: dayIndex, opens_at: "09:00", closes_at: "16:00", is_closed: true };
+  });
+}
+
+function generatedOpenHoursSummary(openHours: OpenHourFormRow[]) {
+  const segments: Array<{ end: number; label: string | null; start: number }> = [];
+
+  for (const openHour of [...openHours].sort((left, right) => left.day_of_week - right.day_of_week)) {
+    const label = openHour.is_closed ? null : `${openHour.opens_at}-${openHour.closes_at}`;
+    const previous = segments.at(-1);
+
+    if (previous?.label === label) {
+      previous.end = openHour.day_of_week;
+    } else {
+      segments.push({ end: openHour.day_of_week, label, start: openHour.day_of_week });
+    }
+  }
+
+  return segments.map((segment) => {
+    const dayLabel =
+      segment.start === segment.end
+        ? operationalDayNames[segment.start]
+        : `${operationalDayNames[segment.start]}-${operationalDayNames[segment.end]}`;
+    return `${dayLabel} ${segment.label ?? "tutup"}`;
+  }).join("; ");
+}
+
 function dateKeyFromUtcParts(year: number, monthIndex: number, day: number) {
   const date = new Date(Date.UTC(year, monthIndex, day, 12));
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(
@@ -357,8 +401,8 @@ function facilityToEditForm(facility: FacilityManagementProfileResponse): Facili
     is_active: facility.is_active,
     location: facility.location,
     name: facility.name,
-    open_hours: facility.open_hours ?? [],
-    open_hours_summary: facility.open_hours_summary,
+    open_hours: operationalRowsFromOpenHours(facility.open_hours),
+    open_hours_summary: generatedOpenHoursSummary(operationalRowsFromOpenHours(facility.open_hours)),
     payment_instructions: facility.payment_instructions ?? "",
     price_rupiah: String(facility.price_rupiah),
   };
@@ -1011,7 +1055,7 @@ export function StaffFacilityEditPage() {
         throw new Error("Harga sewa tidak boleh negatif.");
       }
 
-      const openHours = form.open_hours.map((openHour) => {
+      const openHours = form.open_hours.filter((openHour) => !openHour.is_closed).map((openHour) => {
         if (!time24HourRegex.test(openHour.opens_at) || !time24HourRegex.test(openHour.closes_at)) {
           throw new Error("Jam buka harus memakai format 24 jam HH:mm.");
         }
@@ -1158,7 +1202,7 @@ export function StaffFacilityEditPage() {
     setFormEdits((current) => ({ ...current, [field]: value }));
   };
 
-  const updateOpenHour = (index: number, updates: Partial<FacilityOpenHourResponse>) => {
+  const updateOpenHour = (index: number, updates: Partial<OpenHourFormRow>) => {
     setFormEdits((current) => {
       const currentOpenHours = current.open_hours ?? form.open_hours;
       return {
@@ -1173,19 +1217,13 @@ export function StaffFacilityEditPage() {
   const addOpenHourRow = () => {
     setFormEdits((current) => ({
       ...current,
-      open_hours: [
-        ...(current.open_hours ?? form.open_hours),
-        { day_of_week: 0, opens_at: "08:00", closes_at: "16:00" },
-      ],
+      open_hours: (current.open_hours ?? form.open_hours).map((openHour, index, rows) =>
+        index === rows.findIndex((row) => row.is_closed) ? { ...openHour, is_closed: false } : openHour
+      ),
     }));
   };
 
-  const removeOpenHourRow = (index: number) => {
-    setFormEdits((current) => ({
-      ...current,
-      open_hours: (current.open_hours ?? form.open_hours).filter((_, currentIndex) => currentIndex !== index),
-    }));
-  };
+  const generatedSummary = generatedOpenHoursSummary(form.open_hours);
 
   const categoryOptions = categoriesQuery.data ?? (
     facility ? [{ id: facility.category_id, name: facility.category }] : []
@@ -1343,56 +1381,56 @@ export function StaffFacilityEditPage() {
                 <div>
                   <h2 className="m-0 text-sm font-bold text-[#111827]">Jadwal Operasional</h2>
                   <p className="m-0 mt-2 text-sm leading-6 text-[#6b7280]">
-                    Ringkasan saat ini: {form.open_hours_summary || "Belum ada jam buka"}
+                    Ringkasan otomatis: {generatedSummary || "Belum ada jam buka"}
                   </p>
                 </div>
                 <button
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#d1fae5] bg-[#e8f5e9] px-4 text-sm font-bold text-[#0f9d58]"
-                  disabled={busy}
+                  disabled={busy || !form.open_hours.some((openHour) => openHour.is_closed)}
                   onClick={addOpenHourRow}
                   type="button"
                 >
                   <Plus aria-hidden="true" size={16} />
-                  Tambah Baris Jam Buka
+                  Tambah Jadwal Hari
                 </button>
               </div>
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 {form.open_hours.length === 0 ? (
-                  <div className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4 text-sm font-semibold text-[#6b7280]">
+                  <div className="rounded-lg bg-[#f8fafc] p-4 text-sm font-semibold text-[#6b7280]">
                     Belum ada jam buka terstruktur.
                   </div>
                 ) : null}
                 {form.open_hours.map((openHour, index) => {
                   const rowNumber = index + 1;
+                  const dayLabel = operationalDayNames[openHour.day_of_week];
                   return (
                     <div
-                      className="grid grid-cols-[1.1fr_1fr_1fr_auto] items-end gap-3 rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-3 max-md:grid-cols-1"
+                      className="grid grid-cols-[1fr_auto_1fr_1fr] items-center gap-3 rounded-lg bg-[#f8fafc] p-3 max-md:grid-cols-1"
                       key={openHour.id ?? `new-${index}`}
                     >
-                      <label className="grid gap-2 text-[13px] font-semibold text-[#111827]">
-                        Hari
-                        <select
-                          aria-label={`Hari buka ${rowNumber}`}
-                          className="h-10 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm"
+                      <div>
+                        <div className="text-sm font-bold text-[#111827]">{dayLabel}</div>
+                        <div className="mt-1 text-xs font-semibold text-[#6b7280]">
+                          {openHour.is_closed ? "Tutup" : "Buka"}
+                        </div>
+                      </div>
+                      <label className="inline-flex min-h-10 items-center gap-2 rounded-full bg-white px-3 text-[13px] font-bold text-[#111827]">
+                        <input
+                          aria-label={`Tutup ${dayLabel}`}
+                          checked={openHour.is_closed}
+                          className="h-4 w-4 accent-[#0f9d58]"
                           disabled={busy}
-                          onChange={(event) => updateOpenHour(index, { day_of_week: Number(event.target.value) })}
-                          value={String(openHour.day_of_week)}
-                        >
-                          <option value="0">Senin</option>
-                          <option value="1">Selasa</option>
-                          <option value="2">Rabu</option>
-                          <option value="3">Kamis</option>
-                          <option value="4">Jumat</option>
-                          <option value="5">Sabtu</option>
-                          <option value="6">Minggu</option>
-                        </select>
+                          onChange={(event) => updateOpenHour(index, { is_closed: event.target.checked })}
+                          type="checkbox"
+                        />
+                        Tutup
                       </label>
                       <label className="grid gap-2 text-[13px] font-semibold text-[#111827]">
                         Jam Buka
                         <input
                           aria-label={`Jam buka mulai ${rowNumber}`}
                           className="h-10 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm"
-                          disabled={busy}
+                          disabled={busy || openHour.is_closed}
                           inputMode="numeric"
                           onChange={(event) => updateOpenHour(index, { opens_at: event.target.value })}
                           pattern={time24HourPattern}
@@ -1406,7 +1444,7 @@ export function StaffFacilityEditPage() {
                         <input
                           aria-label={`Jam buka selesai ${rowNumber}`}
                           className="h-10 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm"
-                          disabled={busy}
+                          disabled={busy || openHour.is_closed}
                           inputMode="numeric"
                           onChange={(event) => updateOpenHour(index, { closes_at: event.target.value })}
                           pattern={time24HourPattern}
@@ -1415,15 +1453,6 @@ export function StaffFacilityEditPage() {
                           value={openHour.closes_at}
                         />
                       </label>
-                      <button
-                        aria-label={`Hapus Jam Buka ${rowNumber}`}
-                        className="min-h-10 rounded-lg border border-[#fecaca] bg-white px-4 text-sm font-bold text-[#dc2626]"
-                        disabled={busy}
-                        onClick={() => removeOpenHourRow(index)}
-                        type="button"
-                      >
-                        Hapus
-                      </button>
                     </div>
                   );
                 })}

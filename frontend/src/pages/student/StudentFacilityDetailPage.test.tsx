@@ -24,6 +24,14 @@ const facilityDetail = {
   ],
   location: "Kampus Timur",
   name: "Auditorium Backend",
+  open_hours: [
+    { day_of_week: 0, opens_at: "08:00", closes_at: "18:00" },
+    { day_of_week: 1, opens_at: "08:00", closes_at: "18:00" },
+    { day_of_week: 2, opens_at: "08:00", closes_at: "18:00" },
+    { day_of_week: 3, opens_at: "08:00", closes_at: "18:00" },
+    { day_of_week: 4, opens_at: "08:00", closes_at: "18:00" },
+    { day_of_week: 5, opens_at: "09:00", closes_at: "15:00" },
+  ],
   open_hours_summary: "Senin-Jumat 08:00-18:00",
   price: {
     amount_rupiah: 100000,
@@ -134,7 +142,12 @@ describe("StudentFacilityDetailPage", () => {
     expect(screen.getByText("Auditorium utama untuk kegiatan akademik besar.")).toBeVisible();
     expect(screen.getByText("1,200")).toBeVisible();
     expect(screen.getByText("Auditorium")).toBeVisible();
-    expect(screen.getByText("Senin-Jumat 08:00-18:00")).toBeVisible();
+    expect(screen.getAllByText("Hari ini: 08.00–18.00")[0]).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Lihat jadwal lengkap" }));
+    expect(screen.getByText("Sabtu")).toBeVisible();
+    expect(screen.getByText("09.00–15.00")).toBeVisible();
+    expect(screen.getByText("Minggu")).toBeVisible();
+    expect(screen.getByText("Tutup")).toBeVisible();
     expect(screen.getAllByText("0251-8620000")[0]).toBeVisible();
     expect(screen.getByText("Rp100.000")).toBeVisible();
     expect(screen.getByText("Ruangannya luas dan tata suara jelas.")).toBeVisible();

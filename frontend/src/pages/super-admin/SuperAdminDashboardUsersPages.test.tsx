@@ -258,6 +258,45 @@ const auditLogPaginationResponse = Array.from({ length: 25 }, (_, index) => ({
   target_type: "review",
 }));
 
+const auditLogRequestResponse = [
+  {
+    action_type: "request.200",
+    actor_email: "admin@ipb.ac.id",
+    actor_id: "admin-1",
+    created_at: "2026-05-12T04:30:00Z",
+    facility_id: null,
+    id: "audit-endpoint-1",
+    reservation_id: null,
+    student_id: null,
+    target_id: "GET /admin/system-status",
+    target_type: "endpoint",
+  },
+  {
+    action_type: "request.200",
+    actor_email: "admin@ipb.ac.id",
+    actor_id: "admin-1",
+    created_at: "2026-05-12T04:35:00Z",
+    facility_id: null,
+    id: "audit-endpoint-2",
+    reservation_id: null,
+    student_id: null,
+    target_id: "GET /admin/system-status",
+    target_type: "endpoint",
+  },
+  {
+    action_type: "auth.login",
+    actor_email: "admin@ipb.ac.id",
+    actor_id: "admin-1",
+    created_at: "2026-05-12T04:00:00Z",
+    facility_id: null,
+    id: "audit-endpoint-3",
+    reservation_id: null,
+    student_id: null,
+    target_id: "POST /auth/login",
+    target_type: "endpoint",
+  },
+];
+
 const adminReviewResponse = [
   {
     admin_removal_reason: null,
@@ -1010,8 +1049,8 @@ describe("SuperAdminDashboardPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Log Audit" })).toBeVisible();
     expect(await screen.findByText("12 log")).toBeVisible();
-    expect(screen.getAllByText("admin@ipb.ac.id - review admin deleted")).toHaveLength(12);
-    expect(screen.getByText(/review-12/)).toBeVisible();
+    expect(screen.getAllByText("review admin deleted")).toHaveLength(24);
+    expect(screen.getAllByText(/review-12/)[0]).toBeVisible();
     expect(screen.getByRole("link", { name: "Kembali ke Laporan" })).toHaveAttribute(
       "href",
       "/super-admin/reports",
@@ -1038,15 +1077,35 @@ describe("SuperAdminDashboardPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Log Audit" })).toBeVisible();
     expect(await screen.findByText("20 log")).toBeVisible();
-    expect(screen.getAllByText("admin@ipb.ac.id - review admin deleted")).toHaveLength(20);
+    expect(screen.getAllByText("review admin deleted")).toHaveLength(40);
     expect(screen.getByRole("button", { name: "Muat lebih banyak" })).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Muat lebih banyak" }));
 
     expect(await screen.findByText("25 log")).toBeVisible();
-    expect(screen.getAllByText("admin@ipb.ac.id - review admin deleted")).toHaveLength(25);
+    expect(screen.getAllByText("review admin deleted")).toHaveLength(50);
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/admin/audit-logs?limit=20", expect.any(Object));
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/admin/audit-logs?limit=40", expect.any(Object));
+  });
+
+  it("shows endpoint access summaries on the dedicated audit page", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+
+      if (url === "http://localhost:8000/admin/audit-logs?limit=20") {
+        return jsonResponse(auditLogRequestResponse);
+      }
+
+      return jsonResponse({ detail: `Unhandled ${url}` }, 404);
+    });
+
+    renderReports("/super-admin/reports/logs");
+
+    expect((await screen.findAllByText("GET /admin/system-status"))[0]).toBeVisible();
+    expect(screen.getAllByText("admin@ipb.ac.id")[0]).toBeVisible();
+    expect(screen.getByText("2 akses")).toBeVisible();
+    expect(screen.getByText("3 log")).toBeVisible();
+    expect(screen.getAllByText("Login berhasil")[0]).toBeVisible();
   });
 
   it("deletes, restores, and permanently removes moderated reviews", async () => {

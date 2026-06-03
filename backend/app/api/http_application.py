@@ -6,6 +6,7 @@ from typing import Protocol
 from urllib.parse import unquote
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -70,6 +71,7 @@ OPENAPI_TAGS = [
 
 @dataclass(frozen=True)
 class AccountRouteDependencies:
+    get_audit_logs: Callable
     get_bearer_credentials: Callable
     get_current_user: Callable
     get_user_accounts: Callable
@@ -274,6 +276,7 @@ class HttpRuntimeModule:
 
     def account_routes(self) -> AccountRouteDependencies:
         return AccountRouteDependencies(
+            get_audit_logs=self.get_audit_logs,
             get_bearer_credentials=self.bearer_scheme,
             get_current_user=self.get_current_user,
             get_user_accounts=self.get_user_accounts,
@@ -545,11 +548,13 @@ class HttpApplicationModule:
         account_dependencies = runtime.account_routes()
         register_account_routes(
             app,
+            get_audit_logs=account_dependencies.get_audit_logs,
             get_bearer_credentials=account_dependencies.get_bearer_credentials,
             get_current_user=account_dependencies.get_current_user,
             get_user_accounts=account_dependencies.get_user_accounts,
             require_access=account_dependencies.require_access,
         )
+        _register_request_audit_middleware(app, runtime)
         facility_dependencies = runtime.facility_routes()
         register_facility_routes(
             app,
@@ -653,6 +658,55 @@ def _build_private_storage(settings: SettingsModule) -> PrivateStorage:
         return LocalPrivateStorage(Path(database_path).resolve().parent / "private-storage")
 
     return LocalPrivateStorage("private-storage")
+
+
+def _register_request_audit_middleware(app: FastAPI, runtime: HttpRuntimeModule) -> None:
+    @app.middleware("http")
+    async def audit_request_access(request: Request, call_next):
+        response = await call_next(request)
+        if not _should_audit_request_access(request, response.status_code):
+            return response
+
+        actor = _resolve_request_actor(request, runtime)
+        if actor is None:
+            return response
+
+        with runtime.session_factory() as session:
+            audit_logs = runtime._facility_factory.build_audit_logs(session)
+            audit_logs.record(
+                actor=actor,
+                action_type=f"request.{response.status_code}",
+                target_type="endpoint",
+                target_id=f"{request.method.upper()} {request.url.path}",
+            )
+            session.commit()
+        return response
+
+
+def _should_audit_request_access(request: Request, status_code: int) -> bool:
+    if request.url.path in {"/admin/audit-logs", "/health"}:
+        return False
+    if request.url.path.startswith(("/docs", "/openapi.json", "/redoc", "/facility-images/")):
+        return False
+    if status_code >= 500:
+        return False
+    if request.method.upper() != "GET":
+        return False
+    return request.url.path.startswith(("/admin", "/staff", "/student", "/auth/me", "/auth/refresh"))
+
+
+def _resolve_request_actor(request: Request, runtime: HttpRuntimeModule) -> UserAccount | None:
+    authorization = request.headers.get("authorization", "")
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        return None
+
+    with runtime.session_factory() as session:
+        user_accounts = runtime._user_account_factory.build(session)
+        try:
+            return user_accounts.resolve_active_user(token.strip())
+        except (AccountInactive, AccountTokenInvalid):
+            return None
 
 
 def _ensure_reservation_organization_unit_nullable(engine) -> None:

@@ -55,7 +55,7 @@
 - Endpoints consumed: `GET /admin/reports/aggregate`, `GET /admin/audit-logs`, `GET /admin/reviews`, review hide/restore/permanent-delete endpoints.
 - Page-needed fields: reservation counts/trends, revenue totals, audit log rows, moderation rows.
 - Trend behavior: backend daily trend points stay daily in `Mingguan`, group by week in `Bulanan`, and group by month in `Tahunan`; the line/area chart uses sparse axis labels plus hover/focus point detail.
-- Audit behavior: `/super-admin/reports` filters audit preview by the selected report date range and renders a maximum of 10 rows. `/super-admin/reports/logs` consumes the same audit endpoint, starting with a bounded batch and loading more rows on demand until the complete administrative log list is visible.
+- Audit behavior: `/super-admin/reports` filters audit preview by the selected report date range, hides endpoint-access noise, and renders a maximum of 10 rows. `/super-admin/reports/logs` consumes the same audit endpoint, starts with a bounded batch, loads more rows on demand, and surfaces top endpoint plus most-active-actor summaries from the loaded audit data.
 - Auth/session assumptions: super-admin bearer token.
 - Source files: `backend/app/api/routes/audit_log_routes.py`, `backend/app/api/routes/review_routes.py`.
 
@@ -97,7 +97,7 @@
 ## Acceptance Checks
 
 - Desktop and mobile screenshots match references.
-- Integration checks: moderation actions update row status, hidden reviews can be removed permanently, audit preview is capped at 10 rows, full audit log route can progressively reveal the complete list, and trend line points expose dates/counts/revenue through labels and hover/focus text.
+- Integration checks: moderation actions update row status, hidden reviews can be removed permanently, audit preview is capped at 10 non-endpoint rows, full audit log route can progressively reveal the complete list, endpoint access rows show actor/target/status clearly, and trend line points expose dates/counts/revenue through labels and hover/focus text.
 
 ## Open Questions
 

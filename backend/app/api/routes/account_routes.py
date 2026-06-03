@@ -21,6 +21,7 @@ from app.services.accounts import (
     UserAccount,
     UserAccountModule,
 )
+from app.services.audit_logs import AuditLogModule
 from app.schemas.account_schemas import (
     AdminCreateUserRequest,
     AdminResetPasswordRequest,
@@ -37,6 +38,7 @@ from app.models import UserRole
 def register_account_routes(
     app: FastAPI,
     *,
+    get_audit_logs: Callable,
     get_bearer_credentials: Callable,
     get_current_user: Callable,
     get_user_accounts: Callable,
@@ -68,6 +70,7 @@ def register_account_routes(
     @app.post("/auth/login", response_model=TokenResponse)
     async def login(
         payload: LoginRequest,
+        audit_logs: AuditLogModule = Depends(get_audit_logs),
         user_accounts: UserAccountModule = Depends(get_user_accounts),
     ) -> TokenResponse:
         try:
@@ -76,6 +79,13 @@ def register_account_routes(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email atau password salah.")
         except AccountInactive:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Akun tidak aktif.")
+        actor = user_accounts.resolve_active_user(account_session.access_token)
+        audit_logs.record(
+            actor=actor,
+            action_type="auth.login",
+            target_type="endpoint",
+            target_id="POST /auth/login",
+        )
         return TokenResponse(access_token=account_session.access_token)
 
     @app.post("/auth/refresh", response_model=TokenResponse)

@@ -773,6 +773,12 @@ function dashboardActivityText(item: SuperAdminAuditLogResponse) {
 }
 
 function auditActionLabel(actionType: string) {
+  if (actionType === "auth.login") {
+    return "Login berhasil";
+  }
+  if (actionType.startsWith("request.")) {
+    return `Akses endpoint (${actionType.replace("request.", "")})`;
+  }
   const labels: Record<string, string> = {
     "review.deleted": "Menyembunyikan ulasan",
     "review.restored": "Memulihkan ulasan",
@@ -783,6 +789,53 @@ function auditActionLabel(actionType: string) {
     "user.deactivated": "Menonaktifkan pengguna",
   };
   return labels[actionType] ?? actionType.replaceAll("_", " ").replaceAll(".", " ");
+}
+
+function auditStatusCode(actionType: string) {
+  if (!actionType.startsWith("request.")) {
+    return "-";
+  }
+  return actionType.replace("request.", "");
+}
+
+function auditTargetLabel(item: AdminAuditLogResponse) {
+  return item.target_type === "endpoint" ? item.target_id : `${item.target_type} - ${item.target_id}`;
+}
+
+function topEndpointSummary(auditLogs: AdminAuditLogResponse[]) {
+  const counts = new Map<string, number>();
+  for (const entry of auditLogs) {
+    if (entry.target_type !== "endpoint") {
+      continue;
+    }
+    counts.set(entry.target_id, (counts.get(entry.target_id) ?? 0) + 1);
+  }
+  let winner = "-";
+  let winnerCount = 0;
+  for (const [endpoint, count] of counts.entries()) {
+    if (count > winnerCount) {
+      winner = endpoint;
+      winnerCount = count;
+    }
+  }
+  return { endpoint: winner, count: winnerCount };
+}
+
+function topActorSummary(auditLogs: AdminAuditLogResponse[]) {
+  const counts = new Map<string, number>();
+  for (const entry of auditLogs) {
+    const actor = entry.actor_email ?? "Sistem";
+    counts.set(actor, (counts.get(actor) ?? 0) + 1);
+  }
+  let winner = "-";
+  let winnerCount = 0;
+  for (const [actor, count] of counts.entries()) {
+    if (count > winnerCount) {
+      winner = actor;
+      winnerCount = count;
+    }
+  }
+  return { actor: winner, count: winnerCount };
 }
 
 function reportStatusLabel(status: string) {
@@ -2186,8 +2239,8 @@ export function SuperAdminReportsPage() {
   const aggregate = aggregateQuery.data;
   const trendPoints = aggregate ? aggregateTrendPoints(aggregate.trend, trendMode) : [];
   const auditLogs = auditQuery.data ?? [];
-  const previewAuditLogs = auditLogs.slice(0, 10);
-  const hasMoreAuditLogs = auditLogs.length > previewAuditLogs.length;
+  const previewAuditLogs = auditLogs.filter((item) => item.target_type !== "endpoint").slice(0, 10);
+  const hasMoreAuditLogs = auditLogs.filter((item) => item.target_type !== "endpoint").length > previewAuditLogs.length;
   const reviews = reviewsQuery.data ?? [];
   const reviewMutation = useMutation({
     mutationFn: ({ action, reviewId }: { action: "delete" | "restore" | "permanent-delete"; reviewId: string }) => {
@@ -2478,6 +2531,8 @@ export function SuperAdminAuditLogsPage() {
   });
   const auditLogs = auditQuery.data ?? [];
   const hasMoreAuditLogs = auditLogs.length === auditLimit;
+  const topEndpoint = topEndpointSummary(auditLogs);
+  const topActor = topActorSummary(auditLogs);
 
   return (
     <SuperAdminShell active="reports">
@@ -2500,30 +2555,57 @@ export function SuperAdminAuditLogsPage() {
           </DashboardStateMessage>
         ) : null}
 
-        <section className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
+        <section className="grid grid-cols-3 gap-5 max-lg:grid-cols-1">
+          <PlainKpiCard label="Total Log" value={String(auditLogs.length)} />
+          <PlainKpiCard
+            label="Top Endpoint"
+            value={topEndpoint.endpoint}
+            sub={topEndpoint.count > 0 ? `${topEndpoint.count} akses` : "Belum ada akses endpoint"}
+          />
+          <PlainKpiCard
+            label="Aktor Teraktif"
+            value={topActor.actor}
+            sub={topActor.count > 0 ? `${topActor.count} aktivitas` : "Belum ada aktor"}
+          />
+        </section>
+
+        <section className="mt-7 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex min-h-16 items-center justify-between gap-4 border-b border-[#e5e7eb] px-6 max-md:px-5">
             <h2 className="m-0 text-lg font-bold text-[#111827]">Semua Log Audit</h2>
             <span className="rounded-full bg-[#f8fafc] px-3 py-1 text-xs font-bold text-[#6b7280]">
               {auditLogs.length} log
             </span>
           </div>
-          <div className="grid">
+          <table className="w-full border-collapse max-md:hidden">
+            <thead className="bg-[#f9fafb] text-left text-[11px] font-bold uppercase tracking-[0.05em] text-[#6b7280]">
+              <tr>
+                <th className="px-5 py-3">Waktu</th>
+                <th className="px-5 py-3">Aktor</th>
+                <th className="px-5 py-3">Aktivitas</th>
+                <th className="px-5 py-3">Target</th>
+                <th className="px-5 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {auditLogs.map((item) => (
+                <tr className="border-t border-[#e5e7eb]" key={item.id}>
+                  <td className="px-5 py-4 text-xs font-semibold text-[#6b7280]">{formatAuditTime(item.created_at)}</td>
+                  <td className="px-5 py-4 text-sm font-bold">{item.actor_email ?? "Sistem"}</td>
+                  <td className="px-5 py-4 text-sm font-semibold">{auditActionLabel(item.action_type)}</td>
+                  <td className="px-5 py-4 text-sm text-[#374151]">{auditTargetLabel(item)}</td>
+                  <td className="px-5 py-4"><StatusBadge status={auditStatusCode(item.action_type)} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="hidden gap-4 p-4 max-md:grid">
             {auditLogs.map((item) => (
-              <article className="grid grid-cols-[44px_1fr_auto] gap-4 border-t border-[#e5e7eb] px-6 py-4 first:border-t-0 max-md:grid-cols-[44px_1fr] max-md:px-5" key={item.id}>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8f5e9] text-[#0f9d58]">
-                  <SuperIcon name="settings" size={17} />
-                </div>
-                <div className="min-w-0">
-                  <p className="m-0 break-words text-sm font-bold">
-                    {item.actor_email ?? "Sistem"} - {auditActionLabel(item.action_type)}
-                  </p>
-                  <p className="m-0 mt-1 break-words text-xs text-[#6b7280]">
-                    {item.target_type} - {item.target_id}
-                  </p>
-                </div>
-                <time className="text-right text-xs font-semibold text-[#6b7280] max-md:col-span-2 max-md:text-left" dateTime={item.created_at}>
-                  {formatAuditTime(item.created_at)}
-                </time>
+              <article className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]" key={item.id}>
+                <UserField label="Waktu">{formatAuditTime(item.created_at)}</UserField>
+                <UserField label="Aktor">{item.actor_email ?? "Sistem"}</UserField>
+                <UserField label="Aktivitas">{auditActionLabel(item.action_type)}</UserField>
+                <UserField label="Target">{auditTargetLabel(item)}</UserField>
+                <UserField label="Status"><StatusBadge status={auditStatusCode(item.action_type)} /></UserField>
               </article>
             ))}
           </div>

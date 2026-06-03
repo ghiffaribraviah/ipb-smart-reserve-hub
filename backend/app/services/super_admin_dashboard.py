@@ -57,7 +57,11 @@ class SuperAdminDashboardModule:
         users = self._user_accounts.list_user_accounts(page=1, page_size=1)
         administrators = self._user_accounts.list_user_accounts(role=UserRole.super_admin, page=1, page_size=100)
         facility_governance = self._facility_management.list_facility_governance()
-        recent_activity = self._audit_logs.list_logs(AuditLogFilters())[:10]
+        recent_activity = [
+            entry
+            for entry in self._audit_logs.list_logs(AuditLogFilters())
+            if entry.target_type != "endpoint"
+        ][:10]
         return SuperAdminDashboard(
             kpis=SuperAdminDashboardKpis(
                 total_users=users.total,

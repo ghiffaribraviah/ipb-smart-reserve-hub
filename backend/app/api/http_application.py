@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import MetaData, inspect, text
 from sqlalchemy.orm import Session
 
 from app.core.access_policy import AccessDenied, AccessPolicyAction, AccessPolicyModule
@@ -266,7 +267,9 @@ class HttpRuntimeModule:
         return self._bearer_scheme
 
     def create_schema(self) -> None:
-        Base.metadata.create_all(bind=self.session_factory.kw["bind"])
+        engine = self.session_factory.kw["bind"]
+        Base.metadata.create_all(bind=engine)
+        _ensure_reservation_organization_unit_nullable(engine)
 
     def account_routes(self) -> AccountRouteDependencies:
         return AccountRouteDependencies(
@@ -649,6 +652,53 @@ def _build_private_storage(settings: SettingsModule) -> PrivateStorage:
         return LocalPrivateStorage(Path(database_path).resolve().parent / "private-storage")
 
     return LocalPrivateStorage("private-storage")
+
+
+def _ensure_reservation_organization_unit_nullable(engine) -> None:
+    inspector = inspect(engine)
+    if "reservations" not in inspector.get_table_names():
+        return
+
+    organization_unit_column = next(
+        (column for column in inspector.get_columns("reservations") if column["name"] == "organization_unit_id"),
+        None,
+    )
+    if organization_unit_column is None or organization_unit_column["nullable"]:
+        return
+
+    if engine.dialect.name == "sqlite":
+        _rebuild_sqlite_reservations_table(engine)
+        return
+
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE reservations ALTER COLUMN organization_unit_id DROP NOT NULL"))
+
+
+def _rebuild_sqlite_reservations_table(engine) -> None:
+    temp_metadata = MetaData()
+    temp_table_name = "_reservations_nullable_organization_unit"
+    for table in Base.metadata.tables.values():
+        table.to_metadata(temp_metadata, name=temp_table_name if table.name == "reservations" else None)
+    reservations_table = Base.metadata.tables["reservations"]
+    temp_table = temp_metadata.tables[temp_table_name]
+    target_columns = [column.name for column in reservations_table.columns]
+
+    inspector = inspect(engine)
+    existing_columns = {column["name"] for column in inspector.get_columns("reservations")}
+    copied_columns = [column for column in target_columns if column in existing_columns]
+    quoted_columns = ", ".join(f'"{column}"' for column in copied_columns)
+
+    with engine.begin() as connection:
+        temp_table.create(connection)
+        if copied_columns:
+            connection.execute(
+                text(
+                    f'INSERT INTO "{temp_table.name}" ({quoted_columns}) '
+                    f"SELECT {quoted_columns} FROM reservations"
+                )
+            )
+        connection.execute(text("DROP TABLE reservations"))
+        connection.execute(text(f'ALTER TABLE "{temp_table.name}" RENAME TO reservations'))
 
 
 def _assign_openapi_tags(app: FastAPI) -> None:

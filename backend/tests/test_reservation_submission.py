@@ -2,7 +2,9 @@ from datetime import UTC, datetime
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
 
+from app.core.database import build_engine
 from app.main import create_app
 from app.models import Reservation, ReservationStatus, UserRole
 from app.pdf import ApprovalLetterPdfGenerator
@@ -45,6 +47,47 @@ class StubReservationRepository:
 
     def get_for_student(self, reservation_id: str, student_id: str) -> Reservation | None:
         return None
+
+
+def _create_legacy_reservations_table_with_required_organization_unit(database_url: str) -> None:
+    engine = build_engine(database_url)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE reservations (
+                    id VARCHAR(36) PRIMARY KEY,
+                    facility_id VARCHAR(36) NOT NULL,
+                    student_id VARCHAR(36) NOT NULL,
+                    organization_unit_id VARCHAR(36) NOT NULL,
+                    reservation_code VARCHAR(32) NOT NULL UNIQUE,
+                    activity_title VARCHAR(255) NOT NULL,
+                    event_description TEXT NOT NULL,
+                    participant_count INTEGER NOT NULL,
+                    contact_phone VARCHAR(32) NOT NULL,
+                    price_rupiah INTEGER NOT NULL,
+                    organization_unit_name VARCHAR(255) NOT NULL,
+                    extra_requirement_av_support BOOLEAN NOT NULL DEFAULT 0,
+                    extra_requirement_logistics_coordination BOOLEAN NOT NULL DEFAULT 0,
+                    extra_requirement_extra_cleaning BOOLEAN NOT NULL DEFAULT 0,
+                    extra_requirement_security_personnel BOOLEAN NOT NULL DEFAULT 0,
+                    extra_requirement_notes TEXT,
+                    starts_at DATETIME NOT NULL,
+                    ends_at DATETIME NOT NULL,
+                    document_upload_due_at DATETIME,
+                    document_verification_due_at DATETIME,
+                    payment_upload_due_at DATETIME,
+                    payment_verification_due_at DATETIME,
+                    status VARCHAR(32) NOT NULL,
+                    rejection_reason TEXT,
+                    rejection_source VARCHAR(32),
+                    cancellation_reason TEXT,
+                    cancellation_rejection_reason TEXT,
+                    created_at DATETIME NOT NULL
+                )
+                """
+            )
+        )
 
 
 def test_reservation_submission_rejects_commit_time_conflict_after_available_time_selection():
@@ -273,6 +316,55 @@ async def test_student_cannot_submit_reservation_during_facility_blackout():
 
     assert created.status_code == 409
     assert created.json()["detail"] == "Waktu reservasi tidak tersedia."
+
+
+@pytest.mark.anyio
+async def test_student_submits_free_form_organization_after_existing_schema_is_migrated(tmp_path, monkeypatch):
+    monkeypatch.setattr(ApprovalLetterPdfGenerator, "generate", lambda self, letter_input: b"%PDF-1.4\n")
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'legacy.db'}"
+    _create_legacy_reservations_table_with_required_organization_unit(database_url)
+    app = create_app(
+        database_url=database_url,
+        clock=lambda: datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    test_data = DataBuilder(app)
+    facility_id = test_data.create_facility(name="Auditorium Andi Hakim Nasoetion")
+    test_data.add_facility_open_hour(facility_id, day_of_week=0, opens_at="08:00", closes_at="16:00")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        await client.post(
+            "/auth/register",
+            json={
+                "email": "budi@apps.ipb.ac.id",
+                "password": "secret123",
+                "full_name": "Budi Santoso",
+                "nim": "G64190001",
+                "phone": "08123456789",
+            },
+        )
+        login = await client.post("/auth/login", json={"email": "budi@apps.ipb.ac.id", "password": "secret123"})
+        token = login.json()["access_token"]
+
+        created = await client.post(
+            f"/facilities/{facility_id}/reservations",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "activity_title": "Seminar Karier",
+                "event_description": "Seminar persiapan karier untuk mahasiswa tingkat akhir.",
+                "participant_count": 80,
+                "organization_unit_name": "Himpunan Mahasiswa Ilmu Komputer",
+                "contact_phone": "08123456789",
+                "starts_at": "2026-06-01T02:00:00+00:00",
+                "ends_at": "2026-06-01T04:00:00+00:00",
+            },
+        )
+
+    assert created.status_code == 201
+    assert created.json()["organization_unit"] == {
+        "id": None,
+        "name": "Himpunan Mahasiswa Ilmu Komputer",
+    }
 
 
 @pytest.mark.anyio

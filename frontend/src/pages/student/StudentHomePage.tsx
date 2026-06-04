@@ -1,11 +1,16 @@
 import {
   Activity,
   Building2,
+  Bus,
+  CircleDot,
+  FlaskConical,
   House,
   Megaphone,
   Menu,
+  MessageSquare,
   Monitor,
   Search,
+  ShieldCheck,
   Star,
   Trees,
   Users,
@@ -78,15 +83,22 @@ const navItems = [
 ];
 
 const iconByHint: Record<string, LucideIcon> = {
+  auditorium: Megaphone,
+  bus: Bus,
   classroom: Building2,
+  dribbble: CircleDot,
   dumbbell: Activity,
   equipment: Monitor,
+  "flask-conical": FlaskConical,
   landscape: Trees,
+  "message-square": MessageSquare,
   outdoor: Trees,
   presentation: Megaphone,
   school: Building2,
   seminar: Megaphone,
+  "shield-check": ShieldCheck,
   sport: Activity,
+  trees: Trees,
 };
 
 function categoryIcon(iconHint: string | null) {

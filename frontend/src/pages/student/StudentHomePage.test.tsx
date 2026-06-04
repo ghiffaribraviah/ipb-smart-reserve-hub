@@ -107,6 +107,10 @@ async function categoryLink(name: string) {
   return link as HTMLAnchorElement;
 }
 
+function expectCategoryIcon(link: HTMLAnchorElement, iconClass: string) {
+  expect(link.querySelector(`svg.${iconClass}`)).not.toBeNull();
+}
+
 describe("StudentHomePage", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -206,6 +210,72 @@ describe("StudentHomePage", () => {
 
     expect(await categoryLink("Auditorium / Seminar")).toBeVisible();
     expect(await screen.findByText("Belum ada fasilitas unggulan yang tersedia.")).toBeVisible();
+  });
+
+  it("renders distinct configured icons for production category hints", async () => {
+    mockDiscoveryFetch({
+      categories: [
+        {
+          facility_count: 3,
+          icon_hint: "trees",
+          id: "cat-area-terbuka",
+          name: "Area Terbuka",
+          slug: "area-terbuka",
+        },
+        {
+          facility_count: 4,
+          icon_hint: "presentation",
+          id: "cat-auditorium",
+          name: "Auditorium",
+          slug: "auditorium",
+        },
+        {
+          facility_count: 1,
+          icon_hint: "shield-check",
+          id: "cat-keamanan",
+          name: "Keamanan",
+          slug: "keamanan",
+        },
+        {
+          facility_count: 2,
+          icon_hint: "dribbble",
+          id: "cat-lapangan",
+          name: "Lapangan",
+          slug: "lapangan",
+        },
+        {
+          facility_count: 5,
+          icon_hint: "flask-conical",
+          id: "cat-laboratorium",
+          name: "Laboratorium",
+          slug: "laboratorium",
+        },
+        {
+          facility_count: 6,
+          icon_hint: "message-square",
+          id: "cat-ruang-meeting",
+          name: "Ruang Meeting",
+          slug: "ruang-meeting",
+        },
+        {
+          facility_count: 7,
+          icon_hint: "bus",
+          id: "cat-transportasi",
+          name: "Transportasi",
+          slug: "transportasi",
+        },
+      ],
+    });
+
+    renderWithProviders(<StudentHomePage />, { initialEntries: ["/student"] });
+
+    expectCategoryIcon(await categoryLink("Area Terbuka"), "lucide-trees");
+    expectCategoryIcon(await categoryLink("Auditorium"), "lucide-megaphone");
+    expectCategoryIcon(await categoryLink("Keamanan"), "lucide-shield-check");
+    expectCategoryIcon(await categoryLink("Lapangan"), "lucide-circle-dot");
+    expectCategoryIcon(await categoryLink("Laboratorium"), "lucide-flask-conical");
+    expectCategoryIcon(await categoryLink("Ruang Meeting"), "lucide-message-square");
+    expectCategoryIcon(await categoryLink("Transportasi"), "lucide-bus");
   });
 
   it("shows a retry action when a discovery query fails", async () => {

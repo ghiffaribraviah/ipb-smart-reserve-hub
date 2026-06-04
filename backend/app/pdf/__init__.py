@@ -64,34 +64,23 @@ class ApprovalLetterPdfGenerator:
         generated_at = _as_utc(letter_input.generated_at).astimezone(BUSINESS_TIMEZONE)
         starts_at = _as_utc(reservation.starts_at).astimezone(BUSINESS_TIMEZONE)
         ends_at = _as_utc(reservation.ends_at).astimezone(BUSINESS_TIMEZONE)
-        lines = [
-            "IPB SMART RESERVE HUB",
-            "Surat Permohonan Reservasi Fasilitas",
-            f"Nomor: {letter_input.letter_number}",
-            "Lampiran: 1 berkas",
-            "Perihal: Permohonan Reservasi Fasilitas Kampus",
-            f"Tanggal: {_format_indonesian_date(generated_at)}",
-            "",
-            f"Kode reservasi: {reservation.reservation_code}",
-            f"Nama kegiatan: {reservation.activity_title}",
-            f"Organisasi pemohon: {_organization_unit_name(reservation)}",
-            f"Penanggung jawab: {reservation.student.full_name}",
-            f"NIM/NIP: {reservation.student.nim or '-'}",
-            f"Kontak aktif: {reservation.student.email} / {reservation.contact_phone or reservation.student.phone or '-'}",
-            f"Fasilitas: {reservation.facility.name}",
-            f"Lokasi: {reservation.facility.location}",
-            (
-                "Tanggal dan waktu: "
+        return _build_fallback_approval_letter_pdf(
+            letter_number=letter_input.letter_number,
+            generated_date=_format_indonesian_date(generated_at),
+            reservation_code=reservation.reservation_code,
+            activity_title=reservation.activity_title,
+            organization_unit=_organization_unit_name(reservation),
+            responsible_person=reservation.student.full_name,
+            identity_number=reservation.student.nim or "-",
+            active_contact=f"{reservation.student.email} / {reservation.contact_phone or reservation.student.phone or '-'}",
+            facility_name=reservation.facility.name,
+            facility_location=reservation.facility.location,
+            reservation_time=(
                 f"{_format_indonesian_date(starts_at)}, {starts_at:%H:%M}--{ends_at:%H:%M} WIB"
             ),
-            f"Estimasi peserta: {reservation.participant_count} orang",
-            f"Kebutuhan tambahan: {_extra_requirements_text(reservation)}",
-            "",
-            "Pemohon,",
-            reservation.student.full_name,
-            f"NIM/NIP {reservation.student.nim or '-'}",
-        ]
-        return _build_simple_pdf(lines)
+            participant_count=f"{reservation.participant_count} orang",
+            extra_requirements=_extra_requirements_text(reservation),
+        )
 
     def _render_template(self, letter_input: ApprovalLetterInput) -> str:
         template = self._template_path.read_text(encoding="utf-8")
@@ -187,20 +176,132 @@ def _as_utc(value: datetime) -> datetime:
     return value.astimezone(UTC)
 
 
-def _build_simple_pdf(lines: list[str]) -> bytes:
+def _build_fallback_approval_letter_pdf(
+    *,
+    letter_number: str,
+    generated_date: str,
+    reservation_code: str,
+    activity_title: str,
+    organization_unit: str,
+    responsible_person: str,
+    identity_number: str,
+    active_contact: str,
+    facility_name: str,
+    facility_location: str,
+    reservation_time: str,
+    participant_count: str,
+    extra_requirements: str,
+) -> bytes:
+    content_lines: list[str] = [
+        "q",
+        "0.113 0.463 0.404 rg",
+        "40 778 95 24 re f",
+        "0.059 0.616 0.345 rg",
+        "40 748 515 2 re f",
+        "Q",
+        _pdf_text(48, 783, "IPB SRH", size=17, font="F2", color=(1, 1, 1)),
+        _pdf_text(155, 786, "IPB SMART RESERVE HUB", size=13, font="F2"),
+        _pdf_text(155, 770, "Direktorat Pengelolaan Fasilitas Kampus", size=9),
+        _pdf_text(155, 757, "Jl. Raya Dramaga, Kampus IPB Dramaga, Bogor 16680", size=9),
+        _pdf_text(40, 720, "Nomor", size=9, color=(0.42, 0.45, 0.5)),
+        _pdf_text(128, 720, letter_number, size=9, font="F2"),
+        _pdf_text(40, 705, "Lampiran", size=9, color=(0.42, 0.45, 0.5)),
+        _pdf_text(128, 705, "1 berkas", size=9, font="F2"),
+        _pdf_text(40, 690, "Perihal", size=9, color=(0.42, 0.45, 0.5)),
+        _pdf_text(128, 690, "Permohonan Reservasi Fasilitas Kampus", size=9, font="F2"),
+        _pdf_text(40, 675, "Tanggal", size=9, color=(0.42, 0.45, 0.5)),
+        _pdf_text(128, 675, generated_date, size=9, font="F2"),
+        _pdf_text(163, 640, "Surat Permohonan Reservasi Fasilitas", size=15, font="F2"),
+        "0.067 0.094 0.153 RG 0.5 w 163 636 m 432 636 l S",
+    ]
+
+    intro = (
+        "Dengan hormat, melalui surat ini pemohon mengajukan permohonan penggunaan fasilitas kampus "
+        "untuk mendukung pelaksanaan kegiatan akademik/kemahasiswaan berikut."
+    )
+    content_lines.extend(_pdf_paragraph(intro, x=40, y=612, width=515, size=9.5, leading=13))
+
+    detail_rows = [
+        ("Kode reservasi", reservation_code),
+        ("Nama kegiatan", activity_title),
+        ("Organisasi pemohon", organization_unit),
+        ("Penanggung jawab", responsible_person),
+        ("NIM/NIP", identity_number),
+        ("Kontak aktif", active_contact),
+        ("Fasilitas", facility_name),
+        ("Lokasi", facility_location),
+        ("Tanggal dan waktu", reservation_time),
+        ("Estimasi peserta", participant_count),
+        ("Kebutuhan tambahan", extra_requirements),
+    ]
+    content_lines.extend(
+        [
+            "0.819 0.835 0.859 RG 0.8 w 40 398 515 190 re S",
+            "0.973 0.992 0.980 rg 40 548 515 40 re f",
+            _pdf_text(58, 564, "Detail Reservasi", size=12, font="F2", color=(0.06, 0.62, 0.35)),
+        ]
+    )
+    y = 532
+    for label, value in detail_rows:
+        wrapped = _wrap_text(value, 56)
+        content_lines.append(_pdf_text(58, y, label, size=8.5, color=(0.42, 0.45, 0.5)))
+        content_lines.append(_pdf_text(178, y, wrapped[0], size=8.5, font="F2"))
+        for line in wrapped[1:]:
+            y -= 11
+            content_lines.append(_pdf_text(178, y, line, size=8.5, font="F2"))
+        y -= 13
+
+    statement = (
+        "Pemohon menyatakan bahwa data yang tercantum pada surat ini benar dan dapat dipertanggungjawabkan. "
+        "Pemohon juga memahami bahwa persetujuan reservasi bergantung pada ketersediaan fasilitas, "
+        "kelengkapan dokumen, dan hasil verifikasi pengelola."
+    )
+    content_lines.extend(_pdf_paragraph(statement, x=40, y=374, width=515, size=9, leading=12.5))
+
+    content_lines.append(_pdf_text(40, 324, "Ketentuan Penggunaan Fasilitas", size=12, font="F2"))
+    terms = [
+        "Fasilitas hanya digunakan untuk kegiatan yang sesuai dengan tujuan permohonan dan jadwal yang telah disetujui.",
+        "Pemohon wajib menjaga kebersihan, keamanan, ketertiban, serta tidak mengubah tata ruang tanpa persetujuan pengelola.",
+        "Pemohon bertanggung jawab atas kerusakan, kehilangan, atau gangguan operasional yang timbul selama masa penggunaan fasilitas.",
+        "Perubahan tanggal, waktu, jumlah peserta, atau kebutuhan teknis harus diajukan ulang melalui IPB Smart Reserve Hub.",
+        "Pengelola berhak membatalkan reservasi apabila dokumen tidak lengkap, data tidak valid, atau kegiatan melanggar ketentuan kampus.",
+    ]
+    y = 304
+    for index, term in enumerate(terms, start=1):
+        lines = _wrap_text(term, 92)
+        content_lines.append(_pdf_text(48, y, f"{index}.", size=8.5, font="F2"))
+        content_lines.append(_pdf_text(66, y, lines[0], size=8.5))
+        for line in lines[1:]:
+            y -= 11
+            content_lines.append(_pdf_text(66, y, line, size=8.5))
+        y -= 14
+
+    content_lines.extend(
+        [
+            "0.059 0.616 0.345 RG 0.8 w 40 102 515 52 re S",
+            "0.925 0.980 0.941 rg 40 102 515 52 re f",
+        ]
+    )
+    declaration = (
+        "Saya menyatakan bersedia mematuhi seluruh ketentuan penggunaan fasilitas IPB Smart Reserve Hub "
+        "dan menerima konsekuensi administratif apabila terjadi pelanggaran."
+    )
+    content_lines.extend(_pdf_paragraph(declaration, x=54, y=136, width=490, size=8.5, leading=11))
+
+    content_lines.extend(
+        [
+            _pdf_text(392, 82, "Pemohon,", size=9),
+            "392 46 m 520 46 l S",
+            _pdf_text(392, 30, responsible_person, size=9, font="F2"),
+            _pdf_text(392, 16, f"NIM/NIP {identity_number}", size=8),
+        ]
+    )
+    return _build_pdf(content_lines)
+
+
+def _build_pdf(content_lines: list[str]) -> bytes:
     stream = BytesIO()
     objects: list[bytes] = []
-    content_lines = [
-        "BT",
-        "/F1 11 Tf",
-        "14 TL",
-        "1 0 0 1 72 780 Tm",
-    ]
-    for index, line in enumerate(lines):
-        if index > 0:
-            content_lines.append("T*")
-        content_lines.append(f"{_pdf_hex_string(line)} Tj")
-    content_lines.append("ET")
     content = "\n".join(content_lines).encode("ascii")
 
     def add_object(body: bytes) -> None:
@@ -210,9 +311,11 @@ def _build_simple_pdf(lines: list[str]) -> bytes:
     add_object(b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
     add_object(
         b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
-        b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>"
+        b"/Resources << /Font << /F1 4 0 R /F2 5 0 R /F3 6 0 R >> >> /Contents 7 0 R >>"
     )
     add_object(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    add_object(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>")
+    add_object(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>")
     add_object(b"<< /Length " + str(len(content)).encode("ascii") + b" >>\nstream\n" + content + b"\nendstream")
 
     stream.write(b"%PDF-1.4\n")
@@ -236,6 +339,44 @@ def _build_simple_pdf(lines: list[str]) -> bytes:
         + b"%%EOF\n"
     )
     return stream.getvalue()
+
+
+def _pdf_text(
+    x: float,
+    y: float,
+    value: str,
+    *,
+    size: float = 10,
+    font: str = "F1",
+    color: tuple[float, float, float] = (0.067, 0.094, 0.153),
+) -> str:
+    r, g, b = color
+    return f"BT {r:.3f} {g:.3f} {b:.3f} rg /{font} {size:g} Tf 1 0 0 1 {x:g} {y:g} Tm {_pdf_hex_string(value)} Tj ET"
+
+
+def _pdf_paragraph(value: str, *, x: float, y: float, width: float, size: float, leading: float) -> list[str]:
+    max_characters = max(20, int(width / (size * 0.48)))
+    return [
+        _pdf_text(x, y - (index * leading), line, size=size)
+        for index, line in enumerate(_wrap_text(value, max_characters))
+    ]
+
+
+def _wrap_text(value: str, max_characters: int) -> list[str]:
+    words = value.split()
+    lines: list[str] = []
+    current = ""
+    for word in words:
+        candidate = word if not current else f"{current} {word}"
+        if len(candidate) <= max_characters:
+            current = candidate
+            continue
+        if current:
+            lines.append(current)
+        current = word
+    if current:
+        lines.append(current)
+    return lines or [""]
 
 
 def _pdf_hex_string(value: str) -> str:

@@ -72,6 +72,7 @@ def test_approval_letter_pdf_generator_falls_back_when_tectonic_is_missing():
         pdf = generator.generate(_letter_input(reservation))
 
     assert pdf.startswith(b"%PDF-")
+    assert len(pdf) > 8_000
     text = _pdf_text(pdf)
     assert "Surat Permohonan Reservasi Fasilitas" in text
     assert "RSV/IPBSRH/2026/000001" in text
@@ -102,4 +103,5 @@ def test_approval_letter_pdf_generator_falls_back_when_tectonic_exits_with_error
         pdf = generator.generate(_letter_input(reservation))
 
     assert pdf.startswith(b"%PDF-")
+    assert len(pdf) > 8_000
     assert "Surat Permohonan Reservasi Fasilitas" in _pdf_text(pdf)

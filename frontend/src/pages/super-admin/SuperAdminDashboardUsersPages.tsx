@@ -244,6 +244,7 @@ function fetchAdminAuditLogs(range?: ReportDateRange, limit?: number) {
 }
 
 type AuditLogFilters = {
+  actionType: string;
   actorEmail: string;
   from: string;
   statusCode: string;
@@ -253,6 +254,7 @@ type AuditLogFilters = {
 
 function fullAuditLogsPath(filters: AuditLogFilters, limit: number) {
   const params = new URLSearchParams();
+  if (filters.actionType !== "all") params.set("action_type", filters.actionType);
   if (filters.actorEmail.trim()) params.set("actor_email", filters.actorEmail.trim());
   if (filters.targetSearch.trim()) params.set("target_search", filters.targetSearch.trim());
   if (filters.statusCode !== "all") params.set("status_code", filters.statusCode);
@@ -2549,6 +2551,7 @@ export function SuperAdminReportsPage() {
 export function SuperAdminAuditLogsPage() {
   const [auditLimit, setAuditLimit] = useState(20);
   const [filters, setFilters] = useState<AuditLogFilters>({
+    actionType: "all",
     actorEmail: "",
     from: "",
     statusCode: "all",
@@ -2586,7 +2589,25 @@ export function SuperAdminAuditLogsPage() {
         ) : null}
 
         <section className="mt-7 rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] max-md:p-5">
-          <div className="grid grid-cols-5 gap-4 max-lg:grid-cols-2 max-md:grid-cols-1">
+          <div className="grid grid-cols-6 gap-4 max-lg:grid-cols-2 max-md:grid-cols-1">
+            <label className="grid gap-2 text-sm font-bold text-[#374151]">
+              Aktivitas
+              <select
+                className="min-h-11 rounded-lg border border-[#d1d5db] px-3 text-sm font-medium text-[#111827]"
+                onChange={(event) => {
+                  setAuditLimit(20);
+                  setFilters((current) => ({ ...current, actionType: event.target.value }));
+                }}
+                value={filters.actionType}
+              >
+                <option value="all">Semua</option>
+                <option value="auth.login">Login berhasil</option>
+                <option value="auth.logout">Logout</option>
+                <option value="request.200">Akses endpoint 200</option>
+                <option value="request.201">Akses endpoint 201</option>
+                <option value="request.204">Akses endpoint 204</option>
+              </select>
+            </label>
             <label className="grid gap-2 text-sm font-bold text-[#374151]">
               Aktor
               <input
@@ -2657,7 +2678,7 @@ export function SuperAdminAuditLogsPage() {
               className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#111827]"
               onClick={() => {
                 setAuditLimit(20);
-                setFilters({ actorEmail: "", from: "", statusCode: "all", targetSearch: "", to: "" });
+                setFilters({ actionType: "all", actorEmail: "", from: "", statusCode: "all", targetSearch: "", to: "" });
               }}
               type="button"
             >

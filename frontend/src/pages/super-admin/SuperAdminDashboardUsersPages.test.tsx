@@ -1108,7 +1108,7 @@ describe("SuperAdminDashboardPage", () => {
     expect(screen.getAllByText("Login berhasil")[0]).toBeVisible();
   });
 
-  it("filters dedicated audit logs by actor, target, status, and date range", async () => {
+  it("filters dedicated audit logs by action, actor, target, status, and date range", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
@@ -1121,6 +1121,7 @@ describe("SuperAdminDashboardPage", () => {
     renderReports("/super-admin/reports/logs");
 
     await screen.findByRole("heading", { name: "Log Audit" });
+    await user.selectOptions(screen.getByLabelText("Aktivitas"), "request.200");
     await user.type(screen.getByLabelText("Aktor"), "admin@ipb.ac.id");
     await user.type(screen.getByLabelText("Target"), "/admin/system-status");
     await user.selectOptions(screen.getByLabelText("Status"), "200");
@@ -1129,7 +1130,7 @@ describe("SuperAdminDashboardPage", () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8000/admin/audit-logs?actor_email=admin%40ipb.ac.id&target_search=%2Fadmin%2Fsystem-status&status_code=200&created_from=2026-05-12T00%3A00%3A00.000Z&created_to=2026-05-12T23%3A59%3A59.999Z&limit=20",
+        "http://localhost:8000/admin/audit-logs?action_type=request.200&actor_email=admin%40ipb.ac.id&target_search=%2Fadmin%2Fsystem-status&status_code=200&created_from=2026-05-12T00%3A00%3A00.000Z&created_to=2026-05-12T23%3A59%3A59.999Z&limit=20",
         expect.any(Object),
       );
     });

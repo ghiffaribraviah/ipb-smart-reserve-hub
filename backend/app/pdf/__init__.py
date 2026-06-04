@@ -52,8 +52,7 @@ class ApprovalLetterPdfGenerator:
                 raise ApprovalLetterPdfGenerationFailed(str(exc)) from exc
 
             if completed.returncode != 0:
-                error = completed.stderr.decode("utf-8", errors="replace")
-                raise ApprovalLetterPdfGenerationFailed(error)
+                return self._generate_fallback_pdf(letter_input)
 
             pdf_path = temp_path / "approval-letter.pdf"
             if not pdf_path.exists():

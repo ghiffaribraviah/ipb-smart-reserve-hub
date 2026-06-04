@@ -7,21 +7,7 @@ from app.models import Facility, OrganizationUnit, Reservation, ReservationStatu
 from app.pdf import ApprovalLetterInput, ApprovalLetterPdfGenerator
 
 
-def _pdf_text(content: bytes) -> str:
-    with tempfile.NamedTemporaryFile(suffix=".pdf") as pdf:
-        pdf.write(content)
-        pdf.flush()
-        extracted = subprocess.run(
-            ["pdftotext", pdf.name, "-"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    return extracted.stdout
-
-
-def test_approval_letter_pdf_generator_falls_back_when_tectonic_is_missing():
-    generator = ApprovalLetterPdfGenerator()
+def _reservation() -> Reservation:
     reservation = Reservation(
         id="reservation-1",
         facility_id="facility-1",
@@ -54,15 +40,36 @@ def test_approval_letter_pdf_generator_falls_back_when_tectonic_is_missing():
         location="Kampus IPB Dramaga",
     )
     reservation.organization_unit = OrganizationUnit(id="unit-1", name="BEM KM IPB")
+    return reservation
+
+
+def _letter_input(reservation: Reservation) -> ApprovalLetterInput:
+    return ApprovalLetterInput(
+        reservation=reservation,
+        generated_at=datetime(2026, 5, 1, 3, tzinfo=UTC),
+        letter_number="RSV/IPBSRH/2026/000001",
+    )
+
+
+def _pdf_text(content: bytes) -> str:
+    with tempfile.NamedTemporaryFile(suffix=".pdf") as pdf:
+        pdf.write(content)
+        pdf.flush()
+        extracted = subprocess.run(
+            ["pdftotext", pdf.name, "-"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    return extracted.stdout
+
+
+def test_approval_letter_pdf_generator_falls_back_when_tectonic_is_missing():
+    generator = ApprovalLetterPdfGenerator()
+    reservation = _reservation()
 
     with patch("app.pdf.subprocess.run", side_effect=FileNotFoundError(2, "No such file or directory", "tectonic")):
-        pdf = generator.generate(
-            ApprovalLetterInput(
-                reservation=reservation,
-                generated_at=datetime(2026, 5, 1, 3, tzinfo=UTC),
-                letter_number="RSV/IPBSRH/2026/000001",
-            )
-        )
+        pdf = generator.generate(_letter_input(reservation))
 
     assert pdf.startswith(b"%PDF-")
     text = _pdf_text(pdf)
@@ -77,3 +84,22 @@ def test_approval_letter_pdf_generator_falls_back_when_tectonic_is_missing():
     assert "BEM KM IPB" in text
     assert "G64190001" in text
     assert "budi@apps.ipb.ac.id / 08123456789" in text
+
+
+def test_approval_letter_pdf_generator_falls_back_when_tectonic_exits_with_error():
+    generator = ApprovalLetterPdfGenerator()
+    reservation = _reservation()
+
+    with patch(
+        "app.pdf.subprocess.run",
+        return_value=subprocess.CompletedProcess(
+            args=["tectonic"],
+            returncode=1,
+            stdout=b"",
+            stderr=b"error: failed to fetch bundle",
+        ),
+    ):
+        pdf = generator.generate(_letter_input(reservation))
+
+    assert pdf.startswith(b"%PDF-")
+    assert "Surat Permohonan Reservasi Fasilitas" in _pdf_text(pdf)

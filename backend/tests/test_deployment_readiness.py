@@ -17,12 +17,8 @@ def test_railway_backend_deployment_config_lives_with_backend_package():
     )
     assert railway_config["deploy"]["healthcheckPath"] == "/health"
 
-
-def test_backend_railpack_config_installs_tectonic_for_runtime_pdf_generation():
-    railpack_config = json.loads((BACKEND_ROOT / "railpack.json").read_text())
-
-    assert railpack_config["$schema"] == "https://schema.railpack.com"
-    assert railpack_config["deploy"]["aptPackages"] == ["tectonic"]
+def test_backend_does_not_commit_unsupported_railpack_package_overrides():
+    assert not (BACKEND_ROOT / "railpack.json").exists()
 
 
 def test_backend_deployment_guide_covers_demo_readiness_topics():
@@ -32,8 +28,7 @@ def test_backend_deployment_guide_covers_demo_readiness_topics():
         "Railway backend deployment",
         "Root Directory: `/backend`",
         "Config file path: `/backend/railway.toml`",
-        "railpack.json",
-        "tectonic",
+        "fallback PDF generator",
         "IPB_ENVIRONMENT=production",
         "IPB_DATABASE_URL",
         "IPB_SECRET_KEY",

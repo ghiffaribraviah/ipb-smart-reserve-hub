@@ -72,7 +72,7 @@ def test_approval_letter_pdf_generator_falls_back_when_tectonic_is_missing():
         pdf = generator.generate(_letter_input(reservation))
 
     assert pdf.startswith(b"%PDF-")
-    assert len(pdf) > 8_000
+    assert len(pdf) > 7_000
     text = _pdf_text(pdf)
     assert "Surat Permohonan Reservasi Fasilitas" in text
     assert "RSV/IPBSRH/2026/000001" in text
@@ -85,6 +85,11 @@ def test_approval_letter_pdf_generator_falls_back_when_tectonic_is_missing():
     assert "BEM KM IPB" in text
     assert "G64190001" in text
     assert "budi@apps.ipb.ac.id / 08123456789" in text
+    assert "Kepada Yth." in text
+    assert "Ketentuan Penggunaan Fasilitas" in text
+    assert "Lampiran Wajib" in text
+    assert "Pernyataan Pemohon" in text
+    assert "Proposal atau rundown kegiatan" in text
 
 
 def test_approval_letter_pdf_generator_falls_back_when_tectonic_exits_with_error():
@@ -103,5 +108,5 @@ def test_approval_letter_pdf_generator_falls_back_when_tectonic_exits_with_error
         pdf = generator.generate(_letter_input(reservation))
 
     assert pdf.startswith(b"%PDF-")
-    assert len(pdf) > 8_000
+    assert len(pdf) > 7_000
     assert "Surat Permohonan Reservasi Fasilitas" in _pdf_text(pdf)

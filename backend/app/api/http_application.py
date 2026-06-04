@@ -673,13 +673,16 @@ def _register_request_audit_middleware(app: FastAPI, runtime: HttpRuntimeModule)
 
         with runtime.session_factory() as session:
             audit_logs = runtime._facility_factory.build_audit_logs(session)
-            audit_logs.record(
-                actor=actor,
-                action_type=f"request.{response.status_code}",
-                target_type="endpoint",
-                target_id=f"{request.method.upper()} {request.url.path}",
-            )
-            session.commit()
+            try:
+                audit_logs.record(
+                    actor=actor,
+                    action_type=f"request.{response.status_code}",
+                    target_type="endpoint",
+                    target_id=f"{request.method.upper()} {request.url.path}",
+                )
+                session.commit()
+            except Exception:
+                session.rollback()
         return response
 
 

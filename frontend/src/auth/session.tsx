@@ -32,7 +32,7 @@ type AuthStatus = "checking" | "authenticated" | "unauthenticated";
 
 type AuthContextValue = {
   login: (email: string, password: string) => Promise<CurrentUser>;
-  logout: (reason?: string) => void;
+  logout: (reason?: string) => Promise<void>;
   sessionEndReason: string | null;
   status: AuthStatus;
   token: string | null;
@@ -171,10 +171,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(
-    (_reason?: string) => {
+    async (_reason?: string) => {
+      if (token) {
+        try {
+          await apiRequest<void>("/auth/logout", { method: "POST" });
+        } catch {
+          // Logout should still clear the local session even if the server audit call fails.
+        }
+      }
       clearSession();
     },
-    [clearSession],
+    [clearSession, token],
   );
 
   const value = useMemo(

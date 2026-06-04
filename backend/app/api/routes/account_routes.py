@@ -103,6 +103,18 @@ def register_account_routes(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Akun tidak aktif.")
         return TokenResponse(access_token=account_session.access_token)
 
+    @app.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
+    async def logout(
+        current_user: UserAccount = Depends(get_current_user),
+        audit_logs: AuditLogModule = Depends(get_audit_logs),
+    ) -> None:
+        audit_logs.record(
+            actor=current_user,
+            action_type="auth.logout",
+            target_type="endpoint",
+            target_id="POST /auth/logout",
+        )
+
     @app.get("/auth/me", response_model=UserResponse)
     async def get_current_user_identity(
         current_user: UserAccount = Depends(get_current_user),

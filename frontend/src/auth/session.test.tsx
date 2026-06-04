@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { AuthProvider, RequireRole } from "./session";
+import { AuthProvider, RequireRole, useAuth } from "./session";
 import { LoginPage } from "../pages/auth/LoginPage";
 
 const studentUser = {
@@ -38,6 +38,15 @@ function renderRoutes(initialPath: string) {
         </Routes>
       </AuthProvider>
     </MemoryRouter>,
+  );
+}
+
+function LogoutButton() {
+  const auth = useAuth();
+  return (
+    <button onClick={() => void auth.logout()} type="button">
+      Keluar
+    </button>
   );
 }
 
@@ -128,6 +137,51 @@ describe("session routing", () => {
 
     expect(await screen.findByRole("heading", { name: "Student Home" })).toBeVisible();
     expect(sessionStorage.getItem("ipb-srh-token")).toBe("new-token");
+  });
+
+  it("calls the logout endpoint before clearing the local session", async () => {
+    const user = userEvent.setup();
+    sessionStorage.setItem("ipb-srh-token", "stored-token");
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(studentUser), {
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    render(
+      <MemoryRouter initialEntries={["/student"]}>
+        <AuthProvider>
+          <Routes>
+            <Route element={<LoginPage />} path="/login" />
+            <Route
+              element={
+                <RequireRole allow={["student"]}>
+                  <LogoutButton />
+                </RequireRole>
+              }
+              path="/student"
+            />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    await screen.findByRole("button", { name: "Keluar" });
+    await user.click(screen.getByRole("button", { name: "Keluar" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8000/auth/logout",
+        expect.objectContaining({
+          method: "POST",
+          headers: expect.objectContaining({ Authorization: "Bearer stored-token" }),
+        }),
+      );
+    });
+    expect(sessionStorage.getItem("ipb-srh-token")).toBeNull();
   });
 
   it("opens the admin contact modal instead of navigating away", async () => {

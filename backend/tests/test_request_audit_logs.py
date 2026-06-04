@@ -41,3 +41,28 @@ async def test_super_admin_audit_logs_include_login_and_endpoint_access_events()
         ("request.200", "GET /admin/dashboard"),
     }
     assert dashboard.json()["recent_activity"] == []
+
+
+@pytest.mark.anyio
+async def test_super_admin_logout_creates_logout_audit_event():
+    app = create_app(
+        database_url="sqlite+pysqlite:///:memory:",
+        clock=lambda: datetime(2026, 6, 4, tzinfo=UTC),
+    )
+    test_data = DataBuilder(app)
+    test_data.create_user(email="admin@ipb.ac.id", role=UserRole.super_admin)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login = await client.post("/auth/login", json={"email": "admin@ipb.ac.id", "password": "secret123"})
+        token = login.json()["access_token"]
+        logout = await client.post("/auth/logout", headers={"Authorization": f"Bearer {token}"})
+        audit_logs = await client.get(
+            "/admin/audit-logs",
+            headers={"Authorization": f"Bearer {token}"},
+            params={"action_type": "auth.logout"},
+        )
+
+    assert logout.status_code == 204
+    assert audit_logs.status_code == 200
+    assert audit_logs.json()[0]["target_id"] == "POST /auth/logout"
